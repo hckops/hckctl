@@ -1,5 +1,5 @@
 # hckctl
 
 <p align="center">
-  <img src="docs/logo.svg" alt="logo">
+  <img width="160" src="docs/logo.svg" alt="logo">
 </p>
