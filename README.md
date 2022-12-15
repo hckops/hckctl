@@ -3,3 +3,14 @@
 </p>
 
 # hckctl
+
+```bash
+# init project (first time)
+go mod init github.com/hckops/hckctl
+
+# install|update dependencies
+go mod tidy
+
+# run
+go run main.go
+```
