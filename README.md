@@ -13,4 +13,5 @@ go mod tidy
 
 # run
 go run main.go
+go run main.go box open --local
 ```
