@@ -1,0 +1,6 @@
+# see https://github.com/github/gitignore/blob/main/Go.gitignore
+
+*~
+.DS_Store
+
+build/

@@ -4,6 +4,10 @@
 
 # hckctl
 
+## Development
+
+* [just](https://github.com/casey/just)
+
 ```bash
 # init project (first time)
 go mod init github.com/hckops/hckctl
@@ -14,4 +18,7 @@ go mod tidy
 # run
 go run main.go
 go run main.go box open --local
+
+# build
+./build/hckctl box open -l
 ```
