@@ -9,7 +9,7 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "hckctl",
-	Short: "Cloud Native HaCKing Tool",
+	Short: "The Cloud Native HaCKing Tool",
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.HelpFunc()(cmd, args)
 	},

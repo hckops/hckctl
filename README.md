@@ -19,10 +19,11 @@ go mod init github.com/hckops/hckctl
 # install|update dependencies
 go mod tidy
 
+# build
+just
+
 # run
 go run main.go
 go run main.go box open --local
-
-# build
 ./build/hckctl box open -l
 ```
