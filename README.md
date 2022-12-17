@@ -1,4 +1,4 @@
-# hckctl
+<h1 align="center"><code>hckctl</code></h1>
 
 <p align="center">
   <img width="160" src="docs/logo.svg" alt="logo">
