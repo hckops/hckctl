@@ -4,13 +4,8 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
-
-type globalFlags struct {
-	serverUrl *string
-	token     *string
-	local     *bool
-}
 
 var rootCmd = &cobra.Command{
 	Use:   "hckctl",
@@ -21,13 +16,19 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	var globalFlags = &globalFlags{
-		serverUrl: rootCmd.PersistentFlags().String("server-url", "", "TODO ServerUrl"),
-		token:     rootCmd.PersistentFlags().StringP("token", "t", "", "TODO Token"),
-		local:     rootCmd.PersistentFlags().Bool("local", false, "TODO Local"),
-	}
+	// --server-url
+	rootCmd.PersistentFlags().StringP(ServerUrl, "u", "https://api.hckops.com", "TODO ServerUrl")
+	viper.BindPFlag(ServerUrl, rootCmd.PersistentFlags().Lookup(ServerUrl))
 
-	rootCmd.AddCommand(NewBoxCmd(globalFlags))
+	// --token
+	rootCmd.PersistentFlags().StringP(Token, "t", "", "TODO Token")
+	viper.BindPFlag(Token, rootCmd.PersistentFlags().Lookup(Token))
+
+	// --local
+	rootCmd.PersistentFlags().BoolP(Local, "l", false, "TODO Local")
+	viper.BindPFlag(Local, rootCmd.PersistentFlags().Lookup(Local))
+
+	rootCmd.AddCommand(NewBoxCmd())
 }
 
 func Execute() {

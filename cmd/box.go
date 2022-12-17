@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewBoxCmd(globalFlags *globalFlags) *cobra.Command {
+func NewBoxCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "box",
 		Short: "TODO box",
@@ -24,7 +24,7 @@ func NewBoxCmd(globalFlags *globalFlags) *cobra.Command {
 		Use:   "open",
 		Short: "TODO open",
 		Run: func(cmd *cobra.Command, args []string) {
-			if *globalFlags.local {
+			if GlobalFlags().local {
 				log.Println(box.OpenLocalBox())
 			} else {
 				log.Println(box.OpenBox())
@@ -34,8 +34,4 @@ func NewBoxCmd(globalFlags *globalFlags) *cobra.Command {
 
 	command.AddCommand(openCmd)
 	return command
-}
-
-func init() {
-
 }
