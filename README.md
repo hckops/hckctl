@@ -10,20 +10,10 @@ The Cloud Native HaCKing Tool
 
 ## Development
 
-* [just](https://github.com/casey/just)
-
 ```bash
-# init project (first time)
-go mod init github.com/hckops/hckctl
-
-# install|update dependencies
-go mod tidy
-
 # build
 just
 
 # run
-go run main.go
-go run main.go box open --local
-./build/hckctl box open -l
+./build/hckctl box open --local
 ```
