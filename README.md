@@ -11,9 +11,12 @@ The Cloud Native HaCKing Tool
 ## Development
 
 ```bash
+# template
+go run main.go template parrot | yq -o=json
+
 # build
 just
 
 # run
-./build/hckctl box open --local
+./build/hckctl
 ```

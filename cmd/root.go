@@ -4,7 +4,8 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+
+	"github.com/hckops/hckctl/cmd/template"
 )
 
 var rootCmd = &cobra.Command{
@@ -16,19 +17,7 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	// --server-url
-	rootCmd.PersistentFlags().StringP(ServerUrl, "u", "https://api.hckops.com", "TODO ServerUrl")
-	viper.BindPFlag(ServerUrl, rootCmd.PersistentFlags().Lookup(ServerUrl))
-
-	// --token
-	rootCmd.PersistentFlags().StringP(Token, "t", "", "TODO Token")
-	viper.BindPFlag(Token, rootCmd.PersistentFlags().Lookup(Token))
-
-	// --local
-	rootCmd.PersistentFlags().BoolP(Local, "l", false, "TODO Local")
-	viper.BindPFlag(Local, rootCmd.PersistentFlags().Lookup(Local))
-
-	rootCmd.AddCommand(NewBoxCmd())
+	rootCmd.AddCommand(template.NewTemplateCmd())
 }
 
 func Execute() {
