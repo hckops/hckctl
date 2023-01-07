@@ -5,17 +5,33 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"regexp"
 
 	"github.com/hckops/hckctl/pkg/common"
 )
 
-// TODO basic validation
-func IsValidName(value string) bool {
-	return true
+type TemplateReq struct {
+	TemplateName  string
+	TemplateKind  string
+	SourceVersion string
+	ClientVersion string
 }
 
-func IsNotValidName(value string) bool {
-	return !IsValidName(value)
+// TODO better validation: should not start with dashes or contain double dashes
+var isValidName = regexp.MustCompile(`^[A-Za-z-]+$`).MatchString
+
+func NewTemplateReq(name string) (*TemplateReq, error) {
+
+	if !isValidName(name) {
+		return nil, fmt.Errorf("invalid name")
+	}
+
+	return &TemplateReq{
+		TemplateName:  name,
+		TemplateKind:  "box", // TODO enum
+		SourceVersion: "main",
+		ClientVersion: "snapshot", // TODO sha/tag
+	}, nil
 }
 
 func httpGetString(url string) (string, error) {
@@ -38,20 +54,21 @@ func httpGetString(url string) (string, error) {
 	return string(data), nil
 }
 
-func FetchPublicTemplate(name string) (string, error) {
+func (req *TemplateReq) FetchPublicTemplate() (string, error) {
 
-	path := fmt.Sprintf("boxes/official/%s.yml", name)
+	// TODO use TemplateKind
+	path := fmt.Sprintf("%s/boxes/official/%s.yml", req.SourceVersion, req.TemplateName)
 
 	template, err := httpGetString(fmt.Sprintf("%s/%s", common.UrlMegalopolisRaw, path))
 	if err != nil {
-		return "", fmt.Errorf("invalid public template")
+		return "", fmt.Errorf("error fetching public template: %v", err)
 	}
 
 	return template, nil
 }
 
-// TODO add headers e.g. client version
-func FetchApiTemplate(name string) (string, error) {
+// TODO add headers e.g. ClientVersion
+func (req *TemplateReq) FetchApiTemplate() (string, error) {
 
 	templateUrl, err := url.Parse(fmt.Sprintf("%s/template", common.UrlApi))
 	if err != nil {
@@ -59,12 +76,13 @@ func FetchApiTemplate(name string) (string, error) {
 	}
 
 	params := url.Values{}
-	params.Add("name", name)
+	params.Add("name", req.TemplateName)
+	params.Add("version", req.SourceVersion)
 	templateUrl.RawQuery = params.Encode()
 
 	template, err := httpGetString(templateUrl.String())
 	if err != nil {
-		return "", fmt.Errorf("invalid api template")
+		return "", fmt.Errorf("error fetching api template: %v", err)
 	}
 
 	return template, nil

@@ -3,21 +3,24 @@ package template
 import (
 	"fmt"
 
-	"github.com/hckops/hckctl/pkg/template"
+	t "github.com/hckops/hckctl/pkg/template"
 )
 
+// TODO client side schema validation
 func fetchBox(name string) {
 
-	if template.IsNotValidName(name) {
-		fmt.Println("invalid name")
+	req, err := t.NewTemplateReq(name)
+	if err != nil {
+		fmt.Println(err)
 		return
 	}
 
 	// attempt remote validation and access to private templates
-	apiTemplate, err := template.FetchApiTemplate(name)
+	apiTemplate, err := req.FetchApiTemplate()
 	if err != nil {
-		publicTemplate, err := template.FetchPublicTemplate(name)
+		publicTemplate, err := req.FetchPublicTemplate()
 		if err != nil {
+			fmt.Println(err)
 			return
 		}
 		fmt.Print(publicTemplate)
