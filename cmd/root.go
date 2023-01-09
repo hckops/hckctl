@@ -18,6 +18,9 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(template.NewTemplateCmd())
+
+	// removes timestamps
+	log.SetFlags(0)
 }
 
 func Execute() {

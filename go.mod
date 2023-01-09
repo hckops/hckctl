@@ -2,7 +2,11 @@ module github.com/hckops/hckctl
 
 go 1.19
 
-require github.com/spf13/cobra v1.6.1
+require (
+	github.com/santhosh-tekuri/jsonschema/v5 v5.1.1
+	github.com/spf13/cobra v1.6.1
+	gopkg.in/yaml.v3 v3.0.1
+)
 
 require (
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect

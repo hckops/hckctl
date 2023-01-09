@@ -68,6 +68,7 @@ func (req *TemplateReq) FetchPublicTemplate() (string, error) {
 }
 
 // TODO add headers e.g. ClientVersion
+// TODO add format e.g. yaml/json
 func (req *TemplateReq) FetchApiTemplate() (string, error) {
 
 	templateUrl, err := url.Parse(fmt.Sprintf("%s/template", common.UrlApi))
