@@ -1,3 +1,41 @@
 {
-  "key": "value"
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schema.hckops.com/box-v1.json",
+  "title": "BoxV1",
+  "description": "TODO",
+  "type": "object",
+  "properties": {
+    "version": {
+      "description": "The type and version of the template",
+      "type": "string"
+    },
+    "name": {
+      "description": "The name of the template",
+      "type": "string"
+    },
+    "tags": {
+      "description": "Tags for the template",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "image": {
+      "type": "object",
+      "properties": {
+        "repository": {
+          "description": "The repository name of the image",
+          "type": "string"
+        },
+        "version": {
+          "description": "The version of the image e.g. latest, sha or tag",
+          "type": "string"
+        }
+      },
+      "required": [ "repository" ]
+    }
+  },
+  "required": [ "version", "name", "tags", "image" ]
 }

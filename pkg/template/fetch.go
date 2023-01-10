@@ -30,7 +30,7 @@ func NewTemplateReq(name string) (*TemplateReq, error) {
 		TemplateName:  name,
 		TemplateKind:  "box", // TODO enum
 		SourceVersion: "main",
-		ClientVersion: "snapshot", // TODO sha/tag
+		ClientVersion: "hckctl-v0.0.0", // TODO sha/tag
 	}, nil
 }
 
@@ -67,8 +67,7 @@ func (req *TemplateReq) FetchPublicTemplate() (string, error) {
 	return template, nil
 }
 
-// TODO add headers e.g. ClientVersion
-// TODO add format e.g. yaml/json
+// TODO e.g. https://api.hckops.com/template/box?name=official/alpine&version=main&format=json
 func (req *TemplateReq) FetchApiTemplate() (string, error) {
 
 	templateUrl, err := url.Parse(fmt.Sprintf("%s/template", common.UrlApi))
@@ -76,9 +75,13 @@ func (req *TemplateReq) FetchApiTemplate() (string, error) {
 		return "", fmt.Errorf("invalid api url")
 	}
 
+	// TODO authentication
+	// TODO add header e.g. x-client=hckctl-v0.0.0
 	params := url.Values{}
 	params.Add("name", req.TemplateName)
 	params.Add("version", req.SourceVersion)
+	params.Add("format", "yaml")
+	//params.Add("client", req.ClientVersion)
 	templateUrl.RawQuery = params.Encode()
 
 	template, err := httpGetString(templateUrl.String())
