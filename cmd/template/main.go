@@ -1,24 +1,27 @@
 package template
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 )
 
 func NewTemplateCmd() *cobra.Command {
+	var path string
+	var format string
+
 	command := &cobra.Command{
-		Use:   "template",
-		Short: "TODO template",
+		Use:   "template [NAME]",
+		Short: "Loads and validates a template",
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) == 0 {
-				// TODO override usage: "hckctl template NAME"
-				cmd.HelpFunc()(cmd, args)
-				os.Exit(1)
+			if path != "" {
+				RunTemplateLocalCmd(path, format)
+			} else if len(args) == 1 {
+				RunTemplateRemoteCmd(args[0], format)
 			} else {
-				fetchBox(args[0])
+				cmd.HelpFunc()(cmd, args)
 			}
 		},
 	}
+	command.Flags().StringVarP(&path, "path", "p", "", "load the template from a local path")
+	command.Flags().StringVarP(&format, "output", "o", "", "output format, one of: yaml|json")
 	return command
 }

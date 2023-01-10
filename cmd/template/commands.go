@@ -2,38 +2,69 @@ package template
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 
 	t "github.com/hckops/hckctl/pkg/template"
 )
 
-// TODO client side schema validation
-func fetchBox(name string) *t.BoxV1 {
-
-	req, err := t.NewTemplateReq(name)
+func RunTemplateLocalCmd(path, format string) {
+	data, err := loadTemplate(path)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	var data string
-	// attempt remote validation and to access private templates
-	data, err = req.FetchApiTemplate()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	data, err = req.FetchPublicTemplate()
+	err = validateTemplate(data)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	fmt.Print(data)
+}
 
-	box, err := t.ParseBoxV1(data)
+func RunTemplateRemoteCmd(name, format string) {
+	data, err := fetchTemplate(name)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	fmt.Print(box.Name)
+	err = validateTemplate(data)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-	return box
+	fmt.Print(data)
+}
+
+func loadTemplate(path string) (string, error) {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", fmt.Errorf("file not found")
+	}
+	return string(data), nil
+}
+
+func fetchTemplate(name string) (string, error) {
+	var data string
+
+	req, err := t.NewTemplateReq(name)
+	if err != nil {
+		return "", err
+	}
+
+	// attempts remote validation and to access private templates
+	data, err = req.FetchApiTemplate()
+	if err != nil {
+
+		data, err = req.FetchPublicTemplate()
+		if err != nil {
+			return "", err
+		}
+	}
+	return data, nil
+}
+
+// TODO currently supports "box/v1" only: iterate over all validators/versions
+func validateTemplate(data string) error {
+	return t.ValidateBoxV1(data)
 }
