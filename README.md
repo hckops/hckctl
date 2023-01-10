@@ -4,7 +4,9 @@
   <img width="160" src="docs/logo.svg" alt="logo">
 </p>
 
+<!--
 The Cloud Native HaCKing Tool
+-->
 
 > WIP
 
