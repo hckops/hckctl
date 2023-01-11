@@ -15,6 +15,7 @@ The Cloud Native HaCKing Tool
 ```bash
 # template
 go run main.go template parrot | yq -o=json
+go run main.go template -p ../megalopolis/boxes/official/alpine.yml
 
 # build
 just
