@@ -9,7 +9,7 @@ func NewTemplateCmd() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "template [NAME]",
-		Short: "Loads and validates a template",
+		Short: "load and validate a template",
 		Run: func(cmd *cobra.Command, args []string) {
 			if path != "" {
 				RunTemplateLocalCmd(path)
@@ -20,6 +20,6 @@ func NewTemplateCmd() *cobra.Command {
 			}
 		},
 	}
-	command.Flags().StringVarP(&path, "path", "p", "", "load the template from a local path")
+	command.Flags().StringVarP(&path, "path", "p", "", "load a template from a local path")
 	return command
 }

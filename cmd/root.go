@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/hckops/hckctl/cmd/box"
 	"github.com/hckops/hckctl/cmd/template"
 )
 
@@ -22,6 +23,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
 
+	rootCmd.AddCommand(box.NewBoxCmd())
 	rootCmd.AddCommand(template.NewTemplateCmd())
 
 	// removes timestamps

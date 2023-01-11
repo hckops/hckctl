@@ -13,6 +13,10 @@ The Cloud Native HaCKing Tool
 ## Development
 
 ```bash
+# box
+go run main.go box parrot
+go run main.go box alpine --docker
+
 # template
 go run main.go template parrot | yq -o=json
 go run main.go template -p ../megalopolis/boxes/official/alpine.yml
