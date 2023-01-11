@@ -11,21 +11,9 @@ import (
 //go:embed schema/box-v1.json
 var schemaBoxV1 string
 
-func ParseBoxV1(data string) (*BoxV1, error) {
-	// TODO generics ?!
-	var box BoxV1
-	if err := yaml.Unmarshal([]byte(data), &box); err != nil {
-		return nil, fmt.Errorf("decode error: %v", err)
-	}
-	return &box, nil
-}
-
-// returns nil if valid
-func ValidateBoxV1(data string) error {
-	if err := validateSchema("box-v1.json", schemaBoxV1, data); err != nil {
-		return err
-	}
-	return nil
+// TODO currently supports "box/v1" only: iterate over all validators/versions
+func ValidateAllSchema(data string) error {
+	return ValidateBoxV1(data)
 }
 
 func ParseValidBoxV1(data string) (*BoxV1, error) {
@@ -39,6 +27,23 @@ func ParseValidBoxV1(data string) (*BoxV1, error) {
 	}
 
 	return box, nil
+}
+
+// returns nil if valid
+func ValidateBoxV1(data string) error {
+	if err := validateSchema("box-v1.json", schemaBoxV1, data); err != nil {
+		return err
+	}
+	return nil
+}
+
+func ParseBoxV1(data string) (*BoxV1, error) {
+	// TODO generics ?!
+	var box BoxV1
+	if err := yaml.Unmarshal([]byte(data), &box); err != nil {
+		return nil, fmt.Errorf("decode error: %v", err)
+	}
+	return &box, nil
 }
 
 func validateSchema(schemaName string, schemaValue string, data string) error {

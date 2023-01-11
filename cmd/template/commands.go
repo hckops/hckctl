@@ -14,7 +14,7 @@ func RunTemplateLocalCmd(path, format string) {
 		log.Fatalln(err)
 	}
 
-	err = validateTemplate(data)
+	err = t.ValidateAllSchema(data)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -28,7 +28,7 @@ func RunTemplateRemoteCmd(name, format string) {
 		log.Fatalln(err)
 	}
 
-	err = validateTemplate(data)
+	err = t.ValidateAllSchema(data)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -58,13 +58,8 @@ func fetchTemplate(name string) (string, error) {
 
 		data, err = req.FetchPublicTemplate()
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("template not found")
 		}
 	}
 	return data, nil
-}
-
-// TODO currently supports "box/v1" only: iterate over all validators/versions
-func validateTemplate(data string) error {
-	return t.ValidateBoxV1(data)
 }
