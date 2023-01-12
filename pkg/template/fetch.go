@@ -34,7 +34,7 @@ func FetchTemplate(name, revision string) (string, error) {
 
 		data, err = req.FetchPublicTemplate()
 		if err != nil {
-			return "", fmt.Errorf("template not found")
+			return "", fmt.Errorf("unable to fetch the template")
 		}
 	}
 	return data, nil

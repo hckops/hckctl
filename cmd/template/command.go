@@ -39,7 +39,7 @@ func RunTemplateRemoteCmd(name, revision string) {
 func loadTemplate(path string) (string, error) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
-		return "", fmt.Errorf("file not found")
+		return "", fmt.Errorf("unable to load the template")
 	}
 	return string(data), nil
 }
