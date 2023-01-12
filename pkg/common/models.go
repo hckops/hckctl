@@ -1,10 +1,11 @@
 package common
 
 type BoxV1 struct {
-	Version string   `json:"version"`
-	Name    string   `json:"name"`
-	Tags    []string `json:"tags"`
-	Image   struct {
-		Repository string `json:"repository"`
-	} `json:"image"`
+	Kind  string
+	Name  string
+	Tags  []string
+	Image struct {
+		Repository string
+		Version    string
+	}
 }

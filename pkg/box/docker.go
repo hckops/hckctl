@@ -10,19 +10,30 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/dchest/uniuri"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
+
+	"github.com/hckops/hckctl/pkg/common"
 )
 
-func InitDockerBox() {
-	imageName := "edgelevel/alpine-xfce-vnc:web-0.6.0"
-	containerName := fmt.Sprintf("mydocker-%s", uniuri.NewLen(5))
-
+func InitDockerBox(box *common.BoxV1) {
 	ctx := context.Background()
+
+	var imageVersion string
+	if box.Image.Version == "" {
+		imageVersion = "latest"
+	}
+	imageName := fmt.Sprintf("%s:%s", box.Image.Repository, imageVersion)
+	containerName := fmt.Sprintf("%s-%s", box.Name, uniuri.NewLen(5))
+
+	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond) // Build our new spinner
+	s.Color("green", "bold")
 
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -36,7 +47,9 @@ func InitDockerBox() {
 	}
 	defer reader.Close()
 
-	// io.Copy(os.Stdout, reader)
+	s.Suffix = fmt.Sprintf("\tpulling %s", imageName)
+
+	s.Start()
 	// suppress output
 	io.Copy(ioutil.Discard, reader)
 
@@ -48,6 +61,7 @@ func InitDockerBox() {
 		OpenStdin:    true,
 		StdinOnce:    true,
 		Tty:          true,
+		// TODO
 		ExposedPorts: nat.PortSet{
 			nat.Port("5900/tcp"): {},
 			nat.Port("6080/tcp"): {},
@@ -86,7 +100,7 @@ func InitDockerBox() {
 		AttachStderr: true,
 		Detach:       false,
 		Tty:          true,
-		Cmd:          []string{"/bin/bash"},
+		Cmd:          []string{"/bin/ash"},
 	})
 	if err != nil {
 		log.Fatalf("error docker exec create: %v", err)
@@ -107,6 +121,8 @@ func InitDockerBox() {
 			log.Fatalf("error docker remove: %v", err)
 		}
 	}
+
+	s.Stop()
 
 	var once sync.Once
 	go func() {

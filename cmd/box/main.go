@@ -5,6 +5,7 @@ import (
 )
 
 func NewBoxCmd() *cobra.Command {
+	var revision string
 	var docker bool
 
 	command := &cobra.Command{
@@ -15,7 +16,7 @@ func NewBoxCmd() *cobra.Command {
 				name := args[0]
 
 				if docker {
-					RunBoxDockerCmd(name)
+					RunBoxDockerCmd(name, revision)
 				} else {
 					RunBoxCloudCmd(name)
 				}
@@ -25,6 +26,7 @@ func NewBoxCmd() *cobra.Command {
 			}
 		},
 	}
+	command.Flags().StringVarP(&revision, "revision", "r", "main", "git source version i.e. branch|tag|sha")
 	command.Flags().BoolVar(&docker, "docker", false, "start a docker container locally")
 	//command.Flags().BoolVar(&docker, "podman", false, "start a podman container locally")
 	//command.MarkFlagsMutuallyExclusive("docker", "podman")
