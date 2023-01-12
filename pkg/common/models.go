@@ -1,4 +1,4 @@
-package template
+package common
 
 type BoxV1 struct {
 	Version string   `json:"version"`

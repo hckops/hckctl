@@ -23,7 +23,7 @@ func RunTemplateLocalCmd(path string) {
 }
 
 func RunTemplateRemoteCmd(name string) {
-	data, err := fetchTemplate(name)
+	data, err := t.FetchTemplate(name)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -42,24 +42,4 @@ func loadTemplate(path string) (string, error) {
 		return "", fmt.Errorf("file not found")
 	}
 	return string(data), nil
-}
-
-func fetchTemplate(name string) (string, error) {
-	var data string
-
-	req, err := t.NewTemplateReq(name)
-	if err != nil {
-		return "", err
-	}
-
-	// attempts remote validation and to access private templates
-	data, err = req.FetchApiTemplate()
-	if err != nil {
-
-		data, err = req.FetchPublicTemplate()
-		if err != nil {
-			return "", fmt.Errorf("template not found")
-		}
-	}
-	return data, nil
 }

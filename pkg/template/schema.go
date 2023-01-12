@@ -6,6 +6,8 @@ import (
 
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	"gopkg.in/yaml.v3"
+
+	"github.com/hckops/hckctl/pkg/common"
 )
 
 //go:embed schema/box-v1.json
@@ -16,7 +18,7 @@ func ValidateAllSchema(data string) error {
 	return ValidateBoxV1(data)
 }
 
-func ParseValidBoxV1(data string) (*BoxV1, error) {
+func ParseValidBoxV1(data string) (*common.BoxV1, error) {
 	if err := ValidateBoxV1(data); err != nil {
 		return nil, err
 	}
@@ -37,9 +39,9 @@ func ValidateBoxV1(data string) error {
 	return nil
 }
 
-func ParseBoxV1(data string) (*BoxV1, error) {
+func ParseBoxV1(data string) (*common.BoxV1, error) {
 	// TODO generics ?!
-	var box BoxV1
+	var box common.BoxV1
 	if err := yaml.Unmarshal([]byte(data), &box); err != nil {
 		return nil, fmt.Errorf("decode error: %v", err)
 	}
