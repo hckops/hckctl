@@ -22,8 +22,8 @@ func RunTemplateLocalCmd(path string) {
 	fmt.Print(data)
 }
 
-func RunTemplateRemoteCmd(name string) {
-	data, err := t.FetchTemplate(name)
+func RunTemplateRemoteCmd(name, revision string) {
+	data, err := t.FetchTemplate(name, revision)
 	if err != nil {
 		log.Fatalln(err)
 	}

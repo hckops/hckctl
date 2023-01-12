@@ -5,6 +5,7 @@ import (
 )
 
 func NewTemplateCmd() *cobra.Command {
+	var revision string
 	var path string
 
 	command := &cobra.Command{
@@ -14,12 +15,14 @@ func NewTemplateCmd() *cobra.Command {
 			if path != "" {
 				RunTemplateLocalCmd(path)
 			} else if len(args) == 1 {
-				RunTemplateRemoteCmd(args[0])
+				RunTemplateRemoteCmd(args[0], revision)
 			} else {
 				cmd.HelpFunc()(cmd, args)
 			}
 		},
 	}
+	command.Flags().StringVarP(&revision, "revision", "r", "main", "git source version i.e. branch|tag|sha")
 	command.Flags().StringVarP(&path, "path", "p", "", "load a template from a local path")
+	command.MarkFlagsMutuallyExclusive("revision", "path")
 	return command
 }

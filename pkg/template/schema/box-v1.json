@@ -5,7 +5,7 @@
   "description": "TODO",
   "type": "object",
   "properties": {
-    "version": {
+    "kind": {
       "description": "The type and version of the template",
       "type": "string"
     },
@@ -37,5 +37,5 @@
       "required": [ "repository" ]
     }
   },
-  "required": [ "version", "name", "tags", "image" ]
+  "required": [ "kind", "name", "tags", "image" ]
 }

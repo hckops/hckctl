@@ -13,17 +13,17 @@ import (
 type TemplateReq struct {
 	TemplateName  string
 	TemplateKind  string
-	SourceVersion string
+	Revision      string
 	ClientVersion string
 }
 
 // TODO better validation: should not start with dashes or contain double dashes
 var IsValidName = regexp.MustCompile(`^[A-Za-z-]+$`).MatchString
 
-func FetchTemplate(name string) (string, error) {
+func FetchTemplate(name, revision string) (string, error) {
 	var data string
 
-	req, err := newTemplateReq(name)
+	req, err := newTemplateReq(name, revision)
 	if err != nil {
 		return "", err
 	}
@@ -40,7 +40,7 @@ func FetchTemplate(name string) (string, error) {
 	return data, nil
 }
 
-func newTemplateReq(name string) (*TemplateReq, error) {
+func newTemplateReq(name, revision string) (*TemplateReq, error) {
 
 	if !IsValidName(name) {
 		return nil, fmt.Errorf("invalid name")
@@ -49,7 +49,7 @@ func newTemplateReq(name string) (*TemplateReq, error) {
 	return &TemplateReq{
 		TemplateName:  name,
 		TemplateKind:  "box", // TODO enum
-		SourceVersion: "main",
+		Revision:      revision,
 		ClientVersion: "hckctl-v0.0.0", // TODO sha/tag
 	}, nil
 }
@@ -66,7 +66,7 @@ func (req *TemplateReq) FetchApiTemplate() (string, error) {
 	// TODO add header e.g. x-client=hckctl-v0.0.0
 	params := url.Values{}
 	params.Add("name", req.TemplateName)
-	params.Add("version", req.SourceVersion)
+	params.Add("version", req.Revision)
 	params.Add("format", "yaml")
 	//params.Add("client", req.ClientVersion)
 	templateUrl.RawQuery = params.Encode()
@@ -82,7 +82,7 @@ func (req *TemplateReq) FetchApiTemplate() (string, error) {
 func (req *TemplateReq) FetchPublicTemplate() (string, error) {
 
 	// TODO use TemplateKind
-	path := fmt.Sprintf("%s/boxes/official/%s.yml", req.SourceVersion, req.TemplateName)
+	path := fmt.Sprintf("%s/boxes/official/%s.yml", req.Revision, req.TemplateName)
 
 	template, err := httpGetString(fmt.Sprintf("%s/%s", common.UrlMegalopolisRaw, path))
 	if err != nil {
