@@ -10,30 +10,62 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
-	"time"
 
-	"github.com/briandowns/spinner"
 	"github.com/dchest/uniuri"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 
-	"github.com/hckops/hckctl/pkg/common"
+	privcommon "github.com/hckops/hckctl/internal/common"
+	pubcommon "github.com/hckops/hckctl/pkg/common"
 )
 
-func InitDockerBox(box *common.BoxV1) {
+type DockerBox struct {
+	ctx    context.Context
+	loader *privcommon.Loader
+	box    *pubcommon.BoxV1
+}
+
+func NewDockerBox(box *pubcommon.BoxV1) *DockerBox {
+	return &DockerBox{
+		ctx:    context.Background(),
+		loader: privcommon.NewLoader(),
+		box:    box,
+	}
+}
+
+func (d *DockerBox) InitBox() {
+	d.loader.Start(fmt.Sprintf("loading %s", d.box.Name))
+
+	//containerName := d.box.GenerateName()
+
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Fatalf("error docker client: %v", err)
+	}
+	defer docker.Close()
+
+	reader, err := docker.ImagePull(d.ctx, d.box.ImageName(), types.ImagePullOptions{})
+	if err != nil {
+		log.Fatalf("error image pull: %v", err)
+	}
+	defer reader.Close()
+
+	// suppress output
+	io.Copy(ioutil.Discard, reader)
+
+	d.loader.Stop()
+}
+
+func InitDockerBoxOld(box *pubcommon.BoxV1) {
+
 	ctx := context.Background()
 
 	var imageVersion string
-	if box.Image.Version == "" {
-		imageVersion = "latest"
-	}
+
 	imageName := fmt.Sprintf("%s:%s", box.Image.Repository, imageVersion)
 	containerName := fmt.Sprintf("%s-%s", box.Name, uniuri.NewLen(5))
-
-	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond) // Build our new spinner
-	s.Color("green", "bold")
 
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -47,20 +79,17 @@ func InitDockerBox(box *common.BoxV1) {
 	}
 	defer reader.Close()
 
-	s.Suffix = fmt.Sprintf("\tpulling %s", imageName)
-
-	s.Start()
 	// suppress output
 	io.Copy(ioutil.Discard, reader)
 
 	containerConfig := &container.Config{
-		Image:        imageName,
-		AttachStdin:  true,
-		AttachStdout: true,
-		AttachStderr: true,
-		OpenStdin:    true,
-		StdinOnce:    true,
-		Tty:          true,
+		Image:       imageName,
+		AttachStdin: true,
+		//AttachStdout: true,
+		//AttachStderr: true,
+		OpenStdin: true,
+		StdinOnce: true,
+		//Tty:       true,
 		// TODO
 		ExposedPorts: nat.PortSet{
 			nat.Port("5900/tcp"): {},
@@ -87,8 +116,6 @@ func InitDockerBox(box *common.BoxV1) {
 	}
 
 	containerId := newContainer.ID
-
-	log.Printf("new container: image=%s, name=%s, id=%s", imageName, containerName, containerId)
 
 	if err := docker.ContainerStart(ctx, containerId, types.ContainerStartOptions{}); err != nil {
 		log.Fatalf("error container start: %v", err)
@@ -121,8 +148,6 @@ func InitDockerBox(box *common.BoxV1) {
 			log.Fatalf("error docker remove: %v", err)
 		}
 	}
-
-	s.Stop()
 
 	var once sync.Once
 	go func() {

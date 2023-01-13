@@ -18,7 +18,7 @@ func RunBoxDockerCmd(name, revision string) {
 		log.Fatalln(err)
 	}
 
-	b.InitDockerBox(box)
+	b.NewDockerBox(box).InitBox()
 }
 
 func RunBoxCloudCmd(name string) {
