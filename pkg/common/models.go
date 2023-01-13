@@ -20,6 +20,8 @@ func (box *BoxV1) ImageName() string {
 	var version string
 	if box.Image.Version == "" {
 		version = "latest"
+	} else {
+		version = box.Image.Version
 	}
 	return fmt.Sprintf("%s:%s", box.Image.Repository, version)
 }

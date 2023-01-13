@@ -20,13 +20,19 @@ func NewLoader() *Loader {
 	}
 }
 
-func (l *Loader) Update(message string) {
+func (l *Loader) Start(message string) {
+	l.update(message)
+	l.spinner.Start()
+}
+
+func (l *Loader) update(message string) {
 	l.spinner.Suffix = fmt.Sprintf("  %s", message)
 }
 
-func (l *Loader) Start(message string) {
-	l.Update(message)
-	l.spinner.Start()
+func (l *Loader) Refresh(message string) {
+	l.update(message)
+	l.spinner.Reverse()
+	l.spinner.Restart()
 }
 
 func (l *Loader) Stop() {

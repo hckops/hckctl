@@ -11,10 +11,10 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/dchest/uniuri"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
 
 	privcommon "github.com/hckops/hckctl/internal/common"
@@ -22,94 +22,52 @@ import (
 )
 
 type DockerBox struct {
-	ctx    context.Context
-	loader *privcommon.Loader
-	box    *pubcommon.BoxV1
+	ctx          context.Context
+	dockerClient *client.Client
+	loader       *privcommon.Loader
+	boxTemplate  *pubcommon.BoxV1
 }
 
 func NewDockerBox(box *pubcommon.BoxV1) *DockerBox {
+
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Fatalf("error docker client: %v", err)
+	}
+	defer docker.Close()
+
 	return &DockerBox{
-		ctx:    context.Background(),
-		loader: privcommon.NewLoader(),
-		box:    box,
+		ctx:          context.Background(),
+		dockerClient: docker,
+		loader:       privcommon.NewLoader(),
+		boxTemplate:  box,
 	}
 }
 
 func (d *DockerBox) InitBox() {
-	d.loader.Start(fmt.Sprintf("loading %s", d.box.Name))
+	d.loader.Start(fmt.Sprintf("loading %s", d.boxTemplate.Name))
 
-	//containerName := d.box.GenerateName()
-
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		log.Fatalf("error docker client: %v", err)
-	}
-	defer docker.Close()
-
-	reader, err := docker.ImagePull(d.ctx, d.box.ImageName(), types.ImagePullOptions{})
+	reader, err := d.dockerClient.ImagePull(d.ctx, d.boxTemplate.ImageName(), types.ImagePullOptions{})
 	if err != nil {
 		log.Fatalf("error image pull: %v", err)
 	}
 	defer reader.Close()
 
+	d.loader.Refresh(fmt.Sprintf("pulling %s", d.boxTemplate.ImageName()))
 	// suppress output
 	io.Copy(ioutil.Discard, reader)
 
-	d.loader.Stop()
-}
+	containerName := d.boxTemplate.GenerateName()
 
-func InitDockerBoxOld(box *pubcommon.BoxV1) {
+	d.loader.Refresh(fmt.Sprintf("starting %s", containerName))
 
-	ctx := context.Background()
-
-	var imageVersion string
-
-	imageName := fmt.Sprintf("%s:%s", box.Image.Repository, imageVersion)
-	containerName := fmt.Sprintf("%s-%s", box.Name, uniuri.NewLen(5))
-
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		log.Fatalf("error docker client: %v", err)
-	}
-	defer docker.Close()
-
-	reader, err := docker.ImagePull(ctx, imageName, types.ImagePullOptions{})
-	if err != nil {
-		log.Fatalf("error image pull: %v", err)
-	}
-	defer reader.Close()
-
-	// suppress output
-	io.Copy(ioutil.Discard, reader)
-
-	containerConfig := &container.Config{
-		Image:       imageName,
-		AttachStdin: true,
-		//AttachStdout: true,
-		//AttachStderr: true,
-		OpenStdin: true,
-		StdinOnce: true,
-		//Tty:       true,
-		// TODO
-		ExposedPorts: nat.PortSet{
-			nat.Port("5900/tcp"): {},
-			nat.Port("6080/tcp"): {},
-		},
-	}
-
-	hostConfig := &container.HostConfig{
-		PortBindings: nat.PortMap{
-			"5900/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "5900"}},
-			"6080/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "6080"}},
-		},
-	}
-
-	newContainer, err := docker.ContainerCreate(
-		ctx,
-		containerConfig,
-		hostConfig, // hostConfig
-		nil,        // networkingConfig
-		nil,        // platform
+	// TODO is port is busy start in port+1 ? or attach to existing ?
+	newContainer, err := d.dockerClient.ContainerCreate(
+		d.ctx,
+		buildContainerConfig(d.boxTemplate), // containerConfig
+		buildHostConfig(d.boxTemplate),      // hostConfig
+		nil,                                 // networkingConfig
+		nil,                                 // platform
 		containerName)
 	if err != nil {
 		log.Fatalf("error container create: %v", err)
@@ -117,51 +75,147 @@ func InitDockerBoxOld(box *pubcommon.BoxV1) {
 
 	containerId := newContainer.ID
 
-	if err := docker.ContainerStart(ctx, containerId, types.ContainerStartOptions{}); err != nil {
+	if err := d.dockerClient.ContainerStart(d.ctx, containerId, types.ContainerStartOptions{}); err != nil {
 		log.Fatalf("error container start: %v", err)
 	}
 
-	execCreateResponse, err := docker.ContainerExecCreate(ctx, containerId, types.ExecConfig{
+	//d.todoAttach(containerId)
+	// TODO tty false for tunnel only
+	d.todoExecAttach(containerId, true)
+}
+
+func buildContainerConfig(boxTemplate *pubcommon.BoxV1) *container.Config {
+
+	// TODO iterate over ports
+
+	return &container.Config{
+		Image:       boxTemplate.ImageName(),
+		AttachStdin: true,
+		//AttachStdout: true,
+		//AttachStderr: true,
+		OpenStdin: true,
+		StdinOnce: true,
+		Tty:       true,
+		// TODO
+		ExposedPorts: nat.PortSet{
+			nat.Port("5900/tcp"): {},
+			nat.Port("6080/tcp"): {},
+		},
+	}
+}
+
+func buildHostConfig(boxTemplate *pubcommon.BoxV1) *container.HostConfig {
+
+	// TODO iterate over ports
+
+	return &container.HostConfig{
+		PortBindings: nat.PortMap{
+			"5900/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "5900"}},
+			"6080/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "6080"}},
+		},
+	}
+}
+
+func (d *DockerBox) todoAttach(containerId string) {
+
+	attach, err := d.dockerClient.ContainerAttach(
+		d.ctx,
+		containerId,
+		types.ContainerAttachOptions{
+			Stream: true,
+			Stdin:  true,
+			Stdout: true,
+			Stderr: true,
+			Logs:   true,
+		},
+	)
+	if err != nil {
+		log.Fatalf("error container attach: %v", err)
+	}
+
+	closeCallback := func() {
+		err = d.dockerClient.ContainerRemove(d.ctx, containerId, types.ContainerRemoveOptions{})
+		if err != nil {
+			log.Fatalf("error container remove: %v", err)
+		}
+	}
+
+	var once sync.Once
+	go func() {
+		_, err = io.Copy(os.Stdout, attach.Reader)
+		if err != nil {
+			log.Fatalf("error copy docker->local: %v", err)
+		}
+		once.Do(closeCallback)
+	}()
+	go func() {
+		_, _ = io.Copy(attach.Conn, os.Stdin)
+		if err != nil {
+			log.Fatalf("error copy local->docker: %v", err)
+		}
+		once.Do(closeCallback)
+	}()
+
+	d.loader.Stop()
+
+	statusCh, errCh := d.dockerClient.ContainerWait(d.ctx, containerId, container.WaitConditionNotRunning)
+	select {
+	case err := <-errCh:
+		if err != nil {
+			log.Fatalf("error container wait: %v", err)
+		}
+		log.Printf("close container wait errCh")
+	case status := <-statusCh:
+		log.Printf("close container wait statusCh: %v", status.StatusCode)
+	}
+}
+
+// LAB: configure remove/keepalive timeout, override name, shell, installed packages etc.
+func (d *DockerBox) todoExecAttach(containerId string, tty bool) {
+
+	// TODO always bash
+	execCreateResponse, err := d.dockerClient.ContainerExecCreate(d.ctx, containerId, types.ExecConfig{
 		AttachStdout: true,
 		AttachStdin:  true,
 		AttachStderr: true,
 		Detach:       false,
-		Tty:          true,
-		Cmd:          []string{"/bin/ash"},
+		Tty:          tty,
+		Cmd:          []string{"/bin/sh"},
 	})
 	if err != nil {
-		log.Fatalf("error docker exec create: %v", err)
+		log.Fatalf("error container exec create: %v", err)
 	}
 
-	execAttachResponse, err := docker.ContainerExecAttach(ctx, execCreateResponse.ID, types.ExecStartCheck{
-		Tty: true,
+	execAttachResponse, err := d.dockerClient.ContainerExecAttach(d.ctx, execCreateResponse.ID, types.ExecStartCheck{
+		Tty: tty,
 	})
 	if err != nil {
-		log.Fatalf("error docker exec attach: %v", err)
+		log.Fatalf("error container exec attach: %v", err)
 	}
 	defer execAttachResponse.Close()
 
-	closeChannel := func() {
-		log.Printf("removing docker container: id=%s", containerId)
-
-		if err := docker.ContainerRemove(ctx, containerId, types.ContainerRemoveOptions{Force: true}); err != nil {
+	closeCallback := func() {
+		if err := d.dockerClient.ContainerRemove(d.ctx, containerId, types.ContainerRemoveOptions{Force: true}); err != nil {
 			log.Fatalf("error docker remove: %v", err)
 		}
 	}
 
 	var once sync.Once
 	go func() {
-		// use with TTY=false only, with TTY=true returns: "Unrecognized input header: 13"
-		//_, err := stdcopy.StdCopy(os.Stdout, os.Stderr, execAttachResponse.Reader)
 
-		// TTY
-		_, err := io.Copy(os.Stdout, execAttachResponse.Reader)
-		if err != nil {
-			log.Fatalf("error copy docker->local: %v", err)
+		if tty {
+			_, err := io.Copy(os.Stdout, execAttachResponse.Reader)
+			if err != nil {
+				log.Fatalf("error copy docker->local: %v", err)
+			}
+		} else {
+			_, err := stdcopy.StdCopy(os.Stdout, os.Stderr, execAttachResponse.Reader)
+			if err != nil {
+				log.Fatalf("error copy docker->local: %v", err)
+			}
 		}
 
-		log.Printf("close docker->local")
-		once.Do(closeChannel)
+		once.Do(closeCallback)
 	}()
 
 	go func() {
@@ -170,9 +224,12 @@ func InitDockerBoxOld(box *pubcommon.BoxV1) {
 			log.Fatalf("error copy local->docker: %v", err)
 		}
 
-		log.Printf("close local->docker")
-		once.Do(closeChannel)
+		once.Do(closeCallback)
 	}()
+
+	d.loader.Stop()
+
+	// TODO <<<
 
 	// TODO CTRL+C should NOT exit
 	signalCh := make(chan os.Signal)
@@ -186,11 +243,11 @@ func InitDockerBoxOld(box *pubcommon.BoxV1) {
 		<-signalCh
 
 		log.Printf("CTRL+C handler")
-		once.Do(closeChannel)
+		once.Do(closeCallback)
 		//os.Exit(0)
 	}()
 
-	statusCh, errCh := docker.ContainerWait(ctx, containerId, container.WaitConditionNotRunning)
+	statusCh, errCh := d.dockerClient.ContainerWait(d.ctx, containerId, container.WaitConditionNotRunning)
 	select {
 	case err := <-errCh:
 		if err != nil {
