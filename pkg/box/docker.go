@@ -7,15 +7,14 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
+	"golang.org/x/crypto/ssh/terminal"
 
 	privcommon "github.com/hckops/hckctl/internal/common"
 	pubcommon "github.com/hckops/hckctl/pkg/common"
@@ -75,9 +74,9 @@ func (d *DockerBox) InitBox() {
 
 	containerId := newContainer.ID
 
-	if err := d.dockerClient.ContainerStart(d.ctx, containerId, types.ContainerStartOptions{}); err != nil {
-		log.Fatalf("error container start: %v", err)
-	}
+	// if err := d.dockerClient.ContainerStart(d.ctx, containerId, types.ContainerStartOptions{}); err != nil {
+	// 	log.Fatalf("error container start: %v", err)
+	// }
 
 	//d.todoAttach(containerId)
 	// TODO tty false for tunnel only
@@ -89,13 +88,13 @@ func buildContainerConfig(boxTemplate *pubcommon.BoxV1) *container.Config {
 	// TODO iterate over ports
 
 	return &container.Config{
-		Image:       boxTemplate.ImageName(),
-		AttachStdin: true,
-		//AttachStdout: true,
-		//AttachStderr: true,
-		OpenStdin: true,
-		StdinOnce: true,
-		Tty:       true,
+		Image:        boxTemplate.ImageName(),
+		AttachStdin:  true,
+		AttachStdout: true,
+		AttachStderr: true,
+		OpenStdin:    true,
+		StdinOnce:    true,
+		Tty:          true,
 		// TODO
 		ExposedPorts: nat.PortSet{
 			nat.Port("5900/tcp"): {},
@@ -144,19 +143,43 @@ func (d *DockerBox) todoAttach(containerId string) {
 	go func() {
 		_, err = io.Copy(os.Stdout, attach.Reader)
 		if err != nil {
-			log.Fatalf("error copy docker->local: %v", err)
+			log.Fatalf("error copy docker->stdout: %v", err)
 		}
 		once.Do(closeCallback)
 	}()
+	// go func() {
+	// 	_, err = io.Copy(os.Stderr, attach.Reader)
+	// 	if err != nil {
+	// 		log.Fatalf("error copy docker->stderr: %v", err)
+	// 	}
+	// 	once.Do(closeCallback)
+	// }()
 	go func() {
 		_, _ = io.Copy(attach.Conn, os.Stdin)
 		if err != nil {
-			log.Fatalf("error copy local->docker: %v", err)
+			log.Fatalf("error copy stdin->docker: %v", err)
 		}
 		once.Do(closeCallback)
 	}()
 
+	if err := d.dockerClient.ContainerStart(d.ctx, containerId, types.ContainerStartOptions{}); err != nil {
+		log.Fatalf("error container start: %v", err)
+	}
+
+	fd := int(os.Stdin.Fd())
+	var oldState *terminal.State
+	if terminal.IsTerminal(fd) {
+		oldState, err = terminal.MakeRaw(fd)
+		if err != nil {
+			// print error
+		}
+		defer terminal.Restore(fd, oldState)
+	}
+
+	// clear
+	//fmt.Print("\033[H\033[2J")
 	d.loader.Stop()
+	fmt.Print("\033[F")
 
 	statusCh, errCh := d.dockerClient.ContainerWait(d.ctx, containerId, container.WaitConditionNotRunning)
 	select {
@@ -164,14 +187,20 @@ func (d *DockerBox) todoAttach(containerId string) {
 		if err != nil {
 			log.Fatalf("error container wait: %v", err)
 		}
-		log.Printf("close container wait errCh")
-	case status := <-statusCh:
-		log.Printf("close container wait statusCh: %v", status.StatusCode)
+		//log.Printf("close container wait errCh")
+	case <-statusCh:
+		//log.Printf("close container wait statusCh: %v", status.StatusCode)
 	}
+
+	terminal.Restore(fd, oldState)
 }
 
 // LAB: configure remove/keepalive timeout, override name, shell, installed packages etc.
 func (d *DockerBox) todoExecAttach(containerId string, tty bool) {
+
+	if err := d.dockerClient.ContainerStart(d.ctx, containerId, types.ContainerStartOptions{}); err != nil {
+		log.Fatalf("error container start: %v", err)
+	}
 
 	// TODO always bash
 	execCreateResponse, err := d.dockerClient.ContainerExecCreate(d.ctx, containerId, types.ExecConfig{
@@ -180,7 +209,7 @@ func (d *DockerBox) todoExecAttach(containerId string, tty bool) {
 		AttachStderr: true,
 		Detach:       false,
 		Tty:          tty,
-		Cmd:          []string{"/bin/sh"},
+		Cmd:          []string{"/bin/bash"},
 	})
 	if err != nil {
 		log.Fatalf("error container exec create: %v", err)
@@ -227,25 +256,37 @@ func (d *DockerBox) todoExecAttach(containerId string, tty bool) {
 		once.Do(closeCallback)
 	}()
 
+	fd := int(os.Stdin.Fd())
+	var oldState *terminal.State
+	if terminal.IsTerminal(fd) {
+		oldState, err = terminal.MakeRaw(fd)
+		if err != nil {
+			// print error
+		}
+		defer terminal.Restore(fd, oldState)
+	}
+
+	// clear
+	//fmt.Print("\033[H\033[2J")
 	d.loader.Stop()
 
-	// TODO <<<
+	// // TODO <<<
 
-	// TODO CTRL+C should NOT exit
-	signalCh := make(chan os.Signal)
-	signal.Notify(signalCh, os.Interrupt, syscall.SIGTERM)
-	// signal.Notify(c, os.Interrupt)
-	go func() {
-		// for sig := range c {
-		// 	// sig is a ^C, handle it
-		// 	log.Printf("CTRL+C handler %v", sig)
-		// }
-		<-signalCh
+	// // TODO CTRL+C should NOT exit
+	// signalCh := make(chan os.Signal)
+	// signal.Notify(signalCh, os.Interrupt, syscall.SIGTERM)
+	// // signal.Notify(c, os.Interrupt)
+	// go func() {
+	// 	// for sig := range c {
+	// 	// 	// sig is a ^C, handle it
+	// 	// 	log.Printf("CTRL+C handler %v", sig)
+	// 	// }
+	// 	<-signalCh
 
-		log.Printf("CTRL+C handler")
-		once.Do(closeCallback)
-		//os.Exit(0)
-	}()
+	// 	log.Printf("CTRL+C handler")
+	// 	once.Do(closeCallback)
+	// 	//os.Exit(0)
+	// }()
 
 	statusCh, errCh := d.dockerClient.ContainerWait(d.ctx, containerId, container.WaitConditionNotRunning)
 	select {
@@ -254,7 +295,6 @@ func (d *DockerBox) todoExecAttach(containerId string, tty bool) {
 			log.Fatalf("error container wait: %v", err)
 		}
 		log.Printf("close container wait errCh")
-	case status := <-statusCh:
-		log.Printf("close container wait statusCh: %v", status.StatusCode)
+	case <-statusCh:
 	}
 }
