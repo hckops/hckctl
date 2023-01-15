@@ -46,7 +46,7 @@ func NewDockerBox(box *pubcommon.BoxV1) *DockerBox {
 func (d *DockerBox) InitBox() {
 	d.loader.Start(fmt.Sprintf("loading %s", d.boxTemplate.Name))
 
-	// TODO compare latest local and remote hash i.e. nightly
+	// TODO compare latest local and remote hash i.e. midnight schedule
 	reader, err := d.dockerClient.ImagePull(d.ctx, d.boxTemplate.ImageName(), types.ImagePullOptions{})
 	if err != nil {
 		log.Fatalf("error image pull: %v", err)
@@ -61,13 +61,19 @@ func (d *DockerBox) InitBox() {
 
 	d.loader.Refresh(fmt.Sprintf("creating %s", containerName))
 
+	ports := buildDockerPorts(d.boxTemplate.NetworkPorts())
+
 	// TODO if port is busy start on port+1? or prompt to attach to existing?
 	newContainer, err := d.dockerClient.ContainerCreate(
 		d.ctx,
-		buildContainerConfig(d.boxTemplate), // containerConfig
-		buildHostConfig(d.boxTemplate),      // hostConfig
-		nil,                                 // networkingConfig
-		nil,                                 // platform
+		buildContainerConfig(
+			d.boxTemplate.ImageName(),
+			containerName,
+			ports,
+		), // containerConfig
+		buildHostConfig(ports), // hostConfig
+		nil,                    // networkingConfig
+		nil,                    // platform
 		containerName)
 	if err != nil {
 		log.Fatalf("error container create: %v", err)
@@ -78,37 +84,52 @@ func (d *DockerBox) InitBox() {
 	d.openBox(containerId, true)
 }
 
-func buildContainerConfig(boxTemplate *pubcommon.BoxV1) *container.Config {
+func buildDockerPorts(ports []pubcommon.PortV1) []nat.Port {
 
-	// TODO iterate over ports
+	dockerPorts := make([]nat.Port, 0)
+	for _, port := range ports {
+
+		p, err := nat.NewPort("tcp", port.Local)
+		if err != nil {
+			log.Fatalf("error docker port: %v", err)
+		}
+		dockerPorts = append(dockerPorts, p)
+	}
+	return dockerPorts
+}
+
+func buildContainerConfig(imageName string, containerName string, ports []nat.Port) *container.Config {
+
+	exposedPorts := make(nat.PortSet)
+	for _, port := range ports {
+		exposedPorts[port] = struct{}{}
+	}
 
 	return &container.Config{
-		Image:        boxTemplate.ImageName(),
+		Hostname:     containerName,
+		Image:        imageName,
 		AttachStdin:  true,
 		AttachStdout: true,
 		AttachStderr: true,
 		OpenStdin:    true,
 		StdinOnce:    true,
 		Tty:          true,
-		// TODO
-		ExposedPorts: nat.PortSet{
-			nat.Port("5900/tcp"): {},
-			nat.Port("6080/tcp"): {},
-			nat.Port("7681/tcp"): {},
-		},
+		ExposedPorts: exposedPorts,
 	}
 }
 
-func buildHostConfig(boxTemplate *pubcommon.BoxV1) *container.HostConfig {
+func buildHostConfig(ports []nat.Port) *container.HostConfig {
 
-	// TODO iterate over ports
+	portBindings := make(nat.PortMap)
+	for _, port := range ports {
+		portBindings[port] = []nat.PortBinding{{
+			HostIP:   "0.0.0.0",
+			HostPort: port.Port(),
+		}}
+	}
 
 	return &container.HostConfig{
-		PortBindings: nat.PortMap{
-			"5900/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "5900"}},
-			"6080/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "6080"}},
-			"7681/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "7681"}},
-		},
+		PortBindings: portBindings,
 	}
 }
 

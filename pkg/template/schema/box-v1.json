@@ -34,8 +34,28 @@
           "type": "string"
         }
       },
-      "required": [ "repository" ]
+      "required": [
+        "repository"
+      ]
+    },
+    "network": {
+      "description": "Network of the template",
+      "type": "object",
+      "ports": {
+        "description": "Ports of the template",
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "minItems": 1,
+        "uniqueItems": true
+      }
     }
   },
-  "required": [ "kind", "name", "tags", "image" ]
+  "required": [
+    "kind",
+    "name",
+    "tags",
+    "image"
+  ]
 }
