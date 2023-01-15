@@ -26,9 +26,20 @@ func NewBoxCmd() *cobra.Command {
 			}
 		},
 	}
+
 	command.Flags().StringVarP(&revision, "revision", "r", "main", "git source version i.e. branch|tag|sha")
 	command.Flags().BoolVar(&docker, "docker", false, "start a docker container locally")
 	//command.Flags().BoolVar(&docker, "podman", false, "start a podman container locally")
 	//command.MarkFlagsMutuallyExclusive("docker", "podman")
+
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "list available boxes",
+		Run: func(cmd *cobra.Command, args []string) {
+			RunBoxListCmd()
+		},
+	}
+
+	command.AddCommand(listCmd)
 	return command
 }
