@@ -61,9 +61,9 @@ func (d *DockerBox) InitBox() {
 
 	d.loader.Refresh(fmt.Sprintf("creating %s", containerName))
 
+	// TODO if port is busy start on port+1? or prompt to attach to existing?
 	ports := buildDockerPorts(d.boxTemplate.NetworkPorts())
 
-	// TODO if port is busy start on port+1? or prompt to attach to existing?
 	newContainer, err := d.dockerClient.ContainerCreate(
 		d.ctx,
 		buildContainerConfig(

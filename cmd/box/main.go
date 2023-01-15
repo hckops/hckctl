@@ -6,6 +6,8 @@ import (
 
 func NewBoxCmd() *cobra.Command {
 	var revision string
+	var cloud bool
+	var kubernetes bool
 	var docker bool
 
 	command := &cobra.Command{
@@ -15,10 +17,12 @@ func NewBoxCmd() *cobra.Command {
 			if len(args) == 1 {
 				name := args[0]
 
-				if docker {
-					RunBoxDockerCmd(name, revision)
+				if kubernetes {
+					RunKubeBoxCmd(name, revision)
+				} else if docker {
+					RunDockerBoxCmd(name, revision)
 				} else {
-					RunBoxCloudCmd(name)
+					RunCloudBoxCmd(name, revision)
 				}
 
 			} else {
@@ -28,9 +32,11 @@ func NewBoxCmd() *cobra.Command {
 	}
 
 	command.Flags().StringVarP(&revision, "revision", "r", "main", "git source version i.e. branch|tag|sha")
-	command.Flags().BoolVar(&docker, "docker", false, "start a docker container locally")
-	//command.Flags().BoolVar(&docker, "podman", false, "start a podman container locally")
-	//command.MarkFlagsMutuallyExclusive("docker", "podman")
+	command.Flags().BoolVar(&cloud, "cloud", true, "start a remote box")
+	command.Flags().BoolVar(&kubernetes, "kube", false, "start a kubernetes box")
+	command.Flags().BoolVar(&docker, "docker", false, "start a docker box")
+	// TODO podman, firecracker?
+	command.MarkFlagsMutuallyExclusive("cloud", "kube", "docker")
 
 	listCmd := &cobra.Command{
 		Use:   "list",

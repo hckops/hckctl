@@ -7,7 +7,15 @@ import (
 	t "github.com/hckops/hckctl/pkg/template"
 )
 
-func RunBoxDockerCmd(name, revision string) {
+func RunCloudBoxCmd(name, revision string) {
+	log.Println("CLOUD")
+}
+
+func RunKubeBoxCmd(name, revision string) {
+	log.Println("KUBE")
+}
+
+func RunDockerBoxCmd(name, revision string) {
 	data, err := t.FetchTemplate(name, revision)
 	if err != nil {
 		log.Fatalln(err)
@@ -19,8 +27,4 @@ func RunBoxDockerCmd(name, revision string) {
 	}
 
 	b.NewDockerBox(box).InitBox()
-}
-
-func RunBoxCloudCmd(name string) {
-	log.Println("TODO")
 }
