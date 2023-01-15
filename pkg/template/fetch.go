@@ -55,9 +55,11 @@ func newTemplateReq(name, revision string) (*TemplateReq, error) {
 }
 
 // TODO e.g. https://api.hckops.com/template/box?name=official/alpine&version=main&format=json
+// TODO or redirect validate https://schema.hckops.com/validate?kind=box&group=official&name=alpine
+// TODO or content https://schema.hckops.com/template?kind=box&group=official&name=alpine&version=main&format=json|yaml
 func (req *TemplateReq) FetchApiTemplate() (string, error) {
 
-	templateUrl, err := url.Parse(fmt.Sprintf("%s/template", common.UrlApi))
+	templateUrl, err := url.Parse(fmt.Sprintf("%s/todo", common.ApiUrl))
 	if err != nil {
 		return "", fmt.Errorf("invalid api url")
 	}
@@ -81,10 +83,10 @@ func (req *TemplateReq) FetchApiTemplate() (string, error) {
 
 func (req *TemplateReq) FetchPublicTemplate() (string, error) {
 
-	// TODO use TemplateKind
+	// TODO use TemplateKind i.e. box -> boxes
 	path := fmt.Sprintf("%s/boxes/official/%s.yml", req.Revision, req.TemplateName)
 
-	template, err := httpGetString(fmt.Sprintf("%s/%s", common.UrlMegalopolisRaw, path))
+	template, err := httpGetString(fmt.Sprintf("%s/%s", common.MegalopolisRawUrl, path))
 	if err != nil {
 		return "", fmt.Errorf("error fetching public template: %v", err)
 	}

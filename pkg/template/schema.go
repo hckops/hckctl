@@ -14,6 +14,7 @@ import (
 var schemaBoxV1 string
 
 // TODO currently supports "box/v1" only: iterate over all validators/versions
+// see objectForKind e.g. yaml -> json https://github.com/argoproj/argo-workflows/blob/master/workflow/common/parse.go
 func ValidateAllSchema(data string) error {
 	return ValidateBoxV1(data)
 }
