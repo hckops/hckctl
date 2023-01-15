@@ -42,7 +42,7 @@ func NewDockerBox(box *pubcommon.BoxV1) *DockerBox {
 	}
 }
 
-// TODO add flag detached and tunnel-only
+// TODO add flags detached and tunnel-only
 func (d *DockerBox) InitBox() {
 	d.loader.Start(fmt.Sprintf("loading %s", d.boxTemplate.Name))
 
@@ -61,7 +61,7 @@ func (d *DockerBox) InitBox() {
 
 	d.loader.Refresh(fmt.Sprintf("creating %s", containerName))
 
-	// TODO if port is busy start in port+1? or promt to attach to existing?
+	// TODO if port is busy start on port+1? or prompt to attach to existing?
 	newContainer, err := d.dockerClient.ContainerCreate(
 		d.ctx,
 		buildContainerConfig(d.boxTemplate), // containerConfig

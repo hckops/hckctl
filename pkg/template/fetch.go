@@ -10,6 +10,7 @@ import (
 	"github.com/hckops/hckctl/pkg/common"
 )
 
+// TODO remove prefix
 type TemplateReq struct {
 	TemplateName  string
 	TemplateKind  string
