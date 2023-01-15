@@ -19,7 +19,8 @@ func NewRawTerminal() *RawTerminal {
 		if err != nil {
 			return nil
 		}
-		defer terminal.Restore(fd, previousState)
+		// must be invoked from the caller, use Restore()
+		//defer terminal.Restore(fd, previousState)
 
 		return &RawTerminal{
 			fileDescriptor: fd,

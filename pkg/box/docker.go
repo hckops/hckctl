@@ -42,9 +42,11 @@ func NewDockerBox(box *pubcommon.BoxV1) *DockerBox {
 	}
 }
 
+// TODO add flag detached and tunnel-only
 func (d *DockerBox) InitBox() {
 	d.loader.Start(fmt.Sprintf("loading %s", d.boxTemplate.Name))
 
+	// TODO compare latest local and remote hash i.e. nightly
 	reader, err := d.dockerClient.ImagePull(d.ctx, d.boxTemplate.ImageName(), types.ImagePullOptions{})
 	if err != nil {
 		log.Fatalf("error image pull: %v", err)
@@ -52,14 +54,14 @@ func (d *DockerBox) InitBox() {
 	defer reader.Close()
 
 	d.loader.Refresh(fmt.Sprintf("pulling %s", d.boxTemplate.ImageName()))
-	// suppress output
+	// suppress default output
 	io.Copy(ioutil.Discard, reader)
 
 	containerName := d.boxTemplate.GenerateName()
 
 	d.loader.Refresh(fmt.Sprintf("creating %s", containerName))
 
-	// TODO if port is busy start in port+1 ? or attach to existing ?
+	// TODO if port is busy start in port+1? or promt to attach to existing?
 	newContainer, err := d.dockerClient.ContainerCreate(
 		d.ctx,
 		buildContainerConfig(d.boxTemplate), // containerConfig
@@ -135,12 +137,34 @@ func (d *DockerBox) openBox(containerId string, tty bool) {
 	}
 	defer execAttachResponse.Close()
 
-	closeCallback := func() {
+	removeContainerCallback := func() {
 		if err := d.dockerClient.ContainerRemove(d.ctx, containerId, types.ContainerRemoveOptions{Force: true}); err != nil {
 			log.Fatalf("error docker remove: %v", err)
 		}
 	}
 
+	handleStreams(&execAttachResponse, tty, removeContainerCallback)
+
+	// fixes echoes and handle SIGTERM interrupt properly
+	rawTerminal := privcommon.NewRawTerminal()
+	if rawTerminal == nil {
+		log.Fatalf("error raw terminal")
+	}
+	defer rawTerminal.Restore()
+	d.loader.Stop()
+
+	// waits for interrupt signals
+	statusCh, errCh := d.dockerClient.ContainerWait(d.ctx, containerId, container.WaitConditionNotRunning)
+	select {
+	case err := <-errCh:
+		if err != nil {
+			log.Fatalf("error container wait: %v", err)
+		}
+	case <-statusCh:
+	}
+}
+
+func handleStreams(execAttachResponse *types.HijackedResponse, tty bool, onCloseCallback func()) {
 	var once sync.Once
 	go func() {
 
@@ -156,33 +180,14 @@ func (d *DockerBox) openBox(containerId string, tty bool) {
 			}
 		}
 
-		once.Do(closeCallback)
+		once.Do(onCloseCallback)
 	}()
-
 	go func() {
-		_, err = io.Copy(execAttachResponse.Conn, os.Stdin)
+		_, err := io.Copy(execAttachResponse.Conn, os.Stdin)
 		if err != nil {
 			log.Fatalf("error copy stdin local->docker: %v", err)
 		}
 
-		once.Do(closeCallback)
+		once.Do(onCloseCallback)
 	}()
-
-	rawTerminal := privcommon.NewRawTerminal()
-	if rawTerminal == nil {
-		log.Fatalf("error raw terminal")
-	}
-
-	d.loader.Stop()
-
-	statusCh, errCh := d.dockerClient.ContainerWait(d.ctx, containerId, container.WaitConditionNotRunning)
-	select {
-	case err := <-errCh:
-		if err != nil {
-			log.Fatalf("error container wait: %v", err)
-		}
-	case <-statusCh:
-	}
-
-	rawTerminal.Restore()
 }
