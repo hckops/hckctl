@@ -12,6 +12,8 @@ The Cloud Native HaCKing Tool
 
 ## Development
 
+* [just](https://github.com/casey/just)
+
 ```bash
 # list boxes
 go run main.go box list

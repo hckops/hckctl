@@ -27,5 +27,5 @@ func (box *BoxV1) ImageName() string {
 }
 
 func (box *BoxV1) GenerateName() string {
-	return fmt.Sprintf("%s-%s", box.Name, uniuri.NewLen(5))
+	return fmt.Sprintf("box-%s-%s", box.Name, uniuri.NewLen(5))
 }
