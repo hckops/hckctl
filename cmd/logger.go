@@ -1,22 +1,24 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
+	"github.com/hckops/hckctl/internal/common"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
-const (
-	DefaultLogLevel = "info"
-)
+// tmp file
+var DefaultLogFile = filepath.Join(os.TempDir(), fmt.Sprintf("hckctl-%s.log", common.GetUserOrDie()))
 
-func InitLogger(flags *Flags) {
+func InitFileLogger(flags *Flags) {
 	setTimestamp()
 	setLevel(parseLevel(flags.LogLevel))
-	setFormat()
 	setContext()
+	setFileOutput()
 }
 
 func setTimestamp() {
@@ -25,6 +27,7 @@ func setTimestamp() {
 	}
 }
 
+// default info
 func setLevel(level zerolog.Level) {
 	if level == zerolog.NoLevel {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
@@ -48,10 +51,23 @@ func parseLevel(value string) zerolog.Level {
 	}
 }
 
-func setFormat() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
-}
-
 func setContext() {
 	log.Logger = log.With().Caller().Str("source", "hckctl").Logger()
+}
+
+// TODO close file
+func setFileOutput() {
+	common.EnsurePathOrDie(DefaultLogFile, common.DefaultDirectoryMod)
+	mod := os.O_CREATE | os.O_APPEND | os.O_WRONLY
+	file, err := os.OpenFile(DefaultLogFile, mod, common.DefaultFileMod)
+	if err != nil {
+		panic(err)
+	}
+	// defer func() {
+	// 	if file != nil {
+	// 		_ = file.Close()
+	// 	}
+	// }()
+
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: file, TimeFormat: time.RFC3339})
 }

@@ -4,11 +4,15 @@ import (
 	"fmt"
 	"log"
 
+	// TODO
+	l "github.com/rs/zerolog/log"
+
 	b "github.com/hckops/hckctl/internal/box"
 	t "github.com/hckops/hckctl/internal/template"
 )
 
 func runCloudBoxCmd(name, revision string) {
+	l.Info().Msg("CLOUD")
 	log.Println("CLOUD")
 }
 
