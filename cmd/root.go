@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/hckops/hckctl/cmd/box"
 	"github.com/hckops/hckctl/cmd/template"
@@ -23,11 +24,27 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
 
+	initFlags()
+	initCommands()
+
+	cobra.OnInitialize(initConfig)
+}
+
+func initConfig() {
+	flags := NewFlags()
+
+	InitLogger(flags)
+}
+
+func initCommands() {
 	rootCmd.AddCommand(box.NewBoxCmd())
 	rootCmd.AddCommand(template.NewTemplateCmd())
+}
 
-	// removes timestamps
-	log.SetFlags(0)
+func initFlags() {
+	// --log-level
+	rootCmd.PersistentFlags().String(LogLevelFlag, "", "Set the logging level, one of: debug|info|warning|error")
+	viper.BindPFlag(LogLevelFlag, rootCmd.PersistentFlags().Lookup(LogLevelFlag))
 }
 
 func Execute() {
