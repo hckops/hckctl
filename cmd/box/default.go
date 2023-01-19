@@ -3,8 +3,8 @@ package box
 import (
 	"log"
 
-	b "github.com/hckops/hckctl/pkg/box"
-	t "github.com/hckops/hckctl/pkg/template"
+	b "github.com/hckops/hckctl/internal/box"
+	t "github.com/hckops/hckctl/internal/template"
 )
 
 func RunCloudBoxCmd(name, revision string) {

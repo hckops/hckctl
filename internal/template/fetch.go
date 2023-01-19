@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"regexp"
 
-	"github.com/hckops/hckctl/pkg/common"
+	"github.com/hckops/hckctl/internal/common"
 )
 
 // TODO remove prefix

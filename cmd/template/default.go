@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 
-	t "github.com/hckops/hckctl/pkg/template"
+	t "github.com/hckops/hckctl/internal/template"
 )
 
 func RunTemplateLocalCmd(path string) {

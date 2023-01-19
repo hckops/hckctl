@@ -15,18 +15,18 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
 
+	"github.com/hckops/hckctl/internal/model"
 	"github.com/hckops/hckctl/internal/terminal"
-	pubcommon "github.com/hckops/hckctl/pkg/common"
 )
 
 type DockerBox struct {
 	ctx          context.Context
 	dockerClient *client.Client
 	loader       *terminal.Loader
-	boxTemplate  *pubcommon.BoxV1
+	boxTemplate  *model.BoxV1
 }
 
-func NewDockerBox(box *pubcommon.BoxV1) *DockerBox {
+func NewDockerBox(box *model.BoxV1) *DockerBox {
 
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -84,7 +84,7 @@ func (d *DockerBox) InitBox() {
 	d.openBox(containerId, true)
 }
 
-func buildDockerPorts(ports []pubcommon.PortV1) []nat.Port {
+func buildDockerPorts(ports []model.PortV1) []nat.Port {
 
 	dockerPorts := make([]nat.Port, 0)
 	for _, port := range ports {
