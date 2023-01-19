@@ -15,14 +15,14 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
 
-	privcommon "github.com/hckops/hckctl/internal/common"
+	"github.com/hckops/hckctl/internal/terminal"
 	pubcommon "github.com/hckops/hckctl/pkg/common"
 )
 
 type DockerBox struct {
 	ctx          context.Context
 	dockerClient *client.Client
-	loader       *privcommon.Loader
+	loader       *terminal.Loader
 	boxTemplate  *pubcommon.BoxV1
 }
 
@@ -37,7 +37,7 @@ func NewDockerBox(box *pubcommon.BoxV1) *DockerBox {
 	return &DockerBox{
 		ctx:          context.Background(),
 		dockerClient: docker,
-		loader:       privcommon.NewLoader(),
+		loader:       terminal.NewLoader(),
 		boxTemplate:  box,
 	}
 }
@@ -169,7 +169,7 @@ func (d *DockerBox) openBox(containerId string, tty bool) {
 	handleStreams(&execAttachResponse, tty, removeContainerCallback)
 
 	// fixes echoes and handle SIGTERM interrupt properly
-	rawTerminal := privcommon.NewRawTerminal()
+	rawTerminal := terminal.NewRawTerminal()
 	if rawTerminal == nil {
 		log.Fatalf("error raw terminal")
 	}
