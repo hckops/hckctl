@@ -8,7 +8,7 @@ import (
 	t "github.com/hckops/hckctl/internal/template"
 )
 
-func RunTemplateLocalCmd(path string) {
+func runTemplateLocalCmd(path string) {
 	data, err := loadTemplate(path)
 	if err != nil {
 		log.Fatalln(err)
@@ -22,7 +22,7 @@ func RunTemplateLocalCmd(path string) {
 	fmt.Print(data)
 }
 
-func RunTemplateRemoteCmd(name, revision string) {
+func runTemplateRemoteCmd(name, revision string) {
 	data, err := t.FetchTemplate(name, revision)
 	if err != nil {
 		log.Fatalln(err)

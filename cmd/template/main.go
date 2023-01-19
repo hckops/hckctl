@@ -13,9 +13,9 @@ func NewTemplateCmd() *cobra.Command {
 		Short: "load and validate a template",
 		Run: func(cmd *cobra.Command, args []string) {
 			if path != "" {
-				RunTemplateLocalCmd(path)
+				runTemplateLocalCmd(path)
 			} else if len(args) == 1 {
-				RunTemplateRemoteCmd(args[0], revision)
+				runTemplateRemoteCmd(args[0], revision)
 			} else {
 				cmd.HelpFunc()(cmd, args)
 			}

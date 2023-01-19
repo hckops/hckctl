@@ -18,11 +18,11 @@ func NewBoxCmd() *cobra.Command {
 				name := args[0]
 
 				if kubernetes {
-					RunKubeBoxCmd(name, revision)
+					runKubeBoxCmd(name, revision)
 				} else if docker {
-					RunDockerBoxCmd(name, revision)
+					runDockerBoxCmd(name, revision)
 				} else {
-					RunCloudBoxCmd(name, revision)
+					runCloudBoxCmd(name, revision)
 				}
 
 			} else {
@@ -42,7 +42,7 @@ func NewBoxCmd() *cobra.Command {
 		Use:   "list",
 		Short: "list available boxes",
 		Run: func(cmd *cobra.Command, args []string) {
-			RunBoxListCmd()
+			runBoxListCmd()
 		},
 	}
 

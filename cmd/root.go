@@ -35,3 +35,15 @@ func Execute() {
 		log.Fatalln(err)
 	}
 }
+
+// TODO logging
+// https://github.com/derailed/k9s/blob/master/cmd/root.go
+// https://github.com/derailed/k9s/tree/0249f7cf2c2b403348e98f03a26355aadfbdfdda/internal/config
+// https://github.com/rs/zerolog
+
+// HOME https://github.com/adrg/xdg
+
+// TODO config
+// https://cobra.dev
+// https://medium.com/@bnprashanth256/reading-configuration-files-and-environment-variables-in-go-golang-c2607f912b63
+// https://github.com/kubernetes/minikube/blob/master/cmd/minikube/cmd/root.go
