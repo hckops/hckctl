@@ -12,3 +12,9 @@ const (
 	DefaultDirectoryMod os.FileMode = 0755
 	DefaultFileMod      os.FileMode = 0600
 )
+
+const (
+	CliName       string = "hckctl"
+	ConfigName    string = "hck"
+	ConfigNameEnv string = "HCK_CONFIG"
+)

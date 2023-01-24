@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/hckops/hckctl/internal/common"
@@ -11,14 +9,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// tmp file
-var DefaultLogFile = filepath.Join(os.TempDir(), fmt.Sprintf("hckctl-%s.log", common.GetUserOrDie()))
-
-func InitFileLogger(flags *Flags) {
+func InitFileLogger(config *LogConfig) {
 	setTimestamp()
-	setLevel(parseLevel(flags.LogLevel))
+	setLevel(parseLevel(config.LogLevel))
 	setContext()
-	setFileOutput()
+	setFileOutput(config.LogFile)
 }
 
 func setTimestamp() {
@@ -52,14 +47,14 @@ func parseLevel(value string) zerolog.Level {
 }
 
 func setContext() {
-	log.Logger = log.With().Caller().Str("source", "hckctl").Logger()
+	log.Logger = log.With().Caller().Str("source", common.CliName).Logger()
 }
 
-// TODO close file
-func setFileOutput() {
-	common.EnsurePathOrDie(DefaultLogFile, common.DefaultDirectoryMod)
+// TODO close file in rootCmd.run
+func setFileOutput(filePath string) {
+	common.EnsurePathOrDie(filePath, common.DefaultDirectoryMod)
 	mod := os.O_CREATE | os.O_APPEND | os.O_WRONLY
-	file, err := os.OpenFile(DefaultLogFile, mod, common.DefaultFileMod)
+	file, err := os.OpenFile(filePath, mod, common.DefaultFileMod)
 	if err != nil {
 		panic(err)
 	}
