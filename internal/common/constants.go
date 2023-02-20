@@ -15,6 +15,6 @@ const (
 
 const (
 	CliName       string = "hckctl"
-	ConfigName    string = "hck"
-	ConfigNameEnv string = "HCK_CONFIG"
+	ConfigDir     string = "hck"
+	ConfigNameEnv string = "HCK_CONFIG" //  overrides .config/hck/config.yml
 )
