@@ -11,9 +11,9 @@ import (
 
 func InitFileLogger(config *LogConfig) {
 	setTimestamp()
-	setLevel(parseLevel(config.LogLevel))
+	setLevel(parseLevel(config.Level))
 	setContext()
-	setFileOutput(config.LogFile)
+	setFileOutput(config.FilePath)
 }
 
 func setTimestamp() {

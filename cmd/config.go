@@ -2,65 +2,82 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
+	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/hckops/hckctl/internal/common"
 )
 
 type CliConfig struct {
-	log *LogConfig
-	box *BoxConfig
+	Revision string    `yaml:"revision"`
+	Box      BoxConfig `yaml:"box"`
+	Log      LogConfig `yaml:"log"`
 }
 
 // tmp file
 var DefaultLogFile = filepath.Join(os.TempDir(), fmt.Sprintf("%s-%s.log", common.CliName, common.GetUserOrDie()))
 
 type LogConfig struct {
-	LogLevel string
-	LogFile  string
+	Level    string `yaml:"level"`
+	FilePath string `yaml:"filePath"`
 }
 
 type BoxConfig struct {
-	revision string
-	kube     *KubeConfig
+	Kube KubeConfig `yaml:"kube"`
 }
 
 type KubeConfig struct {
-	namespace     string
-	k8sConfigPath string
+	Namespace  string `yaml:"namespace"`
+	ConfigPath string `yaml:"configPath"`
 }
 
-func NewCliConfig() *CliConfig {
+func newCliConfig() *CliConfig {
 	return &CliConfig{
-		log: &LogConfig{
-			LogLevel: "info",
-			LogFile:  DefaultLogFile,
-		},
-		box: &BoxConfig{
-			revision: "main",
-			kube: &KubeConfig{
-				namespace:     "labs",
-				k8sConfigPath: "~/.kube/config",
+		Revision: "main",
+		Box: BoxConfig{
+			Kube: KubeConfig{
+				Namespace:  "labs",
+				ConfigPath: "~/.kube/config",
 			},
 		},
+		Log: LogConfig{
+			Level:    "info",
+			FilePath: DefaultLogFile,
+		},
 	}
 }
 
-// TODO
-func (config *CliConfig) Setup() {
-	home := common.ConfigHome()
-	viper.AddConfigPath(home)
-	viper.SetConfigName(fmt.Sprintf(".%", common.ConfigName))
-	viper.SetConfigType("yml")
+func InitCliConfig() *CliConfig {
 
-	viper.AutomaticEnv()
-	viper.SetEnvPrefix(common.ConfigName)
+	cliConfig := newCliConfig()
+	fmt.Printf("%+v\n", cliConfig)
+	fmt.Printf("%#v\n", cliConfig)
 
-	if err := viper.ReadInConfig(); err != nil {
-		log.Fatal(fmt.Errorf("error reading config: %w", err))
+	cliConfig.Print()
+
+	return cliConfig
+}
+
+func NewConfigCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "config",
+		Short: "prints current configurations",
+		Run: func(cmd *cobra.Command, args []string) {
+
+			// TODO
+			fmt.Println(viper.AllSettings())
+		},
 	}
+}
+
+func (config *CliConfig) Print() {
+	value, err := common.ToYaml(&config)
+	if err != nil {
+		log.Warn().Msg("invalid config")
+	}
+	fmt.Println(value)
 }

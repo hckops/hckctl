@@ -26,10 +26,9 @@ func init() {
 
 	addGlobalFlags()
 
-	config := NewCliConfig()
-	config.Setup()
+	config := InitCliConfig()
+	InitFileLogger(&config.Log)
 	addCommands(config)
-	InitFileLogger(config.log)
 }
 
 func addGlobalFlags() {
@@ -43,7 +42,8 @@ func addGlobalFlags() {
 }
 
 func addCommands(config *CliConfig) {
-	rootCmd.AddCommand(NewBoxCmd(config.box))
+	rootCmd.AddCommand(NewConfigCmd())
+	rootCmd.AddCommand(NewBoxCmd(&config.Box))
 	rootCmd.AddCommand(NewTemplateCmd())
 }
 
