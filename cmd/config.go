@@ -14,9 +14,9 @@ import (
 )
 
 type CliConfig struct {
-	Revision string    `yaml:"revision"`
-	Box      BoxConfig `yaml:"box"`
-	Log      LogConfig `yaml:"log"`
+	Version int8      `yaml:"version"`
+	Box     BoxConfig `yaml:"box"`
+	Log     LogConfig `yaml:"log"`
 }
 
 // tmp file
@@ -28,7 +28,8 @@ type LogConfig struct {
 }
 
 type BoxConfig struct {
-	Kube KubeConfig `yaml:"kube"`
+	Revision string     `yaml:"revision"`
+	Kube     KubeConfig `yaml:"kube"`
 }
 
 type KubeConfig struct {
@@ -38,8 +39,9 @@ type KubeConfig struct {
 
 func newCliConfig() *CliConfig {
 	return &CliConfig{
-		Revision: "main",
+		Version: 1,
 		Box: BoxConfig{
+			Revision: "main",
 			Kube: KubeConfig{
 				Namespace:  "labs",
 				ConfigPath: "~/.kube/config",

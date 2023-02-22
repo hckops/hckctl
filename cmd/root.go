@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -35,7 +37,7 @@ func addGlobalFlags() {
 	)
 
 	// --log-level
-	rootCmd.PersistentFlags().String(LogLevelFlag, "", "Set the logging level, one of: debug|info|warning|error")
+	rootCmd.PersistentFlags().String(LogLevelFlag, "", fmt.Sprintf("Set the logging level for %s, one of: debug|info|warning|error", DefaultLogFile))
 	viper.BindPFlag("log.level", rootCmd.PersistentFlags().Lookup(LogLevelFlag))
 }
 

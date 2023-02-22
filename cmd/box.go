@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 
-	b "github.com/hckops/hckctl/internal/box"
-	t "github.com/hckops/hckctl/internal/template"
-	l "github.com/rs/zerolog/log"
+	"github.com/hckops/hckctl/internal/box"
+	"github.com/hckops/hckctl/internal/template"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func NewBoxCmd() *cobra.Command {
@@ -36,8 +36,14 @@ func NewBoxCmd() *cobra.Command {
 			}
 		},
 	}
+	const (
+		RevisionFlag = "revision"
+	)
 
-	command.Flags().StringVarP(&revision, "revision", "r", "main", "git source version i.e. branch|tag|sha")
+	// TODO should this be global?
+	command.PersistentFlags().StringVarP(&revision, RevisionFlag, "r", "main", "megalopolis git source version i.e. branch|tag|sha")
+	viper.BindPFlag("box.revision", command.PersistentFlags().Lookup(RevisionFlag))
+
 	command.Flags().BoolVar(&cloud, "cloud", true, "start a remote box")
 	command.Flags().BoolVar(&kubernetes, "kube", false, "start a kubernetes box")
 	command.Flags().BoolVar(&docker, "docker", false, "start a docker box")
@@ -57,26 +63,27 @@ func NewBoxCmd() *cobra.Command {
 }
 
 func runCloudBoxCmd(name, revision string) {
-	l.Info().Msg("CLOUD")
-	log.Println("CLOUD")
+	log.Debug().Msgf("request cloud box: name=%s revision=%s", name, revision)
 }
 
 func runKubeBoxCmd(name, revision string) {
-	log.Println("KUBE")
+	log.Debug().Msgf("request kube box: name=%s revision=%s", name, revision)
 }
 
 func runDockerBoxCmd(name, revision string) {
-	data, err := t.FetchTemplate(name, revision)
+	log.Debug().Msgf("request docker box: name=%s revision=%s", name, revision)
+
+	rawTemplate, err := template.FetchTemplate(name, revision)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal().Err(err).Msg("fetch box template")
 	}
 
-	box, err := t.ParseValidBoxV1(data)
+	boxTemplate, err := template.ParseValidBoxV1(rawTemplate)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal().Err(err).Msg("validate box template")
 	}
 
-	b.NewDockerBox(box).InitBox()
+	box.NewDockerBox(boxTemplate).InitBox()
 }
 
 func runBoxListCmd() {

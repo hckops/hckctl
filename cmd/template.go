@@ -26,7 +26,7 @@ func NewTemplateCmd() *cobra.Command {
 			}
 		},
 	}
-	command.Flags().StringVarP(&revision, "revision", "r", "main", "git source version i.e. branch|tag|sha")
+	command.Flags().StringVarP(&revision, "revision", "r", "main", "megalopolis git source version i.e. branch|tag|sha")
 	command.Flags().StringVarP(&path, "path", "p", "", "load a template from a local path")
 	command.MarkFlagsMutuallyExclusive("revision", "path")
 	return command
