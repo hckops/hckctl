@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -51,15 +52,38 @@ func newCliConfig() *CliConfig {
 	}
 }
 
-func InitCliConfig() *CliConfig {
+func InitCliConfig() {
+	configHome := common.ConfigHome()
+	configName := "config"
+	configType := "yml"
+	configPath := filepath.Join(configHome, configName+"."+configType)
+	// see https://github.com/spf13/viper/issues/430
+	common.EnsurePathOrDie(configPath, common.DefaultDirectoryMod)
 
-	cliConfig := newCliConfig()
-	fmt.Printf("%+v\n", cliConfig)
-	fmt.Printf("%#v\n", cliConfig)
+	viper.AddConfigPath(configHome)
+	viper.SetConfigName(configName)
+	viper.SetConfigType(configType)
 
-	cliConfig.Print()
+	viper.AutomaticEnv()
+	viper.SetEnvPrefix(common.ConfigNameEnv)
 
-	return cliConfig
+	// first time only
+	if err := viper.ReadInConfig(); err != nil {
+
+		// default config
+		cliConfig := newCliConfig()
+
+		var configString string
+		if configString, err = common.ToYaml(&cliConfig); err != nil {
+			log.Fatal().Err(fmt.Errorf("error encoding config: %w", err))
+		}
+		if err := viper.ReadConfig(strings.NewReader(configString)); err != nil {
+			log.Fatal().Err(fmt.Errorf("error reading config: %w", err))
+		}
+		if err := viper.SafeWriteConfigAs(configPath); err != nil {
+			log.Fatal().Err(fmt.Errorf("error writing config: %w", err))
+		}
+	}
 }
 
 func NewConfigCmd() *cobra.Command {
@@ -67,14 +91,20 @@ func NewConfigCmd() *cobra.Command {
 		Use:   "config",
 		Short: "prints current configurations",
 		Run: func(cmd *cobra.Command, args []string) {
-
-			// TODO
-			fmt.Println(viper.AllSettings())
+			GetCliConfig().print()
 		},
 	}
 }
 
-func (config *CliConfig) Print() {
+func GetCliConfig() *CliConfig {
+	var cliConfig *CliConfig
+	if err := viper.Unmarshal(&cliConfig); err != nil {
+		log.Fatal().Err(fmt.Errorf("error decoding config: %w", err))
+	}
+	return cliConfig
+}
+
+func (config *CliConfig) print() {
 	value, err := common.ToYaml(&config)
 	if err != nil {
 		log.Warn().Msg("invalid config")

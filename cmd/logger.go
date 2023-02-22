@@ -9,7 +9,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func InitFileLogger(config *LogConfig) {
+func InitFileLogger() {
+	config := GetCliConfig().Log
+
 	setTimestamp()
 	setLevel(parseLevel(config.Level))
 	setContext()

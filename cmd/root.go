@@ -23,12 +23,14 @@ func init() {
 	log.SetFlags(0)
 
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
-
+	cobra.OnInitialize(initConfig)
 	addGlobalFlags()
+	addCommands()
+}
 
-	config := InitCliConfig()
-	InitFileLogger(&config.Log)
-	addCommands(config)
+func initConfig() {
+	InitCliConfig()
+	InitFileLogger()
 }
 
 func addGlobalFlags() {
@@ -38,12 +40,12 @@ func addGlobalFlags() {
 
 	// --log-level
 	rootCmd.PersistentFlags().String(LogLevelFlag, "", "Set the logging level, one of: debug|info|warning|error")
-	viper.BindPFlag(LogLevelFlag, rootCmd.PersistentFlags().Lookup(LogLevelFlag))
+	viper.BindPFlag("log.level", rootCmd.PersistentFlags().Lookup(LogLevelFlag))
 }
 
-func addCommands(config *CliConfig) {
+func addCommands() {
 	rootCmd.AddCommand(NewConfigCmd())
-	rootCmd.AddCommand(NewBoxCmd(&config.Box))
+	rootCmd.AddCommand(NewBoxCmd())
 	rootCmd.AddCommand(NewTemplateCmd())
 }
 

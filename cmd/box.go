@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewBoxCmd(config *BoxConfig) *cobra.Command {
+func NewBoxCmd() *cobra.Command {
 	var revision string
 	var cloud bool
 	var kubernetes bool
