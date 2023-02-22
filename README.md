@@ -20,6 +20,9 @@ just
 
 # run
 ./build/hckctl
+
+# logs
+tail -f /tmp/hckctl-*.log
 ```
 
 Box command

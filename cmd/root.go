@@ -1,8 +1,7 @@
 package cmd
 
 import (
-	"log"
-
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -19,9 +18,6 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	// removes timestamps
-	log.SetFlags(0)
-
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
 	cobra.OnInitialize(initConfig)
 	addGlobalFlags()
@@ -51,6 +47,6 @@ func addCommands() {
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		log.Fatalln(err)
+		log.Fatal().Err(err)
 	}
 }

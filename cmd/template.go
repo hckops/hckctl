@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 
 	"github.com/hckops/hckctl/internal/template"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -33,28 +33,32 @@ func NewTemplateCmd() *cobra.Command {
 }
 
 func runTemplateLocalCmd(path string) {
+	log.Debug().Msgf("local template: path=%s", path)
+
 	data, err := loadTemplate(path)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal().Err(err).Msg("load local template")
 	}
 
 	err = template.ValidateAllSchema(data)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal().Err(err).Msg("validate local template")
 	}
 
 	fmt.Print(data)
 }
 
 func runTemplateRemoteCmd(name, revision string) {
+	log.Debug().Msgf("remote template: name=%s, revision=%s", name, revision)
+
 	data, err := template.FetchTemplate(name, revision)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal().Err(err).Msg("fetch remote template")
 	}
 
 	err = template.ValidateAllSchema(data)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal().Err(err).Msg("validate remote template")
 	}
 
 	fmt.Print(data)

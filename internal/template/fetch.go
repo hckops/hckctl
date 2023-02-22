@@ -8,6 +8,7 @@ import (
 	"regexp"
 
 	"github.com/hckops/hckctl/internal/common"
+	"github.com/rs/zerolog/log"
 )
 
 // TODO remove prefix
@@ -26,15 +27,18 @@ func FetchTemplate(name, revision string) (string, error) {
 
 	req, err := newTemplateReq(name, revision)
 	if err != nil {
+		log.Err(err).Msg("fetch template")
 		return "", err
 	}
 
 	// attempts remote validation and to access private templates
-	data, err = req.FetchApiTemplate()
+	data, err = req.fetchApiTemplate()
 	if err != nil {
+		log.Warn().Msg(err.Error())
 
-		data, err = req.FetchPublicTemplate()
+		data, err = req.fetchPublicTemplate()
 		if err != nil {
+			log.Err(err).Msg("fetch template")
 			return "", fmt.Errorf("unable to fetch the template")
 		}
 	}
@@ -58,7 +62,7 @@ func newTemplateReq(name, revision string) (*TemplateReq, error) {
 // TODO e.g. https://api.hckops.com/template/box?name=official/alpine&version=main&format=json
 // TODO or redirect validate https://schema.hckops.com/validate?kind=box&group=official&name=alpine
 // TODO or content https://schema.hckops.com/template?kind=box&group=official&name=alpine&version=main&format=json|yaml
-func (req *TemplateReq) FetchApiTemplate() (string, error) {
+func (req *TemplateReq) fetchApiTemplate() (string, error) {
 
 	templateUrl, err := url.Parse(fmt.Sprintf("%s/todo", common.ApiUrl))
 	if err != nil {
@@ -82,7 +86,7 @@ func (req *TemplateReq) FetchApiTemplate() (string, error) {
 	return template, nil
 }
 
-func (req *TemplateReq) FetchPublicTemplate() (string, error) {
+func (req *TemplateReq) fetchPublicTemplate() (string, error) {
 
 	// TODO use TemplateKind i.e. box -> boxes
 	path := fmt.Sprintf("%s/boxes/official/%s.yml", req.Revision, req.TemplateName)

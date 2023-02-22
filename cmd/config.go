@@ -91,6 +91,7 @@ func NewConfigCmd() *cobra.Command {
 		Use:   "config",
 		Short: "prints current configurations",
 		Run: func(cmd *cobra.Command, args []string) {
+			// TODO override validation
 			GetCliConfig().print()
 		},
 	}
@@ -109,5 +110,5 @@ func (config *CliConfig) print() {
 	if err != nil {
 		log.Warn().Msg("invalid config")
 	}
-	fmt.Println(value)
+	fmt.Print(value)
 }
