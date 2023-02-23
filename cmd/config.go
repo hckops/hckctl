@@ -14,9 +14,9 @@ import (
 )
 
 type CliConfig struct {
-	Version int8      `yaml:"version"`
-	Box     BoxConfig `yaml:"box"`
-	Log     LogConfig `yaml:"log"`
+	Kind string    `yaml:"kind"`
+	Box  BoxConfig `yaml:"box"`
+	Log  LogConfig `yaml:"log"`
 }
 
 // tmp file
@@ -29,6 +29,7 @@ type LogConfig struct {
 
 type BoxConfig struct {
 	Revision string     `yaml:"revision"`
+	Provider string     `yaml:"provider"`
 	Kube     KubeConfig `yaml:"kube"`
 }
 
@@ -39,9 +40,10 @@ type KubeConfig struct {
 
 func newCliConfig() *CliConfig {
 	return &CliConfig{
-		Version: 1,
+		Kind: "config/v1",
 		Box: BoxConfig{
 			Revision: "main",
+			Provider: "docker", // TODO enum
 			Kube: KubeConfig{
 				Namespace:  "labs",
 				ConfigPath: "~/.kube/config",
@@ -88,6 +90,7 @@ func InitCliConfig() {
 	}
 }
 
+// TODO add command to set/reset configs
 func NewConfigCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "config",

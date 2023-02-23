@@ -11,7 +11,6 @@ import (
 )
 
 func NewBoxCmd() *cobra.Command {
-	var revision string
 	var cloud bool
 	var kubernetes bool
 	var docker bool
@@ -20,15 +19,18 @@ func NewBoxCmd() *cobra.Command {
 		Use:   "box [NAME]",
 		Short: "attach and tunnel a box",
 		Run: func(cmd *cobra.Command, args []string) {
+
+			config := GetCliConfig().Box
+
 			if len(args) == 1 {
 				name := args[0]
 
 				if kubernetes {
-					runKubeBoxCmd(name, revision)
+					runKubeBoxCmd(name, config)
 				} else if docker {
-					runDockerBoxCmd(name, revision)
+					runDockerBoxCmd(name, config)
 				} else {
-					runCloudBoxCmd(name, revision)
+					runCloudBoxCmd(name, config)
 				}
 
 			} else {
@@ -41,7 +43,7 @@ func NewBoxCmd() *cobra.Command {
 	)
 
 	// TODO should this be global?
-	command.PersistentFlags().StringVarP(&revision, RevisionFlag, "r", "main", "megalopolis git source version i.e. branch|tag|sha")
+	command.PersistentFlags().StringP(RevisionFlag, "r", "main", "megalopolis git source version i.e. branch|tag|sha")
 	viper.BindPFlag("box.revision", command.PersistentFlags().Lookup(RevisionFlag))
 
 	command.Flags().BoolVar(&cloud, "cloud", true, "start a remote box")
@@ -62,18 +64,18 @@ func NewBoxCmd() *cobra.Command {
 	return command
 }
 
-func runCloudBoxCmd(name, revision string) {
-	log.Debug().Msgf("request cloud box: name=%s revision=%s", name, revision)
+func runCloudBoxCmd(name string, config BoxConfig) {
+	log.Debug().Msgf("request cloud box: name=%s revision=%s", name, config.Revision)
 }
 
-func runKubeBoxCmd(name, revision string) {
-	log.Debug().Msgf("request kube box: name=%s revision=%s", name, revision)
+func runKubeBoxCmd(name string, config BoxConfig) {
+	log.Debug().Msgf("request kube box: name=%s revision=%s", name, config.Revision)
 }
 
-func runDockerBoxCmd(name, revision string) {
-	log.Debug().Msgf("request docker box: name=%s revision=%s", name, revision)
+func runDockerBoxCmd(name string, config BoxConfig) {
+	log.Debug().Msgf("request docker box: name=%s revision=%s", name, config.Revision)
 
-	rawTemplate, err := template.FetchTemplate(name, revision)
+	rawTemplate, err := template.FetchTemplate(name, config.Revision)
 	if err != nil {
 		log.Fatal().Err(err).Msg("fetch box template")
 	}

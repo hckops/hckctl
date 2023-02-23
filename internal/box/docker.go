@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"sync"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
+	"github.com/rs/zerolog/log"
 
 	"github.com/hckops/hckctl/internal/model"
 	"github.com/hckops/hckctl/internal/terminal"
@@ -30,7 +30,7 @@ func NewDockerBox(box *model.BoxV1) *DockerBox {
 
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		log.Fatalf("error docker client: %v", err)
+		log.Fatal().Err(err).Msg("error docker client")
 	}
 	defer docker.Close()
 
@@ -49,7 +49,7 @@ func (d *DockerBox) InitBox() {
 	// TODO compare latest local and remote hash i.e. midnight schedule
 	reader, err := d.dockerClient.ImagePull(d.ctx, d.boxTemplate.ImageName(), types.ImagePullOptions{})
 	if err != nil {
-		log.Fatalf("error image pull: %v", err)
+		log.Fatal().Err(err).Msg("error image pull")
 	}
 	defer reader.Close()
 
@@ -76,7 +76,7 @@ func (d *DockerBox) InitBox() {
 		nil,                    // platform
 		containerName)
 	if err != nil {
-		log.Fatalf("error container create: %v", err)
+		log.Fatal().Err(err).Msg("error container create")
 	}
 
 	containerId := newContainer.ID
@@ -91,7 +91,7 @@ func buildDockerPorts(ports []model.PortV1) []nat.Port {
 
 		p, err := nat.NewPort("tcp", port.Local)
 		if err != nil {
-			log.Fatalf("error docker port: %v", err)
+			log.Fatal().Err(err).Msg("error docker port")
 		}
 		dockerPorts = append(dockerPorts, p)
 	}
@@ -136,7 +136,7 @@ func buildHostConfig(ports []nat.Port) *container.HostConfig {
 func (d *DockerBox) openBox(containerId string, tty bool) {
 
 	if err := d.dockerClient.ContainerStart(d.ctx, containerId, types.ContainerStartOptions{}); err != nil {
-		log.Fatalf("error container start: %v", err)
+		log.Fatal().Err(err).Msg("error container start")
 	}
 
 	// TODO always bash
@@ -149,20 +149,20 @@ func (d *DockerBox) openBox(containerId string, tty bool) {
 		Cmd:          []string{"/bin/bash"},
 	})
 	if err != nil {
-		log.Fatalf("error container exec create: %v", err)
+		log.Fatal().Err(err).Msg("error container exec create")
 	}
 
 	execAttachResponse, err := d.dockerClient.ContainerExecAttach(d.ctx, execCreateResponse.ID, types.ExecStartCheck{
 		Tty: tty,
 	})
 	if err != nil {
-		log.Fatalf("error container exec attach: %v", err)
+		log.Fatal().Err(err).Msg("error container exec attach")
 	}
 	defer execAttachResponse.Close()
 
 	removeContainerCallback := func() {
 		if err := d.dockerClient.ContainerRemove(d.ctx, containerId, types.ContainerRemoveOptions{Force: true}); err != nil {
-			log.Fatalf("error docker remove: %v", err)
+			log.Fatal().Err(err).Msg("error docker remove")
 		}
 	}
 
@@ -171,7 +171,7 @@ func (d *DockerBox) openBox(containerId string, tty bool) {
 	// fixes echoes and handle SIGTERM interrupt properly
 	rawTerminal := terminal.NewRawTerminal()
 	if rawTerminal == nil {
-		log.Fatalf("error raw terminal")
+		log.Fatal().Msg("error raw terminal")
 	}
 	defer rawTerminal.Restore()
 	d.loader.Stop()
@@ -181,7 +181,7 @@ func (d *DockerBox) openBox(containerId string, tty bool) {
 	select {
 	case err := <-errCh:
 		if err != nil {
-			log.Fatalf("error container wait: %v", err)
+			log.Fatal().Err(err).Msg("error container wait")
 		}
 	case <-statusCh:
 	}
@@ -194,12 +194,12 @@ func handleStreams(execAttachResponse *types.HijackedResponse, tty bool, onClose
 		if tty {
 			_, err := io.Copy(os.Stdout, execAttachResponse.Reader)
 			if err != nil {
-				log.Fatalf("error copy stdout docker->local: %v", err)
+				log.Fatal().Err(err).Msg("error copy stdout docker->local")
 			}
 		} else {
 			_, err := stdcopy.StdCopy(os.Stdout, os.Stderr, execAttachResponse.Reader)
 			if err != nil {
-				log.Fatalf("error copy stdout and stderr docker->local: %v", err)
+				log.Fatal().Err(err).Msg("error copy stdout and stderr docker->local")
 			}
 		}
 
@@ -208,7 +208,7 @@ func handleStreams(execAttachResponse *types.HijackedResponse, tty bool, onClose
 	go func() {
 		_, err := io.Copy(execAttachResponse.Conn, os.Stdin)
 		if err != nil {
-			log.Fatalf("error copy stdin local->docker: %v", err)
+			log.Fatal().Err(err).Msg("error copy stdin local->docker")
 		}
 
 		once.Do(onCloseCallback)
