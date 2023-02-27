@@ -43,32 +43,32 @@ func NewDockerBox(box *model.BoxV1) *DockerBox {
 }
 
 // TODO add flags detached and tunnel-only
-func (d *DockerBox) InitBox() {
-	log.Debug().Msgf("init docker box: \n%v\n", d.boxTemplate.Pretty())
-	d.loader.Start(fmt.Sprintf("loading %s", d.boxTemplate.Name))
+func (b *DockerBox) InitBox() {
+	log.Debug().Msgf("init docker box: \n%v\n", b.boxTemplate.Pretty())
+	b.loader.Start(fmt.Sprintf("loading %s", b.boxTemplate.Name))
 
 	// TODO compare latest local and remote hash i.e. midnight schedule
-	reader, err := d.dockerClient.ImagePull(d.ctx, d.boxTemplate.ImageName(), types.ImagePullOptions{})
+	reader, err := b.dockerClient.ImagePull(b.ctx, b.boxTemplate.ImageName(), types.ImagePullOptions{})
 	if err != nil {
 		log.Fatal().Err(err).Msg("error image pull")
 	}
 	defer reader.Close()
 
-	d.loader.Refresh(fmt.Sprintf("pulling %s", d.boxTemplate.ImageName()))
+	b.loader.Refresh(fmt.Sprintf("pulling %s", b.boxTemplate.ImageName()))
 	// suppress default output
 	io.Copy(ioutil.Discard, reader)
 
-	containerName := d.boxTemplate.GenerateName()
+	containerName := b.boxTemplate.GenerateName()
 
-	d.loader.Refresh(fmt.Sprintf("creating %s", containerName))
+	b.loader.Refresh(fmt.Sprintf("creating %s", containerName))
 
 	// TODO if port is busy start on port+1? or prompt to attach to existing?
-	ports := buildDockerPorts(d.boxTemplate.NetworkPorts())
+	ports := buildDockerPorts(b.boxTemplate.NetworkPorts())
 
-	newContainer, err := d.dockerClient.ContainerCreate(
-		d.ctx,
+	newContainer, err := b.dockerClient.ContainerCreate(
+		b.ctx,
 		buildContainerConfig(
-			d.boxTemplate.ImageName(),
+			b.boxTemplate.ImageName(),
 			containerName,
 			ports,
 		), // containerConfig
@@ -82,10 +82,10 @@ func (d *DockerBox) InitBox() {
 
 	containerId := newContainer.ID
 
-	log.Debug().Msgf("open new box: image=%s, containerName=%s, containerId=%s", d.boxTemplate.ImageName(), containerName, containerId)
+	log.Debug().Msgf("open new box: image=%s, containerName=%s, containerId=%s", b.boxTemplate.ImageName(), containerName, containerId)
 
 	// TODO tty false for tunnel only
-	d.openBox(containerId, true)
+	b.openBox(containerId, true)
 }
 
 func buildDockerPorts(ports []model.PortV1) []nat.Port {
@@ -137,14 +137,14 @@ func buildHostConfig(ports []nat.Port) *container.HostConfig {
 	}
 }
 
-func (d *DockerBox) openBox(containerId string, tty bool) {
+func (b *DockerBox) openBox(containerId string, tty bool) {
 
-	if err := d.dockerClient.ContainerStart(d.ctx, containerId, types.ContainerStartOptions{}); err != nil {
+	if err := b.dockerClient.ContainerStart(b.ctx, containerId, types.ContainerStartOptions{}); err != nil {
 		log.Fatal().Err(err).Msg("error container start")
 	}
 
 	// TODO always bash
-	execCreateResponse, err := d.dockerClient.ContainerExecCreate(d.ctx, containerId, types.ExecConfig{
+	execCreateResponse, err := b.dockerClient.ContainerExecCreate(b.ctx, containerId, types.ExecConfig{
 		AttachStdout: true,
 		AttachStdin:  true,
 		AttachStderr: true,
@@ -156,7 +156,7 @@ func (d *DockerBox) openBox(containerId string, tty bool) {
 		log.Fatal().Err(err).Msg("error container exec create")
 	}
 
-	execAttachResponse, err := d.dockerClient.ContainerExecAttach(d.ctx, execCreateResponse.ID, types.ExecStartCheck{
+	execAttachResponse, err := b.dockerClient.ContainerExecAttach(b.ctx, execCreateResponse.ID, types.ExecStartCheck{
 		Tty: tty,
 	})
 	if err != nil {
@@ -165,7 +165,7 @@ func (d *DockerBox) openBox(containerId string, tty bool) {
 	defer execAttachResponse.Close()
 
 	removeContainerCallback := func() {
-		if err := d.dockerClient.ContainerRemove(d.ctx, containerId, types.ContainerRemoveOptions{Force: true}); err != nil {
+		if err := b.dockerClient.ContainerRemove(b.ctx, containerId, types.ContainerRemoveOptions{Force: true}); err != nil {
 			log.Fatal().Err(err).Msg("error docker remove")
 		}
 	}
@@ -178,10 +178,10 @@ func (d *DockerBox) openBox(containerId string, tty bool) {
 		log.Fatal().Msg("error raw terminal")
 	}
 	defer rawTerminal.Restore()
-	d.loader.Stop()
+	b.loader.Stop()
 
 	// waits for interrupt signals
-	statusCh, errCh := d.dockerClient.ContainerWait(d.ctx, containerId, container.WaitConditionNotRunning)
+	statusCh, errCh := b.dockerClient.ContainerWait(b.ctx, containerId, container.WaitConditionNotRunning)
 	select {
 	case err := <-errCh:
 		if err != nil {

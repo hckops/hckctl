@@ -1,6 +1,10 @@
 package common
 
-import "os"
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+)
 
 const (
 	ApiUrl            string = "https://api.hckops.com"
@@ -18,3 +22,6 @@ const (
 	ConfigDir     string = "hck"
 	ConfigNameEnv string = "HCK_CONFIG" //  overrides .config/hck/config.yml
 )
+
+// tmp file
+var DefaultLogFile = filepath.Join(os.TempDir(), fmt.Sprintf("%s-%s.log", CliName, GetUserOrDie()))

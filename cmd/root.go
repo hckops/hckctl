@@ -6,6 +6,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/hckops/hckctl/internal/common"
 )
 
 var rootCmd = &cobra.Command{
@@ -37,7 +39,7 @@ func addGlobalFlags() {
 	)
 
 	// --log-level
-	rootCmd.PersistentFlags().String(LogLevelFlag, "", fmt.Sprintf("set the logging level for %s, one of: debug|info|warning|error", DefaultLogFile))
+	rootCmd.PersistentFlags().String(LogLevelFlag, "", fmt.Sprintf("set the logging level for %s, one of: debug|info|warning|error", common.DefaultLogFile))
 	viper.BindPFlag("log.level", rootCmd.PersistentFlags().Lookup(LogLevelFlag))
 }
 

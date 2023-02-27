@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hckops/hckctl/internal/box"
+	"github.com/hckops/hckctl/internal/model"
 	"github.com/hckops/hckctl/internal/template"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -12,7 +13,7 @@ import (
 )
 
 func NewBoxCmd() *cobra.Command {
-	var provider Provider
+	var provider ProviderFlag
 
 	command := &cobra.Command{
 		Use:   "box [NAME]",
@@ -21,8 +22,7 @@ func NewBoxCmd() *cobra.Command {
 
 			config := GetCliConfig().Box
 			// use value from merged config
-			// TODO review, there should be a better way to have a string config and avoid this conversion
-			var provider, err = StringToProvider(config.Provider)
+			var provider, err = ProviderToFlag(config.Provider)
 			if err != nil {
 				cmd.HelpFunc()(cmd, args)
 				log.Fatal().Err(err).Msgf("invalid provider: %s", config.Provider)
@@ -32,11 +32,11 @@ func NewBoxCmd() *cobra.Command {
 				name := args[0]
 
 				switch provider {
-				case Docker:
+				case DockerFlag:
 					runDockerBoxCmd(name, config)
-				case Kubernetes:
+				case KubernetesFlag:
 					runKubeBoxCmd(name, config)
-				case Cloud:
+				case CloudFlag:
 					runCloudBoxCmd(name, config)
 				}
 
@@ -70,15 +70,7 @@ func NewBoxCmd() *cobra.Command {
 	return command
 }
 
-func runCloudBoxCmd(name string, config BoxConfig) {
-	log.Debug().Msgf("request cloud box: name=%s revision=%s", name, config.Revision)
-}
-
-func runKubeBoxCmd(name string, config BoxConfig) {
-	log.Debug().Msgf("request kube box: name=%s revision=%s", name, config.Revision)
-}
-
-func runDockerBoxCmd(name string, config BoxConfig) {
+func runDockerBoxCmd(name string, config model.BoxConfig) {
 	log.Debug().Msgf("request docker box: name=%s revision=%s", name, config.Revision)
 
 	rawTemplate, err := template.FetchTemplate(name, config.Revision)
@@ -92,6 +84,26 @@ func runDockerBoxCmd(name string, config BoxConfig) {
 	}
 
 	box.NewDockerBox(boxTemplate).InitBox()
+}
+
+func runKubeBoxCmd(name string, config model.BoxConfig) {
+	log.Debug().Msgf("request kube box: name=%s revision=%s", name, config.Revision)
+
+	rawTemplate, err := template.FetchTemplate(name, config.Revision)
+	if err != nil {
+		log.Fatal().Err(err).Msg("fetch box template")
+	}
+
+	boxTemplate, err := template.ParseValidBoxV1(rawTemplate)
+	if err != nil {
+		log.Fatal().Err(err).Msg("validate box template")
+	}
+
+	box.NewKubeBox(boxTemplate).InitBox(config.Kube)
+}
+
+func runCloudBoxCmd(name string, config model.BoxConfig) {
+	log.Debug().Msgf("request cloud box: name=%s revision=%s", name, config.Revision)
 }
 
 func runBoxListCmd() {

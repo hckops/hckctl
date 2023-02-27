@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -12,80 +11,38 @@ import (
 	"github.com/thediveo/enumflag/v2"
 
 	"github.com/hckops/hckctl/internal/common"
+	"github.com/hckops/hckctl/internal/model"
 )
-
-type CliConfig struct {
-	Kind string    `yaml:"kind"`
-	Box  BoxConfig `yaml:"box"`
-	Log  LogConfig `yaml:"log"`
-}
-
-// tmp file
-var DefaultLogFile = filepath.Join(os.TempDir(), fmt.Sprintf("%s-%s.log", common.CliName, common.GetUserOrDie()))
-
-type LogConfig struct {
-	Level    string `yaml:"level"`
-	FilePath string `yaml:"filePath"`
-}
-
-type BoxConfig struct {
-	Revision string     `yaml:"revision"`
-	Provider string     `yaml:"provider"`
-	Kube     KubeConfig `yaml:"kube"`
-}
 
 // see enum https://stackoverflow.com/questions/50824554/permitted-flag-values-for-cobra
-type Provider enumflag.Flag
+type ProviderFlag enumflag.Flag
 
 const (
-	Docker Provider = iota
-	Kubernetes
-	Cloud
+	DockerFlag ProviderFlag = iota
+	KubernetesFlag
+	CloudFlag
 )
 
-var ProviderIds = map[Provider][]string{
-	Docker:     {"docker"},
-	Kubernetes: {"kube"},
-	Cloud:      {"cloud"},
+var ProviderIds = map[ProviderFlag][]string{
+	DockerFlag:     {string(model.Docker)},
+	KubernetesFlag: {string(model.Kubernetes)},
+	CloudFlag:      {string(model.Cloud)},
 }
 
-func ProviderToId(provider Provider) string {
+func ProviderToId(provider ProviderFlag) string {
 	return ProviderIds[provider][0]
 }
 
-func StringToProvider(value string) (Provider, error) {
+func ProviderToFlag(value model.Provider) (ProviderFlag, error) {
 	switch value {
-	case "docker":
-		return Docker, nil
-	case "kube":
-		return Kubernetes, nil
-	case "cloud":
-		return Cloud, nil
+	case model.Docker:
+		return DockerFlag, nil
+	case model.Kubernetes:
+		return KubernetesFlag, nil
+	case model.Cloud:
+		return CloudFlag, nil
 	default:
 		return 999, fmt.Errorf("invalid provider")
-	}
-}
-
-type KubeConfig struct {
-	Namespace  string `yaml:"namespace"`
-	ConfigPath string `yaml:"configPath"`
-}
-
-func newCliConfig() *CliConfig {
-	return &CliConfig{
-		Kind: "config/v1",
-		Box: BoxConfig{
-			Revision: "main",
-			Provider: ProviderToId(Docker),
-			Kube: KubeConfig{
-				Namespace:  "labs",
-				ConfigPath: "~/.kube/config",
-			},
-		},
-		Log: LogConfig{
-			Level:    "info",
-			FilePath: DefaultLogFile,
-		},
 	}
 }
 
@@ -108,7 +65,7 @@ func InitCliConfig() {
 	if err := viper.ReadInConfig(); err != nil {
 
 		// default config
-		cliConfig := newCliConfig()
+		cliConfig := model.NewCliConfig()
 
 		var configString string
 		if configString, err = common.ToYaml(&cliConfig); err != nil {
@@ -130,23 +87,15 @@ func NewConfigCmd() *cobra.Command {
 		Short: "prints current configurations",
 		Run: func(cmd *cobra.Command, args []string) {
 			// TODO override validation
-			GetCliConfig().print()
+			GetCliConfig().Print()
 		},
 	}
 }
 
-func GetCliConfig() *CliConfig {
-	var cliConfig *CliConfig
+func GetCliConfig() *model.CliConfig {
+	var cliConfig *model.CliConfig
 	if err := viper.Unmarshal(&cliConfig); err != nil {
 		log.Fatal().Err(fmt.Errorf("error decoding config: %w", err))
 	}
 	return cliConfig
-}
-
-func (config *CliConfig) print() {
-	value, err := common.ToYaml(&config)
-	if err != nil {
-		log.Warn().Msg("invalid config")
-	}
-	fmt.Print(value)
 }

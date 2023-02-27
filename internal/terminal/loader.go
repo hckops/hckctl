@@ -35,6 +35,10 @@ func (l *Loader) Refresh(message string) {
 	l.spinner.Restart()
 }
 
+func (l *Loader) Sleep(seconds int) {
+	time.Sleep(1 * time.Second)
+}
+
 func (l *Loader) Stop() {
 	l.spinner.Stop()
 }
