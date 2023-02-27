@@ -65,7 +65,7 @@ func InitCliConfig() {
 	if err := viper.ReadInConfig(); err != nil {
 
 		// default config
-		cliConfig := model.NewCliConfig()
+		cliConfig := model.NewConfig()
 
 		var configString string
 		if configString, err = common.ToYaml(&cliConfig); err != nil {
@@ -92,8 +92,8 @@ func NewConfigCmd() *cobra.Command {
 	}
 }
 
-func GetCliConfig() *model.CliConfig {
-	var cliConfig *model.CliConfig
+func GetCliConfig() *model.ConfigV1 {
+	var cliConfig *model.ConfigV1
 	if err := viper.Unmarshal(&cliConfig); err != nil {
 		log.Fatal().Err(fmt.Errorf("error decoding config: %w", err))
 	}

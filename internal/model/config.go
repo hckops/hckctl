@@ -7,7 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type CliConfig struct {
+type ConfigV1 struct {
 	Kind string    `yaml:"kind"`
 	Box  BoxConfig `yaml:"box"`
 	Log  LogConfig `yaml:"log"`
@@ -37,8 +37,8 @@ type KubeConfig struct {
 	ConfigPath string `yaml:"configPath"`
 }
 
-func NewCliConfig() *CliConfig {
-	return &CliConfig{
+func NewConfig() *ConfigV1 {
+	return &ConfigV1{
 		Kind: "config/v1",
 		Box: BoxConfig{
 			Revision: "main",
@@ -55,7 +55,7 @@ func NewCliConfig() *CliConfig {
 	}
 }
 
-func (config *CliConfig) Print() {
+func (config *ConfigV1) Print() {
 	value, err := common.ToYaml(&config)
 	if err != nil {
 		log.Warn().Msg("invalid config")
