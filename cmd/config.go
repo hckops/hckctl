@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/thediveo/enumflag/v2"
 
 	"github.com/hckops/hckctl/internal/common"
 )
@@ -33,6 +34,38 @@ type BoxConfig struct {
 	Kube     KubeConfig `yaml:"kube"`
 }
 
+// see enum https://stackoverflow.com/questions/50824554/permitted-flag-values-for-cobra
+type Provider enumflag.Flag
+
+const (
+	Docker Provider = iota
+	Kubernetes
+	Cloud
+)
+
+var ProviderIds = map[Provider][]string{
+	Docker:     {"docker"},
+	Kubernetes: {"kube"},
+	Cloud:      {"cloud"},
+}
+
+func ProviderToId(provider Provider) string {
+	return ProviderIds[provider][0]
+}
+
+func StringToProvider(value string) (Provider, error) {
+	switch value {
+	case "docker":
+		return Docker, nil
+	case "kube":
+		return Kubernetes, nil
+	case "cloud":
+		return Cloud, nil
+	default:
+		return 999, fmt.Errorf("invalid provider")
+	}
+}
+
 type KubeConfig struct {
 	Namespace  string `yaml:"namespace"`
 	ConfigPath string `yaml:"configPath"`
@@ -43,7 +76,7 @@ func newCliConfig() *CliConfig {
 		Kind: "config/v1",
 		Box: BoxConfig{
 			Revision: "main",
-			Provider: "docker", // TODO enum
+			Provider: ProviderToId(Docker),
 			Kube: KubeConfig{
 				Namespace:  "labs",
 				ConfigPath: "~/.kube/config",

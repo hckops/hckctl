@@ -8,12 +8,11 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/thediveo/enumflag/v2"
 )
 
 func NewBoxCmd() *cobra.Command {
-	var cloud bool
-	var kubernetes bool
-	var docker bool
+	var provider Provider
 
 	command := &cobra.Command{
 		Use:   "box [NAME]",
@@ -21,15 +20,23 @@ func NewBoxCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 
 			config := GetCliConfig().Box
+			// use value from merged config
+			// TODO review, there should be a better way to have a string config and avoid this conversion
+			var provider, err = StringToProvider(config.Provider)
+			if err != nil {
+				cmd.HelpFunc()(cmd, args)
+				log.Fatal().Err(err).Msgf("invalid provider: %s", config.Provider)
+			}
 
 			if len(args) == 1 {
 				name := args[0]
 
-				if kubernetes {
-					runKubeBoxCmd(name, config)
-				} else if docker {
+				switch provider {
+				case Docker:
 					runDockerBoxCmd(name, config)
-				} else {
+				case Kubernetes:
+					runKubeBoxCmd(name, config)
+				case Cloud:
 					runCloudBoxCmd(name, config)
 				}
 
@@ -40,17 +47,16 @@ func NewBoxCmd() *cobra.Command {
 	}
 	const (
 		RevisionFlag = "revision"
+		ProviderFlag = "provider"
 	)
 
 	// TODO should this be global?
 	command.PersistentFlags().StringP(RevisionFlag, "r", "main", "megalopolis git source version i.e. branch|tag|sha")
 	viper.BindPFlag("box.revision", command.PersistentFlags().Lookup(RevisionFlag))
 
-	command.Flags().BoolVar(&cloud, "cloud", true, "start a remote box")
-	command.Flags().BoolVar(&kubernetes, "kube", false, "start a kubernetes box")
-	command.Flags().BoolVar(&docker, "docker", false, "start a docker box")
-	// TODO podman, firecracker?
-	command.MarkFlagsMutuallyExclusive("cloud", "kube", "docker")
+	providerValue := enumflag.New(&provider, ProviderFlag, ProviderIds, enumflag.EnumCaseInsensitive)
+	command.Flags().Var(providerValue, ProviderFlag, "set the box provider, one of docker|kube|cloud")
+	viper.BindPFlag("box.provider", command.Flags().Lookup(ProviderFlag))
 
 	listCmd := &cobra.Command{
 		Use:   "list",

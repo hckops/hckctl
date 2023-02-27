@@ -37,7 +37,7 @@ func addGlobalFlags() {
 	)
 
 	// --log-level
-	rootCmd.PersistentFlags().String(LogLevelFlag, "", fmt.Sprintf("Set the logging level for %s, one of: debug|info|warning|error", DefaultLogFile))
+	rootCmd.PersistentFlags().String(LogLevelFlag, "", fmt.Sprintf("set the logging level for %s, one of: debug|info|warning|error", DefaultLogFile))
 	viper.BindPFlag("log.level", rootCmd.PersistentFlags().Lookup(LogLevelFlag))
 }
 
