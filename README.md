@@ -21,30 +21,43 @@ just
 # run
 ./build/hckctl
 
+# debug
+./build/hckctl <CMD> --log-level debug
+
 # logs
 tail -f /tmp/hckctl-*.log
 ```
 
 Box command
 ```bash
-# list boxes
+# lists boxes
 go run main.go box list
 
-# start a docker box
-go run main.go box alpine --docker
+# starts a docker box (default)
+go run main.go box alpine
+go run main.go box alpine --provider docker
 
-# start a kubernetes box
-go run main.go box alpine --kube
+# starts a kubernetes box
+go run main.go box alpine --provider kube
 
-# TODO start a remote box
-go run main.go box parrot
+# TODO starts a remote box
+go run main.go box parrot --provider cloud
 ```
 
 Template command
 ```bash
-# validate and print remote template
+# validates and prints remote template
 go run main.go template parrot | yq -o=json
 
-# validate and print local template
+# validates and prints local template
 go run main.go template -p ../megalopolis/boxes/official/alpine.yml
+```
+
+Config command
+```bash
+# edits config file
+vim ~/.config/hck/config.yml
+
+# prints current config
+go run main.go config
 ```
