@@ -44,6 +44,7 @@ func NewDockerBox(box *model.BoxV1) *DockerBox {
 
 // TODO add flags detached and tunnel-only
 func (d *DockerBox) InitBox() {
+	log.Debug().Msgf("init docker box: \n%v\n", d.boxTemplate.Pretty())
 	d.loader.Start(fmt.Sprintf("loading %s", d.boxTemplate.Name))
 
 	// TODO compare latest local and remote hash i.e. midnight schedule
@@ -80,6 +81,9 @@ func (d *DockerBox) InitBox() {
 	}
 
 	containerId := newContainer.ID
+
+	log.Debug().Msgf("open new box: image=%s, containerName=%s, containerId=%s", d.boxTemplate.ImageName(), containerName, containerId)
+
 	// TODO tty false for tunnel only
 	d.openBox(containerId, true)
 }

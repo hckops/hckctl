@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/dchest/uniuri"
+
+	"github.com/hckops/hckctl/internal/common"
 )
 
 type BoxV1 struct {
@@ -67,4 +69,9 @@ func (box *BoxV1) NetworkPorts() []PortV1 {
 	}
 
 	return ports
+}
+
+func (box *BoxV1) Pretty() string {
+	value, _ := common.ToJson(box)
+	return value
 }
