@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/adrg/xdg v0.4.0
-	github.com/briandowns/spinner v1.20.0
+	github.com/briandowns/spinner v1.22.0
 	github.com/dchest/uniuri v1.2.0
 	github.com/docker/docker v23.0.1+incompatible
 	github.com/docker/go-connections v0.4.0
