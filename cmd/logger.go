@@ -48,6 +48,7 @@ func parseLevel(value string) zerolog.Level {
 	}
 }
 
+// TODO add "cmd" and a random "session" for each instance running
 func setContext() {
 	log.Logger = log.With().Caller().Str("source", common.CliName).Logger()
 }

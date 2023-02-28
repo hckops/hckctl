@@ -4,11 +4,16 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1 "k8s.io/client-go/applyconfigurations/core/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	applyv1 "k8s.io/client-go/applyconfigurations/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
@@ -25,6 +30,7 @@ type KubeBox struct {
 
 // TODO convert box to kube, create vs apply (e.g. no failures for existing namespace), exec + forward
 func NewKubeBox(box *model.BoxV1) *KubeBox {
+	// TODO add config
 	return &KubeBox{
 		ctx:         context.Background(),
 		loader:      terminal.NewLoader(),
@@ -36,9 +42,7 @@ func (b *KubeBox) InitBox(config model.KubeConfig) {
 	log.Debug().Msgf("init kube box: \n%v\n", b.boxTemplate.Pretty())
 	b.loader.Start(fmt.Sprintf("loading %s", b.boxTemplate.Name))
 
-	b.loader.Sleep(2)
-
-	kubeconfig := filepath.Join(homedir.HomeDir(), strings.Replace(config.ConfigPath, "~/", "", 1))
+	kubeconfig := filepath.Join(homedir.HomeDir(), strings.ReplaceAll(config.ConfigPath, "~/", ""))
 	log.Debug().Msgf("read config: configPath=%s, kubeconfig=%s", config.ConfigPath, kubeconfig)
 
 	restConfig, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
@@ -52,11 +56,153 @@ func (b *KubeBox) InitBox(config model.KubeConfig) {
 	}
 
 	// https://github.com/kubernetes/client-go/issues/1036
-	namespace, err := clientSet.CoreV1().Namespaces().Apply(b.ctx, v1.Namespace(config.Namespace), metav1.ApplyOptions{FieldManager: "application/apply-patch"})
+	namespace, err := clientSet.CoreV1().Namespaces().Apply(b.ctx, applyv1.Namespace(config.Namespace), metav1.ApplyOptions{FieldManager: "application/apply-patch"})
 	if err != nil {
 		log.Fatal().Err(err).Msg("error apply namespace")
 	}
 	log.Debug().Msgf("namespace %s successfully applied", namespace.Name)
 
+	containerName := b.boxTemplate.GenerateName()
+	b.loader.Refresh(fmt.Sprintf("creating %s/%s", namespace.Name, containerName))
+
+	deployment, err := clientSet.AppsV1().Deployments(namespace.Name).Create(b.ctx, buildDeployment(namespace.Name, containerName, b.boxTemplate), metav1.CreateOptions{})
+	if err != nil {
+		log.Fatal().Err(err).Msg("error create deployment")
+	}
+	log.Debug().Msgf("deployment %s successfully created", deployment.Name)
+
+	if len(b.boxTemplate.Network.Ports) > 0 {
+		service, err := clientSet.CoreV1().Services(namespace.Name).Create(b.ctx, buildService(namespace.Name, containerName, b.boxTemplate), metav1.CreateOptions{})
+		if err != nil {
+			log.Fatal().Err(err).Msg("error create service")
+		}
+		log.Debug().Msgf("service %s successfully created", service.Name)
+	} else {
+		log.Debug().Msg("service not created")
+	}
+
 	b.loader.Stop()
+}
+
+func buildContainerPorts(ports []model.PortV1) []corev1.ContainerPort {
+
+	containerPorts := make([]corev1.ContainerPort, 0)
+	for _, port := range ports {
+
+		portNumber, err := strconv.Atoi(port.Remote)
+		if err != nil {
+			log.Fatal().Err(err).Msg("error kube container port")
+		}
+
+		containerPort := corev1.ContainerPort{
+			Name:          fmt.Sprintf("%s-svc", port.Alias),
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: int32(portNumber),
+		}
+		containerPorts = append(containerPorts, containerPort)
+	}
+	return containerPorts
+}
+
+func buildLabels(name, version string) map[string]string {
+	return map[string]string{
+		"app.kubernetes.io/name":    name,
+		"app.kubernetes.io/version": version,
+	}
+}
+
+func int32Ptr(i int32) *int32 { return &i }
+
+func buildDeployment(namespaceName string, containerName string, template *model.BoxV1) *appsv1.Deployment {
+
+	imageName := strings.ReplaceAll(template.Image.Repository, "/", "-")
+	labels := buildLabels(containerName, template.ImageVersion())
+	containerPorts := buildContainerPorts(template.NetworkPorts())
+
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      containerName,
+			Namespace: namespaceName,
+			Labels:    labels,
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Name:            imageName,
+					Image:           template.ImageName(),
+					ImagePullPolicy: corev1.PullIfNotPresent,
+					TTY:             true,
+					Stdin:           true,
+					Ports:           containerPorts,
+					Resources: corev1.ResourceRequirements{
+						Limits: corev1.ResourceList{
+							"memory": resource.MustParse("512Mi"),
+						},
+						Requests: corev1.ResourceList{
+							"cpu":    resource.MustParse("500m"),
+							"memory": resource.MustParse("512Mi"),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	return &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      containerName,
+			Namespace: namespaceName,
+			Labels:    labels,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: int32Ptr(1),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labels,
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: pod.ObjectMeta,
+				Spec:       pod.Spec,
+			},
+		},
+	}
+}
+
+func buildServicePorts(ports []model.PortV1) []corev1.ServicePort {
+
+	servicePorts := make([]corev1.ServicePort, 0)
+	for _, port := range ports {
+
+		portNumber, err := strconv.Atoi(port.Remote)
+		if err != nil {
+			log.Fatal().Err(err).Msg("error kube service port")
+		}
+
+		containerPort := corev1.ServicePort{
+			Name:       port.Alias,
+			Protocol:   corev1.ProtocolTCP,
+			Port:       int32(portNumber),
+			TargetPort: intstr.FromString(fmt.Sprintf("%s-svc", port.Alias)),
+		}
+		servicePorts = append(servicePorts, containerPort)
+	}
+	return servicePorts
+}
+
+func buildService(namespaceName string, containerName string, template *model.BoxV1) *corev1.Service {
+
+	labels := buildLabels(containerName, template.ImageVersion())
+	servicePorts := buildServicePorts(template.NetworkPorts())
+
+	return &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      containerName,
+			Namespace: namespaceName,
+			Labels:    labels,
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: labels,
+			Type:     corev1.ServiceTypeClusterIP,
+			Ports:    servicePorts,
+		},
+	}
 }

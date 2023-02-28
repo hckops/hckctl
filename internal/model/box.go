@@ -15,7 +15,7 @@ type BoxV1 struct {
 	Tags  []string
 	Image struct {
 		Repository string
-		Version    string
+		Version    string // TODO RawVersion (internal)
 	}
 	Network struct {
 		Ports []string
@@ -30,17 +30,21 @@ type PortV1 struct {
 }
 
 func (box *BoxV1) ImageName() string {
+	return fmt.Sprintf("%s:%s", box.Image.Repository, box.ImageVersion())
+}
+
+func (box *BoxV1) ImageVersion() string {
 	var version string
 	if box.Image.Version == "" {
 		version = "latest"
 	} else {
 		version = box.Image.Version
 	}
-	return fmt.Sprintf("%s:%s", box.Image.Repository, version)
+	return version
 }
 
 func (box *BoxV1) GenerateName() string {
-	return fmt.Sprintf("box-%s-%s", box.Name, uniuri.NewLen(5))
+	return fmt.Sprintf("box-%s-%s", box.Name, strings.ToLower(uniuri.NewLen(5)))
 }
 
 func (box *BoxV1) NetworkPorts() []PortV1 {
