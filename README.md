@@ -1,5 +1,12 @@
 <h1 align="center"><code>hckctl</code></h1>
 
+<div align="center">
+  <a href="https://github.com/hckops/hckctl/actions/workflows/ci.yaml">
+    <img src="https://github.com/hckops/hckctl/actions/workflows/ci.yaml/badge.svg" alt="ci">
+  </a>
+</div>
+<br>
+
 <p align="center">
   <img width="160" src="docs/logo.svg" alt="logo">
 </p>
