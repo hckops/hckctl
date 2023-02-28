@@ -36,7 +36,7 @@ func (l *Loader) Refresh(message string) {
 }
 
 func (l *Loader) Sleep(seconds int) {
-	time.Sleep(1 * time.Second)
+	time.Sleep(time.Duration(seconds) * time.Second)
 }
 
 func (l *Loader) Stop() {
