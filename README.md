@@ -17,6 +17,13 @@ The Cloud Native HaCKing Tool
 
 > WIP
 
+## Setup
+
+```bash
+# TODO
+curl -sSL https://github.com/hckops/hckctl/releases/download/v0.1.0/hckctl_linux_x86_64.tar.gz | tar -xzf - -C /usr/local/bin
+```
+
 ## Development
 
 * [just](https://github.com/casey/just)
