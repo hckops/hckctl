@@ -7,7 +7,6 @@ on:
 
 jobs:
   ci:
-    name: CI
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -17,6 +16,7 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version-file: 'go.mod'
-          
-      - name: Build
-        run: go build .
+
+      - run: go mod tidy
+      - run: go test -v ./...
+      - run: go build .
