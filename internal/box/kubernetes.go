@@ -56,47 +56,51 @@ func NewKubeBox(template *model.BoxV1, config *model.KubeConfig) *KubeBox {
 }
 
 func (b *KubeBox) Init() {
+	coreClient := b.clientSet.CoreV1()
+	appClient := b.clientSet.AppsV1()
+
 	log.Debug().Msgf("init kube box: \n%v\n", b.template.Pretty())
 	b.loader.Start(fmt.Sprintf("loading %s", b.template.Name))
-	b.loader.Sleep(2)
+	b.loader.Sleep(1)
 
 	// apply namespace, see https://github.com/kubernetes/client-go/issues/1036
-	namespace, err := b.clientSet.CoreV1().Namespaces().Apply(b.ctx, applyv1.Namespace(b.config.Namespace), metav1.ApplyOptions{FieldManager: "application/apply-patch"})
+	namespace, err := coreClient.Namespaces().Apply(b.ctx, applyv1.Namespace(b.config.Namespace), metav1.ApplyOptions{FieldManager: "application/apply-patch"})
 	if err != nil {
 		log.Fatal().Err(err).Msg("error apply namespace")
 	}
 	log.Debug().Msgf("namespace %s successfully applied", namespace.Name)
 
 	containerName := b.template.GenerateFullName()
-	b.loader.Refresh(fmt.Sprintf("creating %s/%s", namespace.Name, containerName))
-
-	deploymentSpec, serviceSpec := buildSpec(namespace.Name, containerName, b.template)
+	deploymentSpec, serviceSpec := buildSpec(namespace.Name, containerName, b.template, b.config)
 
 	// create deployment
-	deployment, err := b.clientSet.AppsV1().Deployments(namespace.Name).Create(b.ctx, deploymentSpec, metav1.CreateOptions{})
+	deployment, err := appClient.Deployments(namespace.Name).Create(b.ctx, deploymentSpec, metav1.CreateOptions{})
 	if err != nil {
 		log.Fatal().Err(err).Msg("error create deployment")
 	}
+	defer appClient.Deployments(namespace.Name).Delete(b.ctx, deployment.Name, metav1.DeleteOptions{})
 	log.Debug().Msgf("deployment %s successfully created", deployment.Name)
 
 	// create service
 	if b.template.HasPorts() {
-		service, err := b.clientSet.CoreV1().Services(namespace.Name).Create(b.ctx, serviceSpec, metav1.CreateOptions{})
+		service, err := coreClient.Services(namespace.Name).Create(b.ctx, serviceSpec, metav1.CreateOptions{})
 		if err != nil {
 			log.Fatal().Err(err).Msg("error create service")
 		}
+		defer coreClient.Services(namespace.Name).Delete(b.ctx, service.Name, metav1.DeleteOptions{})
 		log.Debug().Msgf("service %s successfully created", service.Name)
 	} else {
 		log.Debug().Msg("service not created")
 	}
 
+	b.loader.Refresh(fmt.Sprintf("creating %s/%s", namespace.Name, containerName))
 	// TODO defer close + exec + forward
 	b.loader.Sleep(5)
 
 	b.loader.Stop()
 }
 
-func buildSpec(namespaceName string, containerName string, template *model.BoxV1) (*appsv1.Deployment, *corev1.Service) {
+func buildSpec(namespaceName string, containerName string, template *model.BoxV1, config *model.KubeConfig) (*appsv1.Deployment, *corev1.Service) {
 
 	labels := buildLabels(containerName, template.ImageVersion())
 	objectMeta := metav1.ObjectMeta{
@@ -104,7 +108,7 @@ func buildSpec(namespaceName string, containerName string, template *model.BoxV1
 		Namespace: namespaceName,
 		Labels:    labels,
 	}
-	pod := buildPod(objectMeta, template)
+	pod := buildPod(objectMeta, template, config)
 	deployment := buildDeployment(objectMeta, pod)
 	service := buildService(objectMeta, template)
 
@@ -140,7 +144,7 @@ func buildContainerPorts(ports []model.PortV1) []corev1.ContainerPort {
 	return containerPorts
 }
 
-func buildPod(objectMeta metav1.ObjectMeta, template *model.BoxV1) *corev1.Pod {
+func buildPod(objectMeta metav1.ObjectMeta, template *model.BoxV1, config *model.KubeConfig) *corev1.Pod {
 
 	containerPorts := buildContainerPorts(template.NetworkPorts())
 
@@ -157,11 +161,11 @@ func buildPod(objectMeta metav1.ObjectMeta, template *model.BoxV1) *corev1.Pod {
 					Ports:           containerPorts,
 					Resources: corev1.ResourceRequirements{
 						Limits: corev1.ResourceList{
-							"memory": resource.MustParse("512Mi"),
+							"memory": resource.MustParse(config.Resources.Memory),
 						},
 						Requests: corev1.ResourceList{
-							"cpu":    resource.MustParse("500m"),
-							"memory": resource.MustParse("512Mi"),
+							"cpu":    resource.MustParse(config.Resources.Cpu),
+							"memory": resource.MustParse(config.Resources.Memory),
 						},
 					},
 				},

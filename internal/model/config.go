@@ -33,8 +33,14 @@ const (
 )
 
 type KubeConfig struct {
-	Namespace  string `yaml:"namespace"`
-	ConfigPath string `yaml:"configPath"`
+	Namespace  string        `yaml:"namespace"`
+	ConfigPath string        `yaml:"configPath"`
+	Resources  KubeResources `yaml:"resources"`
+}
+
+type KubeResources struct {
+	Memory string `yaml:"memory"`
+	Cpu    string `yaml:"cpu"`
 }
 
 func NewConfig() *ConfigV1 {
@@ -46,6 +52,10 @@ func NewConfig() *ConfigV1 {
 			Kube: KubeConfig{
 				Namespace:  "labs",
 				ConfigPath: "~/.kube/config",
+				Resources: KubeResources{
+					Memory: "512Mi",
+					Cpu:    "500m",
+				},
 			},
 		},
 		Log: LogConfig{
