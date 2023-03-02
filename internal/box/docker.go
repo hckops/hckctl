@@ -21,12 +21,12 @@ import (
 
 type DockerBox struct {
 	ctx          context.Context
-	dockerClient *client.Client
 	loader       *terminal.Loader
-	boxTemplate  *model.BoxV1
+	template     *model.BoxV1
+	dockerClient *client.Client
 }
 
-func NewDockerBox(box *model.BoxV1) *DockerBox {
+func NewDockerBox(template *model.BoxV1) *DockerBox {
 
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -36,39 +36,39 @@ func NewDockerBox(box *model.BoxV1) *DockerBox {
 
 	return &DockerBox{
 		ctx:          context.Background(),
-		dockerClient: docker,
 		loader:       terminal.NewLoader(),
-		boxTemplate:  box,
+		template:     template,
+		dockerClient: docker,
 	}
 }
 
 // TODO add flags detached and tunnel-only
-func (b *DockerBox) InitBox() {
-	log.Debug().Msgf("init docker box: \n%v\n", b.boxTemplate.Pretty())
-	b.loader.Start(fmt.Sprintf("loading %s", b.boxTemplate.Name))
+func (b *DockerBox) Init() {
+	log.Debug().Msgf("init docker box: \n%v\n", b.template.Pretty())
+	b.loader.Start(fmt.Sprintf("loading %s", b.template.Name))
 
 	// TODO compare latest local and remote hash i.e. midnight schedule
-	reader, err := b.dockerClient.ImagePull(b.ctx, b.boxTemplate.ImageName(), types.ImagePullOptions{})
+	reader, err := b.dockerClient.ImagePull(b.ctx, b.template.ImageName(), types.ImagePullOptions{})
 	if err != nil {
 		log.Fatal().Err(err).Msg("error image pull")
 	}
 	defer reader.Close()
 
-	b.loader.Refresh(fmt.Sprintf("pulling %s", b.boxTemplate.ImageName()))
+	b.loader.Refresh(fmt.Sprintf("pulling %s", b.template.ImageName()))
 	// suppress default output
 	io.Copy(ioutil.Discard, reader)
 
-	containerName := b.boxTemplate.GenerateName()
+	containerName := b.template.GenerateName()
 
 	b.loader.Refresh(fmt.Sprintf("creating %s", containerName))
 
 	// TODO if port is busy start on port+1? or prompt to attach to existing?
-	ports := buildDockerPorts(b.boxTemplate.NetworkPorts())
+	ports := buildDockerPorts(b.template.NetworkPorts())
 
 	newContainer, err := b.dockerClient.ContainerCreate(
 		b.ctx,
 		buildContainerConfig(
-			b.boxTemplate.ImageName(),
+			b.template.ImageName(),
 			containerName,
 			ports,
 		), // containerConfig
@@ -82,7 +82,7 @@ func (b *DockerBox) InitBox() {
 
 	containerId := newContainer.ID
 
-	log.Debug().Msgf("open new box: image=%s, containerName=%s, containerId=%s", b.boxTemplate.ImageName(), containerName, containerId)
+	log.Debug().Msgf("open new box: image=%s, containerName=%s, containerId=%s", b.template.ImageName(), containerName, containerId)
 
 	// TODO tty false for tunnel only
 	b.openBox(containerId, true)

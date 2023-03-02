@@ -30,14 +30,15 @@ func NewBoxCmd() *cobra.Command {
 
 			if len(args) == 1 {
 				name := args[0]
+				template := requestBoxTemplate(name, config.Revision)
 
 				switch provider {
 				case DockerFlag:
-					runDockerBoxCmd(name, config)
+					box.NewDockerBox(template).Init()
 				case KubernetesFlag:
-					runKubeBoxCmd(name, config)
+					box.NewKubeBox(template, &config.Kube).Init()
 				case CloudFlag:
-					runCloudBoxCmd(name, config)
+					log.Debug().Msg("init cloud box")
 				}
 
 			} else {
@@ -70,10 +71,10 @@ func NewBoxCmd() *cobra.Command {
 	return command
 }
 
-func runDockerBoxCmd(name string, config model.BoxConfig) {
-	log.Debug().Msgf("request docker box: name=%s revision=%s", name, config.Revision)
+func requestBoxTemplate(name string, revision string) *model.BoxV1 {
+	log.Debug().Msgf("request box template: name=%s revision=%s", name, revision)
 
-	rawTemplate, err := template.FetchTemplate(name, config.Revision)
+	rawTemplate, err := template.FetchTemplate(name, revision)
 	if err != nil {
 		log.Fatal().Err(err).Msg("fetch box template")
 	}
@@ -83,27 +84,7 @@ func runDockerBoxCmd(name string, config model.BoxConfig) {
 		log.Fatal().Err(err).Msg("validate box template")
 	}
 
-	box.NewDockerBox(boxTemplate).InitBox()
-}
-
-func runKubeBoxCmd(name string, config model.BoxConfig) {
-	log.Debug().Msgf("request kube box: name=%s revision=%s", name, config.Revision)
-
-	rawTemplate, err := template.FetchTemplate(name, config.Revision)
-	if err != nil {
-		log.Fatal().Err(err).Msg("fetch box template")
-	}
-
-	boxTemplate, err := template.ParseValidBoxV1(rawTemplate)
-	if err != nil {
-		log.Fatal().Err(err).Msg("validate box template")
-	}
-
-	box.NewKubeBox(boxTemplate).InitBox(config.Kube)
-}
-
-func runCloudBoxCmd(name string, config model.BoxConfig) {
-	log.Debug().Msgf("request cloud box: name=%s revision=%s", name, config.Revision)
+	return boxTemplate
 }
 
 func runBoxListCmd() {

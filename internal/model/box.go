@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/dchest/uniuri"
@@ -44,7 +45,23 @@ func (box *BoxV1) ImageVersion() string {
 }
 
 func (box *BoxV1) GenerateName() string {
-	return fmt.Sprintf("box-%s-%s", box.Name, strings.ToLower(uniuri.NewLen(5)))
+	return fmt.Sprintf("box-%s-%s", box.Name, uniuri.NewLen(5))
+}
+
+// matches anything other than a letter, digit or underscore, equivalent to "[^a-zA-Z0-9_]"
+var anyNonWordCharacterRegex = regexp.MustCompile(`\W+`)
+
+func (box *BoxV1) SafeName() string {
+	return anyNonWordCharacterRegex.ReplaceAllString(box.Image.Repository, "-")
+}
+
+func (box *BoxV1) GenerateFullName() string {
+	// e.g. "box-organization-image-RANDOM"
+	return fmt.Sprintf("box-%s-%s", box.SafeName(), strings.ToLower(uniuri.NewLen(5)))
+}
+
+func (box *BoxV1) HasPorts() bool {
+	return len(box.Network.Ports) > 0
 }
 
 func (box *BoxV1) NetworkPorts() []PortV1 {

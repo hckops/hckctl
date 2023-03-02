@@ -22,25 +22,16 @@ import (
 	"github.com/hckops/hckctl/internal/terminal"
 )
 
+// TODO add log?
 type KubeBox struct {
-	ctx         context.Context
-	loader      *terminal.Loader
-	boxTemplate *model.BoxV1
+	ctx       context.Context
+	loader    *terminal.Loader
+	config    *model.KubeConfig
+	template  *model.BoxV1
+	clientSet *kubernetes.Clientset
 }
 
-// TODO convert box to kube, create vs apply (e.g. no failures for existing namespace), exec + forward
-func NewKubeBox(box *model.BoxV1) *KubeBox {
-	// TODO add config
-	return &KubeBox{
-		ctx:         context.Background(),
-		loader:      terminal.NewLoader(),
-		boxTemplate: box,
-	}
-}
-
-func (b *KubeBox) InitBox(config model.KubeConfig) {
-	log.Debug().Msgf("init kube box: \n%v\n", b.boxTemplate.Pretty())
-	b.loader.Start(fmt.Sprintf("loading %s", b.boxTemplate.Name))
+func NewKubeBox(template *model.BoxV1, config *model.KubeConfig) *KubeBox {
 
 	kubeconfig := filepath.Join(homedir.HomeDir(), strings.ReplaceAll(config.ConfigPath, "~/", ""))
 	log.Debug().Msgf("read config: configPath=%s, kubeconfig=%s", config.ConfigPath, kubeconfig)
@@ -55,24 +46,42 @@ func (b *KubeBox) InitBox(config model.KubeConfig) {
 		log.Fatal().Err(err).Msg("error clientSet")
 	}
 
-	// https://github.com/kubernetes/client-go/issues/1036
-	namespace, err := clientSet.CoreV1().Namespaces().Apply(b.ctx, applyv1.Namespace(config.Namespace), metav1.ApplyOptions{FieldManager: "application/apply-patch"})
+	return &KubeBox{
+		ctx:       context.Background(),
+		loader:    terminal.NewLoader(),
+		config:    config,
+		template:  template,
+		clientSet: clientSet,
+	}
+}
+
+func (b *KubeBox) Init() {
+	log.Debug().Msgf("init kube box: \n%v\n", b.template.Pretty())
+	b.loader.Start(fmt.Sprintf("loading %s", b.template.Name))
+	b.loader.Sleep(2)
+
+	// apply namespace, see https://github.com/kubernetes/client-go/issues/1036
+	namespace, err := b.clientSet.CoreV1().Namespaces().Apply(b.ctx, applyv1.Namespace(b.config.Namespace), metav1.ApplyOptions{FieldManager: "application/apply-patch"})
 	if err != nil {
 		log.Fatal().Err(err).Msg("error apply namespace")
 	}
 	log.Debug().Msgf("namespace %s successfully applied", namespace.Name)
 
-	containerName := b.boxTemplate.GenerateName()
+	containerName := b.template.GenerateFullName()
 	b.loader.Refresh(fmt.Sprintf("creating %s/%s", namespace.Name, containerName))
 
-	deployment, err := clientSet.AppsV1().Deployments(namespace.Name).Create(b.ctx, buildDeployment(namespace.Name, containerName, b.boxTemplate), metav1.CreateOptions{})
+	deploymentSpec, serviceSpec := buildSpec(namespace.Name, containerName, b.template)
+
+	// create deployment
+	deployment, err := b.clientSet.AppsV1().Deployments(namespace.Name).Create(b.ctx, deploymentSpec, metav1.CreateOptions{})
 	if err != nil {
 		log.Fatal().Err(err).Msg("error create deployment")
 	}
 	log.Debug().Msgf("deployment %s successfully created", deployment.Name)
 
-	if len(b.boxTemplate.Network.Ports) > 0 {
-		service, err := clientSet.CoreV1().Services(namespace.Name).Create(b.ctx, buildService(namespace.Name, containerName, b.boxTemplate), metav1.CreateOptions{})
+	// create service
+	if b.template.HasPorts() {
+		service, err := b.clientSet.CoreV1().Services(namespace.Name).Create(b.ctx, serviceSpec, metav1.CreateOptions{})
 		if err != nil {
 			log.Fatal().Err(err).Msg("error create service")
 		}
@@ -81,7 +90,34 @@ func (b *KubeBox) InitBox(config model.KubeConfig) {
 		log.Debug().Msg("service not created")
 	}
 
+	// TODO defer close + exec + forward
+	b.loader.Sleep(5)
+
 	b.loader.Stop()
+}
+
+func buildSpec(namespaceName string, containerName string, template *model.BoxV1) (*appsv1.Deployment, *corev1.Service) {
+
+	labels := buildLabels(containerName, template.ImageVersion())
+	objectMeta := metav1.ObjectMeta{
+		Name:      containerName,
+		Namespace: namespaceName,
+		Labels:    labels,
+	}
+	pod := buildPod(objectMeta, template)
+	deployment := buildDeployment(objectMeta, pod)
+	service := buildService(objectMeta, template)
+
+	return deployment, service
+}
+
+type Labels map[string]string
+
+func buildLabels(name, version string) Labels {
+	return map[string]string{
+		"app.kubernetes.io/name":    name,
+		"app.kubernetes.io/version": version,
+	}
 }
 
 func buildContainerPorts(ports []model.PortV1) []corev1.ContainerPort {
@@ -104,31 +140,16 @@ func buildContainerPorts(ports []model.PortV1) []corev1.ContainerPort {
 	return containerPorts
 }
 
-func buildLabels(name, version string) map[string]string {
-	return map[string]string{
-		"app.kubernetes.io/name":    name,
-		"app.kubernetes.io/version": version,
-	}
-}
+func buildPod(objectMeta metav1.ObjectMeta, template *model.BoxV1) *corev1.Pod {
 
-func int32Ptr(i int32) *int32 { return &i }
-
-func buildDeployment(namespaceName string, containerName string, template *model.BoxV1) *appsv1.Deployment {
-
-	imageName := strings.ReplaceAll(template.Image.Repository, "/", "-")
-	labels := buildLabels(containerName, template.ImageVersion())
 	containerPorts := buildContainerPorts(template.NetworkPorts())
 
-	pod := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      containerName,
-			Namespace: namespaceName,
-			Labels:    labels,
-		},
+	return &corev1.Pod{
+		ObjectMeta: objectMeta,
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{
-					Name:            imageName,
+					Name:            template.SafeName(),
 					Image:           template.ImageName(),
 					ImagePullPolicy: corev1.PullIfNotPresent,
 					TTY:             true,
@@ -147,17 +168,18 @@ func buildDeployment(namespaceName string, containerName string, template *model
 			},
 		},
 	}
+}
+
+func int32Ptr(i int32) *int32 { return &i }
+
+func buildDeployment(objectMeta metav1.ObjectMeta, pod *corev1.Pod) *appsv1.Deployment {
 
 	return &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      containerName,
-			Namespace: namespaceName,
-			Labels:    labels,
-		},
+		ObjectMeta: objectMeta,
 		Spec: appsv1.DeploymentSpec{
 			Replicas: int32Ptr(1),
 			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
+				MatchLabels: objectMeta.Labels,
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: pod.ObjectMeta,
@@ -188,19 +210,14 @@ func buildServicePorts(ports []model.PortV1) []corev1.ServicePort {
 	return servicePorts
 }
 
-func buildService(namespaceName string, containerName string, template *model.BoxV1) *corev1.Service {
+func buildService(objectMeta metav1.ObjectMeta, template *model.BoxV1) *corev1.Service {
 
-	labels := buildLabels(containerName, template.ImageVersion())
 	servicePorts := buildServicePorts(template.NetworkPorts())
 
 	return &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      containerName,
-			Namespace: namespaceName,
-			Labels:    labels,
-		},
+		ObjectMeta: objectMeta,
 		Spec: corev1.ServiceSpec{
-			Selector: labels,
+			Selector: objectMeta.Labels,
 			Type:     corev1.ServiceTypeClusterIP,
 			Ports:    servicePorts,
 		},
