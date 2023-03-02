@@ -3,6 +3,7 @@ package box
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -12,10 +13,15 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/watch"
 	applyv1 "k8s.io/client-go/applyconfigurations/core/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/client-go/util/homedir"
 
 	model "github.com/hckops/hckctl/internal/model"
@@ -24,11 +30,12 @@ import (
 
 // TODO add log?
 type KubeBox struct {
-	ctx       context.Context
-	loader    *terminal.Loader
-	config    *model.KubeConfig
-	template  *model.BoxV1
-	clientSet *kubernetes.Clientset
+	ctx            context.Context
+	loader         *terminal.Loader
+	config         *model.KubeConfig
+	template       *model.BoxV1
+	kubeRestConfig *rest.Config
+	kubeClientSet  *kubernetes.Clientset
 }
 
 func NewKubeBox(template *model.BoxV1, config *model.KubeConfig) *KubeBox {
@@ -47,21 +54,30 @@ func NewKubeBox(template *model.BoxV1, config *model.KubeConfig) *KubeBox {
 	}
 
 	return &KubeBox{
-		ctx:       context.Background(),
-		loader:    terminal.NewLoader(),
-		config:    config,
-		template:  template,
-		clientSet: clientSet,
+		ctx:            context.Background(),
+		loader:         terminal.NewLoader(),
+		config:         config,
+		template:       template,
+		kubeRestConfig: restConfig,
+		kubeClientSet:  clientSet,
 	}
 }
 
 func (b *KubeBox) Init() {
-	coreClient := b.clientSet.CoreV1()
-	appClient := b.clientSet.AppsV1()
-
 	log.Debug().Msgf("init kube box: \n%v\n", b.template.Pretty())
 	b.loader.Start(fmt.Sprintf("loading %s", b.template.Name))
 	b.loader.Sleep(1)
+
+	deployment := b.applyTemplate()
+	// TODO tty false for tunnel only
+	b.openBox(deployment, true)
+
+	b.loader.Stop()
+}
+
+func (b *KubeBox) applyTemplate() *appsv1.Deployment {
+	coreClient := b.kubeClientSet.CoreV1()
+	appClient := b.kubeClientSet.AppsV1()
 
 	// apply namespace, see https://github.com/kubernetes/client-go/issues/1036
 	namespace, err := coreClient.Namespaces().Apply(b.ctx, applyv1.Namespace(b.config.Namespace), metav1.ApplyOptions{FieldManager: "application/apply-patch"})
@@ -72,6 +88,8 @@ func (b *KubeBox) Init() {
 
 	containerName := b.template.GenerateFullName()
 	deploymentSpec, serviceSpec := buildSpec(namespace.Name, containerName, b.template, b.config)
+
+	b.loader.Refresh(fmt.Sprintf("creating %s/%s", namespace.Name, containerName))
 
 	// create deployment
 	deployment, err := appClient.Deployments(namespace.Name).Create(b.ctx, deploymentSpec, metav1.CreateOptions{})
@@ -93,16 +111,93 @@ func (b *KubeBox) Init() {
 		log.Debug().Msg("service not created")
 	}
 
-	b.loader.Refresh(fmt.Sprintf("creating %s/%s", namespace.Name, containerName))
-	// TODO defer close + exec + forward
-	b.loader.Sleep(5)
+	watcher, err := appClient.Deployments(namespace.Name).Watch(b.ctx, metav1.SingleObject(deployment.ObjectMeta))
+	if err != nil {
+		log.Fatal().Err(err).Msg("error watch deployment")
+	}
 
+	// blocks until the deployment is available, then stop watching
+	for event := range watcher.ResultChan() {
+		switch event.Type {
+		case watch.Modified:
+			deploymentEvent := event.Object.(*appsv1.Deployment)
+
+			for _, condition := range deploymentEvent.Status.Conditions {
+				log.Debug().Msgf("watch event: type=%v, condition=%v", event.Type, condition.Message)
+
+				if condition.Type == appsv1.DeploymentAvailable &&
+					condition.Status == corev1.ConditionTrue {
+					watcher.Stop()
+				}
+			}
+
+		default:
+			log.Fatal().Msgf("error event type: %s", event.Type)
+		}
+	}
+
+	return deployment
+}
+
+func (b *KubeBox) openBox(deployment *appsv1.Deployment, tty bool) {
+	coreClient := b.kubeClientSet.CoreV1()
+
+	// find unique pod for deployment
+	labelSet := labels.Set(deployment.Spec.Selector.MatchLabels)
+	listOptions := metav1.ListOptions{LabelSelector: labelSet.AsSelector().String()}
+	pods, err := coreClient.Pods(deployment.Namespace).List(b.ctx, listOptions)
+	if err != nil {
+		log.Fatal().Err(err).Msg("error list pods")
+	}
+	if len(pods.Items) != 1 {
+		log.Fatal().Msgf("only 1 pod expected for deployment with labels=%s", deployment.Spec.Selector.MatchLabels)
+	}
+	pod := pods.Items[0]
+	log.Debug().Msgf("found matching pod %s", pod.Name)
+
+	// exec remote shell
+	restRequest := coreClient.RESTClient().
+		Post().
+		Namespace(pod.Namespace).
+		Resource("pods").
+		Name(pod.Name).
+		SubResource("exec").
+		VersionedParams(&corev1.PodExecOptions{
+			Container: pod.Spec.Containers[0].Name,
+			Command:   []string{"/bin/bash"},
+			Stdin:     true,
+			Stdout:    true,
+			Stderr:    true,
+			TTY:       tty,
+		}, scheme.ParameterCodec)
+
+	exec, err := remotecommand.NewSPDYExecutor(b.kubeRestConfig, "POST", restRequest.URL())
+	if err != nil {
+		log.Fatal().Err(err).Msg("error spdy executor")
+	}
+
+	// TODO
+	rawTerminal := terminal.NewRawTerminal()
+	if rawTerminal == nil {
+		log.Fatal().Msg("error raw terminal")
+	}
+	defer rawTerminal.Restore()
 	b.loader.Stop()
+
+	err = exec.Stream(remotecommand.StreamOptions{
+		Stdin:  os.Stdin,
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+		Tty:    tty,
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("error exec stream")
+	}
 }
 
 func buildSpec(namespaceName string, containerName string, template *model.BoxV1, config *model.KubeConfig) (*appsv1.Deployment, *corev1.Service) {
 
-	labels := buildLabels(containerName, template.ImageVersion())
+	labels := buildLabels(containerName, template.SafeName(), template.ImageVersion())
 	objectMeta := metav1.ObjectMeta{
 		Name:      containerName,
 		Namespace: namespaceName,
@@ -117,10 +212,12 @@ func buildSpec(namespaceName string, containerName string, template *model.BoxV1
 
 type Labels map[string]string
 
-func buildLabels(name, version string) Labels {
+func buildLabels(name, instance, version string) Labels {
 	return map[string]string{
-		"app.kubernetes.io/name":    name,
-		"app.kubernetes.io/version": version,
+		"app.kubernetes.io/name":       name,
+		"app.kubernetes.io/instance":   instance,
+		"app.kubernetes.io/version":    version,
+		"app.kubernetes.io/managed-by": "hckops",
 	}
 }
 
@@ -181,7 +278,7 @@ func buildDeployment(objectMeta metav1.ObjectMeta, pod *corev1.Pod) *appsv1.Depl
 	return &appsv1.Deployment{
 		ObjectMeta: objectMeta,
 		Spec: appsv1.DeploymentSpec{
-			Replicas: int32Ptr(1),
+			Replicas: int32Ptr(1), // only 1 replica
 			Selector: &metav1.LabelSelector{
 				MatchLabels: objectMeta.Labels,
 			},

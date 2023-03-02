@@ -145,8 +145,8 @@ func (b *DockerBox) openBox(containerId string, tty bool) {
 
 	// TODO always bash
 	execCreateResponse, err := b.dockerClient.ContainerExecCreate(b.ctx, containerId, types.ExecConfig{
-		AttachStdout: true,
 		AttachStdin:  true,
+		AttachStdout: true,
 		AttachStderr: true,
 		Detach:       false,
 		Tty:          tty,
