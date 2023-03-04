@@ -16,6 +16,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 	applyv1 "k8s.io/client-go/applyconfigurations/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -23,6 +24,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/client-go/util/homedir"
+	"k8s.io/kubectl/pkg/cmd/exec"
 
 	model "github.com/hckops/hckctl/internal/model"
 	"github.com/hckops/hckctl/internal/terminal"
@@ -68,14 +70,12 @@ func (b *KubeBox) Init() {
 	b.loader.Start(fmt.Sprintf("loading %s", b.template.Name))
 	b.loader.Sleep(1)
 
-	deployment := b.applyTemplate()
+	pod := b.applyTemplate()
 	// TODO tty false for tunnel only
-	b.openBox(deployment, true)
-
-	b.loader.Stop()
+	b.openBox(pod, true)
 }
 
-func (b *KubeBox) applyTemplate() *appsv1.Deployment {
+func (b *KubeBox) applyTemplate() *corev1.Pod {
 	coreClient := b.kubeClientSet.CoreV1()
 	appClient := b.kubeClientSet.AppsV1()
 
@@ -96,7 +96,8 @@ func (b *KubeBox) applyTemplate() *appsv1.Deployment {
 	if err != nil {
 		log.Fatal().Err(err).Msg("error create deployment")
 	}
-	defer appClient.Deployments(namespace.Name).Delete(b.ctx, deployment.Name, metav1.DeleteOptions{})
+	// TODO
+	//defer appClient.Deployments(namespace.Name).Delete(b.ctx, deployment.Name, metav1.DeleteOptions{})
 	log.Debug().Msgf("deployment %s successfully created", deployment.Name)
 
 	// create service
@@ -105,7 +106,8 @@ func (b *KubeBox) applyTemplate() *appsv1.Deployment {
 		if err != nil {
 			log.Fatal().Err(err).Msg("error create service")
 		}
-		defer coreClient.Services(namespace.Name).Delete(b.ctx, service.Name, metav1.DeleteOptions{})
+		// TODO
+		//defer coreClient.Services(namespace.Name).Delete(b.ctx, service.Name, metav1.DeleteOptions{})
 		log.Debug().Msgf("service %s successfully created", service.Name)
 	} else {
 		log.Debug().Msg("service not created")
@@ -136,12 +138,6 @@ func (b *KubeBox) applyTemplate() *appsv1.Deployment {
 		}
 	}
 
-	return deployment
-}
-
-func (b *KubeBox) openBox(deployment *appsv1.Deployment, tty bool) {
-	coreClient := b.kubeClientSet.CoreV1()
-
 	// find unique pod for deployment
 	labelSet := labels.Set(deployment.Spec.Selector.MatchLabels)
 	listOptions := metav1.ListOptions{LabelSelector: labelSet.AsSelector().String()}
@@ -154,6 +150,24 @@ func (b *KubeBox) openBox(deployment *appsv1.Deployment, tty bool) {
 	}
 	pod := pods.Items[0]
 	log.Debug().Msgf("found matching pod %s", pod.Name)
+
+	return &pod
+}
+
+// https://github.com/kubernetes/kubectl/blob/master/pkg/cmd/exec/exec.go
+func (b *KubeBox) openBox(pod *corev1.Pod, isTty bool) {
+	coreClient := b.kubeClientSet.CoreV1()
+
+	streamOptions := exec.StreamOptions{
+		Stdin: true,
+		TTY:   isTty,
+		IOStreams: genericclioptions.IOStreams{
+			In:     os.Stdin,
+			Out:    os.Stdout,
+			ErrOut: os.Stderr,
+		},
+	}
+	tty := streamOptions.SetupTTY()
 
 	// exec remote shell
 	restRequest := coreClient.RESTClient().
@@ -168,29 +182,23 @@ func (b *KubeBox) openBox(deployment *appsv1.Deployment, tty bool) {
 			Stdin:     true,
 			Stdout:    true,
 			Stderr:    true,
-			TTY:       tty,
+			TTY:       tty.Raw,
 		}, scheme.ParameterCodec)
 
-	exec, err := remotecommand.NewSPDYExecutor(b.kubeRestConfig, "POST", restRequest.URL())
-	if err != nil {
-		log.Fatal().Err(err).Msg("error spdy executor")
+	executor := exec.DefaultRemoteExecutor{}
+
+	var sizeQueue remotecommand.TerminalSizeQueue
+	if tty.Raw {
+		sizeQueue = tty.MonitorSize(tty.GetSize())
+		streamOptions.ErrOut = nil
 	}
 
-	// TODO
-	rawTerminal := terminal.NewRawTerminal()
-	if rawTerminal == nil {
-		log.Fatal().Msg("error raw terminal")
-	}
-	defer rawTerminal.Restore()
 	b.loader.Stop()
 
-	err = exec.Stream(remotecommand.StreamOptions{
-		Stdin:  os.Stdin,
-		Stdout: os.Stdout,
-		Stderr: os.Stderr,
-		Tty:    tty,
-	})
-	if err != nil {
+	fn := func() error {
+		return executor.Execute("POST", restRequest.URL(), b.kubeRestConfig, streamOptions.In, streamOptions.Out, streamOptions.ErrOut, tty.Raw, sizeQueue)
+	}
+	if err := tty.Safe(fn); err != nil {
 		log.Fatal().Err(err).Msg("error exec stream")
 	}
 }
