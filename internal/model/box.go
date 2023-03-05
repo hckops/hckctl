@@ -64,6 +64,7 @@ func (box *BoxV1) HasPorts() bool {
 	return len(box.Network.Ports) > 0
 }
 
+// TODO validate that ports are valid ints + verify schema type
 func (box *BoxV1) NetworkPorts() []PortV1 {
 
 	ports := make([]PortV1, 0)

@@ -1,8 +1,11 @@
 package box
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -22,7 +25,9 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/tools/remotecommand"
+	"k8s.io/client-go/transport/spdy"
 	"k8s.io/client-go/util/homedir"
 	"k8s.io/kubectl/pkg/cmd/exec"
 
@@ -65,6 +70,7 @@ func NewKubeBox(template *model.BoxV1, config *model.KubeConfig) *KubeBox {
 	}
 }
 
+// TODO detached mode + reconnect to existing
 func (b *KubeBox) OpenBox() {
 	log.Debug().Msgf("init kube box: \n%v\n", b.template.Pretty())
 	b.loader.Start(fmt.Sprintf("loading %s", b.template.Name))
@@ -73,7 +79,7 @@ func (b *KubeBox) OpenBox() {
 	pod, deleteResources := b.applyTemplate()
 	defer deleteResources()
 
-	// TODO forward all ports
+	b.portForwardPod(pod)
 
 	// TODO tty false for tunnel only
 	b.execPod(pod, true)
@@ -179,6 +185,85 @@ func (b *KubeBox) getPod(deployment *appsv1.Deployment) *corev1.Pod {
 	return &pod
 }
 
+func (b *KubeBox) portForwardPod(pod *corev1.Pod) {
+	coreClient := b.kubeClientSet.CoreV1()
+
+	if !b.template.HasPorts() {
+		// exit, no service/port available to bind
+		return
+	}
+
+	var portBindings []string
+	for i, port := range b.template.NetworkPorts() {
+		localPort := getLocalAvailablePort(port.Local)
+		log.Info().Msgf("[%d] forwarding %s (local) -> %s (remote)", i+1, localPort, port.Remote)
+
+		portBindings = append(portBindings, fmt.Sprintf("%s:%s", localPort, port.Remote))
+	}
+
+	restRequest := coreClient.RESTClient().
+		Post().
+		Resource("pods").
+		Namespace(pod.Namespace).
+		Name(pod.Name).
+		SubResource("portforward")
+
+	transport, upgrader, err := spdy.RoundTripperFor(b.kubeRestConfig)
+	if err != nil {
+		log.Fatal().Err(err).Msg("error kube round tripper")
+	}
+	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, http.MethodPost, restRequest.URL())
+
+	stopChannel := b.ctx.Done()
+	readyChannel := make(chan struct{}, 1)
+	out := new(bytes.Buffer)
+	errOut := new(bytes.Buffer)
+
+	forwarder, err := portforward.New(dialer, portBindings, stopChannel, readyChannel, out, errOut)
+	if err != nil {
+		log.Fatal().Err(err).Msg("error kube new portforward")
+	}
+
+	// wait until interrupted
+	log.Debug().Msgf("forwarding all ports for pod %s", pod.Name)
+	go func() {
+		if err := forwarder.ForwardPorts(); err != nil {
+			log.Fatal().Err(err).Msg("error kube forwarding")
+		}
+	}()
+	for range readyChannel {
+	}
+
+	if len(errOut.String()) != 0 {
+		log.Fatal().Msgf("error kube new portforward: %s", errOut.String())
+	}
+}
+
+func getLocalAvailablePort(port string) string {
+	if err := verifyOpenPort(port); err == nil {
+		return port
+	} else {
+		p, _ := strconv.Atoi(port)
+		nextPort := strconv.Itoa(p + 1)
+		log.Warn().Err(err).Msgf("port %s is not available, attempt %s", port, nextPort)
+
+		return getLocalAvailablePort(nextPort)
+	}
+}
+
+func verifyOpenPort(port string) error {
+	listener, err := net.Listen("tcp", fmt.Sprintf("[::]:%s", port))
+	if err != nil {
+		return fmt.Errorf("unable to listen on port %s: %v", port, err)
+	}
+
+	if err := listener.Close(); err != nil {
+		return fmt.Errorf("failed to close port %s: %v", port, err)
+	}
+
+	return nil
+}
+
 func (b *KubeBox) execPod(pod *corev1.Pod, isTty bool) {
 	coreClient := b.kubeClientSet.CoreV1()
 
@@ -222,7 +307,7 @@ func (b *KubeBox) execPod(pod *corev1.Pod, isTty bool) {
 	b.loader.Stop()
 
 	fn := func() error {
-		return executor.Execute("POST", restRequest.URL(), b.kubeRestConfig, streamOptions.In, streamOptions.Out, streamOptions.ErrOut, tty.Raw, sizeQueue)
+		return executor.Execute(http.MethodPost, restRequest.URL(), b.kubeRestConfig, streamOptions.In, streamOptions.Out, streamOptions.ErrOut, tty.Raw, sizeQueue)
 	}
 	if err := tty.Safe(fn); err != nil {
 		log.Warn().Err(err).Msg("terminal session closed")
