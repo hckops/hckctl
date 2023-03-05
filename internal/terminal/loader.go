@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/briandowns/spinner"
+	"github.com/rs/zerolog/log"
 )
 
 type Loader struct {
@@ -26,6 +27,7 @@ func (l *Loader) Start(message string) {
 }
 
 func (l *Loader) update(message string) {
+	log.Debug().Msgf("loader: %s", message)
 	l.spinner.Suffix = fmt.Sprintf("  %s", message)
 }
 

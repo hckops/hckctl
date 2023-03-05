@@ -47,7 +47,7 @@ func (b *DockerBox) OpenBox() {
 	log.Debug().Msgf("init docker box: \n%v\n", b.template.Pretty())
 	b.loader.Start(fmt.Sprintf("loading %s", b.template.Name))
 
-	// TODO compare latest local and remote hash i.e. midnight schedule
+	// TODO delete dangling images
 	reader, err := b.dockerClient.ImagePull(b.ctx, b.template.ImageName(), types.ImagePullOptions{})
 	if err != nil {
 		log.Fatal().Err(err).Msg("error image pull")

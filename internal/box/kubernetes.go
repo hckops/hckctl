@@ -30,7 +30,7 @@ import (
 	"github.com/hckops/hckctl/internal/terminal"
 )
 
-// TODO add log?
+// TODO add log with context?
 type KubeBox struct {
 	ctx            context.Context
 	loader         *terminal.Loader
