@@ -44,7 +44,7 @@ tail -f /tmp/hckctl-*.log
 
 Box command
 
-> TODO detached mode + reconnect to existing
+> TODO detached mode + reconnect to existing + tunnel only
 
 ```bash
 # lists boxes

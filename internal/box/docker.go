@@ -15,6 +15,7 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/rs/zerolog/log"
 
+	"github.com/hckops/hckctl/internal/common"
 	"github.com/hckops/hckctl/internal/model"
 	"github.com/hckops/hckctl/internal/terminal"
 )
@@ -42,7 +43,6 @@ func NewDockerBox(template *model.BoxV1) *DockerBox {
 	}
 }
 
-// TODO add flags detached and tunnel-only
 func (b *DockerBox) OpenBox() {
 	log.Debug().Msgf("init docker box: \n%v\n", b.template.Pretty())
 	b.loader.Start(fmt.Sprintf("loading %s", b.template.Name))
@@ -62,19 +62,16 @@ func (b *DockerBox) OpenBox() {
 
 	b.loader.Refresh(fmt.Sprintf("creating %s", containerName))
 
-	// TODO if port is busy start on port+1? or prompt to attach to existing?
-	ports := buildDockerPorts(b.template.NetworkPorts())
-
 	newContainer, err := b.dockerClient.ContainerCreate(
 		b.ctx,
 		buildContainerConfig(
 			b.template.ImageName(),
 			containerName,
-			ports,
+			b.template.NetworkPorts(),
 		), // containerConfig
-		buildHostConfig(ports), // hostConfig
-		nil,                    // networkingConfig
-		nil,                    // platform
+		buildHostConfig(b.template.NetworkPorts()), // hostConfig
+		nil, // networkingConfig
+		nil, // platform
 		containerName)
 	if err != nil {
 		log.Fatal().Err(err).Msg("error container create")
@@ -82,31 +79,21 @@ func (b *DockerBox) OpenBox() {
 
 	containerId := newContainer.ID
 
-	log.Debug().Msgf("open new box: image=%s, containerName=%s, containerId=%s", b.template.ImageName(), containerName, containerId)
+	log.Info().Msgf("open new box: image=%s, containerName=%s, containerId=%s", b.template.ImageName(), containerName, containerId)
 
 	// TODO tty false for tunnel only
 	b.execContainer(containerId, true)
 }
 
-func buildDockerPorts(ports []model.PortV1) []nat.Port {
-
-	dockerPorts := make([]nat.Port, 0)
-	for _, port := range ports {
-
-		p, err := nat.NewPort("tcp", port.Local)
-		if err != nil {
-			log.Fatal().Err(err).Msg("error docker port")
-		}
-		dockerPorts = append(dockerPorts, p)
-	}
-	return dockerPorts
-}
-
-func buildContainerConfig(imageName string, containerName string, ports []nat.Port) *container.Config {
+func buildContainerConfig(imageName string, containerName string, ports []model.PortV1) *container.Config {
 
 	exposedPorts := make(nat.PortSet)
 	for _, port := range ports {
-		exposedPorts[port] = struct{}{}
+		p, err := nat.NewPort("tcp", port.Remote)
+		if err != nil {
+			log.Fatal().Err(err).Msg("error docker port: containerConfig")
+		}
+		exposedPorts[p] = struct{}{}
 	}
 
 	return &container.Config{
@@ -122,13 +109,21 @@ func buildContainerConfig(imageName string, containerName string, ports []nat.Po
 	}
 }
 
-func buildHostConfig(ports []nat.Port) *container.HostConfig {
+func buildHostConfig(ports []model.PortV1) *container.HostConfig {
 
 	portBindings := make(nat.PortMap)
 	for _, port := range ports {
-		portBindings[port] = []nat.PortBinding{{
+		remotePort, err := nat.NewPort("tcp", port.Remote)
+		if err != nil {
+			log.Fatal().Err(err).Msg("error docker port: hostConfig")
+		}
+
+		localPort := common.GetLocalPort(port.Local)
+		log.Info().Msgf("[%s] exposing %s (local) -> %s (container)", port.Alias, localPort, port.Remote)
+
+		portBindings[remotePort] = []nat.PortBinding{{
 			HostIP:   "0.0.0.0",
-			HostPort: port.Port(),
+			HostPort: localPort,
 		}}
 	}
 

@@ -77,6 +77,7 @@ func (b *KubeBox) OpenBox() {
 
 	pod, deleteResources := b.applyTemplate()
 	defer deleteResources()
+	log.Info().Msgf("open new box: image=%s, namespace=%s, podName=%s", b.template.ImageName(), pod.Namespace, pod.Name)
 
 	b.portForwardPod(pod)
 
@@ -193,9 +194,9 @@ func (b *KubeBox) portForwardPod(pod *corev1.Pod) {
 	}
 
 	var portBindings []string
-	for i, port := range b.template.NetworkPorts() {
+	for _, port := range b.template.NetworkPorts() {
 		localPort := common.GetLocalPort(port.Local)
-		log.Info().Msgf("[%d] forwarding %s (local) -> %s (remote)", i+1, localPort, port.Remote)
+		log.Info().Msgf("[%s] forwarding %s (local) -> %s (remote)", port.Alias, localPort, port.Remote)
 
 		portBindings = append(portBindings, fmt.Sprintf("%s:%s", localPort, port.Remote))
 	}
