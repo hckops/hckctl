@@ -65,28 +65,32 @@ func NewKubeBox(template *model.BoxV1, config *model.KubeConfig) *KubeBox {
 	}
 }
 
-func (b *KubeBox) Init() {
+func (b *KubeBox) OpenBox() {
 	log.Debug().Msgf("init kube box: \n%v\n", b.template.Pretty())
 	b.loader.Start(fmt.Sprintf("loading %s", b.template.Name))
 	b.loader.Sleep(1)
 
-	pod := b.applyTemplate()
+	pod, deleteResources := b.applyTemplate()
+	defer deleteResources()
+
+	// TODO forward all ports
+
 	// TODO tty false for tunnel only
-	b.openBox(pod, true)
+	b.execPod(pod, true)
 }
 
-func (b *KubeBox) applyTemplate() *corev1.Pod {
+func (b *KubeBox) applyTemplate() (*corev1.Pod, func()) {
 	coreClient := b.kubeClientSet.CoreV1()
 	appClient := b.kubeClientSet.AppsV1()
 
 	// apply namespace, see https://github.com/kubernetes/client-go/issues/1036
 	namespace, err := coreClient.Namespaces().Apply(b.ctx, applyv1.Namespace(b.config.Namespace), metav1.ApplyOptions{FieldManager: "application/apply-patch"})
 	if err != nil {
-		log.Fatal().Err(err).Msg("error apply namespace")
+		log.Fatal().Err(err).Msgf("error kube apply namespace: %s", namespace.Name)
 	}
 	log.Debug().Msgf("namespace %s successfully applied", namespace.Name)
 
-	containerName := b.template.GenerateFullName()
+	containerName := b.template.GenerateName()
 	deploymentSpec, serviceSpec := buildSpec(namespace.Name, containerName, b.template, b.config)
 
 	b.loader.Refresh(fmt.Sprintf("creating %s/%s", namespace.Name, containerName))
@@ -94,38 +98,34 @@ func (b *KubeBox) applyTemplate() *corev1.Pod {
 	// create deployment
 	deployment, err := appClient.Deployments(namespace.Name).Create(b.ctx, deploymentSpec, metav1.CreateOptions{})
 	if err != nil {
-		log.Fatal().Err(err).Msg("error create deployment")
+		log.Fatal().Err(err).Msgf("error kube create deployment: %s", deployment.Name)
 	}
-	// TODO
-	//defer appClient.Deployments(namespace.Name).Delete(b.ctx, deployment.Name, metav1.DeleteOptions{})
 	log.Debug().Msgf("deployment %s successfully created", deployment.Name)
 
-	// create service
+	// create service: can't create a service without ports
+	var service *corev1.Service
 	if b.template.HasPorts() {
-		service, err := coreClient.Services(namespace.Name).Create(b.ctx, serviceSpec, metav1.CreateOptions{})
+		service, err = coreClient.Services(namespace.Name).Create(b.ctx, serviceSpec, metav1.CreateOptions{})
 		if err != nil {
-			log.Fatal().Err(err).Msg("error create service")
+			log.Fatal().Err(err).Msgf("error kube create service: %s", service.Name)
 		}
-		// TODO
-		//defer coreClient.Services(namespace.Name).Delete(b.ctx, service.Name, metav1.DeleteOptions{})
 		log.Debug().Msgf("service %s successfully created", service.Name)
 	} else {
 		log.Debug().Msg("service not created")
 	}
 
+	// blocks until the deployment is available, then stop watching
 	watcher, err := appClient.Deployments(namespace.Name).Watch(b.ctx, metav1.SingleObject(deployment.ObjectMeta))
 	if err != nil {
-		log.Fatal().Err(err).Msg("error watch deployment")
+		log.Fatal().Err(err).Msgf("error kube watch deployment: %s", deployment.Name)
 	}
-
-	// blocks until the deployment is available, then stop watching
 	for event := range watcher.ResultChan() {
 		switch event.Type {
 		case watch.Modified:
 			deploymentEvent := event.Object.(*appsv1.Deployment)
 
 			for _, condition := range deploymentEvent.Status.Conditions {
-				log.Debug().Msgf("watch event: type=%v, condition=%v", event.Type, condition.Message)
+				log.Debug().Msgf("watch kube event: type=%v, condition=%v", event.Type, condition.Message)
 
 				if condition.Type == appsv1.DeploymentAvailable &&
 					condition.Status == corev1.ConditionTrue {
@@ -134,28 +134,52 @@ func (b *KubeBox) applyTemplate() *corev1.Pod {
 			}
 
 		default:
-			log.Fatal().Msgf("error event type: %s", event.Type)
+			log.Fatal().Msgf("error kube event type: %s", event.Type)
 		}
 	}
 
 	// find unique pod for deployment
+	pod := b.getPod(deployment)
+
+	cleanupCallback := func() {
+		if err := appClient.Deployments(namespace.Name).Delete(b.ctx, deployment.Name, metav1.DeleteOptions{}); err != nil {
+			log.Fatal().Err(err).Msgf("error kube delete deployment: %s", deployment.Name)
+		}
+		log.Debug().Msgf("deployment %s successfully deleted", deployment.Name)
+
+		if service != nil {
+			if err := coreClient.Services(namespace.Name).Delete(b.ctx, service.Name, metav1.DeleteOptions{}); err != nil {
+				log.Fatal().Err(err).Msgf("error kube delete service: %s", service.Name)
+			}
+			log.Debug().Msgf("service %s successfully deleted", service.Name)
+		}
+	}
+
+	return pod, cleanupCallback
+}
+
+func (b *KubeBox) getPod(deployment *appsv1.Deployment) *corev1.Pod {
+	coreClient := b.kubeClientSet.CoreV1()
+
 	labelSet := labels.Set(deployment.Spec.Selector.MatchLabels)
 	listOptions := metav1.ListOptions{LabelSelector: labelSet.AsSelector().String()}
+
 	pods, err := coreClient.Pods(deployment.Namespace).List(b.ctx, listOptions)
 	if err != nil {
 		log.Fatal().Err(err).Msg("error list pods")
 	}
+
 	if len(pods.Items) != 1 {
 		log.Fatal().Msgf("only 1 pod expected for deployment with labels=%s", deployment.Spec.Selector.MatchLabels)
 	}
+
 	pod := pods.Items[0]
 	log.Debug().Msgf("found matching pod %s", pod.Name)
 
 	return &pod
 }
 
-// https://github.com/kubernetes/kubectl/blob/master/pkg/cmd/exec/exec.go
-func (b *KubeBox) openBox(pod *corev1.Pod, isTty bool) {
+func (b *KubeBox) execPod(pod *corev1.Pod, isTty bool) {
 	coreClient := b.kubeClientSet.CoreV1()
 
 	streamOptions := exec.StreamOptions{
@@ -167,7 +191,14 @@ func (b *KubeBox) openBox(pod *corev1.Pod, isTty bool) {
 			ErrOut: os.Stderr,
 		},
 	}
+
 	tty := streamOptions.SetupTTY()
+
+	var sizeQueue remotecommand.TerminalSizeQueue
+	if tty.Raw {
+		sizeQueue = tty.MonitorSize(tty.GetSize())
+		streamOptions.ErrOut = nil
+	}
 
 	// exec remote shell
 	restRequest := coreClient.RESTClient().
@@ -187,19 +218,14 @@ func (b *KubeBox) openBox(pod *corev1.Pod, isTty bool) {
 
 	executor := exec.DefaultRemoteExecutor{}
 
-	var sizeQueue remotecommand.TerminalSizeQueue
-	if tty.Raw {
-		sizeQueue = tty.MonitorSize(tty.GetSize())
-		streamOptions.ErrOut = nil
-	}
-
+	log.Debug().Msgf("exec into pod %s", pod.Name)
 	b.loader.Stop()
 
 	fn := func() error {
 		return executor.Execute("POST", restRequest.URL(), b.kubeRestConfig, streamOptions.In, streamOptions.Out, streamOptions.ErrOut, tty.Raw, sizeQueue)
 	}
 	if err := tty.Safe(fn); err != nil {
-		log.Fatal().Err(err).Msg("error exec stream")
+		log.Warn().Err(err).Msg("terminal session closed")
 	}
 }
 

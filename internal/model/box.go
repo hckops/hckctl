@@ -45,7 +45,7 @@ func (box *BoxV1) ImageVersion() string {
 }
 
 func (box *BoxV1) GenerateName() string {
-	return fmt.Sprintf("box-%s-%s", box.Name, uniuri.NewLen(5))
+	return fmt.Sprintf("box-%s-%s", box.Name, strings.ToLower(uniuri.NewLen(5)))
 }
 
 // matches anything other than a letter, digit or underscore, equivalent to "[^a-zA-Z0-9_]"

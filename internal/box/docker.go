@@ -43,7 +43,7 @@ func NewDockerBox(template *model.BoxV1) *DockerBox {
 }
 
 // TODO add flags detached and tunnel-only
-func (b *DockerBox) Init() {
+func (b *DockerBox) OpenBox() {
 	log.Debug().Msgf("init docker box: \n%v\n", b.template.Pretty())
 	b.loader.Start(fmt.Sprintf("loading %s", b.template.Name))
 
@@ -85,7 +85,7 @@ func (b *DockerBox) Init() {
 	log.Debug().Msgf("open new box: image=%s, containerName=%s, containerId=%s", b.template.ImageName(), containerName, containerId)
 
 	// TODO tty false for tunnel only
-	b.openBox(containerId, true)
+	b.execContainer(containerId, true)
 }
 
 func buildDockerPorts(ports []model.PortV1) []nat.Port {
@@ -137,7 +137,7 @@ func buildHostConfig(ports []nat.Port) *container.HostConfig {
 	}
 }
 
-func (b *DockerBox) openBox(containerId string, tty bool) {
+func (b *DockerBox) execContainer(containerId string, tty bool) {
 
 	if err := b.dockerClient.ContainerStart(b.ctx, containerId, types.ContainerStartOptions{}); err != nil {
 		log.Fatal().Err(err).Msg("error container start")
