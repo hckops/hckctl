@@ -18,6 +18,7 @@ const (
 )
 
 const (
+	ProjectName   string = "hckops"
 	CliName       string = "hckctl"
 	ConfigDir     string = "hck"
 	ConfigNameEnv string = "HCK_CONFIG" //  overrides .config/hck/config.yml

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -31,6 +30,7 @@ import (
 	"k8s.io/client-go/util/homedir"
 	"k8s.io/kubectl/pkg/cmd/exec"
 
+	"github.com/hckops/hckctl/internal/common"
 	model "github.com/hckops/hckctl/internal/model"
 	"github.com/hckops/hckctl/internal/terminal"
 )
@@ -70,7 +70,6 @@ func NewKubeBox(template *model.BoxV1, config *model.KubeConfig) *KubeBox {
 	}
 }
 
-// TODO detached mode + reconnect to existing
 func (b *KubeBox) OpenBox() {
 	log.Debug().Msgf("init kube box: \n%v\n", b.template.Pretty())
 	b.loader.Start(fmt.Sprintf("loading %s", b.template.Name))
@@ -195,7 +194,7 @@ func (b *KubeBox) portForwardPod(pod *corev1.Pod) {
 
 	var portBindings []string
 	for i, port := range b.template.NetworkPorts() {
-		localPort := getLocalAvailablePort(port.Local)
+		localPort := common.GetLocalPort(port.Local)
 		log.Info().Msgf("[%d] forwarding %s (local) -> %s (remote)", i+1, localPort, port.Remote)
 
 		portBindings = append(portBindings, fmt.Sprintf("%s:%s", localPort, port.Remote))
@@ -237,31 +236,6 @@ func (b *KubeBox) portForwardPod(pod *corev1.Pod) {
 	if len(errOut.String()) != 0 {
 		log.Fatal().Msgf("error kube new portforward: %s", errOut.String())
 	}
-}
-
-func getLocalAvailablePort(port string) string {
-	if err := verifyOpenPort(port); err == nil {
-		return port
-	} else {
-		p, _ := strconv.Atoi(port)
-		nextPort := strconv.Itoa(p + 1)
-		log.Warn().Err(err).Msgf("port %s is not available, attempt %s", port, nextPort)
-
-		return getLocalAvailablePort(nextPort)
-	}
-}
-
-func verifyOpenPort(port string) error {
-	listener, err := net.Listen("tcp", fmt.Sprintf("[::]:%s", port))
-	if err != nil {
-		return fmt.Errorf("unable to listen on port %s: %v", port, err)
-	}
-
-	if err := listener.Close(); err != nil {
-		return fmt.Errorf("failed to close port %s: %v", port, err)
-	}
-
-	return nil
 }
 
 func (b *KubeBox) execPod(pod *corev1.Pod, isTty bool) {
@@ -336,7 +310,7 @@ func buildLabels(name, instance, version string) Labels {
 		"app.kubernetes.io/name":       name,
 		"app.kubernetes.io/instance":   instance,
 		"app.kubernetes.io/version":    version,
-		"app.kubernetes.io/managed-by": "hckops",
+		"app.kubernetes.io/managed-by": common.ProjectName,
 	}
 }
 

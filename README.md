@@ -43,6 +43,9 @@ tail -f /tmp/hckctl-*.log
 ```
 
 Box command
+
+> TODO detached mode + reconnect to existing
+
 ```bash
 # lists boxes
 go run main.go box list
