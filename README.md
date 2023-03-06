@@ -1,26 +1,17 @@
 <h1 align="center"><code>hckctl</code></h1>
 
+<h3 align="center">The Cloud Native HaCKing Tool</h3>
+
+<p align="center">
+  <img width="160" src="docs/logo.svg" alt="logo">
+</p>
+
 <div align="center">
   <a href="https://github.com/hckops/hckctl/actions/workflows/ci.yaml">
     <img src="https://github.com/hckops/hckctl/actions/workflows/ci.yaml/badge.svg" alt="ci">
   </a>
 </div>
 <br>
-
-<p align="center">
-  <img width="160" src="docs/logo.svg" alt="logo">
-</p>
-
-The Cloud Native HaCKing Tool
-
-## Setup
-
-```bash
-# TODO latest
-# TODO verify archives + add brew
-curl -sSL https://github.com/hckops/hckctl/releases/download/v0.1.0/hckctl_linux_x86_64.tar.gz | \
-  tar -xzf - -C /usr/local/bin
-```
 
 ## Quick start
 
@@ -29,7 +20,7 @@ Create an `alpine` box to see how it works
 # spawns a docker box locally
 hckctl box alpine
 
-# deploys a box in your kubernetes cluster
+# deploys a box to your kubernetes cluster
 hckctl box alpine --provider kube
 ```
 
@@ -50,21 +41,32 @@ vncviewer localhost:5900
 [open|xdg-open] http://localhost:7681
 ```
 
-## Commands
+## Setup
+
+> TODO
+
+```bash
+# TODO latest
+curl -sSL https://github.com/hckops/hckctl/releases/download/v0.1.0/hckctl_linux_x86_64.tar.gz | \
+  tar -xzf - -C /usr/local/bin
+```
+
+## Guide
 
 ### Box
 
-Boxes are community driven and publicly maintained docker images, designed for security enthusiasts that want to spend more time hacking and need an environment that is constantly updated, quick to start and just work.
+> **Boxes** are community driven and publicly maintained docker images, designed for security enthusiasts that want to spend more time hacking and need an environment that is constantly updated, quick to start and just work
 
 Main features:
 * public, you want to know what you are running!
   - see templates: TODO
   - see docker images: TODO
-* constantly unpdated
+* constantly updated
   - see scheduled actions TODO
 * unified local and remote experience
 * all declared ports are exposed and forwarded by default
 * resources are automatically deleted once you close the box
+* the *cloud* version currently is in private beta only
 
 ```bash
 # lists boxes
@@ -76,24 +78,19 @@ hckctl box alpine --provider docker
 
 # starts a kubernetes box
 hckctl box alpine --provider kube
-```
 
-> TODO discord
-
-The *cloud* version is in private beta only, request more information in the discord channel!
-```bash
 # starts a remote box
 hckctl box alpine --provider cloud
 ```
 
 ### Lab
 
-Labs are user-defined customized hacking environments for your specific needs
+> **Labs** are user-defined hacking environments for your specific needs
 
 Main features:
 * override defaults e.g. credentials, environment variables, etc.
 * attach volumes
-* multiple connected boxes
+* connect multiple boxes
 
 > WIP coming soon
 
@@ -110,11 +107,11 @@ hckctl template -p ../megalopolis/boxes/official/alpine.yml
 ### Config
 
 ```bash
-# edits config file
-vim ~/.config/hck/config.yml
-
 # prints current config
 hckctl config
+
+# edits config file
+vim ~/.config/hck/config.yml
 ```
 
 ## Development
@@ -142,3 +139,4 @@ TODO
 * add tests
 * finalize schema (move in megalopolis)
 * add cmd version
+* release: verify archives + add brew
