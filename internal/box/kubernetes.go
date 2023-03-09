@@ -30,21 +30,22 @@ import (
 	"k8s.io/kubectl/pkg/cmd/exec"
 
 	"github.com/hckops/hckctl/internal/common"
-	model "github.com/hckops/hckctl/internal/model"
+	cli "github.com/hckops/hckctl/internal/model"
 	"github.com/hckops/hckctl/internal/terminal"
+	"github.com/hckops/hckctl/pkg/model"
 )
 
 // TODO add log with context?
 type KubeBox struct {
 	ctx            context.Context
 	loader         *terminal.Loader
-	config         *model.KubeConfig
+	config         *cli.KubeConfig
 	template       *model.BoxV1
 	kubeRestConfig *rest.Config
 	kubeClientSet  *kubernetes.Clientset
 }
 
-func NewKubeBox(template *model.BoxV1, config *model.KubeConfig) *KubeBox {
+func NewKubeBox(template *model.BoxV1, config *cli.KubeConfig) *KubeBox {
 
 	kubeconfig := filepath.Join(homedir.HomeDir(), strings.ReplaceAll(config.ConfigPath, "~/", ""))
 	log.Debug().Msgf("read config: configPath=%s, kubeconfig=%s", config.ConfigPath, kubeconfig)
@@ -286,7 +287,7 @@ func (b *KubeBox) execPod(pod *corev1.Pod, streams *model.BoxStreams) {
 	}
 }
 
-func buildSpec(namespaceName string, containerName string, template *model.BoxV1, config *model.KubeConfig) (*appsv1.Deployment, *corev1.Service) {
+func buildSpec(namespaceName string, containerName string, template *model.BoxV1, config *cli.KubeConfig) (*appsv1.Deployment, *corev1.Service) {
 
 	labels := buildLabels(containerName, template.SafeName(), template.ImageVersion())
 	objectMeta := metav1.ObjectMeta{
@@ -332,7 +333,7 @@ func buildContainerPorts(ports []model.PortV1) []corev1.ContainerPort {
 	return containerPorts
 }
 
-func buildPod(objectMeta metav1.ObjectMeta, template *model.BoxV1, config *model.KubeConfig) *corev1.Pod {
+func buildPod(objectMeta metav1.ObjectMeta, template *model.BoxV1, config *cli.KubeConfig) *corev1.Pod {
 
 	containerPorts := buildContainerPorts(template.NetworkPorts())
 

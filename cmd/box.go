@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/hckops/hckctl/internal/box"
-	"github.com/hckops/hckctl/internal/model"
 	"github.com/hckops/hckctl/internal/template"
+	boxModel "github.com/hckops/hckctl/pkg/model"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -32,7 +32,7 @@ func NewBoxCmd() *cobra.Command {
 			if len(args) == 1 {
 				name := args[0]
 				template := requestBoxTemplate(name, config.Revision)
-				boxStreams := &model.BoxStreams{
+				boxStreams := &boxModel.BoxStreams{
 					Stdin:  os.Stdin,
 					Stdout: os.Stdout,
 					Stderr: os.Stderr,
@@ -78,7 +78,7 @@ func NewBoxCmd() *cobra.Command {
 	return command
 }
 
-func requestBoxTemplate(name string, revision string) *model.BoxV1 {
+func requestBoxTemplate(name string, revision string) *boxModel.BoxV1 {
 	log.Debug().Msgf("request box template: name=%s revision=%s", name, revision)
 
 	rawTemplate, err := template.FetchTemplate(name, revision)

@@ -7,7 +7,7 @@ import (
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	"gopkg.in/yaml.v3"
 
-	"github.com/hckops/hckctl/internal/model"
+	"github.com/hckops/hckctl/pkg/model"
 )
 
 //go:embed schema/box-v1.json

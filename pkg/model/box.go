@@ -8,7 +8,7 @@ import (
 
 	"github.com/dchest/uniuri"
 
-	"github.com/hckops/hckctl/internal/common"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 type BoxStreams struct {
@@ -102,6 +102,6 @@ func (box *BoxV1) NetworkPorts() []PortV1 {
 }
 
 func (box *BoxV1) Pretty() string {
-	value, _ := common.ToJson(box)
+	value, _ := util.ToJson(box)
 	return value
 }

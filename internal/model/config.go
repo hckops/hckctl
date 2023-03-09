@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hckops/hckctl/internal/common"
+	"github.com/hckops/hckctl/pkg/util"
 	"github.com/rs/zerolog/log"
 )
 
@@ -66,7 +67,7 @@ func NewConfig() *ConfigV1 {
 }
 
 func (config *ConfigV1) Print() {
-	value, err := common.ToYaml(&config)
+	value, err := util.ToYaml(&config)
 	if err != nil {
 		log.Warn().Msg("invalid config")
 	}

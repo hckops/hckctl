@@ -12,6 +12,7 @@ import (
 
 	"github.com/hckops/hckctl/internal/common"
 	"github.com/hckops/hckctl/internal/model"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 type ProviderFlag enumflag.Flag
@@ -67,7 +68,7 @@ func InitCliConfig() {
 		cliConfig := model.NewConfig()
 
 		var configString string
-		if configString, err = common.ToYaml(&cliConfig); err != nil {
+		if configString, err = util.ToYaml(&cliConfig); err != nil {
 			log.Fatal().Err(fmt.Errorf("error encoding config: %w", err))
 		}
 		if err := viper.ReadConfig(strings.NewReader(configString)); err != nil {

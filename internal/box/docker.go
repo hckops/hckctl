@@ -15,8 +15,8 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/hckops/hckctl/internal/common"
-	"github.com/hckops/hckctl/internal/model"
 	"github.com/hckops/hckctl/internal/terminal"
+	"github.com/hckops/hckctl/pkg/model"
 )
 
 type DockerBox struct {

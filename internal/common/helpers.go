@@ -1,7 +1,6 @@
 package common
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -10,7 +9,6 @@ import (
 	"strconv"
 
 	"github.com/rs/zerolog/log"
-	"gopkg.in/yaml.v2"
 )
 
 func GetUserOrDie() string {
@@ -29,17 +27,6 @@ func EnsurePathOrDie(path string, mod os.FileMode) {
 			log.Fatal().Err(err).Msgf("Unable to create dir %q", dir)
 		}
 	}
-}
-
-func ToJson(data interface{}) (string, error) {
-	bytes, err := json.MarshalIndent(data, "", "  ")
-	return string(bytes), err
-}
-
-func ToYaml(data interface{}) (string, error) {
-	// v2 prints 2 spaces
-	bytes, err := yaml.Marshal(data)
-	return string(bytes), err
 }
 
 func GetLocalPort(port string) string {
