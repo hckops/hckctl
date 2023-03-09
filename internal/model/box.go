@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"io"
 	"regexp"
 	"strings"
 
@@ -9,6 +10,13 @@ import (
 
 	"github.com/hckops/hckctl/internal/common"
 )
+
+type BoxStreams struct {
+	Stdin  io.Reader
+	Stdout io.Writer
+	Stderr io.Writer
+	IsTty  bool // TODO tty false for tunnel only
+}
 
 type BoxV1 struct {
 	Kind  string

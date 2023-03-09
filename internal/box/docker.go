@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
 	"sync"
 
 	"github.com/docker/docker/api/types"
@@ -43,7 +42,7 @@ func NewDockerBox(template *model.BoxV1) *DockerBox {
 	}
 }
 
-func (b *DockerBox) OpenBox() {
+func (b *DockerBox) OpenBox(streams *model.BoxStreams) {
 	log.Debug().Msgf("init docker box: \n%v\n", b.template.Pretty())
 	b.loader.Start(fmt.Sprintf("loading %s", b.template.Name))
 
@@ -81,8 +80,7 @@ func (b *DockerBox) OpenBox() {
 
 	log.Info().Msgf("open new box: image=%s, containerName=%s, containerId=%s", b.template.ImageName(), containerName, containerId)
 
-	// TODO tty false for tunnel only
-	b.execContainer(containerId, true)
+	b.execContainer(containerId, streams)
 }
 
 func buildContainerConfig(imageName string, containerName string, ports []model.PortV1) *container.Config {
@@ -132,7 +130,7 @@ func buildHostConfig(ports []model.PortV1) *container.HostConfig {
 	}
 }
 
-func (b *DockerBox) execContainer(containerId string, tty bool) {
+func (b *DockerBox) execContainer(containerId string, streams *model.BoxStreams) {
 
 	if err := b.dockerClient.ContainerStart(b.ctx, containerId, types.ContainerStartOptions{}); err != nil {
 		log.Fatal().Err(err).Msg("error container start")
@@ -144,7 +142,7 @@ func (b *DockerBox) execContainer(containerId string, tty bool) {
 		AttachStdout: true,
 		AttachStderr: true,
 		Detach:       false,
-		Tty:          tty,
+		Tty:          streams.IsTty,
 		Cmd:          []string{"/bin/bash"},
 	})
 	if err != nil {
@@ -152,7 +150,7 @@ func (b *DockerBox) execContainer(containerId string, tty bool) {
 	}
 
 	execAttachResponse, err := b.dockerClient.ContainerExecAttach(b.ctx, execCreateResponse.ID, types.ExecStartCheck{
-		Tty: tty,
+		Tty: streams.IsTty,
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("error container exec attach")
@@ -165,7 +163,7 @@ func (b *DockerBox) execContainer(containerId string, tty bool) {
 		}
 	}
 
-	handleStreams(&execAttachResponse, tty, removeContainerCallback)
+	handleStreams(&execAttachResponse, streams, removeContainerCallback)
 
 	// fixes echoes and handle SIGTERM interrupt properly
 	rawTerminal := terminal.NewRawTerminal()
@@ -186,17 +184,17 @@ func (b *DockerBox) execContainer(containerId string, tty bool) {
 	}
 }
 
-func handleStreams(execAttachResponse *types.HijackedResponse, tty bool, onCloseCallback func()) {
+func handleStreams(execAttachResponse *types.HijackedResponse, streams *model.BoxStreams, onCloseCallback func()) {
 	var once sync.Once
 	go func() {
 
-		if tty {
-			_, err := io.Copy(os.Stdout, execAttachResponse.Reader)
+		if streams.IsTty {
+			_, err := io.Copy(streams.Stdout, execAttachResponse.Reader)
 			if err != nil {
 				log.Fatal().Err(err).Msg("error copy stdout docker->local")
 			}
 		} else {
-			_, err := stdcopy.StdCopy(os.Stdout, os.Stderr, execAttachResponse.Reader)
+			_, err := stdcopy.StdCopy(streams.Stdout, streams.Stderr, execAttachResponse.Reader)
 			if err != nil {
 				log.Fatal().Err(err).Msg("error copy stdout and stderr docker->local")
 			}
@@ -205,7 +203,7 @@ func handleStreams(execAttachResponse *types.HijackedResponse, tty bool, onClose
 		once.Do(onCloseCallback)
 	}()
 	go func() {
-		_, err := io.Copy(execAttachResponse.Conn, os.Stdin)
+		_, err := io.Copy(execAttachResponse.Conn, streams.Stdin)
 		if err != nil {
 			log.Fatal().Err(err).Msg("error copy stdin local->docker")
 		}

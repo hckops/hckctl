@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/hckops/hckctl/internal/box"
 	"github.com/hckops/hckctl/internal/model"
@@ -31,12 +32,18 @@ func NewBoxCmd() *cobra.Command {
 			if len(args) == 1 {
 				name := args[0]
 				template := requestBoxTemplate(name, config.Revision)
+				boxStreams := &model.BoxStreams{
+					Stdin:  os.Stdin,
+					Stdout: os.Stdout,
+					Stderr: os.Stderr,
+					IsTty:  true,
+				}
 
 				switch provider {
 				case DockerFlag:
-					box.NewDockerBox(template).OpenBox()
+					box.NewDockerBox(template).OpenBox(boxStreams)
 				case KubernetesFlag:
-					box.NewKubeBox(template, &config.Kube).OpenBox()
+					box.NewKubeBox(template, &config.Kube).OpenBox(boxStreams)
 				case CloudFlag:
 					log.Debug().Msg("init cloud box")
 				}

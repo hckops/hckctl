@@ -1,10 +1,10 @@
-<h1 align="center"><code>hckctl</code></h1>
-
-<h3 align="center">The Cloud Native HaCKing Tool</h3>
-
 <p align="center">
   <img width="160" src="docs/logo.svg" alt="logo">
 </p>
+
+<h1 align="center"><code>hckctl</code></h1>
+
+<h3 align="center">The Cloud Native HaCKing Tool</h3>
 
 <div align="center">
   <a href="https://github.com/hckops/hckctl/actions/workflows/ci.yaml">

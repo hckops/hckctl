@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -70,7 +69,7 @@ func NewKubeBox(template *model.BoxV1, config *model.KubeConfig) *KubeBox {
 	}
 }
 
-func (b *KubeBox) OpenBox() {
+func (b *KubeBox) OpenBox(streams *model.BoxStreams) {
 	log.Debug().Msgf("init kube box: \n%v\n", b.template.Pretty())
 	b.loader.Start(fmt.Sprintf("loading %s", b.template.Name))
 	b.loader.Sleep(1)
@@ -80,9 +79,7 @@ func (b *KubeBox) OpenBox() {
 	log.Info().Msgf("open new box: image=%s, namespace=%s, podName=%s", b.template.ImageName(), pod.Namespace, pod.Name)
 
 	b.portForwardPod(pod)
-
-	// TODO tty false for tunnel only
-	b.execPod(pod, true)
+	b.execPod(pod, streams)
 }
 
 func (b *KubeBox) applyTemplate() (*corev1.Pod, func()) {
@@ -239,16 +236,16 @@ func (b *KubeBox) portForwardPod(pod *corev1.Pod) {
 	}
 }
 
-func (b *KubeBox) execPod(pod *corev1.Pod, isTty bool) {
+func (b *KubeBox) execPod(pod *corev1.Pod, streams *model.BoxStreams) {
 	coreClient := b.kubeClientSet.CoreV1()
 
 	streamOptions := exec.StreamOptions{
 		Stdin: true,
-		TTY:   isTty,
+		TTY:   streams.IsTty,
 		IOStreams: genericclioptions.IOStreams{
-			In:     os.Stdin,
-			Out:    os.Stdout,
-			ErrOut: os.Stderr,
+			In:     streams.Stdin,
+			Out:    streams.Stdout,
+			ErrOut: streams.Stderr,
 		},
 	}
 

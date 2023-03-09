@@ -14,7 +14,6 @@ import (
 	"github.com/hckops/hckctl/internal/model"
 )
 
-// see enum https://stackoverflow.com/questions/50824554/permitted-flag-values-for-cobra
 type ProviderFlag enumflag.Flag
 
 const (
