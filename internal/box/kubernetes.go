@@ -33,6 +33,7 @@ import (
 	cli "github.com/hckops/hckctl/internal/model"
 	"github.com/hckops/hckctl/internal/terminal"
 	"github.com/hckops/hckctl/pkg/model"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 // TODO add log with context?
@@ -193,7 +194,7 @@ func (b *KubeBox) portForwardPod(pod *corev1.Pod) {
 
 	var portBindings []string
 	for _, port := range b.template.NetworkPorts() {
-		localPort := common.GetLocalPort(port.Local)
+		localPort := util.GetLocalPort(port.Local)
 		log.Info().Msgf("[%s] forwarding %s (local) -> %s (remote)", port.Alias, localPort, port.Remote)
 
 		portBindings = append(portBindings, fmt.Sprintf("%s:%s", localPort, port.Remote))

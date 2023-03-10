@@ -41,7 +41,7 @@ func NewBoxCmd() *cobra.Command {
 
 				switch provider {
 				case DockerFlag:
-					box.NewDockerBox(template).OpenBox(boxStreams)
+					box.NewDockerBox(template, boxStreams).Open()
 				case KubernetesFlag:
 					box.NewKubeBox(template, &config.Kube).OpenBox(boxStreams)
 				case CloudFlag:
