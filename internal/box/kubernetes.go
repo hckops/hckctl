@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -71,7 +72,16 @@ func NewKubeBox(template *model.BoxV1, config *cli.KubeConfig) *KubeBox {
 	}
 }
 
-func (b *KubeBox) OpenBox(streams *model.BoxStreams) {
+func (b *KubeBox) Open() {
+
+	// TODO
+	streams := &model.BoxStreams{
+		Stdin:  os.Stdin,
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+		IsTty:  true,
+	}
+
 	log.Debug().Msgf("init kube box: \n%v\n", b.template.Pretty())
 	b.loader.Start(fmt.Sprintf("loading %s", b.template.Name))
 	b.loader.Sleep(1)
