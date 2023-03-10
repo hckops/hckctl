@@ -27,7 +27,7 @@ func (l *Loader) Start(message string) {
 }
 
 func (l *Loader) update(message string) {
-	log.Debug().Msgf("loader: %s", message)
+	log.Debug().Msgf("update: %s", message)
 	l.spinner.Suffix = fmt.Sprintf("  %s", message)
 }
 

@@ -11,10 +11,10 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
+	"github.com/moby/term"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log" // TODO remove
 
-	"github.com/hckops/hckctl/internal/terminal" // TODO remove internal
 	"github.com/hckops/hckctl/pkg/model"
 	"github.com/hckops/hckctl/pkg/util"
 )
@@ -185,11 +185,13 @@ func (box *DockerBox) Exec(containerId string, streams *model.BoxStreams, onExec
 	handleStreams(&execAttachResponse, streams, removeContainerCallback)
 
 	// fixes echoes and handle SIGTERM interrupt properly
-	rawTerminal := terminal.NewRawTerminal()
-	if rawTerminal == nil {
-		return errors.Wrap(err, "error raw terminal")
+	if fd, isTerminal := term.GetFdInfo(streams.Stdin); isTerminal {
+		previousState, err := term.SetRawTerminal(fd)
+		if err != nil {
+			return errors.Wrap(err, "error raw terminal")
+		}
+		defer term.RestoreTerminal(fd, previousState)
 	}
-	defer rawTerminal.Restore()
 
 	onExecCallback()
 
