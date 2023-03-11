@@ -25,6 +25,7 @@ type DockerBox struct {
 
 	OnSetupCallback       func()
 	OnCreateCallback      func(port model.PortV1)
+	OnExecCallback        func()
 	OnCloseCallback       func()
 	OnCloseErrorCallback  func(error, string)
 	OnStreamErrorCallback func(error, string) // TODO replace with error channel
@@ -156,7 +157,7 @@ func buildHostConfig(ports []model.PortV1, onPortBindCallback func(port model.Po
 }
 
 // TODO set bash in the config
-func (box *DockerBox) Exec(containerId string, streams *model.BoxStreams, onExecCallback func()) error {
+func (box *DockerBox) Exec(containerId string, streams *model.BoxStreams) error {
 
 	if err := box.docker.ContainerStart(box.ctx, containerId, types.ContainerStartOptions{}); err != nil {
 		return errors.Wrap(err, "error container start")
@@ -201,7 +202,7 @@ func (box *DockerBox) Exec(containerId string, streams *model.BoxStreams, onExec
 		defer term.RestoreTerminal(fd, previousState)
 	}
 
-	onExecCallback()
+	box.OnExecCallback()
 
 	// waits for interrupt signals
 	statusCh, errCh := box.docker.ContainerWait(box.ctx, containerId, container.WaitConditionNotRunning)
@@ -226,13 +227,11 @@ func handleStreams(
 	go func() {
 
 		if streams.IsTty {
-			_, err := io.Copy(streams.Stdout, execAttachResponse.Reader)
-			if err != nil {
+			if _, err := io.Copy(streams.Stdout, execAttachResponse.Reader); err != nil {
 				onStreamErrorCallback(err, "error copy stdout docker->local")
 			}
 		} else {
-			_, err := stdcopy.StdCopy(streams.Stdout, streams.Stderr, execAttachResponse.Reader)
-			if err != nil {
+			if _, err := stdcopy.StdCopy(streams.Stdout, streams.Stderr, execAttachResponse.Reader); err != nil {
 				onStreamErrorCallback(err, "error copy stdout and stderr docker->local")
 			}
 		}
@@ -240,8 +239,7 @@ func handleStreams(
 		once.Do(onCloseCallback)
 	}()
 	go func() {
-		_, err := io.Copy(execAttachResponse.Conn, streams.Stdin)
-		if err != nil {
+		if _, err := io.Copy(execAttachResponse.Conn, streams.Stdin); err != nil {
 			onStreamErrorCallback(err, "error copy stdin local->docker")
 		}
 

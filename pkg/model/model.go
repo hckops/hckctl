@@ -29,8 +29,3 @@ type Box interface {
 	Exec()
 	Close()
 }
-type BoxCallback interface {
-	OnCreate()
-	OnOpen()
-	OnClose()
-}

@@ -63,17 +63,20 @@ func (cli *DockerBoxCli) Open() {
 
 	cli.log.Info().Msgf("opening new box: image=%s, containerName=%s, containerId=%s", imageName, containerName, containerId)
 
+	cli.box.OnExecCallback = func() {
+		cli.loader.Stop()
+	}
 	cli.box.OnCloseCallback = func() {
 		cli.log.Debug().Msgf("removing container: %s", containerId)
 	}
 	cli.box.OnCloseErrorCallback = func(err error, message string) {
-		cli.shutDown(err, message)
+		cli.log.Warn().Err(err).Msg(message)
 	}
 	cli.box.OnStreamErrorCallback = func(err error, message string) {
 		cli.log.Warn().Err(err).Msg(message)
 	}
 
-	cli.box.Exec(containerId, cli.streams, cli.loader.Stop)
+	cli.box.Exec(containerId, cli.streams)
 }
 
 func (cli *DockerBoxCli) shutDown(err error, message string) {
