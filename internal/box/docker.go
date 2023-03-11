@@ -28,8 +28,8 @@ func NewDockerBox(template *model.BoxV1) *DockerBoxCli {
 	}
 
 	return &DockerBoxCli{
-		loader:  terminal.NewLoader(),
 		log:     l,
+		loader:  terminal.NewLoader(),
 		box:     box,
 		streams: model.NewDefaultStreams(true), // TODO tty
 	}

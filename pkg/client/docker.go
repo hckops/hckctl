@@ -23,6 +23,7 @@ type DockerBox struct {
 	docker   *client.Client
 	Template *model.BoxV1
 
+	// TODO found better design than callback
 	OnSetupCallback       func()
 	OnCreateCallback      func(port model.PortV1)
 	OnExecCallback        func()

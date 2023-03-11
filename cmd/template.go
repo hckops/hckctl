@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/hckops/hckctl/internal/template"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+
+	"github.com/hckops/hckctl/internal/template"
 )
 
 func NewTemplateCmd() *cobra.Command {

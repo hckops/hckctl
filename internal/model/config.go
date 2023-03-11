@@ -2,6 +2,8 @@ package model
 
 import (
 	"fmt"
+	"net"
+	"strconv"
 
 	"github.com/hckops/hckctl/internal/common"
 	"github.com/hckops/hckctl/pkg/util"
@@ -20,9 +22,10 @@ type LogConfig struct {
 }
 
 type BoxConfig struct {
-	Revision string     `yaml:"revision"`
-	Provider Provider   `yaml:"provider"`
-	Kube     KubeConfig `yaml:"kube"`
+	Revision string      `yaml:"revision"`
+	Provider Provider    `yaml:"provider"`
+	Kube     KubeConfig  `yaml:"kube"`
+	Cloud    CloudConfig `yaml:"cloud"`
 }
 
 type Provider string
@@ -37,6 +40,17 @@ type KubeConfig struct {
 	Namespace  string        `yaml:"namespace"`
 	ConfigPath string        `yaml:"configPath"`
 	Resources  KubeResources `yaml:"resources"`
+}
+
+type CloudConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Username string `yaml:"username"`
+	Token    string `yaml:"token"`
+}
+
+func (c *CloudConfig) Address() string {
+	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
 }
 
 type KubeResources struct {
@@ -57,6 +71,12 @@ func NewConfig() *ConfigV1 {
 					Memory: "512Mi",
 					Cpu:    "500m",
 				},
+			},
+			Cloud: CloudConfig{
+				Host:     "0.0.0.0",
+				Port:     2222,
+				Username: "",
+				Token:    "",
 			},
 		},
 		Log: LogConfig{

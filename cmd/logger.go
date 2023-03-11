@@ -4,9 +4,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/hckops/hckctl/internal/common"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
+	"github.com/hckops/hckctl/internal/common"
 )
 
 func InitFileLogger() {

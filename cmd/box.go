@@ -3,13 +3,14 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/hckops/hckctl/internal/box"
-	"github.com/hckops/hckctl/internal/template"
-	boxModel "github.com/hckops/hckctl/pkg/model"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/thediveo/enumflag/v2"
+
+	"github.com/hckops/hckctl/internal/box"
+	"github.com/hckops/hckctl/internal/template"
+	"github.com/hckops/hckctl/pkg/model"
 )
 
 func NewBoxCmd() *cobra.Command {
@@ -38,7 +39,7 @@ func NewBoxCmd() *cobra.Command {
 				case KubernetesFlag:
 					box.NewKubeBox(template, &config.Kube).Open()
 				case CloudFlag:
-					log.Debug().Msg("init cloud box")
+					box.NewCloudBox(name, &config.Cloud).Open()
 				}
 
 			} else {
@@ -71,7 +72,7 @@ func NewBoxCmd() *cobra.Command {
 	return command
 }
 
-func requestBoxTemplate(name string, revision string) *boxModel.BoxV1 {
+func requestBoxTemplate(name string, revision string) *model.BoxV1 {
 	log.Debug().Msgf("request box template: name=%s revision=%s", name, revision)
 
 	rawTemplate, err := template.FetchTemplate(name, revision)
