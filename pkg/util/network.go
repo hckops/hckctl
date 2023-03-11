@@ -4,20 +4,18 @@ import (
 	"fmt"
 	"net"
 	"strconv"
-
-	"github.com/rs/zerolog/log"
 )
 
-func GetLocalPort(port string) string {
+func GetLocalPort(port string) (string, error) {
 	if err := verifyOpenPort(port); err == nil {
-		return port
+		return port, nil
 	} else {
 		p, errConv := strconv.Atoi(port)
 		if errConv != nil {
-			log.Fatal().Err(errConv).Msgf("port %s is not a valid int", port)
+			return "", fmt.Errorf("port %s is not a valid int: %v", port, errConv)
 		}
 		nextPort := strconv.Itoa(p + 1)
-		log.Warn().Err(err).Msgf("port %s is not available, attempt %s", port, nextPort)
+		// WARN fmt.Printf("port %s is not available, attempt %s", port, nextPort)
 
 		return GetLocalPort(nextPort)
 	}

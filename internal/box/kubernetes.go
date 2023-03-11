@@ -204,7 +204,7 @@ func (b *KubeBox) portForwardPod(pod *corev1.Pod) {
 
 	var portBindings []string
 	for _, port := range b.template.NetworkPorts() {
-		localPort := util.GetLocalPort(port.Local)
+		localPort, _ := util.GetLocalPort(port.Local)
 		log.Info().Msgf("[%s] forwarding %s (local) -> %s (remote)", port.Alias, localPort, port.Remote)
 
 		portBindings = append(portBindings, fmt.Sprintf("%s:%s", localPort, port.Remote))

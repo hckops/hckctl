@@ -26,8 +26,6 @@ func NewDockerBox(template *model.BoxV1) *DockerBoxCli {
 	if err != nil {
 		l.Fatal().Err(err).Msg("error docker box")
 	}
-	// TODO is this the right place?
-	defer box.Close()
 
 	return &DockerBoxCli{
 		loader:  terminal.NewLoader(),
@@ -38,30 +36,48 @@ func NewDockerBox(template *model.BoxV1) *DockerBoxCli {
 }
 
 func (cli *DockerBoxCli) Open() {
+	defer cli.box.Close()
+
 	cli.log.Debug().Msgf("init docker box:\n%v\n", cli.box.Template.Pretty())
 	cli.loader.Start(fmt.Sprintf("loading %s", cli.box.Template.Name))
 
 	imageName := cli.box.Template.ImageName()
 
-	// TODO add sleep / move loader outside
-	if err := cli.box.Setup(func() {
+	cli.box.OnSetupCallback = func() {
 		cli.loader.Refresh(fmt.Sprintf("pulling %s", imageName))
-	}); err != nil {
-		cli.log.Fatal().Err(err).Msg("error docker box setup")
+	}
+	if err := cli.box.Setup(); err != nil {
+		cli.shutDown(err, "error docker box setup")
 	}
 
 	containerName := cli.box.Template.GenerateName()
-
 	cli.loader.Refresh(fmt.Sprintf("creating %s", containerName))
 
-	containerId, err := cli.box.Create(containerName, func(port model.PortV1) {
+	cli.box.OnCreateCallback = func(port model.PortV1) {
 		cli.log.Info().Msgf("[%s] exposing %s (local) -> %s (container)", port.Alias, port.Local, port.Remote)
-	})
+	}
+	containerId, err := cli.box.Create(containerName)
 	if err != nil {
-		cli.log.Fatal().Err(err).Msg("error docker box create")
+		cli.shutDown(err, "error docker box create")
 	}
 
 	cli.log.Info().Msgf("opening new box: image=%s, containerName=%s, containerId=%s", imageName, containerName, containerId)
 
+	cli.box.OnCloseCallback = func() {
+		cli.log.Debug().Msgf("removing container: %s", containerId)
+	}
+	cli.box.OnCloseErrorCallback = func(err error, message string) {
+		cli.shutDown(err, message)
+	}
+	cli.box.OnStreamErrorCallback = func(err error, message string) {
+		cli.log.Warn().Err(err).Msg(message)
+	}
+
 	cli.box.Exec(containerId, cli.streams, cli.loader.Stop)
+}
+
+func (cli *DockerBoxCli) shutDown(err error, message string) {
+	cli.loader.Stop()
+	fmt.Println(message)
+	cli.log.Fatal().Err(err).Msg(message)
 }
