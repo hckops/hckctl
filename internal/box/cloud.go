@@ -1,87 +1,123 @@
 package box
 
 import (
+	"fmt"
 	"io"
-	"log"
-	"net"
 	"os"
-	"strconv"
 
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	logger "github.com/rs/zerolog/log"
 	"golang.org/x/crypto/ssh"
 
-	"github.com/hckops/hckctl/internal/model"
+	cli "github.com/hckops/hckctl/internal/model"
 	"github.com/hckops/hckctl/internal/terminal"
+	"github.com/hckops/hckctl/pkg/model"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 type CloudBoxCli struct {
-	log    zerolog.Logger
-	loader *terminal.Loader
-	config *model.CloudConfig
+	log      zerolog.Logger
+	loader   *terminal.Loader
+	config   *cli.CloudConfig
+	template *model.BoxV1 // only name is actually needed
 }
 
-func NewCloudBox(name string, config *model.CloudConfig) *CloudBoxCli {
-	l := logger.With().Str("cmd", "docker").Logger()
+func NewCloudBox(template *model.BoxV1, config *cli.CloudConfig) *CloudBoxCli {
+	l := logger.With().Str("cmd", "cloud").Logger()
 
 	return &CloudBoxCli{
-		log:    l,
-		loader: terminal.NewLoader(),
-		config: config,
+		log:      l,
+		loader:   terminal.NewLoader(),
+		config:   config,
+		template: template,
 	}
 }
 
 func (cli *CloudBoxCli) Open() {
+	cli.log.Debug().Msgf("init cloud box:\n%v\n", cli.template.Pretty())
+	cli.loader.Start(fmt.Sprintf("loading to %s/%s", cli.config.Address(), cli.template.Name))
+	cli.loader.Sleep(1)
 
-	address := net.JoinHostPort(cli.config.Host, strconv.Itoa(cli.config.Port))
 	sshConfig := sshClientConfig(cli.config)
-	connect(address, sshConfig)
 
+	client, err := ssh.Dial("tcp", cli.config.Address(), sshConfig)
+	if err != nil {
+		cli.loader.Halt(err, "connection failed")
+	}
+
+	session, err := client.NewSession()
+	if err != nil {
+		cli.loader.Halt(err, "ssh session failed")
+	}
+	defer session.Close()
+
+	cli.log.Debug().Msgf("[%s] ssh connection established (%s)", client.RemoteAddr(), client.ClientVersion())
+
+	onStreamErrorCallback := func(err error, message string) {
+		cli.log.Warn().Err(err).Msg(message)
+	}
+
+	if err := handleStreams(session, onStreamErrorCallback); err != nil {
+		cli.loader.Halt(err, "error streams")
+	}
+
+	terminal, err := util.NewRawTerminal(os.Stdin)
+	if err != nil {
+		cli.log.Warn().Err(err).Msg("error terminal")
+	}
+	defer terminal.Restore()
+
+	// TODO schema "{"kind":"action/v1","name":"hck-box-open","template":{"name":"alpine","version":"latest"}}"
+	cli.loader.Stop()
+	if err := session.Run(fmt.Sprintf("hck-box-open::%s", cli.template.Name)); err != nil && err != io.EOF {
+		cli.loader.Halt(err, "error cloud box open")
+	}
 }
 
-func sshClientConfig(config *model.CloudConfig) *ssh.ClientConfig {
+// TODO ssh agent auth
+func sshClientConfig(config *cli.CloudConfig) *ssh.ClientConfig {
 	sshConfig := &ssh.ClientConfig{
 		User: config.Username,
 		Auth: []ssh.AuthMethod{
 			ssh.Password(config.Token),
 		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // TODO remove
 	}
 	return sshConfig
 }
 
-func connect(address string, sshConfig *ssh.ClientConfig) {
-	client, err := ssh.Dial("tcp", address, sshConfig)
-	if err != nil {
-		log.Fatalf("failed to dial: %v", err)
-	}
-	log.Printf("[%s] new ssh connection (%s)", client.RemoteAddr(), client.ClientVersion())
-
-	session, err := client.NewSession()
-	if err != nil {
-		log.Fatalf("failed to create session: %v", err)
-	}
-	log.Printf("[%s] new ssh connection", client.RemoteAddr())
+func handleStreams(session *ssh.Session, onStreamErrorCallback func(error, string)) error {
 
 	stdin, err := session.StdinPipe()
 	if err != nil {
-		log.Fatalf("Unable to setup stdin for session: %v", err)
+		return errors.Wrap(err, "unable to setup stdin for session")
 	}
-	go io.Copy(stdin, os.Stdin)
+	go func() {
+		if _, err := io.Copy(stdin, os.Stdin); err != nil {
+			onStreamErrorCallback(err, "error copy stdin local->remote")
+		}
+	}()
 
 	stdout, err := session.StdoutPipe()
 	if err != nil {
-		log.Fatalf("Unable to setup stdout for session: %v", err)
+		return errors.Wrap(err, "unable to setup stdout for session")
 	}
-	go io.Copy(os.Stdout, stdout)
+	go func() {
+		if _, err := io.Copy(os.Stdout, stdout); err != nil {
+			onStreamErrorCallback(err, "error copy stdout remote->local")
+		}
+	}()
 
 	stderr, err := session.StderrPipe()
 	if err != nil {
-		log.Fatalf("Unable to setup stderr for session: %v", err)
+		return errors.Wrap(err, "unable to setup stderr for session")
 	}
-	go io.Copy(os.Stderr, stderr)
+	go func() {
+		if _, err := io.Copy(os.Stderr, stderr); err != nil {
+			onStreamErrorCallback(err, "error copy stderr remote->local")
+		}
+	}()
 
-	err = session.Run("docker")
-
-	defer session.Close()
+	return nil
 }

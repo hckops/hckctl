@@ -44,3 +44,9 @@ func (l *Loader) Sleep(seconds int) {
 func (l *Loader) Stop() {
 	l.spinner.Stop()
 }
+
+func (l *Loader) Halt(err error, message string) {
+	l.Stop()
+	fmt.Println(message)
+	log.Fatal().Err(err).Msg(message)
+}

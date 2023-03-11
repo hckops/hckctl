@@ -11,7 +11,6 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
-	"github.com/moby/term"
 	"github.com/pkg/errors"
 
 	"github.com/hckops/hckctl/pkg/model"
@@ -195,12 +194,8 @@ func (box *DockerBox) Exec(containerId string, streams *model.BoxStreams) error 
 	handleStreams(&execAttachResponse, streams, removeContainerCallback, box.OnStreamErrorCallback)
 
 	// fixes echoes and handle SIGTERM interrupt properly
-	if fd, isTerminal := term.GetFdInfo(streams.Stdin); isTerminal {
-		previousState, err := term.SetRawTerminal(fd)
-		if err != nil {
-			return errors.Wrap(err, "error raw terminal")
-		}
-		defer term.RestoreTerminal(fd, previousState)
+	if terminal, err := util.NewRawTerminal(streams.Stdin); err == nil {
+		defer terminal.Restore()
 	}
 
 	box.OnExecCallback()

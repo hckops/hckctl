@@ -39,7 +39,7 @@ func NewBoxCmd() *cobra.Command {
 				case KubernetesFlag:
 					box.NewKubeBox(template, &config.Kube).Open()
 				case CloudFlag:
-					box.NewCloudBox(name, &config.Cloud).Open()
+					box.NewCloudBox(template, &config.Cloud).Open()
 				}
 
 			} else {

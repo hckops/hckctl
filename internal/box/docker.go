@@ -47,7 +47,7 @@ func (cli *DockerBoxCli) Open() {
 		cli.loader.Refresh(fmt.Sprintf("pulling %s", imageName))
 	}
 	if err := cli.box.Setup(); err != nil {
-		cli.shutDown(err, "error docker box setup")
+		cli.loader.Halt(err, "error docker box setup")
 	}
 
 	containerName := cli.box.Template.GenerateName()
@@ -58,7 +58,7 @@ func (cli *DockerBoxCli) Open() {
 	}
 	containerId, err := cli.box.Create(containerName)
 	if err != nil {
-		cli.shutDown(err, "error docker box create")
+		cli.loader.Halt(err, "error docker box create")
 	}
 
 	cli.log.Info().Msgf("opening new box: image=%s, containerName=%s, containerId=%s", imageName, containerName, containerId)
@@ -77,10 +77,4 @@ func (cli *DockerBoxCli) Open() {
 	}
 
 	cli.box.Exec(containerId, cli.streams)
-}
-
-func (cli *DockerBoxCli) shutDown(err error, message string) {
-	cli.loader.Stop()
-	fmt.Println(message)
-	cli.log.Fatal().Err(err).Msg(message)
 }
