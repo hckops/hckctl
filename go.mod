@@ -14,6 +14,7 @@ require (
 	github.com/santhosh-tekuri/jsonschema/v5 v5.1.1
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
+	github.com/stretchr/testify v1.8.1
 	github.com/thediveo/enumflag/v2 v2.0.2
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
 	gopkg.in/yaml.v2 v2.4.0
@@ -76,6 +77,7 @@ require (
 	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/spf13/afero v1.9.3 // indirect
 	github.com/spf13/cast v1.5.0 // indirect

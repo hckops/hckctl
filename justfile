@@ -6,6 +6,9 @@ default: build
 format:
 	go fmt ./...
 
-build: format
+test:
+	go test ./...
+
+build: format test
 	rm -frv {{BUILD_PATH}}
 	go build -o {{BUILD_PATH}}/{{BIN_NAME}} main.go

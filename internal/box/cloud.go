@@ -37,7 +37,6 @@ func NewCloudBox(template *model.BoxV1, config *cli.CloudConfig) *CloudBoxCli {
 func (cli *CloudBoxCli) Open() {
 	cli.log.Debug().Msgf("init cloud box:\n%v\n", cli.template.Pretty())
 	cli.loader.Start(fmt.Sprintf("loading to %s/%s", cli.config.Address(), cli.template.Name))
-	cli.loader.Sleep(1)
 
 	sshConfig := sshClientConfig(cli.config)
 
@@ -68,8 +67,10 @@ func (cli *CloudBoxCli) Open() {
 	}
 	defer terminal.Restore()
 
-	// TODO schema "{"kind":"action/v1","name":"hck-box-open","template":{"name":"alpine","version":"latest"}}"
+	// TODO split channel requests to show progress
 	cli.loader.Stop()
+
+	// TODO schema "{"kind":"action/v1","name":"hck-box-open","template":{"name":"alpine","revision":"main"}}"
 	if err := session.Run(fmt.Sprintf("hck-box-open::%s", cli.template.Name)); err != nil && err != io.EOF {
 		cli.loader.Halt(err, "error cloud box open")
 	}
