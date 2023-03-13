@@ -14,15 +14,15 @@ var schemaBoxV1 string
 // TODO currently supports "box/v1" only: iterate over all validators/versions
 // see objectForKind e.g. yaml -> json https://github.com/argoproj/argo-workflows/blob/master/workflow/common/parse.go
 func ValidateAllSchema(data string) error {
-	return ValidateBoxV1(data)
+	return validateBoxV1(data)
 }
 
 func ParseValidBoxV1(data string) (*BoxV1, error) {
-	if err := ValidateBoxV1(data); err != nil {
+	if err := validateBoxV1(data); err != nil {
 		return nil, err
 	}
 
-	box, err := ParseBoxV1(data)
+	box, err := parseBoxV1(data)
 	if err != nil {
 		return nil, err
 	}
@@ -31,14 +31,14 @@ func ParseValidBoxV1(data string) (*BoxV1, error) {
 }
 
 // returns nil if valid
-func ValidateBoxV1(data string) error {
+func validateBoxV1(data string) error {
 	if err := validateSchema("box-v1.json", schemaBoxV1, data); err != nil {
 		return err
 	}
 	return nil
 }
 
-func ParseBoxV1(data string) (*BoxV1, error) {
+func parseBoxV1(data string) (*BoxV1, error) {
 	// TODO generics ?!
 	var box BoxV1
 	if err := yaml.Unmarshal([]byte(data), &box); err != nil {
