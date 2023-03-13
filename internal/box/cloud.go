@@ -12,7 +12,7 @@ import (
 
 	cli "github.com/hckops/hckctl/internal/model"
 	"github.com/hckops/hckctl/internal/terminal"
-	"github.com/hckops/hckctl/pkg/model"
+	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
@@ -20,10 +20,10 @@ type CloudBoxCli struct {
 	log      zerolog.Logger
 	loader   *terminal.Loader
 	config   *cli.CloudConfig
-	template *model.BoxV1 // only name is actually needed
+	template *schema.BoxV1 // only name is actually needed
 }
 
-func NewCloudBox(template *model.BoxV1, config *cli.CloudConfig) *CloudBoxCli {
+func NewCloudBox(template *schema.BoxV1, config *cli.CloudConfig) *CloudBoxCli {
 	l := logger.With().Str("cmd", "cloud").Logger()
 
 	return &CloudBoxCli{
@@ -34,6 +34,7 @@ func NewCloudBox(template *model.BoxV1, config *cli.CloudConfig) *CloudBoxCli {
 	}
 }
 
+// TODO refactor in pkg/client
 func (cli *CloudBoxCli) Open() {
 	cli.log.Debug().Msgf("init cloud box:\n%v\n", cli.template.Pretty())
 	cli.loader.Start(fmt.Sprintf("loading to %s/%s", cli.config.Address(), cli.template.Name))
@@ -70,7 +71,7 @@ func (cli *CloudBoxCli) Open() {
 	// TODO split channel requests to show progress
 	cli.loader.Stop()
 
-	// TODO schema "{"kind":"action/v1","name":"hck-box-open","template":{"name":"alpine","revision":"main"}}"
+	// TODO schema "{"kind":"action/v1","name":"hck-box-open","body":{"template":"alpine","revision":"main"}}"
 	if err := session.Run(fmt.Sprintf("hck-box-open::%s", cli.template.Name)); err != nil && err != io.EOF {
 		cli.loader.Halt(err, "error cloud box open")
 	}

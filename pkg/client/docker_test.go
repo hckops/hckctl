@@ -7,10 +7,10 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/hckops/hckctl/pkg/model"
+	"github.com/hckops/hckctl/pkg/schema"
 )
 
-var testPorts = []model.PortV1{
+var testPorts = []schema.PortV1{
 	{Alias: "aaa", Local: "123", Remote: "123"},
 	{Alias: "bbb", Local: "456", Remote: "789"},
 }
@@ -45,7 +45,7 @@ func TestBuildHostConfig(t *testing.T) {
 		},
 	}
 
-	result, err := buildHostConfig(testPorts, func(port model.PortV1) {})
+	result, err := buildHostConfig(testPorts, func(port schema.PortV1) {})
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 }

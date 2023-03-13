@@ -9,6 +9,7 @@ import (
 	"github.com/hckops/hckctl/internal/terminal"
 	"github.com/hckops/hckctl/pkg/client"
 	"github.com/hckops/hckctl/pkg/model"
+	"github.com/hckops/hckctl/pkg/schema"
 )
 
 type DockerBoxCli struct {
@@ -19,7 +20,7 @@ type DockerBoxCli struct {
 	streams *model.BoxStreams
 }
 
-func NewDockerBox(template *model.BoxV1) *DockerBoxCli {
+func NewDockerBox(template *schema.BoxV1) *DockerBoxCli {
 	l := logger.With().Str("cmd", "docker").Logger()
 
 	box, err := client.NewDockerBox(template)
@@ -53,7 +54,7 @@ func (cli *DockerBoxCli) Open() {
 	containerName := cli.box.Template.GenerateName()
 	cli.loader.Refresh(fmt.Sprintf("creating %s", containerName))
 
-	cli.box.OnCreateCallback = func(port model.PortV1) {
+	cli.box.OnCreateCallback = func(port schema.PortV1) {
 		cli.log.Info().Msgf("[%s] exposing %s (local) -> %s (container)", port.Alias, port.Local, port.Remote)
 	}
 	containerId, err := cli.box.Create(containerName)

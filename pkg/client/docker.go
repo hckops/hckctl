@@ -14,17 +14,18 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/hckops/hckctl/pkg/model"
+	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
 type DockerBox struct {
 	ctx      context.Context
 	docker   *client.Client
-	Template *model.BoxV1
+	Template *schema.BoxV1
 
 	// TODO look for better design than callbacks
 	OnSetupCallback       func()
-	OnCreateCallback      func(port model.PortV1)
+	OnCreateCallback      func(port schema.PortV1)
 	OnExecCallback        func()
 	OnCloseCallback       func()
 	OnCloseErrorCallback  func(error, string)
@@ -32,7 +33,7 @@ type DockerBox struct {
 }
 
 // don't forget to invoke "defer dockerClient.Close()"
-func NewDockerBox(template *model.BoxV1) (*DockerBox, error) {
+func NewDockerBox(template *schema.BoxV1) (*DockerBox, error) {
 
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -99,7 +100,7 @@ func (box *DockerBox) Create(containerName string) (string, error) {
 	return newContainer.ID, nil
 }
 
-func buildContainerConfig(imageName string, containerName string, ports []model.PortV1) (*container.Config, error) {
+func buildContainerConfig(imageName string, containerName string, ports []schema.PortV1) (*container.Config, error) {
 
 	exposedPorts := make(nat.PortSet)
 	for _, port := range ports {
@@ -123,7 +124,7 @@ func buildContainerConfig(imageName string, containerName string, ports []model.
 	}, nil
 }
 
-func buildHostConfig(ports []model.PortV1, onPortBindCallback func(port model.PortV1)) (*container.HostConfig, error) {
+func buildHostConfig(ports []schema.PortV1, onPortBindCallback func(port schema.PortV1)) (*container.HostConfig, error) {
 
 	portBindings := make(nat.PortMap)
 	for _, port := range ports {
@@ -139,7 +140,7 @@ func buildHostConfig(ports []model.PortV1, onPortBindCallback func(port model.Po
 		}
 
 		// actual port binded port
-		onPortBindCallback(model.PortV1{
+		onPortBindCallback(schema.PortV1{
 			Alias:  port.Alias,
 			Local:  localPort,
 			Remote: port.Remote,

@@ -1,4 +1,4 @@
-package template
+package schema
 
 import (
 	_ "embed"
@@ -6,11 +6,9 @@ import (
 
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	"gopkg.in/yaml.v3"
-
-	"github.com/hckops/hckctl/pkg/model"
 )
 
-//go:embed schema/box-v1.json
+//go:embed json/box-v1.json
 var schemaBoxV1 string
 
 // TODO currently supports "box/v1" only: iterate over all validators/versions
@@ -19,7 +17,7 @@ func ValidateAllSchema(data string) error {
 	return ValidateBoxV1(data)
 }
 
-func ParseValidBoxV1(data string) (*model.BoxV1, error) {
+func ParseValidBoxV1(data string) (*BoxV1, error) {
 	if err := ValidateBoxV1(data); err != nil {
 		return nil, err
 	}
@@ -40,9 +38,9 @@ func ValidateBoxV1(data string) error {
 	return nil
 }
 
-func ParseBoxV1(data string) (*model.BoxV1, error) {
+func ParseBoxV1(data string) (*BoxV1, error) {
 	// TODO generics ?!
-	var box model.BoxV1
+	var box BoxV1
 	if err := yaml.Unmarshal([]byte(data), &box); err != nil {
 		return nil, fmt.Errorf("decode error: %v", err)
 	}

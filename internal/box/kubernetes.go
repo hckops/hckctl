@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/hckops/hckctl/pkg/schema"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -42,12 +43,12 @@ type KubeBox struct {
 	ctx            context.Context
 	loader         *terminal.Loader
 	config         *cli.KubeConfig
-	template       *model.BoxV1
+	template       *schema.BoxV1
 	kubeRestConfig *rest.Config
 	kubeClientSet  *kubernetes.Clientset
 }
 
-func NewKubeBox(template *model.BoxV1, config *cli.KubeConfig) *KubeBox {
+func NewKubeBox(template *schema.BoxV1, config *cli.KubeConfig) *KubeBox {
 
 	kubeconfig := filepath.Join(homedir.HomeDir(), strings.ReplaceAll(config.ConfigPath, "~/", ""))
 	log.Debug().Msgf("read config: configPath=%s, kubeconfig=%s", config.ConfigPath, kubeconfig)
@@ -298,7 +299,7 @@ func (b *KubeBox) execPod(pod *corev1.Pod, streams *model.BoxStreams) {
 	}
 }
 
-func buildSpec(namespaceName string, containerName string, template *model.BoxV1, config *cli.KubeConfig) (*appsv1.Deployment, *corev1.Service) {
+func buildSpec(namespaceName string, containerName string, template *schema.BoxV1, config *cli.KubeConfig) (*appsv1.Deployment, *corev1.Service) {
 
 	labels := buildLabels(containerName, template.SafeName(), template.ImageVersion())
 	objectMeta := metav1.ObjectMeta{
@@ -324,7 +325,7 @@ func buildLabels(name, instance, version string) Labels {
 	}
 }
 
-func buildContainerPorts(ports []model.PortV1) []corev1.ContainerPort {
+func buildContainerPorts(ports []schema.PortV1) []corev1.ContainerPort {
 
 	containerPorts := make([]corev1.ContainerPort, 0)
 	for _, port := range ports {
@@ -344,7 +345,7 @@ func buildContainerPorts(ports []model.PortV1) []corev1.ContainerPort {
 	return containerPorts
 }
 
-func buildPod(objectMeta metav1.ObjectMeta, template *model.BoxV1, config *cli.KubeConfig) *corev1.Pod {
+func buildPod(objectMeta metav1.ObjectMeta, template *schema.BoxV1, config *cli.KubeConfig) *corev1.Pod {
 
 	containerPorts := buildContainerPorts(template.NetworkPorts())
 
@@ -393,7 +394,7 @@ func buildDeployment(objectMeta metav1.ObjectMeta, pod *corev1.Pod) *appsv1.Depl
 	}
 }
 
-func buildServicePorts(ports []model.PortV1) []corev1.ServicePort {
+func buildServicePorts(ports []schema.PortV1) []corev1.ServicePort {
 
 	servicePorts := make([]corev1.ServicePort, 0)
 	for _, port := range ports {
@@ -414,7 +415,7 @@ func buildServicePorts(ports []model.PortV1) []corev1.ServicePort {
 	return servicePorts
 }
 
-func buildService(objectMeta metav1.ObjectMeta, template *model.BoxV1) *corev1.Service {
+func buildService(objectMeta metav1.ObjectMeta, template *schema.BoxV1) *corev1.Service {
 
 	servicePorts := buildServicePorts(template.NetworkPorts())
 

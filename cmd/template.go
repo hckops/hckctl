@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/hckops/hckctl/internal/template"
+	"github.com/hckops/hckctl/pkg/schema"
 )
 
 func NewTemplateCmd() *cobra.Command {
@@ -41,7 +42,7 @@ func runTemplateLocalCmd(path string) {
 		log.Fatal().Err(err).Msg("load local template")
 	}
 
-	err = template.ValidateAllSchema(data)
+	err = schema.ValidateAllSchema(data)
 	if err != nil {
 		log.Fatal().Err(err).Msg("validate local template")
 	}
@@ -57,7 +58,7 @@ func runTemplateRemoteCmd(name, revision string) {
 		log.Fatal().Err(err).Msg("fetch remote template")
 	}
 
-	err = template.ValidateAllSchema(data)
+	err = schema.ValidateAllSchema(data)
 	if err != nil {
 		log.Fatal().Err(err).Msg("validate remote template")
 	}

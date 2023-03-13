@@ -10,7 +10,7 @@ import (
 
 	"github.com/hckops/hckctl/internal/box"
 	"github.com/hckops/hckctl/internal/template"
-	"github.com/hckops/hckctl/pkg/model"
+	"github.com/hckops/hckctl/pkg/schema"
 )
 
 func NewBoxCmd() *cobra.Command {
@@ -72,7 +72,7 @@ func NewBoxCmd() *cobra.Command {
 	return command
 }
 
-func requestBoxTemplate(name string, revision string) *model.BoxV1 {
+func requestBoxTemplate(name string, revision string) *schema.BoxV1 {
 	log.Debug().Msgf("request box template: name=%s revision=%s", name, revision)
 
 	rawTemplate, err := template.FetchTemplate(name, revision)
@@ -80,7 +80,7 @@ func requestBoxTemplate(name string, revision string) *model.BoxV1 {
 		log.Fatal().Err(err).Msg("fetch box template")
 	}
 
-	boxTemplate, err := template.ParseValidBoxV1(rawTemplate)
+	boxTemplate, err := schema.ParseValidBoxV1(rawTemplate)
 	if err != nil {
 		log.Fatal().Err(err).Msg("validate box template")
 	}
