@@ -10,6 +10,7 @@ import (
 	"github.com/hckops/hckctl/internal/config"
 )
 
+// TODO add version: git + timestamp
 var rootCmd = &cobra.Command{
 	Use:   "hckctl",
 	Short: "The Cloud Native HaCKing Tool",
