@@ -10,8 +10,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/thediveo/enumflag/v2"
 
-	"github.com/hckops/hckctl/internal/common"
-	"github.com/hckops/hckctl/internal/model"
+	"github.com/hckops/hckctl/internal/config"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
@@ -24,22 +23,22 @@ const (
 )
 
 var ProviderIds = map[ProviderFlag][]string{
-	DockerFlag:     {string(model.Docker)},
-	KubernetesFlag: {string(model.Kubernetes)},
-	CloudFlag:      {string(model.Cloud)},
+	DockerFlag:     {string(config.Docker)},
+	KubernetesFlag: {string(config.Kubernetes)},
+	CloudFlag:      {string(config.Cloud)},
 }
 
 func ProviderToId(provider ProviderFlag) string {
 	return ProviderIds[provider][0]
 }
 
-func ProviderToFlag(value model.Provider) (ProviderFlag, error) {
+func ProviderToFlag(value config.Provider) (ProviderFlag, error) {
 	switch value {
-	case model.Docker:
+	case config.Docker:
 		return DockerFlag, nil
-	case model.Kubernetes:
+	case config.Kubernetes:
 		return KubernetesFlag, nil
-	case model.Cloud:
+	case config.Cloud:
 		return CloudFlag, nil
 	default:
 		return 999, fmt.Errorf("invalid provider")
@@ -47,25 +46,25 @@ func ProviderToFlag(value model.Provider) (ProviderFlag, error) {
 }
 
 func InitCliConfig() {
-	configHome := common.ConfigHome()
+	configHome := config.ConfigHome()
 	configName := "config"
 	configType := "yml"
 	configPath := filepath.Join(configHome, configName+"."+configType)
 	// see https://github.com/spf13/viper/issues/430
-	common.EnsurePathOrDie(configPath, common.DefaultDirectoryMod)
+	config.EnsurePathOrDie(configPath, config.DefaultDirectoryMod)
 
 	viper.AddConfigPath(configHome)
 	viper.SetConfigName(configName)
 	viper.SetConfigType(configType)
 
 	viper.AutomaticEnv()
-	viper.SetEnvPrefix(common.ConfigNameEnv)
+	viper.SetEnvPrefix(config.ConfigNameEnv)
 
 	// first time only
 	if err := viper.ReadInConfig(); err != nil {
 
 		// default config
-		cliConfig := model.NewConfig()
+		cliConfig := config.NewConfig()
 
 		var configString string
 		if configString, err = util.ToYaml(&cliConfig); err != nil {
@@ -92,8 +91,8 @@ func NewConfigCmd() *cobra.Command {
 	}
 }
 
-func GetCliConfig() *model.ConfigV1 {
-	var cliConfig *model.ConfigV1
+func GetCliConfig() *config.ConfigV1 {
+	var cliConfig *config.ConfigV1
 	if err := viper.Unmarshal(&cliConfig); err != nil {
 		log.Fatal().Err(fmt.Errorf("error decoding config: %w", err))
 	}

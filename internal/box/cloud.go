@@ -10,7 +10,7 @@ import (
 	logger "github.com/rs/zerolog/log"
 	"golang.org/x/crypto/ssh"
 
-	cli "github.com/hckops/hckctl/internal/model"
+	"github.com/hckops/hckctl/internal/config"
 	"github.com/hckops/hckctl/internal/terminal"
 	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/util"
@@ -19,11 +19,11 @@ import (
 type CloudBoxCli struct {
 	log      zerolog.Logger
 	loader   *terminal.Loader
-	config   *cli.CloudConfig
+	config   *config.CloudConfig
 	template *schema.BoxV1 // only name is actually needed
 }
 
-func NewCloudBox(template *schema.BoxV1, config *cli.CloudConfig) *CloudBoxCli {
+func NewCloudBox(template *schema.BoxV1, config *config.CloudConfig) *CloudBoxCli {
 	l := logger.With().Str("cmd", "cloud").Logger()
 
 	return &CloudBoxCli{
@@ -78,7 +78,7 @@ func (cli *CloudBoxCli) Open() {
 }
 
 // TODO ssh agent auth
-func sshClientConfig(config *cli.CloudConfig) *ssh.ClientConfig {
+func sshClientConfig(config *config.CloudConfig) *ssh.ClientConfig {
 	sshConfig := &ssh.ClientConfig{
 		User: config.Username,
 		Auth: []ssh.AuthMethod{

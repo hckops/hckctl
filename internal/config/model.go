@@ -1,11 +1,10 @@
-package model
+package config
 
 import (
 	"fmt"
 	"net"
 	"strconv"
 
-	"github.com/hckops/hckctl/internal/common"
 	"github.com/hckops/hckctl/pkg/util"
 	"github.com/rs/zerolog/log"
 )
@@ -81,7 +80,7 @@ func NewConfig() *ConfigV1 {
 		},
 		Log: LogConfig{
 			Level:    "info",
-			FilePath: common.DefaultLogFile,
+			FilePath: DefaultLogFile,
 		},
 	}
 }

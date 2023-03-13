@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/hckops/hckctl/pkg/schema"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -31,10 +30,10 @@ import (
 	"k8s.io/client-go/util/homedir"
 	"k8s.io/kubectl/pkg/cmd/exec"
 
-	"github.com/hckops/hckctl/internal/common"
-	cli "github.com/hckops/hckctl/internal/model"
+	"github.com/hckops/hckctl/internal/config"
 	"github.com/hckops/hckctl/internal/terminal"
 	"github.com/hckops/hckctl/pkg/model"
+	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
@@ -42,13 +41,13 @@ import (
 type KubeBox struct {
 	ctx            context.Context
 	loader         *terminal.Loader
-	config         *cli.KubeConfig
+	config         *config.KubeConfig
 	template       *schema.BoxV1
 	kubeRestConfig *rest.Config
 	kubeClientSet  *kubernetes.Clientset
 }
 
-func NewKubeBox(template *schema.BoxV1, config *cli.KubeConfig) *KubeBox {
+func NewKubeBox(template *schema.BoxV1, config *config.KubeConfig) *KubeBox {
 
 	kubeconfig := filepath.Join(homedir.HomeDir(), strings.ReplaceAll(config.ConfigPath, "~/", ""))
 	log.Debug().Msgf("read config: configPath=%s, kubeconfig=%s", config.ConfigPath, kubeconfig)
@@ -299,7 +298,7 @@ func (b *KubeBox) execPod(pod *corev1.Pod, streams *model.BoxStreams) {
 	}
 }
 
-func buildSpec(namespaceName string, containerName string, template *schema.BoxV1, config *cli.KubeConfig) (*appsv1.Deployment, *corev1.Service) {
+func buildSpec(namespaceName string, containerName string, template *schema.BoxV1, config *config.KubeConfig) (*appsv1.Deployment, *corev1.Service) {
 
 	labels := buildLabels(containerName, template.SafeName(), template.ImageVersion())
 	objectMeta := metav1.ObjectMeta{
@@ -321,7 +320,7 @@ func buildLabels(name, instance, version string) Labels {
 		"app.kubernetes.io/name":       name,
 		"app.kubernetes.io/instance":   instance,
 		"app.kubernetes.io/version":    version,
-		"app.kubernetes.io/managed-by": common.ProjectName,
+		"app.kubernetes.io/managed-by": config.ProjectName,
 	}
 }
 
@@ -345,7 +344,7 @@ func buildContainerPorts(ports []schema.PortV1) []corev1.ContainerPort {
 	return containerPorts
 }
 
-func buildPod(objectMeta metav1.ObjectMeta, template *schema.BoxV1, config *cli.KubeConfig) *corev1.Pod {
+func buildPod(objectMeta metav1.ObjectMeta, template *schema.BoxV1, config *config.KubeConfig) *corev1.Pod {
 
 	containerPorts := buildContainerPorts(template.NetworkPorts())
 

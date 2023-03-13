@@ -7,7 +7,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/hckops/hckctl/internal/common"
+	"github.com/hckops/hckctl/internal/config"
 )
 
 func InitFileLogger() {
@@ -51,14 +51,14 @@ func parseLevel(value string) zerolog.Level {
 
 // TODO add "cmd" and a random "session" for each instance running
 func setContext() {
-	log.Logger = log.With().Caller().Str("source", common.CliName).Logger()
+	log.Logger = log.With().Caller().Str("source", config.CliName).Logger()
 }
 
 // TODO close file in rootCmd.run
 func setFileOutput(filePath string) {
-	common.EnsurePathOrDie(filePath, common.DefaultDirectoryMod)
+	config.EnsurePathOrDie(filePath, config.DefaultDirectoryMod)
 	mod := os.O_CREATE | os.O_APPEND | os.O_WRONLY
-	file, err := os.OpenFile(filePath, mod, common.DefaultFileMod)
+	file, err := os.OpenFile(filePath, mod, config.DefaultFileMod)
 	if err != nil {
 		panic(err)
 	}

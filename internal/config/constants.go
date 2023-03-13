@@ -1,4 +1,4 @@
-package common
+package config
 
 import (
 	"fmt"
@@ -20,6 +20,3 @@ const (
 
 // tmp file
 var DefaultLogFile = filepath.Join(os.TempDir(), fmt.Sprintf("%s-%s.log", CliName, GetUserOrDie()))
-
-// TODO move common+model > config
-// TODO add cli version: git + timestamp
