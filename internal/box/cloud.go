@@ -43,12 +43,12 @@ func (cli *CloudBoxCli) Open() {
 
 	client, err := ssh.Dial("tcp", cli.config.Address(), sshConfig)
 	if err != nil {
-		cli.loader.Halt(err, "connection failed")
+		cli.loader.Halt(err, "connection error")
 	}
 
 	session, err := client.NewSession()
 	if err != nil {
-		cli.loader.Halt(err, "ssh session failed")
+		cli.loader.Halt(err, "ssh session error")
 	}
 	defer session.Close()
 

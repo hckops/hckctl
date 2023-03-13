@@ -7,12 +7,6 @@ import (
 )
 
 const (
-	ApiUrl            string = "https://api.hckops.com"
-	SchemaUrl         string = "https://schema.hckops.com"
-	MegalopolisRawUrl string = "https://raw.githubusercontent.com/hckops/megalopolis"
-)
-
-const (
 	DefaultDirectoryMod os.FileMode = 0755
 	DefaultFileMod      os.FileMode = 0600
 )
@@ -26,3 +20,6 @@ const (
 
 // tmp file
 var DefaultLogFile = filepath.Join(os.TempDir(), fmt.Sprintf("%s-%s.log", CliName, GetUserOrDie()))
+
+// TODO move common+model > config
+// TODO add cli version: git + timestamp

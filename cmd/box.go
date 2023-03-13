@@ -73,19 +73,29 @@ func NewBoxCmd() *cobra.Command {
 }
 
 func requestBoxTemplate(name string, revision string) *schema.BoxV1 {
-	log.Debug().Msgf("request box template: name=%s revision=%s", name, revision)
+	log.Info().Msgf("request box template: name=%s revision=%s", name, revision)
 
-	rawTemplate, err := template.FetchTemplate(name, revision)
+	rawTemplate, err := template.RequestTemplate(NewBoxParam(name, revision))
 	if err != nil {
-		log.Fatal().Err(err).Msg("fetch box template")
+		printFatalError(err, "unable to fetch box template")
 	}
 
 	boxTemplate, err := schema.ParseValidBoxV1(rawTemplate)
 	if err != nil {
-		log.Fatal().Err(err).Msg("validate box template")
+		printFatalError(err, "invalid box template")
 	}
 
 	return boxTemplate
+}
+
+// TODO shared with template cmd
+func NewBoxParam(name, revision string) *template.TemplateParam {
+	return &template.TemplateParam{
+		TemplateKind:  "box/v1", // TODO enum
+		TemplateName:  name,
+		Revision:      revision,
+		ClientVersion: "hckctl-v0.0.0", // TODO sha/tag
+	}
 }
 
 func runBoxListCmd() {
