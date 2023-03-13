@@ -7,8 +7,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/hckops/hckctl/internal/template"
 	"github.com/hckops/hckctl/pkg/schema"
+	"github.com/hckops/hckctl/pkg/template"
 )
 
 func NewTemplateCmd() *cobra.Command {

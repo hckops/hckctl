@@ -9,8 +9,8 @@ import (
 	"github.com/thediveo/enumflag/v2"
 
 	"github.com/hckops/hckctl/internal/box"
-	"github.com/hckops/hckctl/internal/template"
 	"github.com/hckops/hckctl/pkg/schema"
+	"github.com/hckops/hckctl/pkg/template"
 )
 
 func NewBoxCmd() *cobra.Command {
