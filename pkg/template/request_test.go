@@ -7,13 +7,12 @@ import (
 )
 
 func TestValidateTemplateParam(t *testing.T) {
-
-	assert.NoError(t, validateTemplateParam(&TemplateParam{TemplateName: "myname"}))
+	assert.NoError(t, ValidateTemplateParam(&TemplateParam{TemplateName: "myname"}))
 }
 
 func TestValidateTemplateParamError(t *testing.T) {
 
-	err := validateTemplateParam(&TemplateParam{})
+	err := ValidateTemplateParam(&TemplateParam{})
 	if assert.Error(t, err) {
 		assert.ErrorContains(t, err, "invalid name")
 	}

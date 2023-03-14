@@ -10,7 +10,6 @@ import (
 
 	"github.com/hckops/hckctl/internal/box"
 	"github.com/hckops/hckctl/pkg/schema"
-	"github.com/hckops/hckctl/pkg/template"
 )
 
 func NewBoxCmd() *cobra.Command {
@@ -73,9 +72,9 @@ func NewBoxCmd() *cobra.Command {
 }
 
 func requestBoxTemplate(name string, revision string) *schema.BoxV1 {
-	log.Info().Msgf("request box template: name=%s revision=%s", name, revision)
+	log.Info().Msgf("requesting box template: name=%s revision=%s", name, revision)
 
-	rawTemplate, err := template.RequestTemplate(NewBoxParam(name, revision))
+	rawTemplate, err := requestTemplate(newBoxParam(name, revision))
 	if err != nil {
 		printFatalError(err, "unable to fetch box template")
 	}
@@ -86,16 +85,6 @@ func requestBoxTemplate(name string, revision string) *schema.BoxV1 {
 	}
 
 	return boxTemplate
-}
-
-// TODO shared with template cmd
-func NewBoxParam(name, revision string) *template.TemplateParam {
-	return &template.TemplateParam{
-		TemplateKind:  "box/v1", // TODO enum
-		TemplateName:  name,
-		Revision:      revision,
-		ClientVersion: "hckctl-v0.0.0", // TODO sha/tag
-	}
 }
 
 func runBoxListCmd() {

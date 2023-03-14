@@ -55,7 +55,7 @@ func runTemplateRemoteCmd(name, revision string) {
 	log.Info().Msgf("requesting remote template: name=%s, revision=%s", name, revision)
 
 	// TODO handle all templates
-	data, err := template.RequestTemplate(NewBoxParam(name, revision))
+	data, err := requestTemplate(newBoxParam(name, revision))
 	if err != nil {
 		printFatalError(err, "unable to fetch template")
 	}
@@ -74,6 +74,36 @@ func loadTemplate(path string) (string, error) {
 		return "", errors.Wrapf(err, "unable to load template: %s", path)
 	}
 	return string(data), nil
+}
+
+// TODO shared with box cmd
+func newBoxParam(name, revision string) *template.TemplateParam {
+	return &template.TemplateParam{
+		TemplateKind:  "box/v1", // TODO enum
+		TemplateName:  name,
+		Revision:      revision,
+		ClientVersion: "hckctl-v0.0.0", // TODO sha/tag
+	}
+}
+
+// TODO shared with box cmd
+func requestTemplate(param *template.TemplateParam) (string, error) {
+
+	if err := template.ValidateTemplateParam(param); err != nil {
+		return "", errors.Wrap(err, "invalid template")
+	}
+
+	// attempts remote validation and to access private templates
+	var data string
+	data, err := param.RequestApiTemplate()
+	if err != nil {
+		// fallback to public templates only
+		data, err = param.RequestPublicTemplate()
+		if err != nil {
+			return "", errors.Wrap(err, "unable to request template")
+		}
+	}
+	return data, nil
 }
 
 // TODO shared with box cmd

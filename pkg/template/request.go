@@ -10,7 +10,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/hckops/hckctl/pkg/common"
-	"github.com/hckops/hckctl/pkg/util"
 )
 
 type TemplateParam struct {
@@ -23,27 +22,7 @@ type TemplateParam struct {
 // TODO better validation: should not start with dashes or contain double dashes
 var isValidName = regexp.MustCompile(`^[A-Za-z-]+$`).MatchString
 
-func RequestTemplate(param *TemplateParam) (string, error) {
-	templateParamJson, _ := util.ToJsonCompact(param)
-
-	if err := validateTemplateParam(param); err != nil {
-		return "", errors.Wrapf(err, "invalid template: %s", templateParamJson)
-	}
-
-	// attempts remote validation and to access private templates
-	var data string
-	data, err := param.requestApiTemplate()
-	if err != nil {
-		// fallback to public templates only
-		data, err = param.requestPublicTemplate()
-		if err != nil {
-			return "", errors.Wrapf(err, "unable to request template: %s", templateParamJson)
-		}
-	}
-	return data, nil
-}
-
-func validateTemplateParam(param *TemplateParam) error {
+func ValidateTemplateParam(param *TemplateParam) error {
 
 	if !isValidName(param.TemplateName) {
 		return fmt.Errorf("invalid name")
@@ -54,7 +33,7 @@ func validateTemplateParam(param *TemplateParam) error {
 // TODO e.g. https://api.hckops.com/template/box?name=official/alpine&version=main&format=json
 // TODO or redirect validate https://schema.hckops.com/validate?kind=box&group=official&name=alpine
 // TODO or content https://schema.hckops.com/template?kind=box&group=official&name=alpine&version=main&format=json|yaml
-func (param *TemplateParam) requestApiTemplate() (string, error) {
+func (param *TemplateParam) RequestApiTemplate() (string, error) {
 
 	templateUrl, err := url.Parse(fmt.Sprintf("%s/todo", common.ApiUrl))
 	if err != nil {
@@ -78,9 +57,7 @@ func (param *TemplateParam) requestApiTemplate() (string, error) {
 	return template, nil
 }
 
-// https://raw.githubusercontent.com/hckops/megalopolis/main/boxes/official/alpine.yml
-// https://raw.githubusercontent.com/hckops/megalopolis/boxes/main/official/alpine.yml
-func (param *TemplateParam) requestPublicTemplate() (string, error) {
+func (param *TemplateParam) RequestPublicTemplate() (string, error) {
 
 	path, err := buildPath(param)
 	if err != nil {
