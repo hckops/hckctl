@@ -7,6 +7,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/client-go/kubernetes/scheme"
 
@@ -14,9 +15,6 @@ import (
 	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/stretchr/testify/assert"
 )
-
-// https://github.com/kubernetes/client-go/issues/193
-// https://medium.com/@harshjniitr/reading-and-writing-k8s-resource-as-yaml-in-golang-81dc8c7ea800
 
 func TestBuildSpec(t *testing.T) {
 	namespaceName := "my-namespace"
@@ -98,13 +96,57 @@ spec:
         tty: true
 status: {}
 `
-	actualDeployment, _ := BuildSpec(namespaceName, containerName, template, kubeConfig)
-	actualDeployment.TypeMeta = metav1.TypeMeta{
-		Kind: "Deployment", APIVersion: "apps/v1",
-	}
-	assert.YAMLEqf(t, expectedDeployment, deploymentToYaml(actualDeployment), "deployments are not equal")
+
+	expectedService := `
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app.kubernetes.io/instance: hckops-box-mybox
+    app.kubernetes.io/managed-by: hckops
+    app.kubernetes.io/name: my-container-name
+    app.kubernetes.io/version: latest
+  name: my-container-name
+  namespace: my-namespace
+spec:
+  ports:
+  - name: aaa
+    port: 123
+    protocol: TCP
+    targetPort: aaa-svc
+  - name: bbb
+    port: 789
+    protocol: TCP
+    targetPort: bbb-svc
+  selector:
+    app.kubernetes.io/instance: hckops-box-mybox
+    app.kubernetes.io/managed-by: hckops
+    app.kubernetes.io/name: my-container-name
+    app.kubernetes.io/version: latest
+  type: ClusterIP
+status:
+  loadBalancer: {}
+`
+	actualDeployment, actualService := BuildSpec(namespaceName, containerName, template, kubeConfig)
+	actualDeployment.TypeMeta = metav1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1"}
+	actualService.TypeMeta = metav1.TypeMeta{Kind: "Service", APIVersion: "v1"}
+
+	assert.YAMLEqf(t, expectedDeployment, objectToYaml(actualDeployment), "unexpected deployment")
+	assert.YAMLEqf(t, expectedService, objectToYaml(actualService), "unexpected service")
 }
 
+func objectToYaml(object runtime.Object) string {
+	buffer := new(bytes.Buffer)
+	printer := printers.YAMLPrinter{}
+	if err := printer.PrintObj(object, buffer); err != nil {
+		log.Fatalf("objectToYaml: %#v\n", err)
+	}
+	return buffer.String()
+}
+
+// https://github.com/kubernetes/client-go/issues/193
+// https://medium.com/@harshjniitr/reading-and-writing-k8s-resource-as-yaml-in-golang-81dc8c7ea800
 func yamlToDeployment(data string) *appsv1.Deployment {
 	decoder := scheme.Codecs.UniversalDeserializer().Decode
 	object, _, err := decoder([]byte(data), nil, nil)
@@ -112,13 +154,4 @@ func yamlToDeployment(data string) *appsv1.Deployment {
 		log.Fatalf("yamlToDeployment: %#v\n", err)
 	}
 	return object.(*appsv1.Deployment)
-}
-
-func deploymentToYaml(deployment *appsv1.Deployment) string {
-	buffer := new(bytes.Buffer)
-	printer := printers.YAMLPrinter{}
-	if err := printer.PrintObj(deployment, buffer); err != nil {
-		log.Fatalf("deploymentToYaml: %#v\n", err)
-	}
-	return buffer.String()
 }
