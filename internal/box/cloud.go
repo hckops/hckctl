@@ -52,7 +52,13 @@ func (cli *CloudBoxCli) Open() {
 	}
 	defer session.Close()
 
-	cli.log.Debug().Msgf("[%s] ssh connection established (%s)", client.RemoteAddr(), client.ClientVersion())
+	cli.log.Info().
+		Str("User", client.User()).
+		Str("ClientVersion", string(client.ClientVersion())).
+		Str("ServerVersion", string(client.ServerVersion())).
+		Str("RemoteAddress", client.RemoteAddr().String()).
+		Str("LocalAddress", client.LocalAddr().String()).
+		Msg("ssh connection established")
 
 	onStreamErrorCallback := func(err error, message string) {
 		cli.log.Warn().Err(err).Msg(message)
