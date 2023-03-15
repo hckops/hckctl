@@ -55,18 +55,18 @@ curl -sSL https://github.com/hckops/hckctl/releases/download/v0.1.0/hckctl_linux
 
 ### Box
 
-> **Boxes** are community driven and publicly maintained docker images, designed for security enthusiasts that want to spend more time hacking and need an environment that is constantly updated, quick to start and just work
+> **Boxes** are ready-to-go docker images designed for security enthusiasts that want to spend more time hacking and need both an attacker and a vulnerable environment that is constantly updated, quick to start and just work
 
 Main features:
-* public, you want to know what you are running!
-  - see templates: TODO
-  - see docker images: TODO
+* unified local and remote experience - run the same container locally or in a remote cluster
+* community driven and publicly maintained, you want to know what you are running!
+  - see [templates](https://github.com/hckops/megalopolis/tree/main/boxes)
+  - see [docker images](https://github.com/hckops/megalopolis/tree/main/docker)
 * constantly updated
-  - see scheduled actions TODO
-* unified local and remote experience
+  - see scheduled [action](https://github.com/hckops/megalopolis/blob/main/.github/workflows/docker-ci.yml)
 * all declared ports are exposed and forwarded by default
 * resources are automatically deleted once you close the box
-* the *cloud* version currently is in private beta only
+* the *remote cloud* version is currently not publicly accessible
 
 ```bash
 # lists boxes
@@ -136,7 +136,6 @@ TODO
 * box: add detached mode + reconnect to existing + tunnel only
 * box: list from megalopolis (hardcoded)
 * box: test with podman
-* add tests
 * finalize schema (move in megalopolis)
 * add cmd version
 * release: verify archives + add brew

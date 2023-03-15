@@ -42,6 +42,7 @@ type KubeBox struct {
 	Template        *schema.BoxV1
 	ResourceOptions *ResourceOptions
 
+	// TODO look for better design than callbacks
 	OnSetupCallback       func(string)
 	OnTunnelCallback      func(port schema.PortV1)
 	OnTunnelErrorCallback func(error, string)

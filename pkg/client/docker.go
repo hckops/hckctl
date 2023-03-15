@@ -139,7 +139,7 @@ func buildHostConfig(ports []schema.PortV1, onPortBindCallback func(port schema.
 			return nil, errors.Wrap(err, "error docker remote port: hostConfig")
 		}
 
-		// actual port binded port
+		// actual binded port
 		onPortBindCallback(schema.PortV1{
 			Alias:  port.Alias,
 			Local:  localPort,
