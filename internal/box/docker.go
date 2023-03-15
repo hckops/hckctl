@@ -55,7 +55,7 @@ func (cli *DockerBoxCli) Open() {
 	cli.loader.Refresh(fmt.Sprintf("creating %s", containerName))
 
 	cli.box.OnCreateCallback = func(port schema.PortV1) {
-		cli.log.Info().Msgf("[%s] exposing %s (local) -> %s (container)", port.Alias, port.Local, port.Remote)
+		cli.log.Info().Msgf("[%s][%s] exposing %s (local) -> %s (container)", containerName, port.Alias, port.Local, port.Remote)
 	}
 	containerId, err := cli.box.Create(containerName)
 	if err != nil {

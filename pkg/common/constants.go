@@ -5,3 +5,7 @@ const (
 	SchemaUrl         string = "https://schema.hckops.com"
 	MegalopolisRawUrl string = "https://raw.githubusercontent.com/hckops/megalopolis"
 )
+
+const (
+	ProjectName = "hckops"
+)

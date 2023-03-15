@@ -1,297 +1,100 @@
 package box
 
 import (
-	"bytes"
-	"context"
 	"fmt"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
 
-	"github.com/rs/zerolog/log"
-	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
-	applyv1 "k8s.io/client-go/applyconfigurations/core/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/tools/portforward"
-	"k8s.io/client-go/tools/remotecommand"
-	"k8s.io/client-go/transport/spdy"
-	"k8s.io/client-go/util/homedir"
-	"k8s.io/kubectl/pkg/cmd/exec"
+	"github.com/rs/zerolog"
+	logger "github.com/rs/zerolog/log"
 
 	"github.com/hckops/hckctl/internal/config"
 	"github.com/hckops/hckctl/internal/terminal"
 	"github.com/hckops/hckctl/pkg/client"
 	"github.com/hckops/hckctl/pkg/model"
 	"github.com/hckops/hckctl/pkg/schema"
-	"github.com/hckops/hckctl/pkg/util"
 )
 
-// TODO add log with context?
-type KubeBox struct {
-	ctx            context.Context
-	loader         *terminal.Loader
-	config         *config.KubeConfig
-	template       *schema.BoxV1
-	kubeRestConfig *rest.Config
-	kubeClientSet  *kubernetes.Clientset
+type KubeBoxCli struct {
+	log     zerolog.Logger
+	loader  *terminal.Loader
+	box     *client.KubeBox
+	streams *model.BoxStreams
 }
 
-func NewKubeBox(template *schema.BoxV1, config *config.KubeConfig) *KubeBox {
+func NewKubeBox(template *schema.BoxV1, config *config.KubeConfig) *KubeBoxCli {
+	l := logger.With().Str("cmd", "kube").Logger()
 
-	kubeconfig := filepath.Join(homedir.HomeDir(), strings.ReplaceAll(config.ConfigPath, "~/", ""))
-	log.Debug().Msgf("read config: configPath=%s, kubeconfig=%s", config.ConfigPath, kubeconfig)
-
-	restConfig, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
-	if err != nil {
-		log.Fatal().Err(err).Msg("error restConfig")
-	}
-
-	clientSet, err := kubernetes.NewForConfig(restConfig)
-	if err != nil {
-		log.Fatal().Err(err).Msg("error clientSet")
-	}
-
-	return &KubeBox{
-		ctx:            context.Background(),
-		loader:         terminal.NewLoader(),
-		config:         config,
-		template:       template,
-		kubeRestConfig: restConfig,
-		kubeClientSet:  clientSet,
-	}
-}
-
-func (b *KubeBox) Open() {
-
-	// TODO
-	streams := &model.BoxStreams{
-		Stdin:  os.Stdin,
-		Stdout: os.Stdout,
-		Stderr: os.Stderr,
-		IsTty:  true,
-	}
-
-	log.Debug().Msgf("init kube box: \n%v\n", b.template.Pretty())
-	b.loader.Start(fmt.Sprintf("loading %s", b.template.Name))
-	b.loader.Sleep(1)
-
-	pod, deleteResources := b.applyTemplate()
-	defer deleteResources()
-	log.Info().Msgf("open new box: image=%s, namespace=%s, podName=%s", b.template.ImageName(), pod.Namespace, pod.Name)
-
-	b.portForwardPod(pod)
-	b.execPod(pod, streams)
-}
-
-func (b *KubeBox) applyTemplate() (*corev1.Pod, func()) {
-	coreClient := b.kubeClientSet.CoreV1()
-	appClient := b.kubeClientSet.AppsV1()
-
-	// apply namespace, see https://github.com/kubernetes/client-go/issues/1036
-	namespace, err := coreClient.Namespaces().Apply(b.ctx, applyv1.Namespace(b.config.Namespace), metav1.ApplyOptions{FieldManager: "application/apply-patch"})
-	if err != nil {
-		log.Fatal().Err(err).Msgf("error kube apply namespace: %s", namespace.Name)
-	}
-	log.Debug().Msgf("namespace %s successfully applied", namespace.Name)
-
-	containerName := b.template.GenerateName()
-	deploymentSpec, serviceSpec := client.BuildSpec(namespace.Name, containerName, b.template, b.config)
-
-	b.loader.Refresh(fmt.Sprintf("creating %s/%s", namespace.Name, containerName))
-
-	// create deployment
-	deployment, err := appClient.Deployments(namespace.Name).Create(b.ctx, deploymentSpec, metav1.CreateOptions{})
-	if err != nil {
-		log.Fatal().Err(err).Msgf("error kube create deployment: %s", deployment.Name)
-	}
-	log.Debug().Msgf("deployment %s successfully created", deployment.Name)
-
-	// create service: can't create a service without ports
-	var service *corev1.Service
-	if b.template.HasPorts() {
-		service, err = coreClient.Services(namespace.Name).Create(b.ctx, serviceSpec, metav1.CreateOptions{})
-		if err != nil {
-			log.Fatal().Err(err).Msgf("error kube create service: %s", service.Name)
-		}
-		log.Debug().Msgf("service %s successfully created", service.Name)
-	} else {
-		log.Debug().Msg("service not created")
-	}
-
-	// blocks until the deployment is available, then stop watching
-	watcher, err := appClient.Deployments(namespace.Name).Watch(b.ctx, metav1.SingleObject(deployment.ObjectMeta))
-	if err != nil {
-		log.Fatal().Err(err).Msgf("error kube watch deployment: %s", deployment.Name)
-	}
-	for event := range watcher.ResultChan() {
-		switch event.Type {
-		case watch.Modified:
-			deploymentEvent := event.Object.(*appsv1.Deployment)
-
-			for _, condition := range deploymentEvent.Status.Conditions {
-				log.Debug().Msgf("watch kube event: type=%v, condition=%v", event.Type, condition.Message)
-
-				if condition.Type == appsv1.DeploymentAvailable &&
-					condition.Status == corev1.ConditionTrue {
-					watcher.Stop()
-				}
-			}
-
-		default:
-			log.Fatal().Msgf("error kube event type: %s", event.Type)
-		}
-	}
-
-	// find unique pod for deployment
-	pod := b.getPod(deployment)
-
-	cleanupCallback := func() {
-		if err := appClient.Deployments(namespace.Name).Delete(b.ctx, deployment.Name, metav1.DeleteOptions{}); err != nil {
-			log.Fatal().Err(err).Msgf("error kube delete deployment: %s", deployment.Name)
-		}
-		log.Debug().Msgf("deployment %s successfully deleted", deployment.Name)
-
-		if service != nil {
-			if err := coreClient.Services(namespace.Name).Delete(b.ctx, service.Name, metav1.DeleteOptions{}); err != nil {
-				log.Fatal().Err(err).Msgf("error kube delete service: %s", service.Name)
-			}
-			log.Debug().Msgf("service %s successfully deleted", service.Name)
-		}
-	}
-
-	return pod, cleanupCallback
-}
-
-func (b *KubeBox) getPod(deployment *appsv1.Deployment) *corev1.Pod {
-	coreClient := b.kubeClientSet.CoreV1()
-
-	labelSet := labels.Set(deployment.Spec.Selector.MatchLabels)
-	listOptions := metav1.ListOptions{LabelSelector: labelSet.AsSelector().String()}
-
-	pods, err := coreClient.Pods(deployment.Namespace).List(b.ctx, listOptions)
-	if err != nil {
-		log.Fatal().Err(err).Msg("error list pods")
-	}
-
-	if len(pods.Items) != 1 {
-		log.Fatal().Msgf("only 1 pod expected for deployment with labels=%s", deployment.Spec.Selector.MatchLabels)
-	}
-
-	pod := pods.Items[0]
-	log.Debug().Msgf("found matching pod %s", pod.Name)
-
-	return &pod
-}
-
-func (b *KubeBox) portForwardPod(pod *corev1.Pod) {
-	coreClient := b.kubeClientSet.CoreV1()
-
-	if !b.template.HasPorts() {
-		// exit, no service/port available to bind
-		return
-	}
-
-	var portBindings []string
-	for _, port := range b.template.NetworkPorts() {
-		localPort, _ := util.GetLocalPort(port.Local)
-		log.Info().Msgf("[%s] forwarding %s (local) -> %s (remote)", port.Alias, localPort, port.Remote)
-
-		portBindings = append(portBindings, fmt.Sprintf("%s:%s", localPort, port.Remote))
-	}
-
-	restRequest := coreClient.RESTClient().
-		Post().
-		Resource("pods").
-		Namespace(pod.Namespace).
-		Name(pod.Name).
-		SubResource("portforward")
-
-	transport, upgrader, err := spdy.RoundTripperFor(b.kubeRestConfig)
-	if err != nil {
-		log.Fatal().Err(err).Msg("error kube round tripper")
-	}
-	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, http.MethodPost, restRequest.URL())
-
-	stopChannel := b.ctx.Done()
-	readyChannel := make(chan struct{}, 1)
-	out := new(bytes.Buffer)
-	errOut := new(bytes.Buffer)
-
-	forwarder, err := portforward.New(dialer, portBindings, stopChannel, readyChannel, out, errOut)
-	if err != nil {
-		log.Fatal().Err(err).Msg("error kube new portforward")
-	}
-
-	// wait until interrupted
-	log.Debug().Msgf("forwarding all ports for pod %s", pod.Name)
-	go func() {
-		if err := forwarder.ForwardPorts(); err != nil {
-			log.Fatal().Err(err).Msg("error kube forwarding")
-		}
-	}()
-	for range readyChannel {
-	}
-
-	if len(errOut.String()) != 0 {
-		log.Fatal().Msgf("error kube new portforward: %s", errOut.String())
-	}
-}
-
-func (b *KubeBox) execPod(pod *corev1.Pod, streams *model.BoxStreams) {
-	coreClient := b.kubeClientSet.CoreV1()
-
-	streamOptions := exec.StreamOptions{
-		Stdin: true,
-		TTY:   streams.IsTty,
-		IOStreams: genericclioptions.IOStreams{
-			In:     streams.Stdin,
-			Out:    streams.Stdout,
-			ErrOut: streams.Stderr,
+	box, err := client.NewOutOfClusterKubeBox(
+		template,
+		config.ConfigPath,
+		&client.ResourceOptions{
+			Namespace: config.Namespace,
+			Memory:    config.Resources.Memory,
+			Cpu:       config.Resources.Cpu,
 		},
+	)
+	if err != nil {
+		l.Fatal().Err(err).Msg("error kube box")
 	}
 
-	tty := streamOptions.SetupTTY()
+	return &KubeBoxCli{
+		log:     l,
+		loader:  terminal.NewLoader(),
+		box:     box,
+		streams: model.NewDefaultStreams(true), // TODO tty
+	}
+}
 
-	var sizeQueue remotecommand.TerminalSizeQueue
-	if tty.Raw {
-		sizeQueue = tty.MonitorSize(tty.GetSize())
-		streamOptions.ErrOut = nil
+func (cli *KubeBoxCli) Open() {
+	cli.log.Debug().Msgf("init kube box:\n%v\n", cli.box.Template.Pretty())
+	cli.loader.Start(fmt.Sprintf("loading %s", cli.box.Template.Name))
+	// TODO remove ???
+	cli.loader.Sleep(1)
+
+	containerName := cli.box.Template.GenerateName()
+	deployment, service, err := cli.box.BuildSpec(containerName)
+	if err != nil {
+		cli.loader.Halt(err, "error kube: invalid template")
 	}
 
-	// exec remote shell
-	restRequest := coreClient.RESTClient().
-		Post().
-		Namespace(pod.Namespace).
-		Resource("pods").
-		Name(pod.Name).
-		SubResource("exec").
-		VersionedParams(&corev1.PodExecOptions{
-			Container: pod.Spec.Containers[0].Name,
-			Command:   []string{"/bin/bash"},
-			Stdin:     true,
-			Stdout:    true,
-			Stderr:    true,
-			TTY:       tty.Raw,
-		}, scheme.ParameterCodec)
-
-	executor := exec.DefaultRemoteExecutor{}
-
-	log.Debug().Msgf("exec into pod %s", pod.Name)
-	b.loader.Stop()
-
-	fn := func() error {
-		return executor.Execute(http.MethodPost, restRequest.URL(), b.kubeRestConfig, streamOptions.In, streamOptions.Out, streamOptions.ErrOut, tty.Raw, sizeQueue)
+	cli.box.OnSetupCallback = func(message string) {
+		cli.log.Debug().Msg(message)
 	}
-	if err := tty.Safe(fn); err != nil {
-		log.Warn().Err(err).Msg("terminal session closed")
+	cli.loader.Refresh(fmt.Sprintf("creating %s/%s", cli.box.ResourceOptions.Namespace, containerName))
+	err = cli.box.ApplyTemplate(deployment, service)
+	if err != nil {
+		cli.loader.Halt(err, "error kube: apply template")
+	}
+
+	cli.box.OnCloseCallback = func(message string) {
+		cli.log.Debug().Msg(message)
+	}
+	cli.box.OnCloseErrorCallback = func(err error, message string) {
+		cli.log.Warn().Err(err).Msg(message)
+	}
+	defer cli.box.RemoveTemplate(deployment, service)
+
+	pod, err := cli.box.GetPod(deployment)
+	if err != nil {
+		cli.loader.Halt(err, "error kube: invalid pod")
+	}
+	cli.log.Debug().Msgf("found matching pod %s", pod.Name)
+
+	cli.log.Info().Msgf("opening new box: image=%s, namespace=%s, podName=%s", cli.box.Template.ImageName(), pod.Namespace, pod.Name)
+
+	cli.box.OnTunnelCallback = func(port schema.PortV1) {
+		cli.log.Info().Msgf("[%s][%s] forwarding %s (local) -> %s (remote)", pod.Name, port.Alias, port.Local, port.Remote)
+	}
+	cli.box.OnTunnelErrorCallback = func(err error, message string) {
+		cli.loader.Halt(err, "error kube: port forward")
+	}
+	cli.box.PortForward(pod)
+
+	cli.box.OnExecCallback = func() {
+		cli.log.Debug().Msgf("exec into pod %s", pod.Name)
+		cli.loader.Stop()
+	}
+	cli.box.Exec(pod, cli.streams)
+	if err != nil {
+		cli.loader.Halt(err, "error kube: exec pod")
 	}
 }

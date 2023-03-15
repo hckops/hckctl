@@ -11,14 +11,11 @@ import (
 	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/client-go/kubernetes/scheme"
 
-	"github.com/hckops/hckctl/internal/config"
 	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestBuildSpec(t *testing.T) {
-	namespaceName := "my-namespace"
-	containerName := "my-container-name"
 	template := &schema.BoxV1{
 		Kind: "box/v1",
 		Name: "mybox",
@@ -34,13 +31,10 @@ func TestBuildSpec(t *testing.T) {
 			"bbb:456:789",
 		}},
 	}
-	kubeConfig := &config.KubeConfig{
-		Namespace:  "labs",
-		ConfigPath: "~/.kube/config",
-		Resources: config.KubeResources{
-			Memory: "512Mi",
-			Cpu:    "500m",
-		},
+	resourceOptions := &ResourceOptions{
+		Namespace: "my-namespace",
+		Memory:    "512Mi",
+		Cpu:       "500m",
 	}
 
 	expectedDeployment :=
@@ -128,10 +122,12 @@ spec:
 status:
   loadBalancer: {}
 `
-	actualDeployment, actualService := BuildSpec(namespaceName, containerName, template, kubeConfig)
+	actualDeployment, actualService, err := buildSpec("my-container-name", template, resourceOptions)
+	// fix models
 	actualDeployment.TypeMeta = metav1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1"}
 	actualService.TypeMeta = metav1.TypeMeta{Kind: "Service", APIVersion: "v1"}
 
+	assert.NoError(t, err)
 	assert.YAMLEqf(t, expectedDeployment, objectToYaml(actualDeployment), "unexpected deployment")
 	assert.YAMLEqf(t, expectedService, objectToYaml(actualService), "unexpected service")
 }
