@@ -13,7 +13,7 @@
 </div>
 <br>
 
-[![demo](docs/demo-screenshot.png)](docs/demo.mp4)
+![demo](docs/demo.gif)
 
 ## Quick start
 
