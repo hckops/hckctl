@@ -13,6 +13,8 @@
 </div>
 <br>
 
+![demo](docs/demo.mp4)
+
 ## Quick start
 
 Create an `alpine` box to see how it works
@@ -23,8 +25,6 @@ hckctl box alpine
 # deploys a box to your kubernetes cluster
 hckctl box alpine --provider kube
 ```
-
-> TODO screenshots
 
 Spin-up a `parrot` box to start hacking!
 ```bash
@@ -58,15 +58,15 @@ curl -sSL https://github.com/hckops/hckctl/releases/download/v0.1.0/hckctl_linux
 > **Boxes** are ready-to-go docker images designed for security enthusiasts that want to spend more time hacking and need both an attacker and a vulnerable environment that is constantly updated, quick to start and just work
 
 Main features:
-* unified local and remote experience - run the same container locally or in a remote cluster
-* community driven and publicly maintained, you want to know what you are running!
+* unified local and remote experience - run the same environments locally or in a remote cluster
+* open source and publicly maintained - you want to know what you are running!
   - see [templates](https://github.com/hckops/megalopolis/tree/main/boxes)
   - see [docker images](https://github.com/hckops/megalopolis/tree/main/docker)
 * constantly updated
   - see scheduled [action](https://github.com/hckops/megalopolis/blob/main/.github/workflows/docker-ci.yml)
 * all declared ports are exposed and forwarded by default
-* resources are automatically deleted once you close the box
-* the *remote cloud* version is currently not publicly accessible
+* resources are automatically deleted once you close the boxes
+* the *cloud* provider over ssh tunnel is not publicly available at this time
 
 ```bash
 # lists boxes
@@ -112,6 +112,28 @@ hckctl config
 
 # edits config file
 vim ~/.config/hck/config.yml
+```
+
+Default
+```yaml
+kind: config/v1
+box:
+  revision: main
+  provider: docker
+  kube:
+    namespace: labs
+    configPath: ~/.kube/config
+    resources:
+      memory: 512Mi
+      cpu: 500m
+  cloud:
+    host: 0.0.0.0
+    port: 2222
+    username: ""
+    token: ""
+log:
+  level: info
+  filePath: /tmp/hckctl-ubuntu.log
 ```
 
 ## Development
