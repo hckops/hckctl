@@ -65,7 +65,7 @@ func NewConfig() *ConfigV1 {
 			Provider: Docker,
 			Kube: KubeConfig{
 				Namespace:  "labs",
-				ConfigPath: "~/.kube/config",
+				ConfigPath: "",
 				Resources: KubeResources{
 					Memory: "512Mi",
 					Cpu:    "500m",

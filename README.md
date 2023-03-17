@@ -118,11 +118,15 @@ Default
 ```yaml
 kind: config/v1
 box:
+  # branch, tag or sha
+  # https://github.com/hckops/megalopolis
   revision: main
+  # docker|kube|cloud
   provider: docker
   kube:
     namespace: labs
-    configPath: ~/.kube/config
+    # absolute path, default "~/.kube/config"
+    configPath: ""
     resources:
       memory: 512Mi
       cpu: 500m
@@ -132,6 +136,7 @@ box:
     username: ""
     token: ""
 log:
+  # debug|info|warning|error
   level: info
   filePath: /tmp/hckctl-ubuntu.log
 ```
@@ -155,8 +160,11 @@ tail -f /tmp/hckctl-*.log
 ```
 
 TODO
-* box: add detached mode + reconnect to existing + tunnel only
+* box: load from local path?
+* box: fix validation + vulnerable path
+* box: support distroless and different shell
 * box: list from megalopolis (hardcoded)
+* box: add detached mode + reconnect to existing + tunnel only
 * box: test with podman
 * finalize schema (move in megalopolis)
 * add cmd version

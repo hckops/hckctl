@@ -59,9 +59,36 @@ type ResourceOptions struct {
 
 func NewOutOfClusterKubeBox(template *schema.BoxV1, configPath string, resourceOptions *ResourceOptions) (*KubeBox, error) {
 
-	kubeconfig := filepath.Join(homedir.HomeDir(), strings.ReplaceAll(configPath, "~/", ""))
+	var kubeconfig string
+	if strings.TrimSpace(configPath) == "" {
+		kubeconfig = filepath.Join(homedir.HomeDir(), ".kube", "config")
+	} else {
+		// absolute path
+		kubeconfig = configPath
+	}
 
 	restConfig, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		return nil, errors.Wrap(err, "error restConfig")
+	}
+
+	clientSet, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		return nil, errors.Wrap(err, "error clientSet")
+	}
+
+	return &KubeBox{
+		ctx:             context.Background(),
+		kubeRestConfig:  restConfig,
+		kubeClientSet:   clientSet,
+		Template:        template,
+		ResourceOptions: resourceOptions,
+	}, nil
+}
+
+func NewInClusterKubeBox(template *schema.BoxV1, resourceOptions *ResourceOptions) (*KubeBox, error) {
+
+	restConfig, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, errors.Wrap(err, "error restConfig")
 	}
