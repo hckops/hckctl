@@ -21,7 +21,7 @@ type LocalDockerBox struct {
 }
 
 func NewDockerBox(template *schema.BoxV1) *LocalDockerBox {
-	l := logger.With().Str("cmd", "docker").Logger()
+	l := logger.With().Str("provider", "docker").Logger()
 
 	box, err := client.NewDockerBox(template)
 	if err != nil {

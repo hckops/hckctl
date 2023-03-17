@@ -26,7 +26,7 @@ type RemoteSshBox struct {
 }
 
 func NewRemoteSshBox(template *schema.BoxV1, revision string, config *config.CloudConfig) *RemoteSshBox {
-	l := logger.With().Str("cmd", "cloud").Logger()
+	l := logger.With().Str("provider", "cloud").Logger()
 
 	return &RemoteSshBox{
 		log:      l,

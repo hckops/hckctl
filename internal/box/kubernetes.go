@@ -21,7 +21,7 @@ type LocalKubeBox struct {
 }
 
 func NewKubeBox(template *schema.BoxV1, config *config.KubeConfig) *LocalKubeBox {
-	l := logger.With().Str("cmd", "kube").Logger()
+	l := logger.With().Str("provider", "kube").Logger()
 
 	box, err := client.NewOutOfClusterKubeBox(
 		template,
@@ -89,7 +89,7 @@ func (local *LocalKubeBox) Open() {
 	local.box.PortForward(pod)
 
 	local.box.OnExecCallback = func() {
-		local.log.Debug().Msgf("exec into pod %s", pod.Name)
+		local.log.Debug().Msgf("exec into pod: %s", pod.Name)
 		local.loader.Stop()
 	}
 	local.box.Exec(pod, local.streams)

@@ -7,5 +7,5 @@ import (
 )
 
 func TestNewCommandOpenBox(t *testing.T) {
-	assert.Equal(t, "hck-box-open::my-group/my-name::main", NewCommandOpenBox("my-group/my-name", "main"))
+	assert.Equal(t, "hck-box-open::my-group/my-name:main", NewCommandOpenBox("my-group/my-name", "main"))
 }
