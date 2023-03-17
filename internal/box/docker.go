@@ -12,7 +12,7 @@ import (
 	"github.com/hckops/hckctl/pkg/schema"
 )
 
-type DockerBoxCli struct {
+type LocalDockerBox struct {
 	// TODO dockerConfig
 	log     zerolog.Logger
 	loader  *terminal.Loader
@@ -20,7 +20,7 @@ type DockerBoxCli struct {
 	streams *model.BoxStreams
 }
 
-func NewDockerBox(template *schema.BoxV1) *DockerBoxCli {
+func NewDockerBox(template *schema.BoxV1) *LocalDockerBox {
 	l := logger.With().Str("cmd", "docker").Logger()
 
 	box, err := client.NewDockerBox(template)
@@ -28,7 +28,7 @@ func NewDockerBox(template *schema.BoxV1) *DockerBoxCli {
 		l.Fatal().Err(err).Msg("error docker box")
 	}
 
-	return &DockerBoxCli{
+	return &LocalDockerBox{
 		log:     l,
 		loader:  terminal.NewLoader(),
 		box:     box,
@@ -36,46 +36,46 @@ func NewDockerBox(template *schema.BoxV1) *DockerBoxCli {
 	}
 }
 
-func (cli *DockerBoxCli) Open() {
-	defer cli.box.Close()
+func (local *LocalDockerBox) Open() {
+	defer local.box.Close()
 
-	cli.log.Debug().Msgf("init docker box:\n%v\n", cli.box.Template.Pretty())
-	cli.loader.Start(fmt.Sprintf("loading %s", cli.box.Template.Name))
+	local.log.Debug().Msgf("init docker box:\n%v\n", local.box.Template.Pretty())
+	local.loader.Start(fmt.Sprintf("loading %s", local.box.Template.Name))
 
-	imageName := cli.box.Template.ImageName()
+	imageName := local.box.Template.ImageName()
 
-	cli.box.OnSetupCallback = func() {
-		cli.loader.Refresh(fmt.Sprintf("pulling %s", imageName))
+	local.box.OnSetupCallback = func() {
+		local.loader.Refresh(fmt.Sprintf("pulling %s", imageName))
 	}
-	if err := cli.box.Setup(); err != nil {
-		cli.loader.Halt(err, "error docker box setup")
+	if err := local.box.Setup(); err != nil {
+		local.loader.Halt(err, "error docker box setup")
 	}
 
-	containerName := cli.box.Template.GenerateName()
-	cli.loader.Refresh(fmt.Sprintf("creating %s", containerName))
+	containerName := local.box.Template.GenerateName()
+	local.loader.Refresh(fmt.Sprintf("creating %s", containerName))
 
-	cli.box.OnCreateCallback = func(port schema.PortV1) {
-		cli.log.Info().Msgf("[%s][%s] exposing %s (local) -> %s (container)", containerName, port.Alias, port.Local, port.Remote)
+	local.box.OnCreateCallback = func(port schema.PortV1) {
+		local.log.Info().Msgf("[%s][%s] exposing %s (local) -> %s (container)", containerName, port.Alias, port.Local, port.Remote)
 	}
-	containerId, err := cli.box.Create(containerName)
+	containerId, err := local.box.Create(containerName)
 	if err != nil {
-		cli.loader.Halt(err, "error docker box create")
+		local.loader.Halt(err, "error docker box create")
 	}
 
-	cli.log.Info().Msgf("opening new box: image=%s, containerName=%s, containerId=%s", imageName, containerName, containerId)
+	local.log.Info().Msgf("opening new box: image=%s, containerName=%s, containerId=%s", imageName, containerName, containerId)
 
-	cli.box.OnExecCallback = func() {
-		cli.loader.Stop()
+	local.box.OnExecCallback = func() {
+		local.loader.Stop()
 	}
-	cli.box.OnCloseCallback = func() {
-		cli.log.Debug().Msgf("removing container: %s", containerId)
+	local.box.OnCloseCallback = func() {
+		local.log.Debug().Msgf("removing container: %s", containerId)
 	}
-	cli.box.OnCloseErrorCallback = func(err error, message string) {
-		cli.log.Warn().Err(err).Msg(message)
+	local.box.OnCloseErrorCallback = func(err error, message string) {
+		local.log.Warn().Err(err).Msg(message)
 	}
-	cli.box.OnStreamErrorCallback = func(err error, message string) {
-		cli.log.Warn().Err(err).Msg(message)
+	local.box.OnStreamErrorCallback = func(err error, message string) {
+		local.log.Warn().Err(err).Msg(message)
 	}
 
-	cli.box.Exec(containerId, cli.streams)
+	local.box.Exec(containerId, local.streams)
 }

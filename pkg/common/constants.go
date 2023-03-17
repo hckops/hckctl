@@ -7,5 +7,5 @@ const (
 )
 
 const (
-	ProjectName = "hckops"
+	ProjectName string = "hckops"
 )

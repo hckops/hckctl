@@ -65,8 +65,8 @@ Main features:
 * constantly updated
   - see scheduled [action](https://github.com/hckops/megalopolis/blob/main/.github/workflows/docker-ci.yml)
 * all declared ports are exposed and forwarded by default
-* resources are automatically deleted once you close the boxes
-* the *cloud* provider over ssh tunnel is not publicly available at this time
+* resources are automatically deleted once you close a box
+* *the cloud provider is not publicly available at this time*
 
 ```bash
 # lists boxes
@@ -79,7 +79,7 @@ hckctl box alpine --provider docker
 # starts a kubernetes box
 hckctl box alpine --provider kube
 
-# starts a remote box
+# starts a remote box (ssh tunnel)
 hckctl box alpine --provider cloud
 ```
 

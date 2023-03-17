@@ -12,47 +12,50 @@ import (
 
 	"github.com/hckops/hckctl/internal/config"
 	"github.com/hckops/hckctl/internal/terminal"
+	"github.com/hckops/hckctl/pkg/common"
 	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-type CloudBoxCli struct {
+type RemoteSshBox struct {
 	log      zerolog.Logger
 	loader   *terminal.Loader
 	config   *config.CloudConfig
+	revision string
 	template *schema.BoxV1 // only name is actually needed
 }
 
-func NewCloudBox(template *schema.BoxV1, config *config.CloudConfig) *CloudBoxCli {
+func NewRemoteSshBox(template *schema.BoxV1, revision string, config *config.CloudConfig) *RemoteSshBox {
 	l := logger.With().Str("cmd", "cloud").Logger()
 
-	return &CloudBoxCli{
+	return &RemoteSshBox{
 		log:      l,
 		loader:   terminal.NewLoader(),
 		config:   config,
+		revision: revision,
 		template: template,
 	}
 }
 
-// TODO refactor in pkg/client
-func (cli *CloudBoxCli) Open() {
-	cli.log.Debug().Msgf("init cloud box:\n%v\n", cli.template.Pretty())
-	cli.loader.Start(fmt.Sprintf("loading to %s/%s", cli.config.Address(), cli.template.Name))
+// TODO refactor cloud in pkg/client
+func (remote *RemoteSshBox) Open() {
+	remote.log.Debug().Msgf("init cloud box:\n%v\n", remote.template.Pretty())
+	remote.loader.Start(fmt.Sprintf("loading to %s/%s", remote.config.Address(), remote.template.Name))
 
-	sshConfig := sshClientConfig(cli.config)
+	sshConfig := sshClientConfig(remote.config)
 
-	client, err := ssh.Dial("tcp", cli.config.Address(), sshConfig)
+	client, err := ssh.Dial("tcp", remote.config.Address(), sshConfig)
 	if err != nil {
-		cli.loader.Halt(err, "connection error")
+		remote.loader.Halt(err, "connection error")
 	}
 
 	session, err := client.NewSession()
 	if err != nil {
-		cli.loader.Halt(err, "ssh session error")
+		remote.loader.Halt(err, "ssh session error")
 	}
 	defer session.Close()
 
-	cli.log.Info().
+	remote.log.Info().
 		Str("User", client.User()).
 		Str("ClientVersion", string(client.ClientVersion())).
 		Str("ServerVersion", string(client.ServerVersion())).
@@ -61,25 +64,23 @@ func (cli *CloudBoxCli) Open() {
 		Msg("ssh connection established")
 
 	onStreamErrorCallback := func(err error, message string) {
-		cli.log.Warn().Err(err).Msg(message)
+		remote.log.Warn().Err(err).Msg(message)
 	}
-
 	if err := handleStreams(session, onStreamErrorCallback); err != nil {
-		cli.loader.Halt(err, "error streams")
+		remote.loader.Halt(err, "error streams")
 	}
 
 	terminal, err := util.NewRawTerminal(os.Stdin)
 	if err != nil {
-		cli.log.Warn().Err(err).Msg("error terminal")
+		remote.log.Warn().Err(err).Msg("error terminal")
 	}
 	defer terminal.Restore()
 
 	// TODO split channel requests to show progress
-	cli.loader.Stop()
+	remote.loader.Stop()
 
-	// TODO schema "{"kind":"action/v1","name":"hck-box-open","body":{"template":"alpine","revision":"main"}}"
-	if err := session.Run(fmt.Sprintf("hck-box-open::%s", cli.template.Name)); err != nil && err != io.EOF {
-		cli.loader.Halt(err, "error cloud box open")
+	if err := session.Run(common.NewCommandOpenBox(remote.template.Name, remote.revision)); err != nil && err != io.EOF {
+		remote.loader.Halt(err, "error cloud box open")
 	}
 }
 
