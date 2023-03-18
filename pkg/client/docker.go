@@ -200,6 +200,28 @@ func (box *DockerBox) Exec(containerId string, streams *model.BoxStreams) error 
 	}
 
 	box.OnExecCallback()
+	return nil
+}
+
+func (box *DockerBox) Wait(containerId string, streams *model.BoxStreams) error {
+
+	if err := box.docker.ContainerStart(box.ctx, containerId, types.ContainerStartOptions{}); err != nil {
+		panic(err)
+	}
+
+	attachResponse, err := box.docker.ContainerAttach(box.ctx, containerId, types.ContainerAttachOptions{
+		Stream: true,
+		Stdin:  true,
+		Stdout: true,
+		Stderr: true,
+		Logs:   true,
+	})
+	if err != nil {
+		return errors.Wrap(err, "error container exec attach")
+	}
+	defer attachResponse.Close()
+
+	handleStreams(&attachResponse, streams, func() {}, box.OnStreamErrorCallback)
 
 	// waits for interrupt signals
 	statusCh, errCh := box.docker.ContainerWait(box.ctx, containerId, container.WaitConditionNotRunning)
@@ -210,6 +232,14 @@ func (box *DockerBox) Exec(containerId string, streams *model.BoxStreams) error 
 		}
 	case <-statusCh:
 	}
+
+	out, err := box.docker.ContainerLogs(box.ctx, containerId, types.ContainerLogsOptions{ShowStdout: true})
+	if err != nil {
+		panic(err)
+	}
+
+	stdcopy.StdCopy(streams.Stdout, streams.Stderr, out)
+
 	return nil
 }
 

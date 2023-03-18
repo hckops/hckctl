@@ -64,18 +64,26 @@ func (local *LocalDockerBox) Open() {
 
 	local.log.Info().Msgf("opening new box: image=%s, containerName=%s, containerId=%s", imageName, containerName, containerId)
 
-	local.box.OnExecCallback = func() {
-		local.loader.Stop()
-	}
-	local.box.OnCloseCallback = func() {
-		local.log.Debug().Msgf("removing container: %s", containerId)
-	}
-	local.box.OnCloseErrorCallback = func(err error, message string) {
-		local.log.Warn().Err(err).Msg(message)
-	}
-	local.box.OnStreamErrorCallback = func(err error, message string) {
-		local.log.Warn().Err(err).Msg(message)
-	}
+	// local.box.OnExecCallback = func() {
+	// 	// TODO
+	// 	local.loader.Stop()
+	// }
+	// local.box.OnCloseCallback = func() {
+	// 	local.log.Debug().Msgf("removing container: %s", containerId)
+	// }
+	// local.box.OnCloseErrorCallback = func(err error, message string) {
+	// 	local.log.Warn().Err(err).Msg(message)
+	// }
+	// local.box.OnStreamErrorCallback = func(err error, message string) {
+	// 	local.log.Warn().Err(err).Msg(message)
+	// }
+	// if err := local.box.Exec(containerId, local.streams); err != nil {
+	// 	local.loader.Halt(err, "error docker box exec")
+	// }
 
-	local.box.Exec(containerId, local.streams)
+	local.loader.Stop()
+
+	if err := local.box.Wait(containerId, local.streams); err != nil {
+		local.loader.Halt(err, "error docker box wait")
+	}
 }

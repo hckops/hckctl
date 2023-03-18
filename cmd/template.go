@@ -89,9 +89,9 @@ func newBoxParam(name, revision string) *template.TemplateParam {
 // TODO shared with box cmd
 func requestTemplate(param *template.TemplateParam) (string, error) {
 
-	if err := template.ValidateTemplateParam(param); err != nil {
-		return "", errors.Wrap(err, "invalid template")
-	}
+	// if err := template.ValidateTemplateParam(param); err != nil {
+	// 	return "", errors.Wrap(err, "invalid template")
+	// }
 
 	// attempts remote validation and to access private templates
 	var data string

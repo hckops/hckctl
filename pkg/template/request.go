@@ -80,7 +80,7 @@ func buildPath(param *TemplateParam) (string, error) {
 		return "", err
 	}
 
-	path := fmt.Sprintf("%s/%s/official/%s.yml", param.Revision, kind, param.TemplateName)
+	path := fmt.Sprintf("%s/%s/%s.yml", param.Revision, kind, param.TemplateName)
 	fullPath := fmt.Sprintf("%s/%s", common.MegalopolisRawUrl, path)
 
 	return fullPath, nil
