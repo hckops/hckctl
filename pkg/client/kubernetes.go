@@ -311,7 +311,7 @@ func buildStreamOptions(streams *model.BoxStreams) exec.StreamOptions {
 	}
 }
 
-// TODO command
+// TODO command from template
 func buildExecUrl(kubeClientSet *kubernetes.Clientset, pod *corev1.Pod, isTty bool) *url.URL {
 	// exec remote shell
 	return kubeClientSet.CoreV1().RESTClient().

@@ -85,7 +85,7 @@ hckctl box alpine --provider cloud
 
 ### Lab
 
-> **Labs** are user-defined hacking environments for your specific needs
+> **Labs** are user-defined hacking environments
 
 Main features:
 * override defaults e.g. credentials, environment variables, etc.

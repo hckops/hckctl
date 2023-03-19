@@ -157,7 +157,7 @@ func buildHostConfig(ports []schema.PortV1, onPortBindCallback func(port schema.
 	}, nil
 }
 
-// TODO set bash in the config
+// TODO command from template
 func (box *DockerBox) Exec(containerId string, streams *model.BoxStreams) error {
 
 	if err := box.docker.ContainerStart(box.ctx, containerId, types.ContainerStartOptions{}); err != nil {
