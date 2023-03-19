@@ -20,12 +20,3 @@ func NewDefaultStreams(tty bool) *BoxStreams {
 		IsTty:  tty,
 	}
 }
-
-// TODO ???
-type Box interface {
-	NewBox()
-	Template()
-	Setup()
-	Exec()
-	Close()
-}

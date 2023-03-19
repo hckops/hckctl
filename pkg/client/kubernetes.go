@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -263,18 +264,8 @@ func (box *KubeBox) PortForward(pod *corev1.Pod) {
 }
 
 func (box *KubeBox) Exec(pod *corev1.Pod, streams *model.BoxStreams) error {
-	coreClient := box.kubeClientSet.CoreV1()
 
-	streamOptions := exec.StreamOptions{
-		Stdin: true,
-		TTY:   streams.IsTty,
-		IOStreams: genericclioptions.IOStreams{
-			In:     streams.Stdin,
-			Out:    streams.Stdout,
-			ErrOut: streams.Stderr,
-		},
-	}
-
+	streamOptions := buildStreamOptions(streams)
 	tty := streamOptions.SetupTTY()
 
 	var sizeQueue remotecommand.TerminalSizeQueue
@@ -283,8 +274,47 @@ func (box *KubeBox) Exec(pod *corev1.Pod, streams *model.BoxStreams) error {
 		streamOptions.ErrOut = nil
 	}
 
+	execUrl := buildExecUrl(box.kubeClientSet, pod, tty.Raw)
+	executor := exec.DefaultRemoteExecutor{}
+
+	box.OnExecCallback()
+
+	fn := func() error {
+		return executor.Execute(http.MethodPost, execUrl, box.kubeRestConfig, streamOptions.In, streamOptions.Out, streamOptions.ErrOut, tty.Raw, sizeQueue)
+	}
+	if err := tty.Safe(fn); err != nil {
+		return errors.Wrap(err, "terminal session closed")
+	}
+	return nil
+}
+
+func (box *KubeBox) ExecWithoutTerminal(pod *corev1.Pod, streams *model.BoxStreams) error {
+
+	streamOptions := buildStreamOptions(streams)
+	execUrl := buildExecUrl(box.kubeClientSet, pod, streams.IsTty)
+	executor := exec.DefaultRemoteExecutor{}
+
+	box.OnExecCallback()
+
+	return executor.Execute(http.MethodPost, execUrl, box.kubeRestConfig, streamOptions.In, streamOptions.Out, streamOptions.ErrOut, false, nil)
+}
+
+func buildStreamOptions(streams *model.BoxStreams) exec.StreamOptions {
+	return exec.StreamOptions{
+		Stdin: true,
+		TTY:   streams.IsTty,
+		IOStreams: genericclioptions.IOStreams{
+			In:     streams.Stdin,
+			Out:    streams.Stdout,
+			ErrOut: streams.Stderr,
+		},
+	}
+}
+
+// TODO command
+func buildExecUrl(kubeClientSet *kubernetes.Clientset, pod *corev1.Pod, isTty bool) *url.URL {
 	// exec remote shell
-	restRequest := coreClient.RESTClient().
+	return kubeClientSet.CoreV1().RESTClient().
 		Post().
 		Namespace(pod.Namespace).
 		Resource("pods").
@@ -296,20 +326,9 @@ func (box *KubeBox) Exec(pod *corev1.Pod, streams *model.BoxStreams) error {
 			Stdin:     true,
 			Stdout:    true,
 			Stderr:    true,
-			TTY:       tty.Raw,
-		}, scheme.ParameterCodec)
-
-	executor := exec.DefaultRemoteExecutor{}
-
-	box.OnExecCallback()
-
-	fn := func() error {
-		return executor.Execute(http.MethodPost, restRequest.URL(), box.kubeRestConfig, streamOptions.In, streamOptions.Out, streamOptions.ErrOut, tty.Raw, sizeQueue)
-	}
-	if err := tty.Safe(fn); err != nil {
-		return errors.Wrap(err, "terminal session closed")
-	}
-	return nil
+			TTY:       isTty,
+		}, scheme.ParameterCodec).
+		URL()
 }
 
 func buildSpec(containerName string, template *schema.BoxV1, resourceOptions *ResourceOptions) (*appsv1.Deployment, *corev1.Service, error) {
