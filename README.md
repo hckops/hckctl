@@ -79,7 +79,7 @@ hckctl box alpine --provider docker
 # starts a kubernetes box
 hckctl box alpine --provider kube
 
-# starts a remote box (ssh tunnel)
+# starts a remote box (over ssh tunnel)
 hckctl box alpine --provider cloud
 ```
 
@@ -166,6 +166,10 @@ TODO
 * box: list from megalopolis (hardcoded)
 * box: add detached mode + reconnect to existing + tunnel only
 * box: test with podman
+* box: add timeout
+* box: refactor box/template shared cmd
+* box: cloud ssh key auth only
+* config: add set/reset cmd
 * finalize schema (move in megalopolis)
 * add cmd version
 * release: verify archives + add brew

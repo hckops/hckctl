@@ -45,11 +45,13 @@ func ProviderToFlag(value config.Provider) (ProviderFlag, error) {
 	}
 }
 
+var configPath string
+
 func InitCliConfig() {
 	configHome := config.ConfigHome()
 	configName := "config"
 	configType := "yml"
-	configPath := filepath.Join(configHome, configName+"."+configType)
+	configPath = filepath.Join(configHome, configName+"."+configType)
 	// see https://github.com/spf13/viper/issues/430
 	config.EnsurePathOrDie(configPath, config.DefaultDirectoryMod)
 
@@ -57,8 +59,8 @@ func InitCliConfig() {
 	viper.SetConfigName(configName)
 	viper.SetConfigType(configType)
 
-	viper.AutomaticEnv()
 	viper.SetEnvPrefix(config.ConfigNameEnv)
+	viper.AutomaticEnv()
 
 	// first time only
 	if err := viper.ReadInConfig(); err != nil {
@@ -85,7 +87,7 @@ func NewConfigCmd() *cobra.Command {
 		Use:   "config",
 		Short: "prints current configurations",
 		Run: func(cmd *cobra.Command, args []string) {
-			// TODO override validation
+			fmt.Println(fmt.Sprintf("# %s", configPath))
 			GetCliConfig().Print()
 		},
 	}
