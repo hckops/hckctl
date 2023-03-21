@@ -118,8 +118,7 @@ Default
 ```yaml
 kind: config/v1
 box:
-  # branch, tag or sha
-  # https://github.com/hckops/megalopolis
+  # branch, tag or sha of https://github.com/hckops/megalopolis
   revision: main
   # docker|kube|cloud
   provider: docker
