@@ -86,7 +86,7 @@ func (local *LocalKubeBox) Open() {
 	local.box.OnTunnelErrorCallback = func(err error, message string) {
 		local.loader.Halt(err, "error kube: port forward")
 	}
-	local.box.PortForward(pod)
+	local.box.PortForward(pod.Name, pod.Namespace)
 
 	local.box.OnExecCallback = func() {
 		local.log.Debug().Msgf("exec into pod: %s", pod.Name)

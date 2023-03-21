@@ -205,7 +205,7 @@ func (box *KubeBox) GetPod(deployment *appsv1.Deployment) (*corev1.Pod, error) {
 	return &pod, nil
 }
 
-func (box *KubeBox) PortForward(pod *corev1.Pod) {
+func (box *KubeBox) PortForward(podName, namespace string) {
 	coreClient := box.kubeClientSet.CoreV1()
 
 	if !box.Template.HasPorts() {
@@ -229,8 +229,8 @@ func (box *KubeBox) PortForward(pod *corev1.Pod) {
 	restRequest := coreClient.RESTClient().
 		Post().
 		Resource("pods").
-		Namespace(pod.Namespace).
-		Name(pod.Name).
+		Namespace(namespace).
+		Name(podName).
 		SubResource("portforward")
 
 	transport, upgrader, err := spdy.RoundTripperFor(box.kubeRestConfig)

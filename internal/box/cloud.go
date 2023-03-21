@@ -37,10 +37,12 @@ func NewRemoteSshBox(template *schema.BoxV1, revision string, config *config.Clo
 	}
 }
 
-// TODO refactor cloud in pkg/client
 func (remote *RemoteSshBox) Open() {
+	defer remote.loader.Stop()
+
 	remote.log.Debug().Msgf("init cloud box:\n%v\n", remote.template.Pretty())
 	remote.loader.Start(fmt.Sprintf("loading to %s/%s", remote.config.Address(), remote.template.Name))
+	remote.loader.Sleep(1)
 
 	sshConfig := sshClientConfig(remote.config)
 
@@ -48,6 +50,42 @@ func (remote *RemoteSshBox) Open() {
 	if err != nil {
 		remote.loader.Halt(err, "connection error")
 	}
+	defer client.Close()
+
+	remote.create(client, remote.template.Name, remote.revision)
+}
+
+func (remote *RemoteSshBox) create(client *ssh.Client, name, revision string) string {
+	wantReply, response, err := client.SendRequest(string(common.CommandBoxCreate), true, []byte(common.NewCommandCreateBox(name, revision)))
+
+	remote.log.Debug().Msgf("wantReply=%v", wantReply)
+	remote.log.Debug().Msgf("response=%s", response)
+	remote.log.Debug().Msgf("err=%v", err)
+	return ""
+}
+
+// TODO refactor cloud in pkg/client
+func (remote *RemoteSshBox) OpenOld() {
+	remote.log.Debug().Msgf("init cloud box:\n%v\n", remote.template.Pretty())
+	remote.loader.Start(fmt.Sprintf("loading to %s/%s", remote.config.Address(), remote.template.Name))
+	remote.loader.Sleep(1)
+
+	sshConfig := sshClientConfig(remote.config)
+
+	client, err := ssh.Dial("tcp", remote.config.Address(), sshConfig)
+	if err != nil {
+		remote.loader.Halt(err, "connection error")
+	}
+
+	// TODO timeout if no response
+
+	// TODO sent CREATE requests, wait for BOX-ID/OK
+	//client.SendRequest()
+
+	// TODO init direct-tcpip
+	// client.Dial()
+	// TODO start local server to forward traffic to remote connection
+	// net.Listen
 
 	session, err := client.NewSession()
 	if err != nil {
@@ -61,6 +99,7 @@ func (remote *RemoteSshBox) Open() {
 		Str("ServerVersion", string(client.ServerVersion())).
 		Str("RemoteAddress", client.RemoteAddr().String()).
 		Str("LocalAddress", client.LocalAddr().String()).
+		Str("ConnectionId", string(client.SessionID())).
 		Msg("ssh connection established")
 
 	onStreamErrorCallback := func(err error, message string) {
@@ -70,15 +109,16 @@ func (remote *RemoteSshBox) Open() {
 		remote.loader.Halt(err, "error streams")
 	}
 
-	terminal, err := util.NewRawTerminal(os.Stdin)
-	if err != nil {
+	if rawTerminal, err := util.NewRawTerminal(os.Stdin); err == nil {
+		defer rawTerminal.Restore()
+	} else {
 		remote.log.Warn().Err(err).Msg("error terminal")
 	}
-	defer terminal.Restore()
 
 	// TODO split channel requests to show progress
 	remote.loader.Stop()
 
+	// this is session EXEC
 	if err := session.Run(common.NewCommandOpenBox(remote.template.Name, remote.revision)); err != nil && err != io.EOF {
 		remote.loader.Halt(err, "error cloud box open")
 	}
@@ -96,6 +136,7 @@ func sshClientConfig(config *config.CloudConfig) *ssh.ClientConfig {
 	return sshConfig
 }
 
+// TODO rename handleExec
 func handleStreams(session *ssh.Session, onStreamErrorCallback func(error, string)) error {
 
 	stdin, err := session.StdinPipe()
