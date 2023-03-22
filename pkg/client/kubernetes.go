@@ -38,8 +38,8 @@ import (
 
 type KubeBox struct {
 	ctx             context.Context
-	kubeRestConfig  *rest.Config
-	kubeClientSet   *kubernetes.Clientset
+	KubeRestConfig  *rest.Config
+	KubeClientSet   *kubernetes.Clientset
 	Template        *schema.BoxV1
 	ResourceOptions *ResourceOptions
 
@@ -80,8 +80,8 @@ func NewOutOfClusterKubeBox(template *schema.BoxV1, configPath string, resourceO
 
 	return &KubeBox{
 		ctx:             context.Background(),
-		kubeRestConfig:  restConfig,
-		kubeClientSet:   clientSet,
+		KubeRestConfig:  restConfig,
+		KubeClientSet:   clientSet,
 		Template:        template,
 		ResourceOptions: resourceOptions,
 	}, nil
@@ -101,8 +101,8 @@ func NewInClusterKubeBox(template *schema.BoxV1, resourceOptions *ResourceOption
 
 	return &KubeBox{
 		ctx:             context.Background(),
-		kubeRestConfig:  restConfig,
-		kubeClientSet:   clientSet,
+		KubeRestConfig:  restConfig,
+		KubeClientSet:   clientSet,
 		Template:        template,
 		ResourceOptions: resourceOptions,
 	}, nil
@@ -113,8 +113,8 @@ func (box *KubeBox) BuildSpec(containerName string) (*appsv1.Deployment, *corev1
 }
 
 func (box *KubeBox) ApplyTemplate(deploymentSpec *appsv1.Deployment, serviceSpec *corev1.Service) error {
-	coreClient := box.kubeClientSet.CoreV1()
-	appClient := box.kubeClientSet.AppsV1()
+	coreClient := box.KubeClientSet.CoreV1()
+	appClient := box.KubeClientSet.AppsV1()
 
 	// apply namespace, see https://github.com/kubernetes/client-go/issues/1036
 	namespace, err := coreClient.Namespaces().Apply(box.ctx, applyv1.Namespace(box.ResourceOptions.Namespace), metav1.ApplyOptions{FieldManager: "application/apply-patch"})
@@ -169,8 +169,8 @@ func (box *KubeBox) ApplyTemplate(deploymentSpec *appsv1.Deployment, serviceSpec
 }
 
 func (box *KubeBox) RemoveTemplate(deployment *appsv1.Deployment, service *corev1.Service) {
-	coreClient := box.kubeClientSet.CoreV1()
-	appClient := box.kubeClientSet.AppsV1()
+	coreClient := box.KubeClientSet.CoreV1()
+	appClient := box.KubeClientSet.AppsV1()
 
 	if err := appClient.Deployments(box.ResourceOptions.Namespace).Delete(box.ctx, deployment.Name, metav1.DeleteOptions{}); err != nil {
 		box.OnCloseErrorCallback(err, fmt.Sprintf("error kube delete deployment: %s", deployment.Name))
@@ -186,7 +186,7 @@ func (box *KubeBox) RemoveTemplate(deployment *appsv1.Deployment, service *corev
 }
 
 func (box *KubeBox) GetPod(deployment *appsv1.Deployment) (*corev1.Pod, error) {
-	coreClient := box.kubeClientSet.CoreV1()
+	coreClient := box.KubeClientSet.CoreV1()
 
 	labelSet := labels.Set(deployment.Spec.Selector.MatchLabels)
 	listOptions := metav1.ListOptions{LabelSelector: labelSet.AsSelector().String()}
@@ -206,7 +206,7 @@ func (box *KubeBox) GetPod(deployment *appsv1.Deployment) (*corev1.Pod, error) {
 }
 
 func (box *KubeBox) PortForward(podName, namespace string) {
-	coreClient := box.kubeClientSet.CoreV1()
+	coreClient := box.KubeClientSet.CoreV1()
 
 	if !box.Template.HasPorts() {
 		// exit, no service/port available to bind
@@ -233,7 +233,7 @@ func (box *KubeBox) PortForward(podName, namespace string) {
 		Name(podName).
 		SubResource("portforward")
 
-	transport, upgrader, err := spdy.RoundTripperFor(box.kubeRestConfig)
+	transport, upgrader, err := spdy.RoundTripperFor(box.KubeRestConfig)
 	if err != nil {
 		box.OnTunnelErrorCallback(err, "error kube round tripper")
 	}
@@ -274,13 +274,13 @@ func (box *KubeBox) Exec(pod *corev1.Pod, streams *model.BoxStreams) error {
 		streamOptions.ErrOut = nil
 	}
 
-	execUrl := buildExecUrl(box.kubeClientSet, pod, tty.Raw)
+	execUrl := buildExecUrl(box.KubeClientSet, pod, tty.Raw)
 	executor := exec.DefaultRemoteExecutor{}
 
 	box.OnExecCallback()
 
 	fn := func() error {
-		return executor.Execute(http.MethodPost, execUrl, box.kubeRestConfig, streamOptions.In, streamOptions.Out, streamOptions.ErrOut, tty.Raw, sizeQueue)
+		return executor.Execute(http.MethodPost, execUrl, box.KubeRestConfig, streamOptions.In, streamOptions.Out, streamOptions.ErrOut, tty.Raw, sizeQueue)
 	}
 	if err := tty.Safe(fn); err != nil {
 		return errors.Wrap(err, "terminal session closed")
@@ -291,12 +291,12 @@ func (box *KubeBox) Exec(pod *corev1.Pod, streams *model.BoxStreams) error {
 func (box *KubeBox) ExecWithoutTerminal(pod *corev1.Pod, streams *model.BoxStreams) error {
 
 	streamOptions := buildStreamOptions(streams)
-	execUrl := buildExecUrl(box.kubeClientSet, pod, streams.IsTty)
+	execUrl := buildExecUrl(box.KubeClientSet, pod, streams.IsTty)
 	executor := exec.DefaultRemoteExecutor{}
 
 	box.OnExecCallback()
 
-	return executor.Execute(http.MethodPost, execUrl, box.kubeRestConfig, streamOptions.In, streamOptions.Out, streamOptions.ErrOut, false, nil)
+	return executor.Execute(http.MethodPost, execUrl, box.KubeRestConfig, streamOptions.In, streamOptions.Out, streamOptions.ErrOut, false, nil)
 }
 
 func buildStreamOptions(streams *model.BoxStreams) exec.StreamOptions {
