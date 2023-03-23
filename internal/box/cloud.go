@@ -3,6 +3,7 @@ package box
 import (
 	"fmt"
 	"io"
+	"net"
 	"os"
 
 	"github.com/pkg/errors"
@@ -52,22 +53,73 @@ func (remote *RemoteSshBox) Open() {
 	}
 	defer client.Close()
 
-	remote.create(client, remote.template.Name, remote.revision)
+	boxId := remote.create(client, remote.template.Name, remote.revision)
+
+	remote.loader.Refresh(fmt.Sprintf("tunneling %s", boxId))
+	remote.tunnelTest(client, boxId)
 }
 
 func (remote *RemoteSshBox) create(client *ssh.Client, name, revision string) string {
-	wantReply, response, err := client.SendRequest(string(common.CommandBoxCreate), true, []byte(common.NewCommandCreateBox(name, revision)))
+	_, response, err := client.SendRequest(common.CommandBoxCreate.String(), true, []byte(common.NewCommandCreateBox(name, revision)))
+	if err != nil || len(response) == 0 {
+		remote.loader.Halt(err, "error cloud: create")
+	}
+	remote.log.Info().Msgf("new cloud box: %s", response)
+	return string(response)
+}
 
-	remote.log.Debug().Msgf("wantReply=%v", wantReply)
-	remote.log.Debug().Msgf("response=%s", response)
-	remote.log.Debug().Msgf("err=%v", err)
-	return ""
+func (remote *RemoteSshBox) tunnelTest(client *ssh.Client, boxId string) {
+	// starts local server to forward traffic to remote connection
+	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%s", "5901"))
+	if err != nil {
+		remote.loader.Halt(err, "error cloud: tunnel listen")
+	}
+	defer listener.Close()
+
+	copyConnection := func(writer, reader net.Conn) {
+		defer writer.Close()
+		defer reader.Close()
+
+		_, err := io.Copy(writer, reader)
+		if err != nil {
+			remote.log.Warn().Err(err).Msg("error copy connection")
+		}
+	}
+
+	for {
+		localConnection, err := listener.Accept()
+		if err != nil {
+			remote.loader.Halt(err, "error cloud: local tunnel")
+		}
+		// forward
+		go func() {
+			remoteConnection, err := client.Dial("tcp", fmt.Sprintf("%s:%s", boxId, "5900"))
+			if err != nil {
+				remote.loader.Halt(err, "error cloud: remote tunnel")
+			}
+
+			go copyConnection(localConnection, remoteConnection)
+			go copyConnection(remoteConnection, localConnection)
+		}()
+	}
+}
+
+func (remote *RemoteSshBox) tunnelAll(boxId string) {
+
+	var portBindings []string
+	for _, port := range remote.template.NetworkPorts() {
+		localPort, _ := util.GetLocalPort(port.Local)
+
+		portBindings = append(portBindings, fmt.Sprintf("127.0.0.1:%s", localPort))
+	}
+
+	util.GetLocalPort("")
 }
 
 // TODO refactor cloud in pkg/client
 func (remote *RemoteSshBox) OpenOld() {
 	remote.log.Debug().Msgf("init cloud box:\n%v\n", remote.template.Pretty())
-	remote.loader.Start(fmt.Sprintf("loading to %s/%s", remote.config.Address(), remote.template.Name))
+	remote.loader.Start(fmt.Sprintf("loading %s/%s", remote.config.Address(), remote.template.Name))
 	remote.loader.Sleep(1)
 
 	sshConfig := sshClientConfig(remote.config)

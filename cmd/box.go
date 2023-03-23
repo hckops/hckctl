@@ -72,7 +72,7 @@ func NewBoxCmd() *cobra.Command {
 }
 
 func requestBoxTemplate(name string, revision string) *schema.BoxV1 {
-	log.Info().Msgf("requesting box template: name=%s revision=%s", name, revision)
+	log.Info().Msgf("request box template: name=%s revision=%s", name, revision)
 
 	rawTemplate, err := requestTemplate(newBoxParam(name, revision))
 	if err != nil {
