@@ -2,20 +2,18 @@ package box
 
 import (
 	"fmt"
-	"io"
-	"net"
-	"os"
-
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
-	logger "github.com/rs/zerolog/log"
-	"golang.org/x/crypto/ssh"
-
 	"github.com/hckops/hckctl/internal/config"
 	"github.com/hckops/hckctl/internal/terminal"
 	"github.com/hckops/hckctl/pkg/common"
 	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/util"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
+	logger "github.com/rs/zerolog/log"
+	"golang.org/x/crypto/ssh"
+	"io"
+	"net"
+	"os"
 )
 
 type RemoteSshBox struct {
@@ -53,10 +51,19 @@ func (remote *RemoteSshBox) Open() {
 	}
 	defer client.Close()
 
+	remote.log.Info().
+		Str("User", client.User()).
+		Str("ClientVersion", string(client.ClientVersion())).
+		Str("ServerVersion", string(client.ServerVersion())).
+		Str("RemoteAddress", client.RemoteAddr().String()).
+		Str("LocalAddress", client.LocalAddr().String()).
+		Str("ConnectionId", string(client.SessionID())).
+		Msg("ssh connection established")
+
 	boxId := remote.create(client, remote.template.Name, remote.revision)
 
 	remote.loader.Refresh(fmt.Sprintf("tunneling %s", boxId))
-	remote.tunnelTest(client, boxId)
+	remote.tunnelAll(client, boxId)
 }
 
 func (remote *RemoteSshBox) create(client *ssh.Client, name, revision string) string {
@@ -68,9 +75,28 @@ func (remote *RemoteSshBox) create(client *ssh.Client, name, revision string) st
 	return string(response)
 }
 
-func (remote *RemoteSshBox) tunnelTest(client *ssh.Client, boxId string) {
+func (remote *RemoteSshBox) tunnelAll(client *ssh.Client, boxId string) {
+
+	for _, port := range remote.template.NetworkPorts() {
+		localPort, _ := util.GetLocalPort(port.Local)
+
+		openPort := schema.PortV1{
+			Alias:  port.Alias,
+			Local:  localPort,
+			Remote: port.Remote,
+		}
+
+		message := fmt.Sprintf("[%s][%s] forwarding %s (local) -> %s (remote)", boxId, port.Alias, port.Local, port.Remote)
+		remote.log.Info().Msgf(message)
+		fmt.Println(message)
+		go remote.tunnel(client, boxId, openPort)
+	}
+}
+
+func (remote *RemoteSshBox) tunnel(client *ssh.Client, boxId string, port schema.PortV1) {
+
 	// starts local server to forward traffic to remote connection
-	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%s", "5901"))
+	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%s", port.Local))
 	if err != nil {
 		remote.loader.Halt(err, "error cloud: tunnel listen")
 	}
@@ -93,7 +119,7 @@ func (remote *RemoteSshBox) tunnelTest(client *ssh.Client, boxId string) {
 		}
 		// forward
 		go func() {
-			remoteConnection, err := client.Dial("tcp", fmt.Sprintf("%s:%s", boxId, "5900"))
+			remoteConnection, err := client.Dial("tcp", fmt.Sprintf("%s:%s", boxId, port.Remote))
 			if err != nil {
 				remote.loader.Halt(err, "error cloud: remote tunnel")
 			}
@@ -102,18 +128,6 @@ func (remote *RemoteSshBox) tunnelTest(client *ssh.Client, boxId string) {
 			go copyConnection(remoteConnection, localConnection)
 		}()
 	}
-}
-
-func (remote *RemoteSshBox) tunnelAll(boxId string) {
-
-	var portBindings []string
-	for _, port := range remote.template.NetworkPorts() {
-		localPort, _ := util.GetLocalPort(port.Local)
-
-		portBindings = append(portBindings, fmt.Sprintf("127.0.0.1:%s", localPort))
-	}
-
-	util.GetLocalPort("")
 }
 
 // TODO refactor cloud in pkg/client
@@ -144,15 +158,6 @@ func (remote *RemoteSshBox) OpenOld() {
 		remote.loader.Halt(err, "ssh session error")
 	}
 	defer session.Close()
-
-	remote.log.Info().
-		Str("User", client.User()).
-		Str("ClientVersion", string(client.ClientVersion())).
-		Str("ServerVersion", string(client.ServerVersion())).
-		Str("RemoteAddress", client.RemoteAddr().String()).
-		Str("LocalAddress", client.LocalAddr().String()).
-		Str("ConnectionId", string(client.SessionID())).
-		Msg("ssh connection established")
 
 	onStreamErrorCallback := func(err error, message string) {
 		remote.log.Warn().Err(err).Msg(message)

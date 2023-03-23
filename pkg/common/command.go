@@ -14,6 +14,8 @@ const (
 	CommandBoxExec
 	CommandBoxTunnel
 	CommandBoxOpen
+	CommandBoxList
+	CommandBoxDelete
 )
 
 // TODO https://pkg.go.dev/golang.org/x/tools/cmd/stringer
@@ -27,6 +29,10 @@ func (c Command) String() string {
 		return "hck-box-tunnel"
 	case CommandBoxOpen: // create, attach and tunnel to an ephemeral box
 		return "hck-box-open"
+	case CommandBoxList: // list existing boxes
+		return "hck-box-list"
+	case CommandBoxDelete: // delete a box
+		return "hck-box-delete"
 	default:
 		return ""
 	}
@@ -37,7 +43,7 @@ func NewCommandCreateBox(name, revision string) string {
 }
 
 // TODO change payload format e.g. json, protocol buffer
-// TODO schema example "{"kind":"action/v1","name":"hck-box-open","body":{"template":"official/alpine","revision":"main"}}"
+// TODO schema example "{"kind":"action/v1","name":"hck-box-open","body":{"template":"official/alpine","revision":"main","resource":{"memory:"512Mi","cpu":"500m"}}}"
 // TODO simple client validation
 func NewCommandOpenBox(name, revision string) string {
 	return fmt.Sprintf("%s%s%s:%s", CommandBoxOpen.String(), CommandDelimiter, name, revision)
