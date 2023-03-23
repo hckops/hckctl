@@ -1,6 +1,7 @@
 package box
 
 import (
+	"encoding/hex"
 	"fmt"
 	"github.com/hckops/hckctl/internal/config"
 	"github.com/hckops/hckctl/internal/terminal"
@@ -57,7 +58,7 @@ func (remote *RemoteSshBox) Open() {
 		Str("ServerVersion", string(client.ServerVersion())).
 		Str("RemoteAddress", client.RemoteAddr().String()).
 		Str("LocalAddress", client.LocalAddr().String()).
-		Str("ConnectionId", string(client.SessionID())).
+		Str("ConnectionId", hex.EncodeToString(client.SessionID())).
 		Msg("ssh connection established")
 
 	boxId := remote.create(client, remote.template.Name, remote.revision)
