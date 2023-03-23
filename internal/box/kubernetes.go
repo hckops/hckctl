@@ -92,8 +92,7 @@ func (local *LocalKubeBox) Open() {
 		local.log.Debug().Msgf("exec into pod: %s", pod.Name)
 		local.loader.Stop()
 	}
-	local.box.Exec(pod, local.streams)
-	if err != nil {
+	if err := local.box.Exec(pod, local.streams); err != nil {
 		local.loader.Halt(err, "error kube: exec pod")
 	}
 }

@@ -38,13 +38,9 @@ func (c Command) String() string {
 	}
 }
 
-func NewCommandCreateBox(name, revision string) string {
-	return fmt.Sprintf("%s%s%s", name, CommandDelimiter, revision)
-}
-
 // TODO change payload format e.g. json, protocol buffer
 // TODO schema example "{"kind":"action/v1","name":"hck-box-open","body":{"template":"official/alpine","revision":"main","resource":{"memory:"512Mi","cpu":"500m"}}}"
 // TODO simple client validation
-func NewCommandOpenBox(name, revision string) string {
-	return fmt.Sprintf("%s%s%s:%s", CommandBoxOpen.String(), CommandDelimiter, name, revision)
+func NewCommandCreateBox(name, revision string) string {
+	return fmt.Sprintf("%s%s%s", name, CommandDelimiter, revision)
 }

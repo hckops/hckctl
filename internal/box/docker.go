@@ -76,6 +76,7 @@ func (local *LocalDockerBox) Open() {
 	local.box.OnStreamErrorCallback = func(err error, message string) {
 		local.log.Warn().Err(err).Msg(message)
 	}
-
-	local.box.Exec(containerId, local.streams)
+	if err := local.box.Exec(containerId, local.streams); err != nil {
+		local.loader.Halt(err, "error docker box exec")
+	}
 }
