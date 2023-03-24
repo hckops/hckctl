@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/url"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -38,8 +37,8 @@ import (
 
 type KubeBox struct {
 	ctx             context.Context
-	kubeRestConfig  *rest.Config
-	kubeClientSet   *kubernetes.Clientset
+	KubeRestConfig  *rest.Config
+	KubeClientSet   *kubernetes.Clientset
 	Template        *schema.BoxV1
 	ResourceOptions *ResourceOptions
 
@@ -58,7 +57,39 @@ type ResourceOptions struct {
 	Cpu       string
 }
 
-func NewOutOfClusterKubeBox(template *schema.BoxV1, configPath string, resourceOptions *ResourceOptions) (*KubeBox, error) {
+func NewOutOfClusterKubeBox(template *schema.BoxV1, resourceOptions *ResourceOptions, configPath string) (*KubeBox, error) {
+
+	restConfig, clientSet, err := NewOutOfClusterClients(configPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "error out-of-cluster clients")
+	}
+
+	return &KubeBox{
+		ctx:             context.Background(),
+		KubeRestConfig:  restConfig,
+		KubeClientSet:   clientSet,
+		Template:        template,
+		ResourceOptions: resourceOptions,
+	}, nil
+}
+
+func NewInClusterKubeBox(template *schema.BoxV1, resourceOptions *ResourceOptions) (*KubeBox, error) {
+
+	restConfig, clientSet, err := NewInClusterClients()
+	if err != nil {
+		return nil, errors.Wrap(err, "error in-cluster clients")
+	}
+
+	return &KubeBox{
+		ctx:             context.Background(),
+		KubeRestConfig:  restConfig,
+		KubeClientSet:   clientSet,
+		Template:        template,
+		ResourceOptions: resourceOptions,
+	}, nil
+}
+
+func NewOutOfClusterClients(configPath string) (*rest.Config, *kubernetes.Clientset, error) {
 
 	var kubeconfig string
 	if strings.TrimSpace(configPath) == "" {
@@ -70,42 +101,30 @@ func NewOutOfClusterKubeBox(template *schema.BoxV1, configPath string, resourceO
 
 	restConfig, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
-		return nil, errors.Wrap(err, "error restConfig")
+		return nil, nil, errors.Wrap(err, "error restConfig")
 	}
 
 	clientSet, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
-		return nil, errors.Wrap(err, "error clientSet")
+		return nil, nil, errors.Wrap(err, "error clientSet")
 	}
 
-	return &KubeBox{
-		ctx:             context.Background(),
-		kubeRestConfig:  restConfig,
-		kubeClientSet:   clientSet,
-		Template:        template,
-		ResourceOptions: resourceOptions,
-	}, nil
+	return restConfig, clientSet, nil
 }
 
-func NewInClusterKubeBox(template *schema.BoxV1, resourceOptions *ResourceOptions) (*KubeBox, error) {
+func NewInClusterClients() (*rest.Config, *kubernetes.Clientset, error) {
 
 	restConfig, err := rest.InClusterConfig()
 	if err != nil {
-		return nil, errors.Wrap(err, "error restConfig")
+		return nil, nil, errors.Wrap(err, "error restConfig")
 	}
 
 	clientSet, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
-		return nil, errors.Wrap(err, "error clientSet")
+		return nil, nil, errors.Wrap(err, "error clientSet")
 	}
 
-	return &KubeBox{
-		ctx:             context.Background(),
-		kubeRestConfig:  restConfig,
-		kubeClientSet:   clientSet,
-		Template:        template,
-		ResourceOptions: resourceOptions,
-	}, nil
+	return restConfig, clientSet, nil
 }
 
 func (box *KubeBox) BuildSpec(containerName string) (*appsv1.Deployment, *corev1.Service, error) {
@@ -113,8 +132,8 @@ func (box *KubeBox) BuildSpec(containerName string) (*appsv1.Deployment, *corev1
 }
 
 func (box *KubeBox) ApplyTemplate(deploymentSpec *appsv1.Deployment, serviceSpec *corev1.Service) error {
-	coreClient := box.kubeClientSet.CoreV1()
-	appClient := box.kubeClientSet.AppsV1()
+	coreClient := box.KubeClientSet.CoreV1()
+	appClient := box.KubeClientSet.AppsV1()
 
 	// apply namespace, see https://github.com/kubernetes/client-go/issues/1036
 	namespace, err := coreClient.Namespaces().Apply(box.ctx, applyv1.Namespace(box.ResourceOptions.Namespace), metav1.ApplyOptions{FieldManager: "application/apply-patch"})
@@ -169,8 +188,8 @@ func (box *KubeBox) ApplyTemplate(deploymentSpec *appsv1.Deployment, serviceSpec
 }
 
 func (box *KubeBox) RemoveTemplate(deployment *appsv1.Deployment, service *corev1.Service) {
-	coreClient := box.kubeClientSet.CoreV1()
-	appClient := box.kubeClientSet.AppsV1()
+	coreClient := box.KubeClientSet.CoreV1()
+	appClient := box.KubeClientSet.AppsV1()
 
 	if err := appClient.Deployments(box.ResourceOptions.Namespace).Delete(box.ctx, deployment.Name, metav1.DeleteOptions{}); err != nil {
 		box.OnCloseErrorCallback(err, fmt.Sprintf("error kube delete deployment: %s", deployment.Name))
@@ -186,7 +205,7 @@ func (box *KubeBox) RemoveTemplate(deployment *appsv1.Deployment, service *corev
 }
 
 func (box *KubeBox) GetPod(deployment *appsv1.Deployment) (*corev1.Pod, error) {
-	coreClient := box.kubeClientSet.CoreV1()
+	coreClient := box.KubeClientSet.CoreV1()
 
 	labelSet := labels.Set(deployment.Spec.Selector.MatchLabels)
 	listOptions := metav1.ListOptions{LabelSelector: labelSet.AsSelector().String()}
@@ -206,7 +225,7 @@ func (box *KubeBox) GetPod(deployment *appsv1.Deployment) (*corev1.Pod, error) {
 }
 
 func (box *KubeBox) PortForward(podName, namespace string) {
-	coreClient := box.kubeClientSet.CoreV1()
+	coreClient := box.KubeClientSet.CoreV1()
 
 	if !box.Template.HasPorts() {
 		// exit, no service/port available to bind
@@ -233,7 +252,7 @@ func (box *KubeBox) PortForward(podName, namespace string) {
 		Name(podName).
 		SubResource("portforward")
 
-	transport, upgrader, err := spdy.RoundTripperFor(box.kubeRestConfig)
+	transport, upgrader, err := spdy.RoundTripperFor(box.KubeRestConfig)
 	if err != nil {
 		box.OnTunnelErrorCallback(err, "error kube round tripper")
 	}
@@ -264,6 +283,7 @@ func (box *KubeBox) PortForward(podName, namespace string) {
 }
 
 func (box *KubeBox) Exec(pod *corev1.Pod, streams *model.BoxStreams) error {
+	coreClient := box.KubeClientSet.CoreV1()
 
 	streamOptions := buildStreamOptions(streams)
 	tty := streamOptions.SetupTTY()
@@ -274,29 +294,37 @@ func (box *KubeBox) Exec(pod *corev1.Pod, streams *model.BoxStreams) error {
 		streamOptions.ErrOut = nil
 	}
 
-	execUrl := buildExecUrl(box.kubeClientSet, pod, tty.Raw)
+	// TODO add to template or default
+	shell := "/bin/bash"
+
+	// exec remote shell
+	execUrl := coreClient.RESTClient().
+		Post().
+		Namespace(pod.Namespace).
+		Resource("pods").
+		Name(pod.Name).
+		SubResource("exec").
+		VersionedParams(&corev1.PodExecOptions{
+			Container: box.Template.SafeName(), // pod.Spec.Containers[0].Name
+			Command:   []string{shell},
+			Stdin:     true,
+			Stdout:    true,
+			Stderr:    true,
+			TTY:       tty.Raw,
+		}, scheme.ParameterCodec).
+		URL()
+
 	executor := exec.DefaultRemoteExecutor{}
 
 	box.OnExecCallback()
 
 	fn := func() error {
-		return executor.Execute(http.MethodPost, execUrl, box.kubeRestConfig, streamOptions.In, streamOptions.Out, streamOptions.ErrOut, tty.Raw, sizeQueue)
+		return executor.Execute(http.MethodPost, execUrl, box.KubeRestConfig, streamOptions.In, streamOptions.Out, streamOptions.ErrOut, tty.Raw, sizeQueue)
 	}
 	if err := tty.Safe(fn); err != nil {
 		return errors.Wrap(err, "terminal session closed")
 	}
 	return nil
-}
-
-func (box *KubeBox) ExecWithoutTerminal(pod *corev1.Pod, streams *model.BoxStreams) error {
-
-	streamOptions := buildStreamOptions(streams)
-	execUrl := buildExecUrl(box.kubeClientSet, pod, streams.IsTty)
-	executor := exec.DefaultRemoteExecutor{}
-
-	box.OnExecCallback()
-
-	return executor.Execute(http.MethodPost, execUrl, box.kubeRestConfig, streamOptions.In, streamOptions.Out, streamOptions.ErrOut, false, nil)
 }
 
 func buildStreamOptions(streams *model.BoxStreams) exec.StreamOptions {
@@ -311,39 +339,21 @@ func buildStreamOptions(streams *model.BoxStreams) exec.StreamOptions {
 	}
 }
 
-// TODO command from template
-func buildExecUrl(kubeClientSet *kubernetes.Clientset, pod *corev1.Pod, isTty bool) *url.URL {
-	// exec remote shell
-	return kubeClientSet.CoreV1().RESTClient().
-		Post().
-		Namespace(pod.Namespace).
-		Resource("pods").
-		Name(pod.Name).
-		SubResource("exec").
-		VersionedParams(&corev1.PodExecOptions{
-			Container: pod.Spec.Containers[0].Name,
-			Command:   []string{"/bin/bash"},
-			Stdin:     true,
-			Stdout:    true,
-			Stderr:    true,
-			TTY:       isTty,
-		}, scheme.ParameterCodec).
-		URL()
-}
-
 func buildSpec(containerName string, template *schema.BoxV1, resourceOptions *ResourceOptions) (*appsv1.Deployment, *corev1.Service, error) {
 
-	labels := buildLabels(containerName, template.SafeName(), template.ImageVersion())
+	customLabels := buildLabels(containerName, template.SafeName(), template.ImageVersion())
 	objectMeta := metav1.ObjectMeta{
 		Name:      containerName,
 		Namespace: resourceOptions.Namespace,
-		Labels:    labels,
+		Labels:    customLabels,
 	}
 	pod, err := buildPod(objectMeta, template, resourceOptions.Memory, resourceOptions.Cpu)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error kube pod spec")
 	}
+
 	deployment := buildDeployment(objectMeta, pod)
+
 	service, err := buildService(objectMeta, template)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error kube service spec")

@@ -25,12 +25,12 @@ func NewKubeBox(template *schema.BoxV1, config *config.KubeConfig) *LocalKubeBox
 
 	box, err := client.NewOutOfClusterKubeBox(
 		template,
-		config.ConfigPath,
 		&client.ResourceOptions{
 			Namespace: config.Namespace,
 			Memory:    config.Resources.Memory,
 			Cpu:       config.Resources.Cpu,
 		},
+		config.ConfigPath,
 	)
 	if err != nil {
 		l.Fatal().Err(err).Msg("error kube box")
