@@ -3,8 +3,9 @@ package common
 import "fmt"
 
 const (
-	CommandPrefix    string = "hck-"
-	CommandDelimiter string = "::"
+	CommandRequestType   string = "hck-v1"
+	CommandResponseError string = "error"
+	CommandDelimiter     string = "::"
 )
 
 type Command int
@@ -39,8 +40,21 @@ func (c Command) String() string {
 }
 
 // TODO change payload format e.g. json, protocol buffer
-// TODO schema example "{"kind":"action/v1","name":"hck-box-open","body":{"template":"official/alpine","revision":"main","resource":{"memory:"512Mi","cpu":"500m"}}}"
-// TODO simple client validation
+// TODO schema example "{"kind":"action/v1","name":"hck-box-open","body":{"template":"official/alpine","revision":"main","resources":{"memory:"512MB","cpu":"0.5"}}}"
+// TODO basic client side validation
+
 func NewCommandCreateBox(name, revision string) string {
-	return fmt.Sprintf("%s%s%s", name, CommandDelimiter, revision)
+	return fmt.Sprintf("%s%s%s%s%s", CommandBoxCreate, CommandDelimiter, name, CommandDelimiter, revision)
+}
+
+func NewCommandExecBox(name, revision, boxId string) string {
+	return fmt.Sprintf("%s%s%s%s%s%s%s", CommandBoxExec, CommandDelimiter, name, CommandDelimiter, revision, CommandDelimiter, boxId)
+}
+
+func NewCommandListBox() string {
+	return fmt.Sprintf("%s", CommandBoxList)
+}
+
+func NewCommandDeleteBox(name, revision, boxId string) string {
+	return fmt.Sprintf("%s%s%s%s%s%s%s", CommandBoxDelete, CommandDelimiter, name, CommandDelimiter, revision, CommandDelimiter, boxId)
 }

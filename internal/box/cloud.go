@@ -3,18 +3,20 @@ package box
 import (
 	"encoding/hex"
 	"fmt"
+	"io"
+	"net"
+	"os"
+
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
+	logger "github.com/rs/zerolog/log"
+	"golang.org/x/crypto/ssh"
+
 	"github.com/hckops/hckctl/internal/config"
 	"github.com/hckops/hckctl/internal/terminal"
 	"github.com/hckops/hckctl/pkg/common"
 	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/util"
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
-	logger "github.com/rs/zerolog/log"
-	"golang.org/x/crypto/ssh"
-	"io"
-	"net"
-	"os"
 )
 
 type RemoteSshBox struct {
@@ -63,24 +65,40 @@ func (remote *RemoteSshBox) Open() {
 		Str("ConnectionId", hex.EncodeToString(client.SessionID())).
 		Msg("ssh connection established")
 
-	boxId := remote.create(remote.template.Name, remote.revision)
+	boxId := remote.create()
+	defer remote.delete(boxId)
 
 	remote.loader.Refresh(fmt.Sprintf("tunneling %s", boxId))
-	remote.tunnelAll(boxId)
+	remote.tunnelBox(boxId)
 	remote.exec(boxId)
 }
 
-func (remote *RemoteSshBox) create(name, revision string) string {
-	payload := []byte(common.NewCommandCreateBox(name, revision))
-	_, response, err := remote.client.SendRequest(common.CommandBoxCreate.String(), true, payload)
-	if err != nil || len(response) == 0 {
-		remote.loader.Halt(err, "error cloud: create")
+func (remote *RemoteSshBox) create() string {
+
+	boxId := remote.sendRequest(common.NewCommandCreateBox(remote.template.Name, remote.revision))
+	remote.log.Info().Msgf("create cloud box: %s", boxId)
+	return boxId
+}
+
+func (remote *RemoteSshBox) delete(boxId string) {
+
+	_ = remote.sendRequest(common.NewCommandDeleteBox(remote.template.Name, remote.revision, boxId))
+	remote.log.Info().Msgf("delete cloud box: %s", boxId)
+}
+
+func (remote *RemoteSshBox) sendRequest(payload string) string {
+	remote.log.Debug().Msgf("send request: %s", payload)
+
+	_, response, err := remote.client.SendRequest(common.CommandRequestType, true, []byte(payload))
+	if err != nil || string(response) == common.CommandResponseError {
+		remote.loader.Halt(err, "error cloud: send request")
 	}
-	remote.log.Info().Msgf("new cloud box: %s", response)
+
+	remote.log.Debug().Msgf("response: %s", response)
 	return string(response)
 }
 
-func (remote *RemoteSshBox) tunnelAll(boxId string) {
+func (remote *RemoteSshBox) tunnelBox(boxId string) {
 
 	for _, port := range remote.template.NetworkPorts() {
 		localPort, _ := util.GetLocalPort(port.Local)
@@ -91,7 +109,7 @@ func (remote *RemoteSshBox) tunnelAll(boxId string) {
 			Remote: port.Remote,
 		}
 
-		message := fmt.Sprintf("[%s][%s] forwarding %s (local) -> %s (remote)", boxId, port.Alias, port.Local, port.Remote)
+		message := fmt.Sprintf("[%s][%s] tunnel %s (local) -> %s (remote)", boxId, port.Alias, port.Local, port.Remote)
 		remote.log.Info().Msgf(message)
 		fmt.Println(message)
 		go remote.tunnel(boxId, openPort)
@@ -158,7 +176,8 @@ func (remote *RemoteSshBox) exec(boxId string) {
 
 	remote.loader.Stop()
 
-	if err := session.Run(boxId); err != nil && err != io.EOF {
+	payload := common.NewCommandExecBox(remote.template.Name, remote.revision, boxId)
+	if err := session.Run(payload); err != nil && err != io.EOF {
 		remote.loader.Halt(err, "error cloud box exec")
 	}
 }
