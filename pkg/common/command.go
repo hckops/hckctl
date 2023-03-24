@@ -11,32 +11,38 @@ const (
 type Command int
 
 const (
-	CommandBoxCreate Command = iota
-	CommandBoxExec
-	CommandBoxTunnel
-	CommandBoxOpen
-	CommandBoxList
-	CommandBoxDelete
+	CommandBoxCreate Command = iota // create a long-running detached box
+	CommandBoxExec                  // attach to a box
+	CommandBoxTunnel                // tunnel a box
+	CommandBoxOpen                  // create, attach and tunnel to an ephemeral box
+	CommandBoxList                  // list existing boxes
+	CommandBoxDelete                // delete a box
 )
 
-// TODO https://pkg.go.dev/golang.org/x/tools/cmd/stringer
-func (c Command) String() string {
-	switch c {
-	case CommandBoxCreate: // create a long-running detached box
-		return "hck-box-create"
-	case CommandBoxExec: // attach to a box
-		return "hck-box-exec"
-	case CommandBoxTunnel: // tunnel a box
-		return "hck-box-tunnel"
-	case CommandBoxOpen: // create, attach and tunnel to an ephemeral box
-		return "hck-box-open"
-	case CommandBoxList: // list existing boxes
-		return "hck-box-list"
-	case CommandBoxDelete: // delete a box
-		return "hck-box-delete"
-	default:
-		return ""
+func Values() []string {
+	return []string{
+		"hck-box-create",
+		"hck-box-exec",
+		"hck-box-tunnel",
+		"hck-box-open",
+		"hck-box-list",
+		"hck-box-delete",
 	}
+}
+
+// TODO https://pkg.go.dev/golang.org/x/tools/cmd/stringer
+// Command is automatically converted in fmt.Sprintf with "%s" String
+func (c Command) String() string {
+	return Values()[c]
+}
+
+func FromString(str string) (Command, error) {
+	for index, value := range Values() {
+		if str == value {
+			return Command(index), nil
+		}
+	}
+	return -1, fmt.Errorf("invalid command: %s", str)
 }
 
 // TODO change payload format e.g. json, protocol buffer

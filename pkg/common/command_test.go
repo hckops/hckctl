@@ -6,6 +6,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestCommandConstants(t *testing.T) {
+	assert.Equal(t, CommandRequestType, "hck-v1")
+	assert.Equal(t, CommandResponseError, "error")
+	assert.Equal(t, CommandDelimiter, "::")
+}
+
+func TestCommandFromString(t *testing.T) {
+	command, err := FromString("hck-box-create")
+	assert.NoError(t, err)
+	assert.Equal(t, CommandBoxCreate, command)
+}
+
+func TestCommandFromStringError(t *testing.T) {
+	command, err := FromString("todo")
+	assert.EqualError(t, err, "invalid command: todo")
+	assert.Equal(t, Command(-1), command)
+}
+
 func TestNewCommandCreateBox(t *testing.T) {
 	assert.Equal(t, "hck-box-create::my-group/my-name::main", NewCommandCreateBox("my-group/my-name", "main"))
 }
