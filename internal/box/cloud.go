@@ -87,14 +87,14 @@ func (remote *RemoteSshBox) delete(boxId string) {
 }
 
 func (remote *RemoteSshBox) sendRequest(payload string) string {
-	remote.log.Debug().Msgf("send request: %s", payload)
+	remote.log.Debug().Msgf("send request [%s]", payload)
 
 	_, response, err := remote.client.SendRequest(common.CommandRequestType, true, []byte(payload))
 	if err != nil || string(response) == common.CommandResponseError {
 		remote.loader.Halt(err, "error cloud: send request")
 	}
 
-	remote.log.Debug().Msgf("response: %s", response)
+	remote.log.Debug().Msgf("response [%s]", response)
 	return string(response)
 }
 
@@ -111,6 +111,7 @@ func (remote *RemoteSshBox) tunnelBox(boxId string) {
 
 		message := fmt.Sprintf("[%s][%s] tunnel %s (local) -> %s (remote)", boxId, port.Alias, port.Local, port.Remote)
 		remote.log.Info().Msgf(message)
+		// prints to terminal
 		fmt.Println(message)
 		go remote.tunnel(boxId, openPort)
 	}
