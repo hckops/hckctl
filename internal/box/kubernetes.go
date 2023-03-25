@@ -93,6 +93,7 @@ func (local *LocalKubeBox) Open() {
 		local.loader.Stop()
 	}
 	if err := local.box.Exec(pod, local.streams); err != nil {
-		local.loader.Halt(err, "error kube: exec pod")
+		// do not exit abruptly or it won't remove the spec
+		local.log.Warn().Err(err).Msg("session closed")
 	}
 }
