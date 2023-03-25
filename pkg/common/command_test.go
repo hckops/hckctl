@@ -32,6 +32,10 @@ func TestNewCommandExecBox(t *testing.T) {
 	assert.Equal(t, "hck-box-exec::my-group/my-name::main::box-id", NewCommandExecBox("my-group/my-name", "main", "box-id"))
 }
 
+func TestNewCommandOpenBox(t *testing.T) {
+	assert.Equal(t, "hck-box-open::my-group/my-name::main", NewCommandOpenBox("my-group/my-name", "main"))
+}
+
 func TestNewCommandListBox(t *testing.T) {
 	assert.Equal(t, "hck-box-list", NewCommandListBox())
 }

@@ -12,9 +12,9 @@ type Command int
 
 const (
 	CommandBoxCreate Command = iota // create a long-running detached box
-	CommandBoxExec                  // attach to a box
+	CommandBoxExec                  // attach to an existing box
+	CommandBoxOpen                  // create and attach to a box
 	CommandBoxTunnel                // tunnel a box
-	CommandBoxOpen                  // create, attach and tunnel to an ephemeral box
 	CommandBoxList                  // list existing boxes
 	CommandBoxDelete                // delete a box
 )
@@ -23,8 +23,8 @@ func Values() []string {
 	return []string{
 		"hck-box-create",
 		"hck-box-exec",
-		"hck-box-tunnel",
 		"hck-box-open",
+		"hck-box-tunnel",
 		"hck-box-list",
 		"hck-box-delete",
 	}
@@ -55,6 +55,10 @@ func NewCommandCreateBox(name, revision string) string {
 
 func NewCommandExecBox(name, revision, boxId string) string {
 	return fmt.Sprintf("%s%s%s%s%s%s%s", CommandBoxExec, CommandDelimiter, name, CommandDelimiter, revision, CommandDelimiter, boxId)
+}
+
+func NewCommandOpenBox(name, revision string) string {
+	return fmt.Sprintf("%s%s%s%s%s", CommandBoxOpen, CommandDelimiter, name, CommandDelimiter, revision)
 }
 
 func NewCommandListBox() string {
