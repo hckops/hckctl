@@ -17,9 +17,8 @@ jobs:
         with:
           go-version-file: 'go.mod'
 
-      - name: Tidy
-        run: go mod tidy
-      - name: Test
-        run: go test -v ./...
+      - name: Setup Just
+        uses: extractions/setup-just@v1
+
       - name: Build
-        run: go build .
+        run: just

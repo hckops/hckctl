@@ -168,7 +168,6 @@ TODO
 * box: add timeout
 * box: refactor box/template shared cmd
 * box: cloud ssh key auth only
-* update ci action with just
 * config: add set/reset cmd
 * finalize schema (move in megalopolis)
 * add cmd version
