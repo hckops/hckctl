@@ -13,7 +13,7 @@
 </div>
 <br>
 
-A novel BAS tool with a declarative approach to launch manual and simulated attacks using pre-defined always up-to-date recipes, easy to integrate in automated pipelines and with the possibility to analyze, aggregate and export reports
+A novel BAS tool with a declarative approach to launch manual and simulated attacks either against self-contained labs or your infrastructure. It uses pre-defined always up-to-date recipes to probe and verify your security posture, easy to integrate in automated pipelines and with the possibility to analyze, aggregate and export reports.
 
 > TODO screenshots
 
