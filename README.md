@@ -13,6 +13,8 @@
 </div>
 <br>
 
+A novel BAS tool with a declarative approach to launch manual and simulated attacks using pre-defined always up-to-date recipes, easy to integrate in automated pipelines and with the possibility to analyze, aggregate and export reports
+
 > TODO screenshots
 
 ## Quick start
@@ -167,7 +169,9 @@ TODO
 * box: test with podman
 * box: add timeout
 * box: refactor box/template shared cmd
-* box: cloud ssh key auth only
+* box: cloud ssh key auth only + remove InsecureIgnoreHostKey
+* box: suppress kube stream logs error on connection close
+* man directory https://xdgbasedirectoryspecification.com
 * config: add set/reset cmd
 * finalize schema (move in megalopolis)
 * add cmd version

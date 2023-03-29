@@ -15,6 +15,7 @@ func ConfigHome() string {
 		return env
 	}
 
+	// https://xdgbasedirectoryspecification.com
 	xdgHome, err := xdg.ConfigFile(ConfigDir)
 	if err != nil {
 		log.Fatal().Err(err).Msgf("unable to create configuration directory: %s", ConfigDir)
