@@ -15,6 +15,7 @@ const (
 	CommandBoxExec                  // attach to an existing box
 	CommandBoxOpen                  // create and attach to a box
 	CommandBoxTunnel                // tunnel a box
+	CommandKeepAlive                // prevent automated cleanup
 	CommandBoxList                  // list existing boxes
 	CommandBoxDelete                // delete a box
 )
@@ -25,6 +26,7 @@ func Values() []string {
 		"hck-box-exec",
 		"hck-box-open",
 		"hck-box-tunnel",
+		"hck-box-keep-alive",
 		"hck-box-list",
 		"hck-box-delete",
 	}
