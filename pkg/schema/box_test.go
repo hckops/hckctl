@@ -46,7 +46,7 @@ func TestSafeName(t *testing.T) {
 
 func TestGenerateFullName(t *testing.T) {
 	name := testBox.GenerateFullName()
-	prefix := "box-hckops-box-mybox-"
+	prefix := "box-hckops-box-mybox-latest-"
 	suffix := strings.ReplaceAll(name, prefix, "")
 
 	assert.True(t, strings.HasPrefix(name, prefix))

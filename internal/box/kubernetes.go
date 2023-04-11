@@ -2,6 +2,7 @@ package box
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/runtime"
 
 	"github.com/rs/zerolog"
 	logger "github.com/rs/zerolog/log"
@@ -45,6 +46,9 @@ func NewKubeBox(template *schema.BoxV1, config *config.KubeConfig) *LocalKubeBox
 }
 
 func (local *LocalKubeBox) Open() {
+	// removes kube error outputs i.e. portforward stream connection closed
+	runtime.ErrorHandlers = runtime.ErrorHandlers[1:]
+
 	local.log.Debug().Msgf("init kube box:\n%v\n", local.box.Template.Pretty())
 	local.loader.Start(fmt.Sprintf("loading %s", local.box.Template.Name))
 	local.loader.Sleep(1)

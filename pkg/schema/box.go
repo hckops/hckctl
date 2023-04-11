@@ -56,8 +56,8 @@ func (box *BoxV1) SafeName() string {
 }
 
 func (box *BoxV1) GenerateFullName() string {
-	// e.g. "box-organization-image-RANDOM"
-	return fmt.Sprintf("box-%s-%s", box.SafeName(), strings.ToLower(uniuri.NewLen(5)))
+	// e.g. "box-organization-image-version-RANDOM"
+	return fmt.Sprintf("box-%s-%s-%s", box.SafeName(), box.ImageVersion(), strings.ToLower(uniuri.NewLen(5)))
 }
 
 func (box *BoxV1) HasPorts() bool {
