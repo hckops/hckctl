@@ -18,9 +18,11 @@
   <a href="#development">Development</a>
 </p>
 
+<!--
 A novel BAS tool with a declarative approach to launch manual and simulated attacks either against self-contained labs or your infrastructure. It uses pre-defined always up-to-date recipes to probe and verify your security posture, designed to be integrated in automated pipelines and with the possibility to analyze, aggregate and export reports.
+-->
 
-> TODO screenshots
+> TODO description and screenshot/gif
 
 ## Quick start
 
@@ -60,9 +62,20 @@ curl -sSL https://github.com/hckops/hckctl/releases/download/v0.1.0/hckctl_linux
 
 ## Guide
 
+### Template
+
+```bash
+# validates and prints remote template
+hckctl template parrot | yq -o=json
+
+# validates and prints local template
+hckctl template -p ../megalopolis/boxes/official/alpine.yml
+```
+
 ### Box
 
-> **Boxes** are ready-to-go docker images designed for security enthusiasts that want to spend more time hacking and need both an attacker and a vulnerable environment that is constantly updated, quick to start and just work
+<!--
+**Boxes** are ready-to-go docker images designed for security enthusiasts that want to spend more time hacking and need both an attacker and a vulnerable environment that is constantly updated, quick to start and just work
 
 Main features:
 * unified local and remote experience - run the same environments locally or in a remote cluster
@@ -74,6 +87,7 @@ Main features:
 * all declared ports are exposed and forwarded by default
 * resources are automatically deleted once you close a box
 * *the cloud provider is not publicly available at this time*
+-->
 
 ```bash
 # lists boxes
@@ -90,6 +104,7 @@ hckctl box alpine --provider kube
 hckctl box alpine --provider cloud
 ```
 
+<!--
 ### Lab
 
 > **Labs** are user-defined hacking environments
@@ -100,16 +115,7 @@ Main features:
 * connect multiple boxes
 
 > WIP coming soon
-
-### Template
-
-```bash
-# validates and prints remote template
-hckctl template parrot | yq -o=json
-
-# validates and prints local template
-hckctl template -p ../megalopolis/boxes/official/alpine.yml
-```
+-->
 
 ### Config
 
@@ -175,10 +181,41 @@ TODO
 * box: add timeout
 * box: refactor box/template shared cmd
 * box: cloud ssh key auth only + remove InsecureIgnoreHostKey
-* box: `pkg/client` replace callback with channels
+* box: docker/kube `cp` + `XDG_DATA_HOME`
+* box: move logs from `/tmp` to `XDG_STATE_HOME`
 * schema: convert to valid CRD?
-* man directory https://xdgbasedirectoryspecification.com
+* schema: stable version + move in megalopolis?
+* man plugin
 * config: add set/reset cmd
-* finalize schema (move in megalopolis)
 * add cmd version
 * release: verify archives + add brew
+* `pkg/client` replace callback with channels
+* `pkg/client` review: docker/kube methods
+* cmd
+  ```bash
+  # client and server: docker|kube|cloud
+  hckctl version
+  
+  # current config
+  hckctl config
+  
+  # --provider docker|kube|cloud
+  # open
+  hckctl box <TEMPLATE_NAME> [--revision <REVISION>]
+  hckctl box --path <TEMPLATE_PATH>
+  
+  # returns BOX_ID
+  hckctl box create <TEMPLATE_NAME> [--revision <REVISION>]
+  hckctl box exec <BOX_ID>
+  hckctl box tunnel <BOX_ID>
+  hckctl box delete <BOX_ID>
+  # new
+  hckctl box cp <PATH_FROM> <PATH_TO>
+  
+  # all boxes: docker/kube
+  hckctl box list
+  
+  hckctl template <TEMPLATE_NAME> [--revision <REVISION>]
+  hckctl template --path <TEMPLATE_PATH>
+  hckctl template list [box]
+  ```
