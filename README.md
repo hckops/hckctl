@@ -4,14 +4,19 @@
 
 <h1 align="center"><code>hckctl</code></h1>
 
-<h3 align="center">The Cloud Native HaCKing Tool</h3>
-
-<div align="center">
+<p align="center">
   <a href="https://github.com/hckops/hckctl/actions/workflows/ci.yaml">
     <img src="https://github.com/hckops/hckctl/actions/workflows/ci.yaml/badge.svg" alt="ci">
   </a>
-</div>
-<br>
+</p>
+
+<p align="center">
+  <i>The Cloud Native HaCKing Tool</i><br>
+  <a href="#quick-start">Quick start</a>&nbsp;&bull;
+  <a href="#setup">Setup</a>&nbsp;&bull;
+  <a href="#guide">Guide</a>&nbsp;&bull;
+  <a href="#development">Development</a>
+</p>
 
 A novel BAS tool with a declarative approach to launch manual and simulated attacks either against self-contained labs or your infrastructure. It uses pre-defined always up-to-date recipes to probe and verify your security posture, easy to integrate in automated pipelines and with the possibility to analyze, aggregate and export reports.
 
