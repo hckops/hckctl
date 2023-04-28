@@ -6,7 +6,7 @@ require (
 	github.com/adrg/xdg v0.4.0
 	github.com/briandowns/spinner v1.23.0
 	github.com/dchest/uniuri v1.2.0
-	github.com/docker/docker v23.0.3+incompatible
+	github.com/docker/docker v23.0.5+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/moby/term v0.0.0-20221205130635-1aeaba878587
 	github.com/pkg/errors v0.9.1
