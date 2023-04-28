@@ -183,6 +183,7 @@ TODO
 * box: cloud ssh key auth only + remove InsecureIgnoreHostKey
 * box: docker/kube `cp` + `XDG_DATA_HOME`
 * box: move logs from `/tmp` to `XDG_STATE_HOME`
+* box: verify remote docker daemon with `DOCKER_HOST`
 * schema: convert to valid CRD?
 * schema: stable version + move in megalopolis?
 * man plugin
