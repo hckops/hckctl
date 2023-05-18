@@ -1,21 +1,24 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 
 	boxCmd "github.com/hckops/hckctl/cmd/box"
-	"github.com/hckops/hckctl/cmd/common"
+	commonCmd "github.com/hckops/hckctl/cmd/common"
 	configCmd "github.com/hckops/hckctl/cmd/config"
 	templateCmd "github.com/hckops/hckctl/cmd/template"
 )
 
 func NewRoodCmd() *cobra.Command {
 
-	opts := &common.GlobalCmdOptions{}
+	opts := &commonCmd.GlobalCmdOptions{}
+
+	description := fmt.Sprintf("The Cloud Native HaCKing Tool - %s", commonCmd.Version())
 
 	rootCmd := &cobra.Command{
 		Use:   "hckctl",
-		Short: "The Cloud Native HaCKing Tool",
+		Short: description,
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.HelpFunc()(cmd, args)
 		},
@@ -31,5 +34,6 @@ func NewRoodCmd() *cobra.Command {
 	rootCmd.AddCommand(boxCmd.NewBoxCmd(opts))
 	rootCmd.AddCommand(configCmd.NewConfigCmd(opts))
 	rootCmd.AddCommand(templateCmd.NewTemplateCmd(opts))
+	rootCmd.AddCommand(commonCmd.NewVersionCmd())
 	return rootCmd
 }

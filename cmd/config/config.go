@@ -21,11 +21,9 @@ func NewConfigCmd(global *common.GlobalCmdOptions) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "config",
-		Short: "validate and print current configurations",
+		Short: "print current configurations",
 		RunE:  opts.run,
 	}
-
-	command.AddCommand(NewConfigShowCmd(&opts))
 
 	return command
 }
