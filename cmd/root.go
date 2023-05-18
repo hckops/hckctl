@@ -29,7 +29,7 @@ func NewRoodCmd() *cobra.Command {
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
 
 	rootCmd.AddCommand(boxCmd.NewBoxCmd(opts))
-	rootCmd.AddCommand(configCmd.NewConfigCmd())
+	rootCmd.AddCommand(configCmd.NewConfigCmd(opts))
 	rootCmd.AddCommand(templateCmd.NewTemplateCmd(opts))
 	return rootCmd
 }
