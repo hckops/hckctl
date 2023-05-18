@@ -8,7 +8,7 @@ import (
 func NewConfigCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "config",
-		Short: "prints current configurations",
+		Short: "print current configurations",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("not implemented")
 		},

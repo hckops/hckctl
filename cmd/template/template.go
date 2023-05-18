@@ -21,20 +21,24 @@ func NewTemplateCmd(global *common.GlobalCmdOptions) *cobra.Command {
 	}
 
 	command := &cobra.Command{
-		Use:   "template [NAME]",
-		Short: "load and validate a template",
+		Use:   "template [name]",
+		Short: "validate and print template",
 		RunE:  opts.run,
 	}
 
-	// TODO prefix file:// for local or https:// vs separate flag e.g. localPath and remotePath + revision
-	command.Flags().StringVarP(&opts.path, "path", "p", "", "load a template from a local path")
-	command.Flags().StringVarP(&opts.revision, "revision", "r", "main", "megalopolis git source version i.e. branch|tag|sha")
-	command.MarkFlagsMutuallyExclusive("revision", "path")
+	command.PersistentFlags().StringVarP(&opts.path, "path", "p", "", "load a local template")
+	command.PersistentFlags().StringVarP(&opts.revision, "revision", "r", "main", "megalopolis version i.e. branch|tag|sha")
+	command.MarkFlagsMutuallyExclusive("path", "revision")
+
+	command.AddCommand(NewTemplateListCmd(&opts))
+	command.AddCommand(NewTemplateShowCmd(&opts))
+	command.AddCommand(NewTemplateValidateCmd(&opts))
 
 	return command
 }
 
 func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
+	// TODO alias of show
 	fmt.Println("not implemented")
 	return nil
 }
