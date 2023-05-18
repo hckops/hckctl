@@ -7,12 +7,14 @@ import (
 )
 
 type boxCreateCmdOptions struct {
-	box *boxCmdOptions
+	box      *boxCmdOptions
+	path     string
+	revision string
 }
 
 func NewBoxCreateCmd(boxOpts *boxCmdOptions) *cobra.Command {
 
-	opts := &boxCopyCmdOptions{
+	opts := &boxCreateCmdOptions{
 		box: boxOpts,
 	}
 
@@ -21,6 +23,10 @@ func NewBoxCreateCmd(boxOpts *boxCmdOptions) *cobra.Command {
 		Short: "TODO create",
 		RunE:  opts.run,
 	}
+
+	command.Flags().StringVarP(&opts.path, "path", "p", "", "load a local template")
+	command.Flags().StringVarP(&opts.revision, "revision", "r", "main", "megalopolis version i.e. branch|tag|sha")
+	command.MarkFlagsMutuallyExclusive("path", "revision")
 
 	return command
 }

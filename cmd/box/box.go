@@ -26,8 +26,8 @@ func NewBoxCmd(globalOpts *common.GlobalCmdOptions) *cobra.Command {
 		RunE:  opts.run,
 	}
 
-	command.PersistentFlags().StringVarP(&opts.path, "path", "p", "", "load a local box")
-	command.PersistentFlags().StringVarP(&opts.revision, "revision", "r", "main", "megalopolis version i.e. branch|tag|sha")
+	command.Flags().StringVarP(&opts.path, "path", "p", "", "load a local template")
+	command.Flags().StringVarP(&opts.revision, "revision", "r", "main", "megalopolis version i.e. branch|tag|sha")
 	command.MarkFlagsMutuallyExclusive("path", "revision")
 
 	command.AddCommand(NewBoxCopyCmd(&opts))
