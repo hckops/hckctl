@@ -14,10 +14,10 @@ type templateCmdOptions struct {
 	revision string
 }
 
-func NewTemplateCmd(global *common.GlobalCmdOptions) *cobra.Command {
+func NewTemplateCmd(globalOpts *common.GlobalCmdOptions) *cobra.Command {
 
 	opts := templateCmdOptions{
-		global: global,
+		global: globalOpts,
 	}
 
 	command := &cobra.Command{

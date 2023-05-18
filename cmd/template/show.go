@@ -10,10 +10,10 @@ type templateShowCmdOptions struct {
 	template *templateCmdOptions
 }
 
-func NewTemplateShowCmd(template *templateCmdOptions) *cobra.Command {
+func NewTemplateShowCmd(templateOpts *templateCmdOptions) *cobra.Command {
 
 	opts := &templateShowCmdOptions{
-		template: template,
+		template: templateOpts,
 	}
 
 	command := &cobra.Command{

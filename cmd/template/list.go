@@ -12,10 +12,10 @@ type templateListCmdOptions struct {
 	kind     string // TODO box, lab
 }
 
-func NewTemplateListCmd(template *templateCmdOptions) *cobra.Command {
+func NewTemplateListCmd(templateOpts *templateCmdOptions) *cobra.Command {
 
 	opts := &templateListCmdOptions{
-		template: template,
+		template: templateOpts,
 	}
 
 	command := &cobra.Command{

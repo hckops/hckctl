@@ -11,10 +11,10 @@ type templateValidateCmdOptions struct {
 	template *templateCmdOptions
 }
 
-func NewTemplateValidateCmd(template *templateCmdOptions) *cobra.Command {
+func NewTemplateValidateCmd(templateOpts *templateCmdOptions) *cobra.Command {
 
 	opts := &templateValidateCmdOptions{
-		template: template,
+		template: templateOpts,
 	}
 
 	command := &cobra.Command{

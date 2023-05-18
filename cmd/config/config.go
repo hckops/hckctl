@@ -13,10 +13,10 @@ type configCmdOptions struct {
 	global *common.GlobalCmdOptions
 }
 
-func NewConfigCmd(global *common.GlobalCmdOptions) *cobra.Command {
+func NewConfigCmd(globalOpts *common.GlobalCmdOptions) *cobra.Command {
 
 	opts := configCmdOptions{
-		global: global,
+		global: globalOpts,
 	}
 
 	command := &cobra.Command{
@@ -29,7 +29,6 @@ func NewConfigCmd(global *common.GlobalCmdOptions) *cobra.Command {
 }
 
 func (opts *configCmdOptions) run(cmd *cobra.Command, args []string) error {
-	// TODO alias of show
 	fmt.Println("not implemented")
 	return nil
 }

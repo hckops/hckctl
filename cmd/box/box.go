@@ -8,22 +8,35 @@ import (
 	"github.com/hckops/hckctl/cmd/common"
 )
 
-// TODO filePath vs repoUrl + revision
 type boxCmdOptions struct {
-	global *common.GlobalCmdOptions
+	global   *common.GlobalCmdOptions
+	path     string
+	revision string
 }
 
-func NewBoxCmd(global *common.GlobalCmdOptions) *cobra.Command {
+func NewBoxCmd(globalOpts *common.GlobalCmdOptions) *cobra.Command {
 
 	opts := boxCmdOptions{
-		global: global,
+		global: globalOpts,
 	}
 
 	command := &cobra.Command{
-		Use:   "box [NAME]",
+		Use:   "box [name]",
 		Short: "attach and tunnel a box",
 		RunE:  opts.run,
 	}
+
+	command.PersistentFlags().StringVarP(&opts.path, "path", "p", "", "load a local box")
+	command.PersistentFlags().StringVarP(&opts.revision, "revision", "r", "main", "megalopolis version i.e. branch|tag|sha")
+	command.MarkFlagsMutuallyExclusive("path", "revision")
+
+	command.AddCommand(NewBoxCopyCmd(&opts))
+	command.AddCommand(NewBoxCreateCmd(&opts))
+	command.AddCommand(NewBoxDeleteCmd(&opts))
+	command.AddCommand(NewBoxExecCmd(&opts))
+	command.AddCommand(NewBoxListCmd(&opts))
+	command.AddCommand(NewBoxOpenCmd(&opts))
+	command.AddCommand(NewBoxTunnelCmd(&opts))
 
 	return command
 }
