@@ -7,14 +7,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// TODO go tool nm ./build/hckctl | grep commit
+// go tool nm ./build/hckctl | grep commit
 var (
 	commit    string
 	timestamp string
 )
 
 // TODO move in cmd folder
-// TODO server/cloud version
 
 func NewVersionCmd() *cobra.Command {
 
@@ -31,7 +30,7 @@ func NewVersionCmd() *cobra.Command {
 
 func Version() string {
 	if commit == "" || timestamp == "" {
-		return "snapshot"
+		return "dev"
 	}
 	return fmt.Sprintf("commit=%s timestamp=%s", commit, timestamp)
 }

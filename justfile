@@ -4,7 +4,11 @@ BIN_NAME := "hckctl"
 GO_BUILD_ENV := "CGO_ENABLED=0"
 GO_FILES := "./..."
 
-default: build
+default: (build BUILD_PATH)
+
+install:
+  go mod tidy
+  go mod vendor
 
 format:
   go fmt {{GO_FILES}}
@@ -15,6 +19,8 @@ vet:
 test:
   go test {{GO_FILES}} -cover
 
-build: format vet test
-  rm -frv {{BUILD_PATH}}
-  {{GO_BUILD_ENV}} go build -o {{BUILD_PATH}}/{{BIN_NAME}} main.go
+build output $VERSION_COMMIT="$(git rev-parse HEAD)" $VERSION_TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)": install format vet test
+  rm -frv {{output}}
+  {{GO_BUILD_ENV}} go build \
+    -ldflags="-X github.com/hckops/hckctl/cmd/common.commit={{VERSION_COMMIT}} -X github.com/hckops/hckctl/cmd/common.timestamp={{VERSION_TIMESTAMP}}" \
+    -o {{output}}/{{BIN_NAME}} main.go

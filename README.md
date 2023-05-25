@@ -188,8 +188,8 @@ TODO
 * schema: stable version + move in megalopolis?
 * man plugin
 * config: add set/reset cmd
-* add cmd version
-* release: verify archives + add brew
+* add server/cloud version
+* release: verify archives + add brew + add VERSION
 * `pkg/client` replace callback with channels
 * `pkg/client` review: docker/kube methods
 * cmd
