@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/hckops/hckctl/cmd/common"
+	"github.com/hckops/hckctl/pkg/command/common"
 )
 
 type boxCmdOptions struct {

@@ -2,8 +2,10 @@ package template
 
 import (
 	"fmt"
-	"github.com/hckops/hckctl/cmd/common"
+
 	"github.com/spf13/cobra"
+
+	"github.com/hckops/hckctl/pkg/command/common"
 )
 
 // TODO order, columns, etc.

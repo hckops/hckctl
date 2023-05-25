@@ -3,12 +3,11 @@ package lab
 import (
 	"fmt"
 
+	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/spf13/cobra"
-
-	"github.com/hckops/hckctl/cmd/common"
 )
 
-// TODO commands list, describe, delete
+// TODO command list, describe, delete
 
 type labCmdOptions struct {
 	global *common.GlobalCmdOptions
