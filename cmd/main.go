@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	// removes timestamps
+	// removes default timestamps
 	log.SetFlags(0)
 
 	if err := command.NewRoodCmd().Execute(); err != nil {

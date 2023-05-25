@@ -3,8 +3,9 @@ package config
 import (
 	"fmt"
 
-	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/spf13/cobra"
+
+	"github.com/hckops/hckctl/pkg/command/common"
 )
 
 // TODO add command to "set" a field with dot notation and "reset" all to default

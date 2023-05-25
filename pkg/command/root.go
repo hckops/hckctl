@@ -21,6 +21,14 @@ func NewRoodCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "hckctl",
 		Short: description,
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+
+			// TODO init config
+			// TODO init logger
+			common.InitFileLogger(opts)
+
+			return nil
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.HelpFunc()(cmd, args)
 		},
