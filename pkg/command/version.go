@@ -15,16 +15,13 @@ var (
 )
 
 func NewVersionCmd() *cobra.Command {
-
-	command := &cobra.Command{
+	return &cobra.Command{
 		Use:   "version",
 		Short: "print client version",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println(version())
 		},
 	}
-
-	return command
 }
 
 func version() string {

@@ -1,4 +1,4 @@
-package config
+package common
 
 import (
 	"net"
@@ -53,12 +53,12 @@ type KubeResources struct {
 	Cpu    string `yaml:"cpu"`
 }
 
-func NewConfig() *ConfigV1 {
+func NewConfig(logFile string) *ConfigV1 {
 	return &ConfigV1{
 		Kind: "config/v1",
 		Log: LogConfig{
 			Level:    "info",
-			FilePath: DefaultLogFile,
+			FilePath: logFile,
 		},
 		Box: BoxConfig{
 			Revision: "main",

@@ -14,7 +14,9 @@ import (
 
 func NewRootCmd() *cobra.Command {
 
+	// TODO add config to opts?! not sure
 	opts := &commonCmd.GlobalCmdOptions{}
+	var config *commonCmd.ConfigV1
 
 	// TODO https://github.com/MakeNowJust/heredoc
 	rootCmd := &cobra.Command{
@@ -22,10 +24,14 @@ func NewRootCmd() *cobra.Command {
 		Short: "The Cloud Native HaCKing Tool",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 
-			if err := configCmd.InitConfig(opts); err != nil {
+			if err := configCmd.InitConfig(); err != nil {
 				return errors.Wrap(err, "unable to init config")
 			}
-			if err := commonCmd.InitFileLogger(opts); err != nil {
+			var err error
+			if config, err = configCmd.LoadConfig(); err != nil {
+				return errors.Wrap(err, "unable to load config")
+			}
+			if err := commonCmd.InitFileLogger(opts, &config.Log); err != nil {
 				return errors.Wrap(err, "unable to init log")
 			}
 
@@ -44,7 +50,7 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
 
 	rootCmd.AddCommand(boxCmd.NewBoxCmd(opts))
-	rootCmd.AddCommand(configCmd.NewConfigCmd(opts))
+	rootCmd.AddCommand(configCmd.NewConfigCmd(opts, config))
 	rootCmd.AddCommand(labCmd.NewLabCmd(opts))
 	rootCmd.AddCommand(templateCmd.NewTemplateCmd(opts))
 	rootCmd.AddCommand(NewVersionCmd())
