@@ -1,10 +1,11 @@
 package command
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/cobra"
+
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 // go tool nm ./build/hckctl | grep commit
@@ -12,8 +13,6 @@ var (
 	commit    string
 	timestamp string
 )
-
-// TODO move in cmd folder
 
 func NewVersionCmd() *cobra.Command {
 
@@ -28,7 +27,7 @@ func NewVersionCmd() *cobra.Command {
 	return command
 }
 
-func Version() string {
+func version() string {
 	if commit == "" || timestamp == "" {
 		return "dev"
 	}
@@ -38,10 +37,10 @@ func Version() string {
 func versionJson() string {
 	type version struct{ Commit, Timestamp string }
 
-	bytes, _ := json.Marshal(version{
+	jsonString, _ := util.ToJson(version{
 		Commit:    commit,
 		Timestamp: timestamp,
 	})
 
-	return string(bytes)
+	return jsonString
 }

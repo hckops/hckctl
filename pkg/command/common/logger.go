@@ -1,14 +1,14 @@
 package common
 
 import (
-	"fmt"
-	"log"
+	"github.com/rs/zerolog/log"
 )
 
 const (
 	LogLevelFlag = "log-level"
 )
 
-func InitFileLogger(global *GlobalCmdOptions) {
-	log.Println(fmt.Sprintf("LEVEL=%s", global.logLevel))
+func InitFileLogger(global *GlobalCmdOptions) error {
+	log.Info().Msgf("LEVEL=%s", global.logLevel)
+	return nil
 }

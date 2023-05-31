@@ -52,7 +52,7 @@ func addCommands() {
 }
 
 func Execute() {
-	if err := command.NewRoodCmd().Execute(); err != nil {
+	if err := command.NewRootCmd().Execute(); err != nil {
 		log.Fatal().Err(err)
 	}
 }

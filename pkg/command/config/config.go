@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/thediveo/enumflag/v2"
 
 	"github.com/spf13/cobra"
 
@@ -11,6 +12,37 @@ import (
 // TODO add command to "set" a field with dot notation and "reset" all to default
 type configCmdOptions struct {
 	global *common.GlobalCmdOptions
+}
+
+type ProviderFlag enumflag.Flag
+
+const (
+	DockerFlag ProviderFlag = iota
+	KubernetesFlag
+	CloudFlag
+)
+
+var ProviderIds = map[ProviderFlag][]string{
+	DockerFlag:     {string(Docker)},
+	KubernetesFlag: {string(Kubernetes)},
+	CloudFlag:      {string(Cloud)},
+}
+
+func ProviderToId(provider ProviderFlag) string {
+	return ProviderIds[provider][0]
+}
+
+func ProviderToFlag(value Provider) (ProviderFlag, error) {
+	switch value {
+	case Docker:
+		return DockerFlag, nil
+	case Kubernetes:
+		return KubernetesFlag, nil
+	case Cloud:
+		return CloudFlag, nil
+	default:
+		return 999, fmt.Errorf("invalid provider")
+	}
 }
 
 func NewConfigCmd(globalOpts *common.GlobalCmdOptions) *cobra.Command {

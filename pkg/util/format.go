@@ -7,6 +7,10 @@ import (
 )
 
 func ToJson(data interface{}) (string, error) {
+	bytes, err := json.Marshal(data)
+	return string(bytes), err
+}
+func ToJsonIndent(data interface{}) (string, error) {
 	bytes, err := json.MarshalIndent(data, "", "  ")
 	return string(bytes), err
 }

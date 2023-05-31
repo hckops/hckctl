@@ -2,30 +2,35 @@ package command
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
 
 	boxCmd "github.com/hckops/hckctl/pkg/command/box"
-	"github.com/hckops/hckctl/pkg/command/common"
+	commonCmd "github.com/hckops/hckctl/pkg/command/common"
 	configCmd "github.com/hckops/hckctl/pkg/command/config"
 	labCmd "github.com/hckops/hckctl/pkg/command/lab"
 	templateCmd "github.com/hckops/hckctl/pkg/command/template"
 )
 
-func NewRoodCmd() *cobra.Command {
+func NewRootCmd() *cobra.Command {
 
-	opts := &common.GlobalCmdOptions{}
+	opts := &commonCmd.GlobalCmdOptions{}
 
-	description := fmt.Sprintf("The Cloud Native HaCKing Tool - %s", Version())
+	// TODO https://github.com/MakeNowJust/heredoc
+	description := fmt.Sprintf("The Cloud Native HaCKing Tool - %s", version())
 
 	rootCmd := &cobra.Command{
 		Use:   "hckctl",
 		Short: description,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 
-			// TODO init config
-			// TODO init logger
-			common.InitFileLogger(opts)
+			if err := configCmd.InitConfig(opts); err != nil {
+				return errors.Wrap(err, "unable to init config")
+			}
+			if err := commonCmd.InitFileLogger(opts); err != nil {
+				return errors.Wrap(err, "unable to init log")
+			}
 
 			return nil
 		},
