@@ -1,7 +1,6 @@
 package command
 
 import (
-	"fmt"
 	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
@@ -18,11 +17,9 @@ func NewRootCmd() *cobra.Command {
 	opts := &commonCmd.GlobalCmdOptions{}
 
 	// TODO https://github.com/MakeNowJust/heredoc
-	description := fmt.Sprintf("The Cloud Native HaCKing Tool - %s", version())
-
 	rootCmd := &cobra.Command{
 		Use:   "hckctl",
-		Short: description,
+		Short: "The Cloud Native HaCKing Tool",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 
 			if err := configCmd.InitConfig(opts); err != nil {

@@ -20,7 +20,7 @@ func NewVersionCmd() *cobra.Command {
 		Use:   "version",
 		Short: "print client version",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(versionJson())
+			fmt.Println(version())
 		},
 	}
 
@@ -31,7 +31,7 @@ func version() string {
 	if commit == "" || timestamp == "" {
 		return "dev"
 	}
-	return fmt.Sprintf("commit=%s timestamp=%s", commit, timestamp)
+	return versionJson()
 }
 
 func versionJson() string {
