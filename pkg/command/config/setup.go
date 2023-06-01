@@ -15,12 +15,6 @@ import (
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-// TODO move ???
-const (
-	defaultDirectoryMod os.FileMode = 0755
-	defaultFileMod      os.FileMode = 0600
-)
-
 const (
 	cliName string = "hckctl"
 	dirName string = "hck"
@@ -30,7 +24,7 @@ const (
 	logDirEnv     string = "HCK_LOG_DIR"
 )
 
-func InitConfig() error {
+func SetupConfig() error {
 	configDir, err := loadConfigDir()
 	if err != nil {
 		return errors.Wrap(err, "error loading config dir")
@@ -40,16 +34,16 @@ func InitConfig() error {
 	configPath := filepath.Join(configDir, configName+"."+configType)
 
 	// see https://github.com/spf13/viper/issues/430
-	if err := initDir(configPath, defaultDirectoryMod); err != nil {
-		return errors.Wrap(err, "error init config dir")
+	if err := util.CreateBaseDir(configPath); err != nil {
+		return errors.Wrap(err, "error creating config dir")
 	}
 
 	logFile, err := loadLogFile()
 	if err != nil {
 		return errors.Wrap(err, "error loading log file")
 	}
-	if err := initDir(logFile, defaultDirectoryMod); err != nil {
-		return errors.Wrap(err, "error init log dir")
+	if err := util.CreateBaseDir(logFile); err != nil {
+		return errors.Wrap(err, "error creating log dir")
 	}
 
 	viper.SetConfigName(configName)
@@ -120,14 +114,4 @@ func loadLogFile() (string, error) {
 	logFile := filepath.Join(xdg.StateHome, dirName, fmt.Sprintf("%s-%s.log", cliName, usr.Username))
 
 	return logFile, nil
-}
-
-func initDir(path string, mod os.FileMode) error {
-	dir := filepath.Dir(path)
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		if err := os.MkdirAll(dir, mod); err != nil {
-			return errors.Wrapf(err, "unable to create dir %s", dir)
-		}
-	}
-	return nil
 }

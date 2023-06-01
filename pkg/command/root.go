@@ -1,8 +1,8 @@
 package command
 
 import (
-	"fmt"
 	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 
 	"github.com/spf13/cobra"
 
@@ -15,7 +15,6 @@ import (
 
 func NewRootCmd() *cobra.Command {
 
-	// TODO >>> add config to opts?! not sure
 	var opts = &commonCmd.GlobalCmdOptions{}
 	var config *commonCmd.ConfigV1
 
@@ -25,14 +24,11 @@ func NewRootCmd() *cobra.Command {
 		Short: "The Cloud Native HaCKing Tool",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 
-			opts.LogLevel = "FIXME"
-
 			// suppress messages on error
 			cmd.SilenceUsage = true
 			cmd.SilenceErrors = true
 
-			fmt.Println("PersistentPreRunE")
-			if err := configCmd.InitConfig(); err != nil {
+			if err := configCmd.SetupConfig(); err != nil {
 				return errors.Wrap(err, "unable to init config")
 			}
 			var err error
@@ -40,15 +36,13 @@ func NewRootCmd() *cobra.Command {
 				return errors.Wrap(err, "unable to load config")
 			}
 			opts.InternalConfig = config
-			if err := commonCmd.InitFileLogger(opts, config.Log); err != nil {
+			if err := commonCmd.SetupLogger(opts, config.Log); err != nil {
 				return errors.Wrap(err, "unable to init log")
 			}
 
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-
-			fmt.Println("Run")
 			cmd.HelpFunc()(cmd, args)
 		},
 		CompletionOptions: cobra.CompletionOptions{
@@ -56,7 +50,14 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	// TODO --log-level
+	const (
+		logLevelFlag      = "log-level"
+		logLevelConfigKey = "log.level"
+	)
+
+	// --log-level
+	rootCmd.PersistentFlags().String(logLevelFlag, "", "set the logging level, one of: debug|info|warning|error")
+	viper.BindPFlag(logLevelConfigKey, rootCmd.PersistentFlags().Lookup(logLevelFlag))
 
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
 
