@@ -78,8 +78,8 @@ func SetupConfig() error {
 	return nil
 }
 
-func LoadConfig() (*common.ConfigV1, error) {
-	var configV1 *common.ConfigV1
+func LoadConfig() (*common.Config, error) {
+	var configV1 *common.Config
 	if err := viper.Unmarshal(&configV1); err != nil {
 		return nil, errors.Wrap(err, "error decoding config")
 	}

@@ -11,12 +11,6 @@ import (
 	"github.com/hckops/hckctl/pkg/command/common"
 )
 
-// TODO add command to "set" a field with dot notation and "reset" all to default
-type configCmdOptions struct {
-	global *common.GlobalCmdOptions
-	config *common.ConfigV1
-}
-
 type ProviderFlag enumflag.Flag
 
 const (
@@ -48,16 +42,17 @@ func ProviderToFlag(value common.Provider) (ProviderFlag, error) {
 	}
 }
 
-// TODO commands reset, edit
+// TODO add command to "set" a field with dot notation and "reset" all to default
 
-func NewConfigCmd(globalOpts *common.GlobalCmdOptions, config *common.ConfigV1) *cobra.Command {
+type configCmdOptions struct {
+	common *common.CommonCmdOptions
+}
+
+func NewConfigCmd(commonOpts *common.CommonCmdOptions) *cobra.Command {
 
 	opts := configCmdOptions{
-		global: globalOpts,
-		config: config,
+		common: commonOpts,
 	}
-
-	fmt.Println(fmt.Sprintf("NewConfigCmd > %s", opts.global.LogLevel))
 
 	command := &cobra.Command{
 		Use:   "config",
@@ -70,20 +65,13 @@ func NewConfigCmd(globalOpts *common.GlobalCmdOptions, config *common.ConfigV1) 
 
 func (opts *configCmdOptions) run(cmd *cobra.Command, args []string) error {
 
-	fmt.Println(fmt.Sprintf("config run > %s", opts.global.LogLevel))
-	fmt.Println(fmt.Sprintf("config run > %s", opts.global.InternalConfig.Kind))
+	fmt.Println(fmt.Sprintf("NewConfigCmd.run > %v", *opts.common))
 
-	value, err := util.ToYaml(opts.config)
+	value, err := util.ToYaml(opts.common.ConfigRef)
 	if err != nil {
 		return errors.Wrap(err, "error encoding config")
 	}
 	fmt.Print(value)
-
-	if aaa, err := LoadConfig(); err != nil {
-		return errors.Wrap(err, "unable to load config")
-	} else {
-		fmt.Print(aaa.Box.Provider)
-	}
 
 	return nil
 }

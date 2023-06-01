@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-type ConfigV1 struct {
+type Config struct {
 	Kind string     `yaml:"kind"`
 	Box  BoxConfig  `yaml:"box"`
 	Log  *LogConfig `yaml:"log"`
@@ -53,8 +53,8 @@ type KubeResources struct {
 	Cpu    string `yaml:"cpu"`
 }
 
-func NewConfig(logFile string) *ConfigV1 {
-	return &ConfigV1{
+func NewConfig(logFile string) *Config {
+	return &Config{
 		Kind: "config/v1",
 		Log: &LogConfig{
 			Level:    "info",

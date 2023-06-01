@@ -2,21 +2,17 @@ package command
 
 import (
 	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/spf13/cobra"
-
-	boxCmd "github.com/hckops/hckctl/pkg/command/box"
 	commonCmd "github.com/hckops/hckctl/pkg/command/common"
 	configCmd "github.com/hckops/hckctl/pkg/command/config"
-	labCmd "github.com/hckops/hckctl/pkg/command/lab"
-	templateCmd "github.com/hckops/hckctl/pkg/command/template"
 )
 
 func NewRootCmd() *cobra.Command {
 
-	var opts = &commonCmd.GlobalCmdOptions{}
-	var config *commonCmd.ConfigV1
+	var opts *commonCmd.CommonCmdOptions
+	opts = &commonCmd.CommonCmdOptions{}
 
 	// TODO https://github.com/MakeNowJust/heredoc
 	rootCmd := &cobra.Command{
@@ -31,12 +27,18 @@ func NewRootCmd() *cobra.Command {
 			if err := configCmd.SetupConfig(); err != nil {
 				return errors.Wrap(err, "unable to init config")
 			}
-			var err error
-			if config, err = configCmd.LoadConfig(); err != nil {
-				return errors.Wrap(err, "unable to load config")
+			//var err error
+			//if config, err = configCmd.LoadConfig(); err != nil {
+			//	return errors.Wrap(err, "unable to load config")
+			//}
+
+			var configV1 *commonCmd.Config
+			if err := viper.Unmarshal(&configV1); err != nil {
+				return errors.Wrap(err, "error decoding config")
 			}
-			opts.InternalConfig = config
-			if err := commonCmd.SetupLogger(opts, config.Log); err != nil {
+
+			opts.ConfigRef = configV1
+			if err := commonCmd.SetupLogger(opts.ConfigRef.Log); err != nil {
 				return errors.Wrap(err, "unable to init log")
 			}
 
@@ -61,10 +63,10 @@ func NewRootCmd() *cobra.Command {
 
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
 
-	rootCmd.AddCommand(boxCmd.NewBoxCmd(opts))
-	rootCmd.AddCommand(configCmd.NewConfigCmd(opts, config))
-	rootCmd.AddCommand(labCmd.NewLabCmd(opts))
-	rootCmd.AddCommand(templateCmd.NewTemplateCmd(opts))
+	//rootCmd.AddCommand(boxCmd.NewBoxCmd(opts))
+	rootCmd.AddCommand(configCmd.NewConfigCmd(opts))
+	//rootCmd.AddCommand(labCmd.NewLabCmd(opts))
+	//rootCmd.AddCommand(templateCmd.NewTemplateCmd(opts))
 	rootCmd.AddCommand(NewVersionCmd())
 	return rootCmd
 }
