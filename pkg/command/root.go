@@ -9,14 +9,15 @@ import (
 	configCmd "github.com/hckops/hckctl/pkg/command/config"
 )
 
+// env HCK_CONFIG_LOG.FILEPATH=/tmp/example.log ./build/hckctl config --log-level debug
+
 func NewRootCmd() *cobra.Command {
 
-	var opts *commonCmd.CommonCmdOptions
-	opts = &commonCmd.CommonCmdOptions{}
+	opts := &commonCmd.CommonCmdOptions{}
 
 	// TODO https://github.com/MakeNowJust/heredoc
 	rootCmd := &cobra.Command{
-		Use:   "hckctl",
+		Use:   commonCmd.CliName,
 		Short: "The Cloud Native HaCKing Tool",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 
@@ -24,21 +25,13 @@ func NewRootCmd() *cobra.Command {
 			cmd.SilenceUsage = true
 			cmd.SilenceErrors = true
 
-			if err := configCmd.SetupConfig(); err != nil {
+			config, err := configCmd.SetupConfig()
+			if err != nil {
 				return errors.Wrap(err, "unable to init config")
 			}
-			//var err error
-			//if config, err = configCmd.LoadConfig(); err != nil {
-			//	return errors.Wrap(err, "unable to load config")
-			//}
+			opts.Config = config
 
-			var configV1 *commonCmd.Config
-			if err := viper.Unmarshal(&configV1); err != nil {
-				return errors.Wrap(err, "error decoding config")
-			}
-
-			opts.ConfigRef = configV1
-			if err := commonCmd.SetupLogger(opts.ConfigRef.Log); err != nil {
+			if err := commonCmd.SetupLogger(opts.Config.Log); err != nil {
 				return errors.Wrap(err, "unable to init log")
 			}
 

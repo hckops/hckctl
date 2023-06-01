@@ -1,9 +1,7 @@
 package config
 
 import (
-	"fmt"
 	"os"
-	"os/user"
 	"path/filepath"
 	"strings"
 
@@ -16,18 +14,23 @@ import (
 )
 
 const (
-	cliName string = "hckctl"
-	dirName string = "hck"
-
+	configDirName string = "hck"
 	configEnvName string = "HCK_CONFIG" // overrides .config/hck/config.yml
 	configDirEnv  string = "HCK_CONFIG_DIR"
-	logDirEnv     string = "HCK_LOG_DIR"
 )
 
-func SetupConfig() error {
-	configDir, err := loadConfigDir()
+func SetupConfig() (*common.Config, error) {
+	err := initConfig()
 	if err != nil {
-		return errors.Wrap(err, "error loading config dir")
+		return nil, err
+	}
+	return loadConfig()
+}
+
+func initConfig() error {
+	configDir, err := getConfigDir()
+	if err != nil {
+		return errors.Wrap(err, "invalid config dir")
 	}
 	configName := "config"
 	configType := "yml"
@@ -38,12 +41,9 @@ func SetupConfig() error {
 		return errors.Wrap(err, "error creating config dir")
 	}
 
-	logFile, err := loadLogFile()
+	logFile, err := common.GetLogFile()
 	if err != nil {
-		return errors.Wrap(err, "error loading log file")
-	}
-	if err := util.CreateBaseDir(logFile); err != nil {
-		return errors.Wrap(err, "error creating log dir")
+		return errors.Wrap(err, "invalid log file")
 	}
 
 	viper.SetConfigName(configName)
@@ -78,40 +78,24 @@ func SetupConfig() error {
 	return nil
 }
 
-func LoadConfig() (*common.Config, error) {
-	var configV1 *common.Config
-	if err := viper.Unmarshal(&configV1); err != nil {
+func loadConfig() (*common.Config, error) {
+	var configRef *common.Config
+	if err := viper.Unmarshal(&configRef); err != nil {
 		return nil, errors.Wrap(err, "error decoding config")
 	}
-	return configV1, nil
+	return configRef, nil
 }
 
-func loadConfigDir() (string, error) {
+func getConfigDir() (string, error) {
 	// override
 	if env := os.Getenv(configDirEnv); env != "" {
 		return env, nil
 	}
 
 	// https://xdgbasedirectoryspecification.com
-	xdgDir, err := xdg.ConfigFile(dirName)
+	xdgDir, err := xdg.ConfigFile(configDirName)
 	if err != nil {
-		return "", errors.Wrapf(err, "unable to create xdg config directory %s", dirName)
+		return "", errors.Wrapf(err, "unable to create xdg config directory %s", configDirName)
 	}
 	return xdgDir, nil
-}
-
-func loadLogFile() (string, error) {
-	// override
-	if env := os.Getenv(logDirEnv); env != "" {
-		return env, nil
-	}
-
-	usr, err := user.Current()
-	if err != nil {
-		return "", errors.Wrap(err, "unable to retrieve current user")
-	}
-
-	logFile := filepath.Join(xdg.StateHome, dirName, fmt.Sprintf("%s-%s.log", cliName, usr.Username))
-
-	return logFile, nil
 }

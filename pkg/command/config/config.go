@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/hckops/hckctl/pkg/util"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"github.com/thediveo/enumflag/v2"
 
 	"github.com/spf13/cobra"
@@ -65,9 +66,9 @@ func NewConfigCmd(commonOpts *common.CommonCmdOptions) *cobra.Command {
 
 func (opts *configCmdOptions) run(cmd *cobra.Command, args []string) error {
 
-	fmt.Println(fmt.Sprintf("NewConfigCmd.run > %v", *opts.common))
+	log.Info().Msgf("NewConfigCmd.run > %v", *opts.common)
 
-	value, err := util.ToYaml(opts.common.ConfigRef)
+	value, err := util.ToYaml(opts.common.Config)
 	if err != nil {
 		return errors.Wrap(err, "error encoding config")
 	}
