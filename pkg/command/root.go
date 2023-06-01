@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
@@ -14,8 +15,8 @@ import (
 
 func NewRootCmd() *cobra.Command {
 
-	// TODO add config to opts?! not sure
-	opts := &commonCmd.GlobalCmdOptions{}
+	// TODO >>> add config to opts?! not sure
+	var opts = &commonCmd.GlobalCmdOptions{}
 	var config *commonCmd.ConfigV1
 
 	// TODO https://github.com/MakeNowJust/heredoc
@@ -24,6 +25,13 @@ func NewRootCmd() *cobra.Command {
 		Short: "The Cloud Native HaCKing Tool",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 
+			opts.LogLevel = "FIXME"
+
+			// suppress messages on error
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
+
+			fmt.Println("PersistentPreRunE")
 			if err := configCmd.InitConfig(); err != nil {
 				return errors.Wrap(err, "unable to init config")
 			}
@@ -31,13 +39,16 @@ func NewRootCmd() *cobra.Command {
 			if config, err = configCmd.LoadConfig(); err != nil {
 				return errors.Wrap(err, "unable to load config")
 			}
-			if err := commonCmd.InitFileLogger(opts, &config.Log); err != nil {
+			opts.InternalConfig = config
+			if err := commonCmd.InitFileLogger(opts, config.Log); err != nil {
 				return errors.Wrap(err, "unable to init log")
 			}
 
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+
+			fmt.Println("Run")
 			cmd.HelpFunc()(cmd, args)
 		},
 		CompletionOptions: cobra.CompletionOptions{

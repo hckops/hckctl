@@ -3,5 +3,6 @@ package common
 const NoneFlagShortHand = ""
 
 type GlobalCmdOptions struct {
-	logLevel string // TODO enum
+	LogLevel       string // TODO enum
+	InternalConfig *ConfigV1
 }
