@@ -15,8 +15,8 @@ import (
 
 const (
 	configDirName string = "hck"
-	configEnvName string = "HCK_CONFIG" // overrides .config/hck/config.yml
-	configDirEnv  string = "HCK_CONFIG_DIR"
+	configDirEnv  string = "HCK_CONFIG_DIR" // overrides .config/hck
+	configEnvName string = "HCK_CONFIG"
 )
 
 // SetupConfig loads the config or initialize the default
@@ -101,7 +101,8 @@ func createDefaultConfig(configPath string) error {
 
 func loadConfig() (*common.Config, error) {
 	var configValue *common.Config
-	if err := viper.Unmarshal(&configValue); err != nil {
+	// "exact" makes sure to fail if fields are invalid
+	if err := viper.UnmarshalExact(&configValue); err != nil {
 		return nil, errors.Wrap(err, "error decoding config")
 	}
 	return configValue, nil
