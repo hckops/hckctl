@@ -9,15 +9,15 @@ import (
 )
 
 type boxCmdOptions struct {
-	global   *common.GlobalCmdOptions
-	path     string
-	revision string
+	configRef *common.ConfigRef
+	path      string
+	revision  string
 }
 
-func NewBoxCmd(globalOpts *common.GlobalCmdOptions) *cobra.Command {
+func NewBoxCmd(configRef *common.ConfigRef) *cobra.Command {
 
-	opts := boxCmdOptions{
-		global: globalOpts,
+	opts := &boxCmdOptions{
+		configRef: configRef,
 	}
 
 	command := &cobra.Command{
@@ -26,17 +26,18 @@ func NewBoxCmd(globalOpts *common.GlobalCmdOptions) *cobra.Command {
 		RunE:  opts.run,
 	}
 
+	// TODO
 	command.Flags().StringVarP(&opts.path, "path", "p", "", "load a local template")
 	command.Flags().StringVarP(&opts.revision, "revision", "r", "main", "megalopolis version i.e. branch|tag|sha")
 	command.MarkFlagsMutuallyExclusive("path", "revision")
 
-	command.AddCommand(NewBoxCopyCmd(&opts))
-	command.AddCommand(NewBoxCreateCmd(&opts))
-	command.AddCommand(NewBoxDeleteCmd(&opts))
-	command.AddCommand(NewBoxExecCmd(&opts))
-	command.AddCommand(NewBoxListCmd(&opts))
-	command.AddCommand(NewBoxOpenCmd(&opts))
-	command.AddCommand(NewBoxTunnelCmd(&opts))
+	command.AddCommand(NewBoxCopyCmd(opts))
+	command.AddCommand(NewBoxCreateCmd(opts))
+	command.AddCommand(NewBoxDeleteCmd(opts))
+	command.AddCommand(NewBoxExecCmd(opts))
+	command.AddCommand(NewBoxListCmd(opts))
+	command.AddCommand(NewBoxOpenCmd(opts))
+	command.AddCommand(NewBoxTunnelCmd(opts))
 
 	return command
 }

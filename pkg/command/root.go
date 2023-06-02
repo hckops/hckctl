@@ -5,8 +5,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	boxCmd "github.com/hckops/hckctl/pkg/command/box"
 	commonCmd "github.com/hckops/hckctl/pkg/command/common"
 	configCmd "github.com/hckops/hckctl/pkg/command/config"
+	labCmd "github.com/hckops/hckctl/pkg/command/lab"
+	templateCmd "github.com/hckops/hckctl/pkg/command/template"
 )
 
 // nested folders are created if they don't exist
@@ -62,10 +65,10 @@ func NewRootCmd() *cobra.Command {
 
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
 
-	//rootCmd.AddCommand(boxCmd.NewBoxCmd(configRef))
+	rootCmd.AddCommand(boxCmd.NewBoxCmd(configRef))
 	rootCmd.AddCommand(configCmd.NewConfigCmd(configRef))
-	//rootCmd.AddCommand(labCmd.NewLabCmd(configRef))
-	//rootCmd.AddCommand(templateCmd.NewTemplateCmd(configRef))
+	rootCmd.AddCommand(labCmd.NewLabCmd(configRef))
+	rootCmd.AddCommand(templateCmd.NewTemplateCmd(configRef))
 	rootCmd.AddCommand(NewVersionCmd())
 	return rootCmd
 }

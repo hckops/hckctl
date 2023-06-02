@@ -11,13 +11,13 @@ import (
 // TODO command create, list, describe, delete
 
 type labCmdOptions struct {
-	global *common.GlobalCmdOptions
+	configRef *common.ConfigRef
 }
 
-func NewLabCmd(globalOpts *common.GlobalCmdOptions) *cobra.Command {
+func NewLabCmd(configRef *common.ConfigRef) *cobra.Command {
 
 	opts := labCmdOptions{
-		global: globalOpts,
+		configRef: configRef,
 	}
 
 	command := &cobra.Command{

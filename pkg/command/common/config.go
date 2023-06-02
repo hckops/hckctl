@@ -13,9 +13,9 @@ type ConfigRef struct {
 }
 
 type Config struct {
-	Kind string     `yaml:"kind"`
-	Box  BoxConfig  `yaml:"box"`
-	Log  *LogConfig `yaml:"log"`
+	Kind string    `yaml:"kind"`
+	Box  BoxConfig `yaml:"box"`
+	Log  LogConfig `yaml:"log"`
 }
 
 type LogConfig struct {
@@ -63,7 +63,7 @@ type KubeResources struct {
 func NewConfig(logFile string) *Config {
 	return &Config{
 		Kind: "config/v1",
-		Log: &LogConfig{
+		Log: LogConfig{
 			Level:    "info",
 			FilePath: logFile,
 		},

@@ -9,15 +9,15 @@ import (
 )
 
 type templateCmdOptions struct {
-	global   *common.GlobalCmdOptions
-	path     string
-	revision string
+	configRef *common.ConfigRef
+	path      string
+	revision  string
 }
 
-func NewTemplateCmd(globalOpts *common.GlobalCmdOptions) *cobra.Command {
+func NewTemplateCmd(configRef *common.ConfigRef) *cobra.Command {
 
-	opts := templateCmdOptions{
-		global: globalOpts,
+	opts := &templateCmdOptions{
+		configRef: configRef,
 	}
 
 	command := &cobra.Command{
@@ -30,9 +30,9 @@ func NewTemplateCmd(globalOpts *common.GlobalCmdOptions) *cobra.Command {
 	command.PersistentFlags().StringVarP(&opts.revision, "revision", "r", "main", "megalopolis version i.e. branch|tag|sha")
 	command.MarkFlagsMutuallyExclusive("path", "revision")
 
-	command.AddCommand(NewTemplateListCmd(&opts))
-	command.AddCommand(NewTemplateShowCmd(&opts))
-	command.AddCommand(NewTemplateValidateCmd(&opts))
+	command.AddCommand(NewTemplateListCmd(opts))
+	command.AddCommand(NewTemplateShowCmd(opts))
+	command.AddCommand(NewTemplateValidateCmd(opts))
 
 	return command
 }

@@ -101,6 +101,7 @@ func setFileOutput(filePath string) error {
 	// 	}
 	// }()
 
+	// text format instead of json
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: file, TimeFormat: time.RFC3339})
 	return nil
 }
