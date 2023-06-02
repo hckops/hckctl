@@ -2,10 +2,10 @@ package box
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/thediveo/enumflag/v2"
-	"strings"
 
 	"github.com/hckops/hckctl/pkg/command/common"
 )
@@ -44,11 +44,7 @@ func NewBoxCmd(configRef *common.ConfigRef) *cobra.Command {
 	command.MarkFlagsMutuallyExclusive(pathFlag, revisionFlag)
 
 	// --provider
-	// possible bug: &provider reference (previously in opts) is always 0
-	// enumflag is used only for validation, retrieve validated and merged value between config and flag from configRef
-	var provider common.ProviderFlag
-	providerValue := enumflag.New(&provider, providerFlag, common.ProviderIds, enumflag.EnumCaseInsensitive)
-	command.Flags().Var(providerValue, providerFlag, fmt.Sprintf("set the box provider, one of %s",
+	command.Flags().StringP(providerFlag, common.NoneFlagShortHand, string(common.Docker), fmt.Sprintf("change box provider, one of %s",
 		strings.Join([]string{string(common.Docker), string(common.Kubernetes), string(common.Argo), string(common.Cloud)}, "|")))
 	viper.BindPFlag(fmt.Sprintf("box.%s", providerFlag), command.Flags().Lookup(providerFlag))
 
@@ -64,7 +60,10 @@ func NewBoxCmd(configRef *common.ConfigRef) *cobra.Command {
 }
 
 func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
-	fmt.Println(fmt.Sprintf("not implemented: path=%s revision=%s providerConfig=%v",
+	fmt.Println(fmt.Sprintf("not implemented: path=%s revision=%s provider=%v",
 		opts.path, opts.revision, opts.configRef.Config.Box.Provider))
+
+	// TODO validation
+
 	return nil
 }

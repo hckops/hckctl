@@ -46,6 +46,7 @@ func setTimestamp() {
 	}
 }
 
+// silent fallback
 func parseLevel(value string) zerolog.Level {
 	switch value {
 	case "debug":
