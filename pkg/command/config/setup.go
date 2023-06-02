@@ -21,14 +21,14 @@ const (
 
 // SetupConfig loads the config or initialize the default
 func SetupConfig() (*common.Config, error) {
-	err := initConfig()
+	err := initConfig(false)
 	if err != nil {
 		return nil, err
 	}
 	return loadConfig()
 }
 
-func initConfig() error {
+func initConfig(force bool) error {
 	configDir, err := getConfigDir()
 	if err != nil {
 		return errors.Wrap(err, "invalid config dir")
@@ -49,7 +49,10 @@ func initConfig() error {
 	viper.SetEnvPrefix(configEnvName)
 	viper.AutomaticEnv()
 
-	if err := viper.ReadInConfig(); err != nil {
+	// reset config
+	if force {
+		return createDefaultConfig(configPath)
+	} else if err := viper.ReadInConfig(); err != nil {
 
 		// first time only
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
@@ -93,7 +96,8 @@ func createDefaultConfig(configPath string) error {
 	if err := viper.ReadConfig(strings.NewReader(configString)); err != nil {
 		return errors.Wrap(err, "error reading config")
 	}
-	if err := viper.SafeWriteConfigAs(configPath); err != nil {
+	// SafeWriteConfigAs prevents override
+	if err := viper.WriteConfigAs(configPath); err != nil {
 		return errors.Wrap(err, "error writing config")
 	}
 	return nil
