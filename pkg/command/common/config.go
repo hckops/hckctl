@@ -35,6 +35,7 @@ type Provider string
 const (
 	Docker     Provider = "docker"
 	Kubernetes Provider = "kube"
+	Argo       Provider = "argo"
 	Cloud      Provider = "cloud"
 )
 
@@ -68,7 +69,7 @@ func NewConfig(logFile string) *Config {
 			FilePath: logFile,
 		},
 		Box: BoxConfig{
-			Revision: "main",
+			Revision: DefaultMegalopolisBranch,
 			Provider: Docker,
 			Kube: KubeConfig{
 				Namespace:  "labs",

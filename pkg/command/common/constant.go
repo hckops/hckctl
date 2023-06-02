@@ -1,5 +1,6 @@
 package common
 
-const CliName = "hckctl"
-
-const NoneFlagShortHand = ""
+const (
+	CliName                  = "hckctl"
+	DefaultMegalopolisBranch = "main"
+)
