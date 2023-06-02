@@ -19,6 +19,7 @@ const (
 	configDirEnv  string = "HCK_CONFIG_DIR"
 )
 
+// SetupConfig loads the config or initialize the default
 func SetupConfig() (*common.Config, error) {
 	err := initConfig()
 	if err != nil {
@@ -41,11 +42,6 @@ func initConfig() error {
 		return errors.Wrap(err, "error creating config dir")
 	}
 
-	logFile, err := common.GetLogFile()
-	if err != nil {
-		return errors.Wrap(err, "invalid log file")
-	}
-
 	viper.SetConfigName(configName)
 	viper.SetConfigType(configType)
 	viper.AddConfigPath(configDir)
@@ -57,33 +53,13 @@ func initConfig() error {
 
 		// first time only
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			// default config
-			cliConfig := common.NewConfig(logFile)
-
-			var configString string
-			if configString, err = util.ToYaml(&cliConfig); err != nil {
-				return errors.Wrap(err, "error encoding config")
-			}
-			if err := viper.ReadConfig(strings.NewReader(configString)); err != nil {
-				return errors.Wrap(err, "error reading config")
-			}
-			if err := viper.SafeWriteConfigAs(configPath); err != nil {
-				return errors.Wrap(err, "error writing config")
-			}
+			return createDefaultConfig(configPath)
 		} else {
 			return errors.Wrap(err, "invalid config file")
 		}
 	}
 	//viper.Debug()
 	return nil
-}
-
-func loadConfig() (*common.Config, error) {
-	var configRef *common.Config
-	if err := viper.Unmarshal(&configRef); err != nil {
-		return nil, errors.Wrap(err, "error decoding config")
-	}
-	return configRef, nil
 }
 
 func getConfigDir() (string, error) {
@@ -98,4 +74,35 @@ func getConfigDir() (string, error) {
 		return "", errors.Wrapf(err, "unable to create xdg config directory %s", configDirName)
 	}
 	return xdgDir, nil
+}
+
+func createDefaultConfig(configPath string) error {
+	// default log file
+	logFile, err := common.GetLogFile()
+	if err != nil {
+		return errors.Wrap(err, "invalid log file")
+	}
+
+	// default config
+	cliConfig := common.NewConfig(logFile)
+
+	var configString string
+	if configString, err = util.ToYaml(&cliConfig); err != nil {
+		return errors.Wrap(err, "error encoding config")
+	}
+	if err := viper.ReadConfig(strings.NewReader(configString)); err != nil {
+		return errors.Wrap(err, "error reading config")
+	}
+	if err := viper.SafeWriteConfigAs(configPath); err != nil {
+		return errors.Wrap(err, "error writing config")
+	}
+	return nil
+}
+
+func loadConfig() (*common.Config, error) {
+	var configValue *common.Config
+	if err := viper.Unmarshal(&configValue); err != nil {
+		return nil, errors.Wrap(err, "error decoding config")
+	}
+	return configValue, nil
 }

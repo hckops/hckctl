@@ -2,14 +2,13 @@ package config
 
 import (
 	"fmt"
-	"github.com/hckops/hckctl/pkg/util"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 	"github.com/thediveo/enumflag/v2"
 
 	"github.com/spf13/cobra"
 
 	"github.com/hckops/hckctl/pkg/command/common"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 type ProviderFlag enumflag.Flag
@@ -45,34 +44,30 @@ func ProviderToFlag(value common.Provider) (ProviderFlag, error) {
 
 // TODO add command to "set" a field with dot notation and "reset" all to default
 
-type configCmdOptions struct {
-	common *common.CommonCmdOptions
-}
+type configCmdOptions struct{}
 
-func NewConfigCmd(commonOpts *common.CommonCmdOptions) *cobra.Command {
+func NewConfigCmd(configRef *common.ConfigRef) *cobra.Command {
 
-	opts := configCmdOptions{
-		common: commonOpts,
-	}
+	opts := &configCmdOptions{}
 
 	command := &cobra.Command{
 		Use:   "config",
 		Short: "print current configurations",
-		RunE:  opts.run,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return opts.print(configRef.Config)
+		},
 	}
 
 	return command
 }
 
-func (opts *configCmdOptions) run(cmd *cobra.Command, args []string) error {
+func (opts *configCmdOptions) print(configValue *common.Config) error {
 
-	log.Info().Msgf("NewConfigCmd.run > %v", *opts.common)
-
-	value, err := util.ToYaml(opts.common.Config)
-	if err != nil {
+	if value, err := util.ToYaml(configValue); err != nil {
 		return errors.Wrap(err, "error encoding config")
+	} else {
+		fmt.Print(value)
 	}
-	fmt.Print(value)
 
 	return nil
 }

@@ -14,7 +14,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/hckops/hckctl/internal/config"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
@@ -33,11 +32,12 @@ func GetLogFile() (string, error) {
 	return logFile, nil
 }
 
-func SetupLogger(config *LogConfig) error {
+func SetupLogger(configRef *ConfigRef) error {
+	logConfig := configRef.Config.Log
 	setTimestamp()
-	setLevel(parseLevel(config.Level))
+	setLevel(parseLevel(logConfig.Level))
 	setContext()
-	return setFileOutput(config.FilePath)
+	return setFileOutput(logConfig.FilePath)
 }
 
 func setTimestamp() {
@@ -72,7 +72,7 @@ func setLevel(level zerolog.Level) {
 
 func setContext() {
 	log.Logger = log.With().Caller().
-		Str("source", config.CliName).
+		Str("source", CliName).
 		Str("session", generateSession()).
 		Logger()
 }

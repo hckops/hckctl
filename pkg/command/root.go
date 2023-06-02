@@ -13,7 +13,8 @@ import (
 
 func NewRootCmd() *cobra.Command {
 
-	opts := &commonCmd.CommonCmdOptions{}
+	// define pointer/reference to pass around in all commands and initialize in each PersistentPreRunE
+	configRef := &commonCmd.ConfigRef{}
 
 	// TODO https://github.com/MakeNowJust/heredoc
 	rootCmd := &cobra.Command{
@@ -25,13 +26,13 @@ func NewRootCmd() *cobra.Command {
 			cmd.SilenceUsage = true
 			cmd.SilenceErrors = true
 
-			config, err := configCmd.SetupConfig()
-			if err != nil {
+			if config, err := configCmd.SetupConfig(); err != nil {
 				return errors.Wrap(err, "unable to init config")
+			} else {
+				configRef.Config = config
 			}
-			opts.Config = config
 
-			if err := commonCmd.SetupLogger(opts.Config.Log); err != nil {
+			if err := commonCmd.SetupLogger(configRef); err != nil {
 				return errors.Wrap(err, "unable to init log")
 			}
 
@@ -51,15 +52,15 @@ func NewRootCmd() *cobra.Command {
 	)
 
 	// --log-level
-	rootCmd.PersistentFlags().String(logLevelFlag, "", "set the logging level, one of: debug|info|warning|error")
+	rootCmd.PersistentFlags().StringP(logLevelFlag, "l", commonCmd.NoneFlagShortHand, "set the logging level, one of: debug|info|warning|error")
 	viper.BindPFlag(logLevelConfigKey, rootCmd.PersistentFlags().Lookup(logLevelFlag))
 
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
 
-	//rootCmd.AddCommand(boxCmd.NewBoxCmd(opts))
-	rootCmd.AddCommand(configCmd.NewConfigCmd(opts))
-	//rootCmd.AddCommand(labCmd.NewLabCmd(opts))
-	//rootCmd.AddCommand(templateCmd.NewTemplateCmd(opts))
+	//rootCmd.AddCommand(boxCmd.NewBoxCmd(configRef))
+	rootCmd.AddCommand(configCmd.NewConfigCmd(configRef))
+	//rootCmd.AddCommand(labCmd.NewLabCmd(configRef))
+	//rootCmd.AddCommand(templateCmd.NewTemplateCmd(configRef))
 	rootCmd.AddCommand(NewVersionCmd())
 	return rootCmd
 }
