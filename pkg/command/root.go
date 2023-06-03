@@ -17,7 +17,6 @@ func NewRootCmd() *cobra.Command {
 	// define pointer/reference to pass around in all commands and initialize in each PersistentPreRunE
 	configRef := &commonCmd.ConfigRef{}
 
-	// TODO https://github.com/MakeNowJust/heredoc
 	rootCmd := &cobra.Command{
 		Use:   commonCmd.CliName,
 		Short: "The Cloud Native HaCKing Tool",

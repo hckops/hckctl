@@ -2,18 +2,20 @@ package template
 
 import (
 	"fmt"
-	"github.com/hckops/hckctl/pkg/util"
+	"strings"
+
+	"github.com/MakeNowJust/heredoc"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag/v2"
-	"strings"
 
 	"github.com/hckops/hckctl/pkg/command/common"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 type templateCmdOptions struct {
-	path     string
+	local    bool
 	revision string
 	format   formatFlag
 }
@@ -25,12 +27,26 @@ func NewTemplateCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "template [name]",
 		Short: "validate and print template",
-		RunE:  opts.run,
+		Example: heredoc.Doc(`
+
+			# prints remote alpine template
+			hckctl template alpine
+
+			# prints specific version (branch|tag|sha) of alpine template
+			hckctl template alpine --revision main
+
+			# prints template in json format (default yaml)
+			hckctl template alpine --format json
+
+			# validate and prints local template
+			hckctl template boxes/official/alpine.yml --local
+		`),
+		RunE: opts.run,
 	}
 
 	const (
 		formatFlagName   = "format"
-		pathFlagName     = "path"
+		localFlagName    = "local"
 		revisionFlagName = "revision"
 	)
 
@@ -38,11 +54,12 @@ func NewTemplateCmd() *cobra.Command {
 	formatValue := enumflag.New(&opts.format, formatFlagName, formatIds, enumflag.EnumCaseInsensitive)
 	formatUsage := fmt.Sprintf("output format, one of %s", strings.Join(formatValues(), "|"))
 	command.Flags().Var(formatValue, formatFlagName, formatUsage)
-	// --path
-	command.Flags().StringVarP(&opts.path, pathFlagName, "p", "", "local path")
+
+	// --local
+	command.Flags().BoolVarP(&opts.local, localFlagName, common.NoneFlagShortHand, false, "use local template")
 	// --revision
 	command.Flags().StringVarP(&opts.revision, revisionFlagName, "r", common.RevisionBranch, common.RevisionUsage)
-	command.MarkFlagsMutuallyExclusive(pathFlagName, revisionFlagName)
+	command.MarkFlagsMutuallyExclusive(localFlagName, revisionFlagName)
 
 	command.AddCommand(NewTemplateListCmd())
 	command.AddCommand(NewTemplateValidateCmd())
@@ -53,10 +70,8 @@ func NewTemplateCmd() *cobra.Command {
 func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 	format := opts.format.value()
 
-	if opts.path != "" && len(args) > 0 {
-		return errors.New(fmt.Sprintf("unexpected arguments: %v", args))
-	} else if opts.path != "" {
-		return printLocalTemplate(format, opts.path)
+	if opts.local {
+		return printLocalTemplate(format, args[0])
 	} else if len(args) == 1 {
 		return printRemoteTemplate(format, args[0], opts.revision)
 	} else {
