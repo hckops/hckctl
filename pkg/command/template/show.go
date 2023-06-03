@@ -12,8 +12,6 @@ import (
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-type Format string
-
 type templateShowCmdOptions struct {
 	template *templateCmdOptions
 	format   formatFlag
@@ -35,6 +33,7 @@ func NewTemplateShowCmd(templateOpts *templateCmdOptions) *cobra.Command {
 		formatFlagName = "format"
 	)
 
+	// --format (enum)
 	formatValue := enumflag.New(&opts.format, formatFlagName, toFormatIds(), enumflag.EnumCaseInsensitive)
 	formatUsage := fmt.Sprintf("output format, one of %s", strings.Join([]string{string(yamlFormat), string(jsonFormat)}, "|"))
 	command.Flags().Var(formatValue, formatFlagName, formatUsage)

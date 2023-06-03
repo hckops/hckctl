@@ -4,6 +4,8 @@ import (
 	"github.com/thediveo/enumflag/v2"
 )
 
+type Format string
+
 const (
 	yamlFormat Format = "yaml"
 	jsonFormat Format = "json"

@@ -33,14 +33,15 @@ func NewTemplateCmd(configRef *common.ConfigRef) *cobra.Command {
 	command.MarkFlagsMutuallyExclusive(pathFlag, revisionFlag)
 
 	command.AddCommand(NewTemplateShowCmd(opts)) // default
-	command.AddCommand(NewTemplateValidateCmd(opts))
 
+	// validate only local templates
+	validateCommand := NewTemplateValidateCmd(opts)
+	validateCommand.SetHelpFunc(hideParentFlag(revisionFlag))
+	command.AddCommand(validateCommand)
+
+	// list only remote templates
 	listCommand := NewTemplateListCmd(opts)
-	listCommand.SetHelpFunc(func(cmd *cobra.Command, args []string) {
-		// hide flag for this command
-		command.PersistentFlags().MarkHidden(pathFlag)
-		command.Parent().HelpFunc()(cmd, args)
-	})
+	listCommand.SetHelpFunc(hideParentFlag(pathFlag))
 	command.AddCommand(listCommand)
 
 	return command
@@ -52,4 +53,12 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 		format:   yamlFlag,
 	}
 	return showOpts.run(cmd, args)
+}
+
+func hideParentFlag(flagName string) func(cmd *cobra.Command, args []string) {
+	return func(cmd *cobra.Command, args []string) {
+		// hide flag for this command
+		cmd.Flags().MarkHidden(flagName)
+		cmd.Parent().HelpFunc()(cmd, args)
+	}
 }

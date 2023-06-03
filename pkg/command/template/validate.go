@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// TODO validate multiple templates in a path and filter by regex
+// TODO add folder validation + regex filter
 type templateValidateCmdOptions struct {
 	template *templateCmdOptions
 }
