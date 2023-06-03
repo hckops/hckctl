@@ -2,12 +2,11 @@ package schema
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/old/util"
 	"regexp"
 	"strings"
 
 	"github.com/dchest/uniuri"
-
-	"github.com/hckops/hckctl/pkg/util"
 )
 
 type BoxV1 struct {

@@ -2,6 +2,7 @@ package old
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/old/util"
 	"path/filepath"
 	"strings"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/thediveo/enumflag/v2"
 
 	"github.com/hckops/hckctl/internal/config"
-	"github.com/hckops/hckctl/pkg/util"
 )
 
 type ProviderFlag enumflag.Flag

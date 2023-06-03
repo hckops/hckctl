@@ -2,6 +2,9 @@ package box
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/old/client"
+	"github.com/hckops/hckctl/pkg/old/model"
+	"github.com/hckops/hckctl/pkg/old/schema"
 	"k8s.io/apimachinery/pkg/util/runtime"
 
 	"github.com/rs/zerolog"
@@ -9,9 +12,6 @@ import (
 
 	"github.com/hckops/hckctl/internal/config"
 	"github.com/hckops/hckctl/internal/terminal"
-	"github.com/hckops/hckctl/pkg/client"
-	"github.com/hckops/hckctl/pkg/model"
-	"github.com/hckops/hckctl/pkg/schema"
 )
 
 type LocalKubeBox struct {

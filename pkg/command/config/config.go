@@ -2,13 +2,13 @@ package config
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/old/util"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/hckops/hckctl/pkg/command/common"
-	"github.com/hckops/hckctl/pkg/util"
 )
 
 // TODO add command to "set" a field with dot notation

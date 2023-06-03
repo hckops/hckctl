@@ -2,6 +2,9 @@ package client
 
 import (
 	"context"
+	"github.com/hckops/hckctl/pkg/old/model"
+	"github.com/hckops/hckctl/pkg/old/schema"
+	util2 "github.com/hckops/hckctl/pkg/old/util"
 	"io"
 	"io/ioutil"
 	"sync"
@@ -12,10 +15,6 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
 	"github.com/pkg/errors"
-
-	"github.com/hckops/hckctl/pkg/model"
-	"github.com/hckops/hckctl/pkg/schema"
-	"github.com/hckops/hckctl/pkg/util"
 )
 
 type DockerBox struct {
@@ -129,7 +128,7 @@ func buildHostConfig(ports []schema.PortV1, onPortBindCallback func(port schema.
 	portBindings := make(nat.PortMap)
 	for _, port := range ports {
 
-		localPort, err := util.GetLocalPort(port.Local)
+		localPort, err := util2.GetLocalPort(port.Local)
 		if err != nil {
 			return nil, errors.Wrap(err, "error docker local port: hostConfig")
 		}
@@ -195,7 +194,7 @@ func (box *DockerBox) Exec(containerId string, streams *model.BoxStreams) error 
 	handleStreams(&execAttachResponse, streams, removeContainerCallback, box.OnStreamErrorCallback)
 
 	// fixes echoes and handle SIGTERM interrupt properly
-	if terminal, err := util.NewRawTerminal(streams.Stdin); err == nil {
+	if terminal, err := util2.NewRawTerminal(streams.Stdin); err == nil {
 		defer terminal.Restore()
 	}
 

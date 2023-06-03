@@ -2,10 +2,9 @@ package command
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/old/util"
 
 	"github.com/spf13/cobra"
-
-	"github.com/hckops/hckctl/pkg/util"
 )
 
 // go tool nm ./build/hckctl | grep commit

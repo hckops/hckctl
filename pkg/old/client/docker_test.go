@@ -1,13 +1,12 @@
 package client
 
 import (
+	"github.com/hckops/hckctl/pkg/old/schema"
 	"testing"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/hckops/hckctl/pkg/schema"
 )
 
 var testPorts = []schema.PortV1{

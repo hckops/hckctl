@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/old/util"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -13,8 +14,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-
-	"github.com/hckops/hckctl/pkg/util"
 )
 
 const (

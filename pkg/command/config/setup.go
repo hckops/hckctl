@@ -1,6 +1,7 @@
 package config
 
 import (
+	util2 "github.com/hckops/hckctl/pkg/old/util"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,7 +11,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/hckops/hckctl/pkg/command/common"
-	"github.com/hckops/hckctl/pkg/util"
 )
 
 const (
@@ -38,7 +38,7 @@ func initConfig(force bool) error {
 	configPath := filepath.Join(configDir, configName+"."+configType)
 
 	// see https://github.com/spf13/viper/issues/430
-	if err := util.CreateBaseDir(configPath); err != nil {
+	if err := util2.CreateBaseDir(configPath); err != nil {
 		return errors.Wrap(err, "error creating config dir")
 	}
 
@@ -90,7 +90,7 @@ func createDefaultConfig(configPath string) error {
 	cliConfig := common.NewConfig(logFile)
 
 	var configString string
-	if configString, err = util.ToYaml(&cliConfig); err != nil {
+	if configString, err = util2.ToYaml(&cliConfig); err != nil {
 		return errors.Wrap(err, "error encoding config")
 	}
 	if err := viper.ReadConfig(strings.NewReader(configString)); err != nil {

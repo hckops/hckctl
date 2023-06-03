@@ -3,6 +3,9 @@ package box
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/hckops/hckctl/pkg/old/common"
+	"github.com/hckops/hckctl/pkg/old/schema"
+	util2 "github.com/hckops/hckctl/pkg/old/util"
 	"io"
 	"net"
 	"os"
@@ -14,9 +17,6 @@ import (
 
 	"github.com/hckops/hckctl/internal/config"
 	"github.com/hckops/hckctl/internal/terminal"
-	"github.com/hckops/hckctl/pkg/common"
-	"github.com/hckops/hckctl/pkg/schema"
-	"github.com/hckops/hckctl/pkg/util"
 )
 
 type RemoteSshBox struct {
@@ -101,7 +101,7 @@ func (remote *RemoteSshBox) sendRequest(payload string) string {
 func (remote *RemoteSshBox) tunnelBox(boxId string) {
 
 	for _, port := range remote.template.NetworkPorts() {
-		localPort, _ := util.GetLocalPort(port.Local)
+		localPort, _ := util2.GetLocalPort(port.Local)
 
 		openPort := schema.PortV1{
 			Alias:  port.Alias,
@@ -169,7 +169,7 @@ func (remote *RemoteSshBox) exec(boxId string) {
 		remote.loader.Halt(err, "error streams")
 	}
 
-	if rawTerminal, err := util.NewRawTerminal(os.Stdin); err == nil {
+	if rawTerminal, err := util2.NewRawTerminal(os.Stdin); err == nil {
 		defer rawTerminal.Restore()
 	} else {
 		remote.log.Warn().Err(err).Msg("error terminal")

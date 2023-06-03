@@ -2,14 +2,13 @@ package old
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/old/schema"
+	"github.com/hckops/hckctl/pkg/old/template"
 	"os"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-
-	"github.com/hckops/hckctl/pkg/schema"
-	"github.com/hckops/hckctl/pkg/template"
 )
 
 func NewTemplateCmd() *cobra.Command {

@@ -2,14 +2,14 @@ package box
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/old/client"
+	"github.com/hckops/hckctl/pkg/old/model"
+	"github.com/hckops/hckctl/pkg/old/schema"
 
 	"github.com/rs/zerolog"
 	logger "github.com/rs/zerolog/log"
 
 	"github.com/hckops/hckctl/internal/terminal"
-	"github.com/hckops/hckctl/pkg/client"
-	"github.com/hckops/hckctl/pkg/model"
-	"github.com/hckops/hckctl/pkg/schema"
 )
 
 type LocalDockerBox struct {

@@ -2,10 +2,10 @@ package config
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/old/util"
 	"net"
 	"strconv"
 
-	"github.com/hckops/hckctl/pkg/util"
 	"github.com/rs/zerolog/log"
 )
 
