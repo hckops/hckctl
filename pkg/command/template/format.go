@@ -4,13 +4,6 @@ import (
 	"github.com/thediveo/enumflag/v2"
 )
 
-type Format string
-
-const (
-	yamlFormat Format = "yaml"
-	jsonFormat Format = "json"
-)
-
 type formatFlag enumflag.Flag
 
 const (
@@ -18,19 +11,21 @@ const (
 	jsonFlag
 )
 
-var formats = map[formatFlag]Format{
-	yamlFlag: yamlFormat,
-	jsonFlag: jsonFormat,
+var formatIds = map[formatFlag][]string{
+	yamlFlag: {"yaml", "yml"},
+	jsonFlag: {"json"},
 }
 
-func (f formatFlag) value() Format {
-	return formats[f]
+func (f formatFlag) value() string {
+	return formatIds[f][0]
 }
 
-func toFormatIds() map[formatFlag][]string {
-	var formatIds = make(map[formatFlag][]string)
-	for flag, format := range formats {
-		formatIds[flag] = []string{string(format)}
+func formatValues() []string {
+	var values []string
+	for _, formatId := range formatIds {
+		for _, format := range formatId {
+			values = append(values, format)
+		}
 	}
-	return formatIds
+	return values
 }

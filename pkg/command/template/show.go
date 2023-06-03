@@ -34,8 +34,8 @@ func NewTemplateShowCmd(templateOpts *templateCmdOptions) *cobra.Command {
 	)
 
 	// --format (enum)
-	formatValue := enumflag.New(&opts.format, formatFlagName, toFormatIds(), enumflag.EnumCaseInsensitive)
-	formatUsage := fmt.Sprintf("output format, one of %s", strings.Join([]string{string(yamlFormat), string(jsonFormat)}, "|"))
+	formatValue := enumflag.New(&opts.format, formatFlagName, formatIds, enumflag.EnumCaseInsensitive)
+	formatUsage := fmt.Sprintf("output format, one of %s", strings.Join(formatValues(), "|"))
 	command.Flags().Var(formatValue, formatFlagName, formatUsage)
 
 	return command
@@ -56,7 +56,7 @@ func (opts *templateShowCmdOptions) run(cmd *cobra.Command, args []string) error
 	return nil
 }
 
-func showLocalTemplate(format Format, path string) error {
+func showLocalTemplate(format, path string) error {
 	log.Debug().Msgf("show local template: format=%v path=%s", format, path)
 
 	localTemplate, err := util.ReadFile(path)
@@ -70,7 +70,7 @@ func showLocalTemplate(format Format, path string) error {
 	return nil
 }
 
-func showRemoteTemplate(format Format, name, revision string) error {
+func showRemoteTemplate(format, name, revision string) error {
 	log.Debug().Msgf("show remote template: format=%v name=%s revision=%s", format, name, revision)
 	return nil
 }
