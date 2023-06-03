@@ -38,7 +38,7 @@ func NewTemplateCmd() *cobra.Command {
 			# prints template in json format (default yaml)
 			hckctl template alpine --format json
 
-			# validate and prints local template
+			# validates and prints local template
 			hckctl template ../megalopolis/boxes/official/alpine.yml --local
 		`),
 		RunE: opts.run,
@@ -80,19 +80,23 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// TODO
 func printLocalTemplate(format, path string) error {
 	log.Debug().Msgf("print local template: format=%v path=%s", format, path)
 
-	localTemplate, err := template.RequestLocalTemplate(path)
+	localTemplate, err := template.LoadLocalBoxTemplate(path)
 	if err != nil {
 		return errors.Wrapf(err, "invalid local template %s", localTemplate)
 	}
+
+	//value, _ := util.ToJsonIndent(box)
 
 	fmt.Println(fmt.Sprintf("# %s", path))
 	fmt.Print(localTemplate)
 	return nil
 }
 
+// TODO
 func printRemoteTemplate(format, name, revision string) error {
 	log.Debug().Msgf("print remote template: format=%v name=%s revision=%s", format, name, revision)
 	return nil

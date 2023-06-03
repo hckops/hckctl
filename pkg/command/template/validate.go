@@ -3,9 +3,11 @@ package template
 import (
 	"fmt"
 
+	"github.com/MakeNowJust/heredoc"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/hckops/hckctl/pkg/command/common"
+	"github.com/hckops/hckctl/pkg/template"
 )
 
 type templateValidateCmdOptions struct {
@@ -19,16 +21,35 @@ func NewTemplateValidateCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "validate [path]",
 		Short: "validate template",
-		RunE:  opts.run,
+		Example: heredoc.Doc(`
+
+			# validates a local template
+			hckctl template validate ../megalopolis/boxes/official/alpine.yml
+		`),
+		RunE: opts.run,
 	}
 
-	command.Flags().StringVarP(&opts.kind, "kind", common.NoneFlagShortHand, "", "expected template kind")
+	// TODO implement flag: parse value and compare with result
+	// command.Flags().StringVarP(&opts.kind, "kind", common.NoneFlagShortHand, "", "expected template kind")
 
 	return command
 }
 
-// TODO validate multiple templates in the given path (not only single file) + add regex filter
+// TODO use in gh-action, validate multiple templates in the given path (not only single file) + add regex filter
 func (opts *templateValidateCmdOptions) run(cmd *cobra.Command, args []string) error {
-	fmt.Println("not implemented")
+	if len(args) == 1 {
+		return validateLocalTemplate(args[0])
+	} else {
+		cmd.HelpFunc()(cmd, args)
+	}
+	return nil
+}
+
+func validateLocalTemplate(path string) error {
+	if kind, err := template.LoadLocalTemplate(path); err != nil {
+		return errors.Wrap(err, "KO")
+	} else {
+		fmt.Println(fmt.Sprintf("OK: %s", kind.String()))
+	}
 	return nil
 }

@@ -3,6 +3,8 @@ package common
 import (
 	"net"
 	"strconv"
+
+	"github.com/hckops/hckctl/pkg/template/schema"
 )
 
 // ConfigRef is a wrapper used to avoid global variables and to reference the config value in the commands
@@ -63,7 +65,7 @@ type KubeResources struct {
 
 func NewConfig(logFile string) *ConfigV1 {
 	return &ConfigV1{
-		Kind: "config/v1",
+		Kind: schema.KindConfigV1.String(),
 		Log: LogConfig{
 			Level:    "info",
 			FilePath: logFile,
