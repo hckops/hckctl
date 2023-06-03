@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schema.hckops.com/lab-v1.json",
+  "title": "LabV1",
+  "description": "Defines the template of a lab",
+  "type": "object",
+  "properties": {
+    "kind": {
+      "description": "The type and version of the lab",
+      "type": "string"
+    },
+    "name": {
+      "description": "The name of the lab",
+      "type": "string"
+    },
+    "tags": {
+      "description": "Tags of the lab",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "boxes": {
+      "description": "The boxes available in the lab",
+      "type": "object",
+      "name": {
+        "description": "The name of the box",
+        "type": "string"
+      },
+      "template": {
+        "description": "The reference template of the box",
+        "type": "object",
+        "name": {
+          "description": "The name of the template",
+          "type": "string"
+        }
+      },
+      "size": {
+        "description": "The size of the box",
+        "type": "string",
+        "enum": [ "XS", "S", "M", "L", "XL" ]
+      },
+      "vpn": {
+        "description": "To enable vpn connection",
+        "type": "boolean"
+      },
+      "envs": {
+        "description": "Additional environment variables available in the box",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "name": {
+            "description": "The name of the environment variable",
+            "type": "string"
+          },
+          "value": {
+            "description": "The value of the environment variable",
+            "type": "string"
+          }
+        }
+      },
+      "secrets": {
+        "description": "The secrets to mount in the box",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "name": {
+            "description": "The name of the secret",
+            "type": "string"
+          },
+          "localRef": {
+            "description": "The local path of the secret",
+            "type": "string"
+          },
+          "remoteRef": {
+            "description": "The remote path of the secret",
+            "type": "string"
+          },
+          "alias": {
+            "description": "The alias of the secret key",
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "kind",
+    "name",
+    "tags"
+  ]
+}

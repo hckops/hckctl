@@ -2,19 +2,19 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schema.hckops.com/box-v1.json",
   "title": "BoxV1",
-  "description": "TODO",
+  "description": "Defines the template of a box",
   "type": "object",
   "properties": {
     "kind": {
-      "description": "The type and version of the template",
+      "description": "The type and version of the box",
       "type": "string"
     },
     "name": {
-      "description": "The name of the template",
+      "description": "The name of the box",
       "type": "string"
     },
     "tags": {
-      "description": "Tags for the template",
+      "description": "Tags of the box",
       "type": "array",
       "items": {
         "type": "string"
@@ -38,11 +38,15 @@
         "repository"
       ]
     },
+    "shell": {
+      "description": "The default shell of the box",
+      "type": "string"
+    },
     "network": {
-      "description": "Network of the template",
+      "description": "The network configuration of the box",
       "type": "object",
       "ports": {
-        "description": "Ports of the template",
+        "description": "Ports available from the box",
         "type": "array",
         "items": {
           "type": "string"

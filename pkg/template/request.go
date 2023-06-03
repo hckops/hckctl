@@ -1,12 +1,10 @@
 package template
 
 import (
-	"github.com/hckops/hckctl/pkg/util"
 	"github.com/pkg/errors"
-)
 
-type TemplateRequest struct {
-}
+	"github.com/hckops/hckctl/pkg/util"
+)
 
 func RequestLocalTemplate(path string) (string, error) {
 	localTemplate, err := util.ReadFile(path)

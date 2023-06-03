@@ -14,7 +14,7 @@ type BoxV1 struct {
 	}
 }
 
-type Port struct {
+type BoxPort struct {
 	Alias  string
 	Local  string
 	Remote string
