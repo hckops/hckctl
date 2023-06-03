@@ -35,7 +35,7 @@ func NewBoxCmd(configRef *common.ConfigRef) *cobra.Command {
 	)
 
 	// --path
-	command.Flags().StringVarP(&opts.path, pathFlag, "p", "", "load a local template")
+	command.Flags().StringVarP(&opts.path, pathFlag, "p", "", "local path")
 
 	// --revision
 	command.Flags().StringVarP(&opts.revision, revisionFlag, "r", common.DefaultMegalopolisBranch, "megalopolis version i.e. branch|tag|sha")
@@ -53,7 +53,7 @@ func NewBoxCmd(configRef *common.ConfigRef) *cobra.Command {
 	command.AddCommand(NewBoxDeleteCmd(opts))
 	command.AddCommand(NewBoxExecCmd(opts))
 	command.AddCommand(NewBoxListCmd(opts))
-	command.AddCommand(NewBoxOpenCmd(opts))
+	command.AddCommand(NewBoxOpenCmd(opts)) // default
 	command.AddCommand(NewBoxTunnelCmd(opts))
 
 	return command

@@ -1,8 +1,6 @@
 package template
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/hckops/hckctl/pkg/command/common"
@@ -26,19 +24,32 @@ func NewTemplateCmd(configRef *common.ConfigRef) *cobra.Command {
 		RunE:  opts.run,
 	}
 
-	command.PersistentFlags().StringVarP(&opts.path, "path", "p", "", "load a local template")
-	command.PersistentFlags().StringVarP(&opts.revision, "revision", "r", "main", "megalopolis version i.e. branch|tag|sha")
-	command.MarkFlagsMutuallyExclusive("path", "revision")
+	const (
+		pathFlag     = "path"
+		revisionFlag = "revision"
+	)
+	command.PersistentFlags().StringVarP(&opts.path, pathFlag, "p", "", "local path")
+	command.PersistentFlags().StringVarP(&opts.revision, revisionFlag, "r", common.DefaultMegalopolisBranch, "megalopolis version i.e. branch|tag|sha")
+	command.MarkFlagsMutuallyExclusive(pathFlag, revisionFlag)
 
-	command.AddCommand(NewTemplateListCmd(opts))
-	command.AddCommand(NewTemplateShowCmd(opts))
+	command.AddCommand(NewTemplateShowCmd(opts)) // default
 	command.AddCommand(NewTemplateValidateCmd(opts))
+
+	listCommand := NewTemplateListCmd(opts)
+	listCommand.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		// hide flag for this command
+		command.PersistentFlags().MarkHidden(pathFlag)
+		command.Parent().HelpFunc()(cmd, args)
+	})
+	command.AddCommand(listCommand)
 
 	return command
 }
 
 func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
-	// TODO alias of show
-	fmt.Println("not implemented")
-	return nil
+	showOpts := &templateShowCmdOptions{
+		template: opts,
+		format:   yamlFlag,
+	}
+	return showOpts.run(cmd, args)
 }

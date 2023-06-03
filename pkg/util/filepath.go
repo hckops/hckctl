@@ -24,3 +24,11 @@ func createBaseDirMod(path string, mod os.FileMode) error {
 	}
 	return nil
 }
+
+func ReadFile(path string) (string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to read file %s", path)
+	}
+	return string(data), nil
+}

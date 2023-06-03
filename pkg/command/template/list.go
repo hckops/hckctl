@@ -8,10 +8,10 @@ import (
 	"github.com/hckops/hckctl/pkg/command/common"
 )
 
-// TODO order, columns, etc.
+// TODO add order, columns, etc.
 type templateListCmdOptions struct {
 	template *templateCmdOptions
-	kind     string // TODO box, lab
+	kind     string // TODO filter: comma separated list e.g. "box,lab"
 }
 
 func NewTemplateListCmd(templateOpts *templateCmdOptions) *cobra.Command {

@@ -2,7 +2,7 @@ package old
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -69,7 +69,7 @@ func runTemplateRemoteCmd(name, revision string) {
 }
 
 func loadTemplate(path string) (string, error) {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return "", errors.Wrapf(err, "unable to load template: %s", path)
 	}

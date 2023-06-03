@@ -12,13 +12,6 @@ import (
 	templateCmd "github.com/hckops/hckctl/pkg/command/template"
 )
 
-// nested folders are created if they don't exist
-// HCK_CONFIG_DIR=/tmp/<PATH>/<SUB_PATH> ./build/hckctl config
-
-// precedence override (use "env" to allow dot notation): flag > env > config
-// tail -F /tmp/hckctl/test.log
-// env HCK_CONFIG_LOG.FILEPATH=/tmp/hckctl/test.log ./build/hckctl config --log-level debug
-
 func NewRootCmd() *cobra.Command {
 
 	// define pointer/reference to pass around in all commands and initialize in each PersistentPreRunE
