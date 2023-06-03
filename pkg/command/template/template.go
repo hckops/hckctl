@@ -2,16 +2,16 @@ package template
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"strings"
 
 	"github.com/MakeNowJust/heredoc"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag/v2"
 
 	"github.com/hckops/hckctl/pkg/command/common"
-	"github.com/hckops/hckctl/pkg/util"
+	"github.com/hckops/hckctl/pkg/template"
 )
 
 type templateCmdOptions struct {
@@ -39,7 +39,7 @@ func NewTemplateCmd() *cobra.Command {
 			hckctl template alpine --format json
 
 			# validate and prints local template
-			hckctl template boxes/official/alpine.yml --local
+			hckctl template ../megalopolis/boxes/official/alpine.yml --local
 		`),
 		RunE: opts.run,
 	}
@@ -83,14 +83,12 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 func printLocalTemplate(format, path string) error {
 	log.Debug().Msgf("print local template: format=%v path=%s", format, path)
 
-	// TODO refactor and move all in RequestLocalTemplate
-	localTemplate, err := util.ReadFile(path)
+	localTemplate, err := template.RequestLocalTemplate(path)
 	if err != nil {
-		return errors.Wrapf(err, "local template not found %s", localTemplate)
+		return errors.Wrapf(err, "invalid local template %s", localTemplate)
 	}
 
-	// TODO validation
-
+	fmt.Println(fmt.Sprintf("# %s", path))
 	fmt.Print(localTemplate)
 	return nil
 }
