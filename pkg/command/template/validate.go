@@ -47,11 +47,14 @@ func (opts *templateValidateCmdOptions) run(cmd *cobra.Command, args []string) e
 }
 
 func validateLocalTemplate(path string) error {
+	log.Debug().Msgf("validate local template: path=%s", path)
+
 	if kind, err := template.LoadLocalTemplate(path); err != nil {
-		log.Warn().Err(err).Msg("invalid local template")
+		log.Warn().Err(err).Msgf("invalid local template: path=%s", path)
 		return errors.New("KO")
 	} else {
-		fmt.Println(fmt.Sprintf("OK: %s", kind.String()))
+		log.Info().Msgf("valid template: path=%s kind=%s", path, kind.String())
+		fmt.Println(fmt.Sprintf("OK %s", kind.String()))
 	}
 	return nil
 }
