@@ -38,7 +38,7 @@ func NewBoxCmd(configRef *common.ConfigRef) *cobra.Command {
 	command.Flags().StringVarP(&opts.path, pathFlag, "p", "", "local path")
 
 	// --revision
-	command.Flags().StringVarP(&opts.revision, revisionFlag, "r", common.DefaultMegalopolisBranch, "megalopolis version i.e. branch|tag|sha")
+	command.Flags().StringVarP(&opts.revision, revisionFlag, "r", common.RevisionBranch, common.RevisionUsage)
 	viper.BindPFlag(fmt.Sprintf("box.%s", revisionFlag), command.Flags().Lookup(revisionFlag))
 
 	command.MarkFlagsMutuallyExclusive(pathFlag, revisionFlag)

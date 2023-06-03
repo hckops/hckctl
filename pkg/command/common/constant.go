@@ -1,7 +1,10 @@
 package common
 
 const (
-	CliName                  = "hckctl"
-	DefaultMegalopolisBranch = "main"
-	NoneFlagShortHand        = ""
+	CliName = "hckctl"
+
+	NoneFlagShortHand = ""
+
+	RevisionBranch = "main"
+	RevisionUsage  = "megalopolis version i.e. branch|tag|sha"
 )

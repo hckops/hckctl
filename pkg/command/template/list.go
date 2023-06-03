@@ -4,29 +4,23 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-
-	"github.com/hckops/hckctl/pkg/command/common"
 )
 
-// TODO add order, columns, etc.
 type templateListCmdOptions struct {
-	template *templateCmdOptions
-	kind     string // TODO filter: comma separated list e.g. "box,lab"
+	kind   string // TODO filter comma separated list e.g. "box,lab"
+	order  string // TODO sort output
+	column string // TODO output only specific fields
 }
 
-func NewTemplateListCmd(templateOpts *templateCmdOptions) *cobra.Command {
+func NewTemplateListCmd() *cobra.Command {
 
-	opts := &templateListCmdOptions{
-		template: templateOpts,
-	}
+	opts := &templateListCmdOptions{}
 
 	command := &cobra.Command{
 		Use:   "list",
 		Short: "list templates",
 		RunE:  opts.run,
 	}
-
-	command.Flags().StringVarP(&opts.kind, "kind", common.NoneFlagShortHand, "", "filter by kind")
 
 	return command
 }

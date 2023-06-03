@@ -69,7 +69,7 @@ func NewConfig(logFile string) *Config {
 			FilePath: logFile,
 		},
 		Box: BoxConfig{
-			Revision: DefaultMegalopolisBranch,
+			Revision: RevisionBranch,
 			Provider: Docker,
 			Kube: KubeConfig{
 				Namespace:  "labs",
