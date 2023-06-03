@@ -3,6 +3,7 @@ package schema
 import (
 	"fmt"
 
+	"github.com/rs/zerolog/log"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	"gopkg.in/yaml.v3"
 )
@@ -21,9 +22,11 @@ func ValidateAll(data string) (SchemaKind, error) {
 		if err := sv.validationFunc(data); err == nil {
 			// found valid schema
 			return sv.kind, nil
+		} else {
+			log.Debug().Err(err).Msgf("failed to match schema %s", sv.kind)
 		}
 	}
-	return -1, fmt.Errorf("unable to find valid schema")
+	return -1, fmt.Errorf("invalid schema")
 }
 
 func ValidateBoxV1(data string) error {

@@ -2,6 +2,7 @@ package template
 
 import (
 	"fmt"
+	"github.com/rs/zerolog/log"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/pkg/errors"
@@ -47,7 +48,8 @@ func (opts *templateValidateCmdOptions) run(cmd *cobra.Command, args []string) e
 
 func validateLocalTemplate(path string) error {
 	if kind, err := template.LoadLocalTemplate(path); err != nil {
-		return errors.Wrap(err, "KO")
+		log.Warn().Err(err).Msg("invalid local template")
+		return errors.New("KO")
 	} else {
 		fmt.Println(fmt.Sprintf("OK: %s", kind.String()))
 	}

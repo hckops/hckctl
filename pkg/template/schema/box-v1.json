@@ -7,7 +7,8 @@
   "properties": {
     "kind": {
       "description": "The type and version of the box",
-      "type": "string"
+      "type": "string",
+      "const": "box/v1"
     },
     "name": {
       "description": "The name of the box",

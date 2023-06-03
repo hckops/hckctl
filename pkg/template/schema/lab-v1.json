@@ -7,7 +7,8 @@
   "properties": {
     "kind": {
       "description": "The type and version of the lab",
-      "type": "string"
+      "type": "string",
+      "const": "lab/v1"
     },
     "name": {
       "description": "The name of the lab",
@@ -24,63 +25,72 @@
     },
     "boxes": {
       "description": "The boxes available in the lab",
-      "type": "object",
-      "name": {
-        "description": "The name of the box",
-        "type": "string"
-      },
-      "template": {
-        "description": "The reference template of the box",
+      "type": "array",
+      "items": {
         "type": "object",
         "name": {
-          "description": "The name of the template",
+          "description": "The name of the box",
           "type": "string"
-        }
-      },
-      "size": {
-        "description": "The size of the box",
-        "type": "string",
-        "enum": [ "XS", "S", "M", "L", "XL" ]
-      },
-      "vpn": {
-        "description": "To enable vpn connection",
-        "type": "boolean"
-      },
-      "envs": {
-        "description": "Additional environment variables available in the box",
-        "type": "array",
-        "items": {
+        },
+        "template": {
+          "description": "The reference template of the box",
           "type": "object",
           "name": {
-            "description": "The name of the environment variable",
-            "type": "string"
-          },
-          "value": {
-            "description": "The value of the environment variable",
+            "description": "The name of the template",
             "type": "string"
           }
-        }
-      },
-      "secrets": {
-        "description": "The secrets to mount in the box",
-        "type": "array",
-        "items": {
-          "type": "object",
-          "name": {
-            "description": "The name of the secret",
-            "type": "string"
-          },
-          "localRef": {
-            "description": "The local path of the secret",
-            "type": "string"
-          },
-          "remoteRef": {
-            "description": "The remote path of the secret",
-            "type": "string"
-          },
-          "alias": {
-            "description": "The alias of the secret key",
-            "type": "string"
+        },
+        "size": {
+          "description": "The size of the box",
+          "type": "string",
+          "enum": [
+            "XS",
+            "S",
+            "M",
+            "L",
+            "XL"
+          ]
+        },
+        "vpn": {
+          "description": "To enable vpn connection",
+          "type": "boolean"
+        },
+        "envs": {
+          "description": "Additional environment variables available in the box",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "name": {
+              "description": "The name of the environment variable",
+              "type": "string"
+            },
+            "value": {
+              "description": "The value of the environment variable",
+              "type": "string"
+            }
+          }
+        },
+        "secrets": {
+          "description": "The secrets to mount in the box",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "name": {
+              "description": "The name of the secret",
+              "type": "string"
+            },
+            "localRef": {
+              "description": "The local path of the secret",
+              "type": "string"
+            },
+            "remoteRef": {
+              "description": "The remote path of the secret",
+              "type": "string"
+            },
+            "alias": {
+              "description": "The alias of the secret key",
+              "type": "string"
+            }
           }
         }
       }
