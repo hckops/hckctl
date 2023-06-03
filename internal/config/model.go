@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"github.com/hckops/hckctl/pkg/old/util"
+	"github.com/hckops/hckctl/pkg/util"
 	"net"
 	"strconv"
 

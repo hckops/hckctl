@@ -2,9 +2,10 @@ package template
 
 import (
 	"fmt"
-	"github.com/hckops/hckctl/pkg/command/common"
 
 	"github.com/spf13/cobra"
+
+	"github.com/hckops/hckctl/pkg/command/common"
 )
 
 type templateValidateCmdOptions struct {

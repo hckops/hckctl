@@ -2,7 +2,6 @@ package template
 
 import (
 	"fmt"
-	"github.com/hckops/hckctl/pkg/old/util"
 	"strings"
 
 	"github.com/MakeNowJust/heredoc"
@@ -12,6 +11,7 @@ import (
 	"github.com/thediveo/enumflag/v2"
 
 	"github.com/hckops/hckctl/pkg/command/common"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 type templateCmdOptions struct {

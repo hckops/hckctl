@@ -153,16 +153,6 @@ log:
   filePath: /tmp/hckctl-ubuntu.log
 ```
 
-TODO
-```bash
-# nested folders are created if they don't exist
-HCK_CONFIG_DIR=/tmp/<PATH>/<SUB_PATH> ./build/hckctl config
-
-# precedence override (use "env" to allow dot notation): flag > env > config
-tail -F /tmp/hckctl/test.log
-env HCK_CONFIG_LOG.FILEPATH=/tmp/hckctl/test.log ./build/hckctl config --log-level debug
-```
-
 ## Development
 
 * [just](https://github.com/casey/just)
