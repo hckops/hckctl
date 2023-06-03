@@ -20,7 +20,7 @@ const (
 )
 
 // SetupConfig loads the config or initialize the default
-func SetupConfig() (*common.Config, error) {
+func SetupConfig() (*common.ConfigV1, error) {
 	err := initConfig(false)
 	if err != nil {
 		return nil, err
@@ -103,11 +103,11 @@ func createDefaultConfig(configPath string) error {
 	return nil
 }
 
-func loadConfig() (*common.Config, error) {
-	var configValue *common.Config
+func loadConfig() (*common.ConfigV1, error) {
+	var configV1 *common.ConfigV1
 	// "exact" makes sure to fail if fields are invalid
-	if err := viper.UnmarshalExact(&configValue); err != nil {
+	if err := viper.UnmarshalExact(&configV1); err != nil {
 		return nil, errors.Wrap(err, "error decoding config")
 	}
-	return configValue, nil
+	return configV1, nil
 }

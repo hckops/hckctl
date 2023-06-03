@@ -7,12 +7,12 @@ import (
 
 // ConfigRef is a wrapper used to avoid global variables and to reference the config value in the commands
 // before they are actually loaded with viper in each PersistentPreRunE.
-// The Config model is in a common package to avoid "import cycle not allowed"
+// The ConfigV1 model is in a common package to avoid "import cycle not allowed"
 type ConfigRef struct {
-	Config *Config
+	Config *ConfigV1
 }
 
-type Config struct {
+type ConfigV1 struct {
 	Kind string    `yaml:"kind"`
 	Box  BoxConfig `yaml:"box"`
 	Log  LogConfig `yaml:"log"`
@@ -61,8 +61,8 @@ type KubeResources struct {
 	Cpu    string `yaml:"cpu"`
 }
 
-func NewConfig(logFile string) *Config {
-	return &Config{
+func NewConfig(logFile string) *ConfigV1 {
+	return &ConfigV1{
 		Kind: "config/v1",
 		Log: LogConfig{
 			Level:    "info",
