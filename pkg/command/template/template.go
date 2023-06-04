@@ -26,7 +26,7 @@ func NewTemplateCmd() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "template [name]",
-		Short: "validate and print template",
+		Short: "validate and print templates",
 		Example: heredoc.Doc(`
 
 			# prints remote alpine template

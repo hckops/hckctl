@@ -77,10 +77,10 @@ func SetFileOutput(filePath string) (func() error, error) {
 func closeFileCallback(file *os.File) func() error {
 	return func() error {
 		if file != nil {
-			log.Debug().Msg("log file closed")
+			log.Debug().Msg("closing log file")
 			return file.Close()
 		}
-		log.Debug().Msg("log file not closed")
+		log.Warn().Msg("log file already closed")
 		return nil
 	}
 }

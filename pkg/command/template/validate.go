@@ -24,7 +24,7 @@ func NewTemplateValidateCmd() *cobra.Command {
 		Short: "validate template",
 		Example: heredoc.Doc(`
 
-			# validates a local template
+			# validates local template
 			hckctl template validate ../megalopolis/boxes/official/alpine.yml
 		`),
 		RunE: opts.run,

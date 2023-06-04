@@ -22,7 +22,7 @@ func NewLabCmd(configRef *common.ConfigRef) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "lab [name]",
-		Short: "manage a lab",
+		Short: "manage labs",
 		RunE:  opts.run,
 	}
 

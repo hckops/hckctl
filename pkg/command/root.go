@@ -50,7 +50,7 @@ func NewRootCmd() *cobra.Command {
 			cmd.HelpFunc()(cmd, args)
 		},
 		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
-			// close properly log file
+			// close log file properly
 			return logCallback()
 		},
 		CompletionOptions: cobra.CompletionOptions{

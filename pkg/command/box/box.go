@@ -24,7 +24,7 @@ func NewBoxCmd(configRef *common.ConfigRef) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "box [name]",
-		Short: "attach and tunnel a container",
+		Short: "attach and tunnel containers",
 		RunE:  opts.run,
 	}
 
