@@ -12,7 +12,7 @@ import (
 
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/command/config"
-	"github.com/hckops/hckctl/pkg/template"
+	"github.com/hckops/hckctl/pkg/template/loader"
 )
 
 type templateCmdOptions struct {
@@ -75,47 +75,37 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 	format := opts.format.value()
 
 	if opts.local {
-		return printLocalTemplate(&template.LocalTemplateOpts{
+		localOpts := &loader.LocalTemplateOpts{
 			Path:   args[0],
 			Format: format,
-		})
+		}
+		log.Debug().Msgf("print local template: %+v", localOpts)
+		return printTemplate(loader.NewLocalTemplateLoader(localOpts))
+
 	} else if len(args) == 1 {
-		return printRemoteTemplate(&template.RemoteTemplateOpts{
+		remoteOpts := &loader.RemoteTemplateOpts{
 			SourceCacheDir: opts.configRef.Config.Template.DirPath,
 			SourceUrl:      common.TemplateSourceUrl,
 			Revision:       opts.revision,
 			Name:           args[0],
 			Format:         format,
-		})
+		}
+		log.Debug().Msgf("print remote template: %+v", remoteOpts)
+		return printTemplate(loader.NewRemoteTemplateLoader(remoteOpts))
+
 	} else {
 		cmd.HelpFunc()(cmd, args)
 	}
 	return nil
 }
 
-func printLocalTemplate(opts *template.LocalTemplateOpts) error {
-	if templateValue, err := template.LoadLocalTemplate(opts); err != nil {
-		log.Warn().Err(err).Msgf("error printing template: path=%s", opts.Path)
+func printTemplate(loader loader.TemplateLoader) error {
+	if templateValue, err := loader.Load(); err != nil {
+		log.Warn().Err(err).Msg("error printing template")
 		return errors.New("invalid")
 	} else {
-		log.Debug().Msgf("print template: path=%s kind=%s\n%s", opts.Path, templateValue.Kind.String(), templateValue.Data)
+		log.Debug().Msgf("print template: kind=%s\n%s", templateValue.Kind.String(), templateValue.Data)
 		fmt.Print(templateValue.Data)
 	}
 	return nil
 }
-
-// TODO
-func printRemoteTemplate(opts *template.RemoteTemplateOpts) error {
-	return nil
-}
-
-//func printTemplate(loader template.TemplateLoader) error {
-//	if templateValue, err := loader.Load(); err != nil {
-//		log.Warn().Err(err).Msgf("error printing template: path=%s", loader.Path)
-//		return errors.New("invalid")
-//	} else {
-//		log.Debug().Msgf("print template: path=%s kind=%s\n%s", opts.Path, templateValue.Kind.String(), templateValue.Data)
-//		fmt.Print(templateValue.Data)
-//	}
-//	return nil
-//}

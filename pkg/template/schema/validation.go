@@ -31,11 +31,11 @@ func ValidateAll(data string) (SchemaKind, error) {
 }
 
 func ValidateBoxV1(data string) error {
-	return validateSchema("box-v1.json", BoxV1Schema, data)
+	return validateSchema("box-v1.json", boxV1Schema, data)
 }
 
 func ValidateLabV1(data string) error {
-	return validateSchema("lab-v1.json", LabV1Schema, data)
+	return validateSchema("lab-v1.json", labV1Schema, data)
 }
 
 // returns nil if valid

@@ -1,9 +1,10 @@
-package template
+package loader
 
 import (
 	"github.com/go-git/go-git/v5"
-	"github.com/hckops/hckctl/pkg/util"
 	"github.com/rs/zerolog/log"
+
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 type RemoteTemplateOpts struct {

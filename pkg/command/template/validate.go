@@ -8,7 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/hckops/hckctl/pkg/template"
+	"github.com/hckops/hckctl/pkg/template/loader"
 )
 
 type templateValidateCmdOptions struct {
@@ -47,9 +47,7 @@ func (opts *templateValidateCmdOptions) run(cmd *cobra.Command, args []string) e
 }
 
 func validateLocalTemplate(path string) error {
-	opts := &template.LocalTemplateOpts{Path: path, Format: template.YamlFormat.String()}
-
-	if templateValue, err := template.LoadLocalTemplate(opts); err != nil {
+	if templateValue, err := loader.NewDefaultLocalTemplateLoader(path).Load(); err != nil {
 		log.Warn().Err(err).Msgf("error validating local template: path=%s", path)
 		return errors.New("KO")
 	} else {

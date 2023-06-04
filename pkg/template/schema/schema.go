@@ -7,10 +7,10 @@ import (
 // see http://json-schema.org
 
 //go:embed box-v1.json
-var BoxV1Schema string
+var boxV1Schema string
 
 //go:embed lab-v1.json
-var LabV1Schema string
+var labV1Schema string
 
 type SchemaKind int
 
