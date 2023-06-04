@@ -36,7 +36,7 @@ func NewTemplateValidateCmd() *cobra.Command {
 	return command
 }
 
-// TODO use in gh-action, validate multiple templates in the given path (not only single file) + add regex filter
+// TODO use in gh-action: validate multiple templates in the given path (not only single file) + add regex filter
 func (opts *templateValidateCmdOptions) run(cmd *cobra.Command, args []string) error {
 	if len(args) == 1 {
 		return validateLocalTemplate(args[0])

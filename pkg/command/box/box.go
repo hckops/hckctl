@@ -39,7 +39,7 @@ func NewBoxCmd(configRef *common.ConfigRef) *cobra.Command {
 
 	// --revision
 	command.Flags().StringVarP(&opts.revision, revisionFlag, "r", common.RevisionBranch, common.RevisionUsage)
-	viper.BindPFlag(fmt.Sprintf("box.%s", revisionFlag), command.Flags().Lookup(revisionFlag))
+	viper.BindPFlag(fmt.Sprintf("template.%s", revisionFlag), command.Flags().Lookup(revisionFlag))
 
 	command.MarkFlagsMutuallyExclusive(pathFlag, revisionFlag)
 

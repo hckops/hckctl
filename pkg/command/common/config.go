@@ -15,9 +15,10 @@ type ConfigRef struct {
 }
 
 type ConfigV1 struct {
-	Kind string    `yaml:"kind"`
-	Box  BoxConfig `yaml:"box"`
-	Log  LogConfig `yaml:"log"`
+	Kind     string         `yaml:"kind"`
+	Log      LogConfig      `yaml:"log"`
+	Template TemplateConfig `yaml:"template"`
+	Box      BoxConfig      `yaml:"box"`
 }
 
 type LogConfig struct {
@@ -25,8 +26,12 @@ type LogConfig struct {
 	FilePath string `yaml:"filePath"`
 }
 
+type TemplateConfig struct {
+	Revision string `yaml:"revision"`
+	DirPath  string `yaml:"dirPath"`
+}
+
 type BoxConfig struct {
-	Revision string      `yaml:"revision"`
 	Provider Provider    `yaml:"provider"`
 	Kube     KubeConfig  `yaml:"kube"`
 	Cloud    CloudConfig `yaml:"cloud"`
@@ -63,15 +68,18 @@ type KubeResources struct {
 	Cpu    string `yaml:"cpu"`
 }
 
-func NewConfig(logFile string) *ConfigV1 {
+func NewConfig(logFile, cacheDir string) *ConfigV1 {
 	return &ConfigV1{
 		Kind: schema.KindConfigV1.String(),
 		Log: LogConfig{
-			Level:    "info",
+			Level:    "info", // TODO enum
 			FilePath: logFile,
 		},
-		Box: BoxConfig{
+		Template: TemplateConfig{
 			Revision: RevisionBranch,
+			DirPath:  cacheDir,
+		},
+		Box: BoxConfig{
 			Provider: Docker,
 			Kube: KubeConfig{
 				Namespace:  "labs",

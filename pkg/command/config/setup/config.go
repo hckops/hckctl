@@ -1,4 +1,4 @@
-package config
+package setup
 
 import (
 	"os"
@@ -21,14 +21,14 @@ const (
 
 // SetupConfig loads the config or initialize the default
 func SetupConfig() (*common.ConfigV1, error) {
-	err := initConfig(false)
+	err := InitConfig(false)
 	if err != nil {
 		return nil, err
 	}
 	return loadConfig()
 }
 
-func initConfig(force bool) error {
+func InitConfig(force bool) error {
 	configDir, err := getConfigDir()
 	if err != nil {
 		return errors.Wrap(err, "invalid config dir")
@@ -81,13 +81,18 @@ func getConfigDir() (string, error) {
 
 func createDefaultConfig(configPath string) error {
 	// default log file
-	logFile, err := common.GetLogFile()
+	logFile, err := getLogFile()
 	if err != nil {
 		return errors.Wrap(err, "invalid log file")
 	}
+	// default cache dir
+	cacheDir, err := getCacheDir()
+	if err != nil {
+		return errors.Wrap(err, "invalid cache dir")
+	}
 
 	// default config
-	cliConfig := common.NewConfig(logFile)
+	cliConfig := common.NewConfig(logFile, cacheDir)
 
 	var configString string
 	if configString, err = util.EncodeYaml(&cliConfig); err != nil {
@@ -110,4 +115,9 @@ func loadConfig() (*common.ConfigV1, error) {
 		return nil, errors.Wrap(err, "error decoding config")
 	}
 	return configV1, nil
+}
+
+// TODO
+func getCacheDir() (string, error) {
+	return "TODO", nil
 }

@@ -89,7 +89,6 @@ func printLocalTemplate(format, path string) error {
 		return errors.New("invalid")
 	} else {
 		log.Info().Msgf("print template: path=%s kind=%s\n%s", path, response.Kind.String(), response.Value)
-		fmt.Println(fmt.Sprintf("# %s", path))
 		fmt.Print(response.Value)
 	}
 	return nil
