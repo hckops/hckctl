@@ -35,9 +35,13 @@ func NewDefaultLocalTemplateLoader(path string) *LocalTemplateLoader {
 }
 
 func (l *LocalTemplateLoader) Load() (*TemplateValue, error) {
-	data, err := util.ReadFile(l.opts.Path)
+	return loadLocalTemplate(l.opts)
+}
+
+func loadLocalTemplate(opts *LocalTemplateOpts) (*TemplateValue, error) {
+	data, err := util.ReadFile(opts.Path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "local template not found %s", l.opts.Path)
+		return nil, errors.Wrapf(err, "local template not found %s", opts.Path)
 	}
 
 	kind, err := schema.ValidateAll(data)
@@ -45,7 +49,7 @@ func (l *LocalTemplateLoader) Load() (*TemplateValue, error) {
 		return nil, errors.Wrapf(err, "invalid schema %s", data)
 	}
 
-	switch l.opts.Format {
+	switch opts.Format {
 	case template.YamlFormat.String():
 		return &TemplateValue{kind, data, template.YamlFormat}, nil
 	case template.JsonFormat.String():
@@ -56,6 +60,6 @@ func (l *LocalTemplateLoader) Load() (*TemplateValue, error) {
 			return &TemplateValue{kind, fmt.Sprintf("%s\n", jsonValue), template.JsonFormat}, nil
 		}
 	default:
-		return nil, fmt.Errorf("invalid Format %s", l.opts.Format)
+		return nil, fmt.Errorf("invalid Format %s", opts.Format)
 	}
 }
