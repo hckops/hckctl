@@ -2,11 +2,9 @@ package template
 
 import (
 	"fmt"
-
-	"github.com/pkg/errors"
-
 	"github.com/hckops/hckctl/pkg/template/schema"
 	"github.com/hckops/hckctl/pkg/util"
+	"github.com/pkg/errors"
 )
 
 type LocalTemplateOpts struct {
@@ -14,18 +12,18 @@ type LocalTemplateOpts struct {
 	Format string
 }
 
-type RemoteTemplateOpts struct {
-	SourceDir string
-	SourceUrl string
-	Revision  string
-	Name      string
-	Format    string
+type LocalTemplateLoader struct {
+	opts *LocalTemplateOpts
 }
 
-type TemplateValue struct {
-	Kind   schema.SchemaKind
-	Data   string
-	Format Format
+func NewLocalTemplateLoader(opts *LocalTemplateOpts) *LocalTemplateLoader {
+	return &LocalTemplateLoader{
+		opts: opts,
+	}
+}
+
+func (l *LocalTemplateLoader) Load() (*TemplateValue, error) {
+	return LoadLocalTemplate(l.opts)
 }
 
 func LoadLocalTemplate(opts *LocalTemplateOpts) (*TemplateValue, error) {
@@ -52,12 +50,4 @@ func LoadLocalTemplate(opts *LocalTemplateOpts) (*TemplateValue, error) {
 	default:
 		return nil, fmt.Errorf("invalid Format %s", opts.Format)
 	}
-}
-
-func LoadRemoteTemplate() {
-	// check if git source exists
-	// > if not download --> (if fail exit)
-	// > otherwise update --> (if fail WARN offline but continue)
-	// load local template
-	// list all templates
 }

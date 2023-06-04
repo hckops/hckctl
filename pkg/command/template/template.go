@@ -81,11 +81,11 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 		})
 	} else if len(args) == 1 {
 		return printRemoteTemplate(&template.RemoteTemplateOpts{
-			SourceDir: opts.configRef.Config.Template.DirPath,
-			SourceUrl: common.TemplateSourceUrl,
-			Revision:  opts.revision,
-			Name:      args[0],
-			Format:    format,
+			SourceCacheDir: opts.configRef.Config.Template.DirPath,
+			SourceUrl:      common.TemplateSourceUrl,
+			Revision:       opts.revision,
+			Name:           args[0],
+			Format:         format,
 		})
 	} else {
 		cmd.HelpFunc()(cmd, args)
@@ -95,7 +95,7 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 func printLocalTemplate(opts *template.LocalTemplateOpts) error {
 	if templateValue, err := template.LoadLocalTemplate(opts); err != nil {
-		log.Warn().Err(err).Msgf("error printing local template: path=%s", opts.Path)
+		log.Warn().Err(err).Msgf("error printing template: path=%s", opts.Path)
 		return errors.New("invalid")
 	} else {
 		log.Debug().Msgf("print template: path=%s kind=%s\n%s", opts.Path, templateValue.Kind.String(), templateValue.Data)
@@ -108,3 +108,14 @@ func printLocalTemplate(opts *template.LocalTemplateOpts) error {
 func printRemoteTemplate(opts *template.RemoteTemplateOpts) error {
 	return nil
 }
+
+//func printTemplate(loader template.TemplateLoader) error {
+//	if templateValue, err := loader.Load(); err != nil {
+//		log.Warn().Err(err).Msgf("error printing template: path=%s", loader.Path)
+//		return errors.New("invalid")
+//	} else {
+//		log.Debug().Msgf("print template: path=%s kind=%s\n%s", opts.Path, templateValue.Kind.String(), templateValue.Data)
+//		fmt.Print(templateValue.Data)
+//	}
+//	return nil
+//}

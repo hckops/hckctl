@@ -17,12 +17,17 @@ func CreateBaseDir(path string) error {
 
 func createBaseDirMod(path string, mod os.FileMode) error {
 	dir := filepath.Dir(path)
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
+	if IsPathNotExist(path) {
 		if err := os.MkdirAll(dir, mod); err != nil {
 			return errors.Wrapf(err, "unable to create dir %s", dir)
 		}
 	}
 	return nil
+}
+
+func IsPathNotExist(path string) bool {
+	_, err := os.Stat(path)
+	return os.IsNotExist(err)
 }
 
 func ReadFile(path string) (string, error) {
