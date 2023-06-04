@@ -67,25 +67,20 @@ func (l *RemoteTemplateLoader) refreshRevision() error {
 		return errors.Wrap(err, "unable to access repository")
 	}
 
-	// update current revision
+	// update previous revision and fetch latest changes
+	// set automatically default revision in case override is invalid
 	if err := workTree.Pull(&git.PullOptions{}); err != nil && err != git.NoErrAlreadyUpToDate {
-		return errors.Wrap(err, "unable to update revision")
+		return errors.Wrap(err, "unable to update previous revision")
 	}
 
-	// attempts checkout for the latest revision
-	checkoutStrategy := []*git.CheckoutOptions{
-		{Branch: plumbing.NewBranchReferenceName(l.opts.Revision)},
-		{Hash: plumbing.NewHash(l.opts.Revision)},
-		{Branch: plumbing.NewTagReferenceName(l.opts.Revision)},
+	// resolve supported revision to hash
+	hash, err := repository.ResolveRevision(plumbing.Revision(l.opts.Revision))
+	if err != nil {
+		return errors.Wrap(err, "unable to resolve hash revision")
 	}
-	var checkoutSuccess bool
-	for index, strategy := range checkoutStrategy {
-		if err := workTree.Checkout(strategy); err == nil {
-			log.Debug().Msgf("use checkout strategy %d", index)
-			checkoutSuccess = true
-		}
-	}
-	if !checkoutSuccess {
+
+	// checkout latest revision
+	if err := workTree.Checkout(&git.CheckoutOptions{Hash: *hash}); err != nil {
 		return errors.Wrap(err, "unable to checkout revision")
 	}
 
