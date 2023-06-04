@@ -11,18 +11,22 @@ import (
 	"github.com/thediveo/enumflag/v2"
 
 	"github.com/hckops/hckctl/pkg/command/common"
+	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/template"
 )
 
 type templateCmdOptions struct {
-	local    bool
-	revision string
-	format   formatFlag
+	configRef *config.ConfigRef
+	format    formatFlag
+	local     bool
+	revision  string
 }
 
-func NewTemplateCmd() *cobra.Command {
+func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 
-	opts := &templateCmdOptions{}
+	opts := &templateCmdOptions{
+		configRef: configRef,
+	}
 
 	command := &cobra.Command{
 		Use:   "template [name]",
@@ -71,31 +75,36 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 	format := opts.format.value()
 
 	if opts.local {
-		return printLocalTemplate(format, args[0])
+		return printLocalTemplate(&template.LocalTemplateOpts{
+			Path:   args[0],
+			Format: format,
+		})
 	} else if len(args) == 1 {
-		return printRemoteTemplate(format, args[0], opts.revision)
+		return printRemoteTemplate(&template.RemoteTemplateOpts{
+			SourceDir: opts.configRef.Config.Template.DirPath,
+			SourceUrl: common.TemplateSourceUrl,
+			Revision:  opts.revision,
+			Name:      args[0],
+			Format:    format,
+		})
 	} else {
 		cmd.HelpFunc()(cmd, args)
 	}
 	return nil
 }
 
-func printLocalTemplate(format, path string) error {
-	log.Debug().Msgf("print local template: format=%v path=%s", format, path)
-
-	request := &template.RequestLocalTemplate{Path: path, Format: format}
-	if response, err := template.LoadLocalTemplate(request); err != nil {
-		log.Warn().Err(err).Msgf("error printing local template: path=%s", path)
+func printLocalTemplate(opts *template.LocalTemplateOpts) error {
+	if templateValue, err := template.LoadLocalTemplate(opts); err != nil {
+		log.Warn().Err(err).Msgf("error printing local template: path=%s", opts.Path)
 		return errors.New("invalid")
 	} else {
-		log.Info().Msgf("print template: path=%s kind=%s\n%s", path, response.Kind.String(), response.Value)
-		fmt.Print(response.Value)
+		log.Debug().Msgf("print template: path=%s kind=%s\n%s", opts.Path, templateValue.Kind.String(), templateValue.Data)
+		fmt.Print(templateValue.Data)
 	}
 	return nil
 }
 
 // TODO
-func printRemoteTemplate(format, name, revision string) error {
-	log.Debug().Msgf("print remote template: format=%v name=%s revision=%s", format, name, revision)
+func printRemoteTemplate(opts *template.RemoteTemplateOpts) error {
 	return nil
 }

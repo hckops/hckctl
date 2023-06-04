@@ -5,6 +5,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/hckops/hckctl/pkg/template/model"
 	"github.com/hckops/hckctl/pkg/template/schema"
 	"github.com/hckops/hckctl/pkg/util"
 )
@@ -39,16 +40,16 @@ func ConvertFromYamlToJson(kind schema.SchemaKind, value string) (string, error)
 	}
 }
 
-func DecodeBoxFromYaml(value string) (*BoxV1, error) {
-	var box BoxV1
+func DecodeBoxFromYaml(value string) (*model.BoxV1, error) {
+	var box model.BoxV1
 	if err := yaml.Unmarshal([]byte(value), &box); err != nil {
 		return nil, fmt.Errorf("box decoder error: %v", err)
 	}
 	return &box, nil
 }
 
-func DecodeLabFromYaml(value string) (*LabV1, error) {
-	var lab LabV1
+func DecodeLabFromYaml(value string) (*model.LabV1, error) {
+	var lab model.LabV1
 	if err := yaml.Unmarshal([]byte(value), &lab); err != nil {
 		return nil, fmt.Errorf("lab decoder error: %v", err)
 	}

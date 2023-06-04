@@ -1,4 +1,4 @@
-package template
+package model
 
 type BoxV1 struct {
 	Kind  string

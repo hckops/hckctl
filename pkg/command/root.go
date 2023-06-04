@@ -71,7 +71,7 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.AddCommand(boxCmd.NewBoxCmd(configRef))
 	rootCmd.AddCommand(configCmd.NewConfigCmd(configRef))
 	rootCmd.AddCommand(labCmd.NewLabCmd(configRef))
-	rootCmd.AddCommand(templateCmd.NewTemplateCmd())
+	rootCmd.AddCommand(templateCmd.NewTemplateCmd(configRef))
 	rootCmd.AddCommand(NewVersionCmd())
 	return rootCmd
 }

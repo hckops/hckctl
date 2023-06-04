@@ -47,15 +47,14 @@ func (opts *templateValidateCmdOptions) run(cmd *cobra.Command, args []string) e
 }
 
 func validateLocalTemplate(path string) error {
-	log.Debug().Msgf("validate local template: path=%s", path)
+	opts := &template.LocalTemplateOpts{Path: path, Format: template.YamlFormat.String()}
 
-	request := &template.RequestLocalTemplate{Path: path, Format: template.YamlFormat.String()}
-	if response, err := template.LoadLocalTemplate(request); err != nil {
+	if templateValue, err := template.LoadLocalTemplate(opts); err != nil {
 		log.Warn().Err(err).Msgf("error validating local template: path=%s", path)
 		return errors.New("KO")
 	} else {
-		log.Info().Msgf("valid template: path=%s kind=%s", path, response.Kind.String())
-		fmt.Println(fmt.Sprintf("OK %s", response.Kind.String()))
+		log.Debug().Msgf("valid template: path=%s kind=%s", path, templateValue.Kind.String())
+		fmt.Println(fmt.Sprintf("OK %s", templateValue.Kind.String()))
 	}
 	return nil
 }

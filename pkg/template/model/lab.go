@@ -1,4 +1,4 @@
-package template
+package model
 
 type LabV1 struct {
 	Kind  string

@@ -9,38 +9,55 @@ import (
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-type RequestLocalTemplate struct {
+type LocalTemplateOpts struct {
 	Path   string
 	Format string
 }
 
-type ResponseLocalTemplate struct {
-	Kind  schema.SchemaKind
-	Value string
+type RemoteTemplateOpts struct {
+	SourceDir string
+	SourceUrl string
+	Revision  string
+	Name      string
+	Format    string
 }
 
-func LoadLocalTemplate(request *RequestLocalTemplate) (*ResponseLocalTemplate, error) {
-	value, err := util.ReadFile(request.Path)
+type TemplateValue struct {
+	Kind   schema.SchemaKind
+	Data   string
+	Format Format
+}
+
+func LoadLocalTemplate(opts *LocalTemplateOpts) (*TemplateValue, error) {
+	data, err := util.ReadFile(opts.Path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "local template not found %s", request.Path)
+		return nil, errors.Wrapf(err, "local template not found %s", opts.Path)
 	}
 
-	kind, err := schema.ValidateAll(value)
+	kind, err := schema.ValidateAll(data)
 	if err != nil {
-		return nil, errors.Wrapf(err, "invalid schema %s", value)
+		return nil, errors.Wrapf(err, "invalid schema %s", data)
 	}
 
-	switch request.Format {
+	switch opts.Format {
 	case YamlFormat.String():
-		return &ResponseLocalTemplate{kind, value}, nil
+		return &TemplateValue{kind, data, YamlFormat}, nil
 	case JsonFormat.String():
-		if jsonValue, err := ConvertFromYamlToJson(kind, value); err != nil {
+		if jsonValue, err := ConvertFromYamlToJson(kind, data); err != nil {
 			return nil, errors.Wrap(err, "conversion from yaml to json failed")
 		} else {
 			// adds newline only for json
-			return &ResponseLocalTemplate{kind, fmt.Sprintf("%s\n", jsonValue)}, nil
+			return &TemplateValue{kind, fmt.Sprintf("%s\n", jsonValue), JsonFormat}, nil
 		}
 	default:
-		return nil, fmt.Errorf("invalid Format %s", request.Format)
+		return nil, fmt.Errorf("invalid Format %s", opts.Format)
 	}
+}
+
+func LoadRemoteTemplate() {
+	// check if git source exists
+	// > if not download --> (if fail exit)
+	// > otherwise update --> (if fail WARN offline but continue)
+	// load local template
+	// list all templates
 }
