@@ -58,7 +58,7 @@ func NewTemplateCmd() *cobra.Command {
 	// --local
 	command.Flags().BoolVarP(&opts.local, localFlagName, common.NoneFlagShortHand, false, "use local template")
 	// --revision
-	command.Flags().StringVarP(&opts.revision, revisionFlagName, "r", common.RevisionBranch, common.RevisionUsage)
+	command.Flags().StringVarP(&opts.revision, revisionFlagName, "r", common.TemplateRevision, common.TemplateRevisionUsage)
 	command.MarkFlagsMutuallyExclusive(localFlagName, revisionFlagName)
 
 	command.AddCommand(NewTemplateListCmd())

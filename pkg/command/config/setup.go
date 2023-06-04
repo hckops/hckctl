@@ -1,7 +1,9 @@
-package setup
+package config
 
 import (
+	"fmt"
 	"os"
+	"os/user"
 	"path/filepath"
 	"strings"
 
@@ -14,19 +16,9 @@ import (
 )
 
 const (
-	configDirName string = "hck"
 	configDirEnv  string = "HCK_CONFIG_DIR" // overrides .config/hck
 	configEnvName string = "HCK_CONFIG"
 )
-
-// SetupConfig loads the config or initialize the default
-func SetupConfig() (*common.ConfigV1, error) {
-	err := InitConfig(false)
-	if err != nil {
-		return nil, err
-	}
-	return loadConfig()
-}
 
 func InitConfig(force bool) error {
 	configDir, err := getConfigDir()
@@ -72,9 +64,9 @@ func getConfigDir() (string, error) {
 	}
 
 	// https://xdgbasedirectoryspecification.com
-	xdgDir, err := xdg.ConfigFile(configDirName)
+	xdgDir, err := xdg.ConfigFile(common.DefaultDirName)
 	if err != nil {
-		return "", errors.Wrapf(err, "unable to create xdg config directory %s", configDirName)
+		return "", errors.Wrapf(err, "unable to create xdg config directory %s", common.DefaultDirName)
 	}
 	return xdgDir, nil
 }
@@ -85,14 +77,9 @@ func createDefaultConfig(configPath string) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid log file")
 	}
-	// default cache dir
-	cacheDir, err := getCacheDir()
-	if err != nil {
-		return errors.Wrap(err, "invalid cache dir")
-	}
 
 	// default config
-	cliConfig := common.NewConfig(logFile, cacheDir)
+	cliConfig := common.NewConfig(logFile, getTemplateSourceDir())
 
 	var configString string
 	if configString, err = util.EncodeYaml(&cliConfig); err != nil {
@@ -108,16 +95,26 @@ func createDefaultConfig(configPath string) error {
 	return nil
 }
 
-func loadConfig() (*common.ConfigV1, error) {
+func getLogFile() (string, error) {
+	usr, err := user.Current()
+	if err != nil {
+		return "", errors.Wrap(err, "unable to retrieve current user")
+	}
+
+	logFile := filepath.Join(xdg.StateHome, common.DefaultDirName, fmt.Sprintf("%s-%s.log", common.CliName, usr.Username))
+
+	return logFile, nil
+}
+
+func getTemplateSourceDir() string {
+	return filepath.Join(xdg.CacheHome, common.DefaultDirName, common.TemplateSourceName)
+}
+
+func LoadConfig() (*common.ConfigV1, error) {
 	var configV1 *common.ConfigV1
 	// "exact" makes sure to fail if fields are invalid
 	if err := viper.UnmarshalExact(&configV1); err != nil {
 		return nil, errors.Wrap(err, "error decoding config")
 	}
 	return configV1, nil
-}
-
-// TODO
-func getCacheDir() (string, error) {
-	return "TODO", nil
 }

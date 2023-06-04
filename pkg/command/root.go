@@ -11,7 +11,6 @@ import (
 	boxCmd "github.com/hckops/hckctl/pkg/command/box"
 	commonCmd "github.com/hckops/hckctl/pkg/command/common"
 	configCmd "github.com/hckops/hckctl/pkg/command/config"
-	"github.com/hckops/hckctl/pkg/command/config/setup"
 	labCmd "github.com/hckops/hckctl/pkg/command/lab"
 	templateCmd "github.com/hckops/hckctl/pkg/command/template"
 	"github.com/hckops/hckctl/pkg/logger"
@@ -32,13 +31,13 @@ func NewRootCmd() *cobra.Command {
 			cmd.SilenceUsage = true
 			cmd.SilenceErrors = true
 
-			if config, err := setup.SetupConfig(); err != nil {
+			if config, err := setupConfig(); err != nil {
 				return errors.Wrap(err, "unable to init config")
 			} else {
 				configRef.Config = config
 			}
 
-			if callback, err := setup.SetupLogger(configRef); err != nil {
+			if callback, err := setupLogger(configRef); err != nil {
 				return errors.Wrap(err, "unable to init log")
 			} else {
 				logCallback = callback
@@ -75,4 +74,21 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.AddCommand(templateCmd.NewTemplateCmd())
 	rootCmd.AddCommand(NewVersionCmd())
 	return rootCmd
+}
+
+// loads configs or initialize the default
+func setupConfig() (*commonCmd.ConfigV1, error) {
+	err := configCmd.InitConfig(false)
+	if err != nil {
+		return nil, err
+	}
+	return configCmd.LoadConfig()
+}
+
+func setupLogger(configRef *commonCmd.ConfigRef) (func() error, error) {
+	logConfig := configRef.Config.Log
+	logger.SetTimestamp()
+	logger.SetLevel(logger.ParseLevel(logConfig.Level))
+	logger.SetContext(commonCmd.CliName)
+	return logger.SetFileOutput(logConfig.FilePath)
 }

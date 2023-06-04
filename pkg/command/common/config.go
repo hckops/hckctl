@@ -68,7 +68,7 @@ type KubeResources struct {
 	Cpu    string `yaml:"cpu"`
 }
 
-func NewConfig(logFile, cacheDir string) *ConfigV1 {
+func NewConfig(logFile, sourceDir string) *ConfigV1 {
 	return &ConfigV1{
 		Kind: schema.KindConfigV1.String(),
 		Log: LogConfig{
@@ -76,8 +76,8 @@ func NewConfig(logFile, cacheDir string) *ConfigV1 {
 			FilePath: logFile,
 		},
 		Template: TemplateConfig{
-			Revision: RevisionBranch,
-			DirPath:  cacheDir,
+			Revision: TemplateRevision,
+			DirPath:  sourceDir,
 		},
 		Box: BoxConfig{
 			Provider: Docker,

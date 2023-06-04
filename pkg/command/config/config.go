@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/hckops/hckctl/pkg/command/common"
-	"github.com/hckops/hckctl/pkg/command/config/setup"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
@@ -46,7 +45,7 @@ func NewConfigCmd(configRef *common.ConfigRef) *cobra.Command {
 		Use:   "reset",
 		Short: "restore default configurations",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return setup.InitConfig(true)
+			return InitConfig(true)
 		},
 	}
 
