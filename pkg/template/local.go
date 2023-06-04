@@ -4,52 +4,43 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v3"
 
 	"github.com/hckops/hckctl/pkg/template/schema"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-// TODO refactor
-
-func LoadLocalTemplate(path string) (schema.SchemaKind, error) {
-	localTemplate, err := util.ReadFile(path)
-	if err != nil {
-		return -1, errors.Wrapf(err, "local template not found %s", localTemplate)
-	}
-	return schema.ValidateAll(localTemplate)
+type RequestLocalTemplate struct {
+	Path   string
+	Format string
 }
 
-func LoadLocalBoxTemplate(path string) (*BoxV1, error) {
-	localTemplate, err := util.ReadFile(path)
-	if err != nil {
-		return nil, errors.Wrapf(err, "local template not found %s", localTemplate)
-	}
-
-	if err := schema.ValidateBoxV1(localTemplate); err != nil {
-		return nil, err
-	}
-
-	var boxSchema BoxV1
-	if err := yaml.Unmarshal([]byte(localTemplate), &boxSchema); err != nil {
-		return nil, fmt.Errorf("decode error: %v", err)
-	}
-	return &boxSchema, nil
+type ResponseLocalTemplate struct {
+	Kind  schema.SchemaKind
+	Value string
 }
 
-func LoadLocalLabTemplate(path string) (*LabV1, error) {
-	localTemplate, err := util.ReadFile(path)
+func LoadLocalTemplate(request *RequestLocalTemplate) (*ResponseLocalTemplate, error) {
+	value, err := util.ReadFile(request.Path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "local template not found %s", localTemplate)
+		return nil, errors.Wrapf(err, "local template not found %s", request.Path)
 	}
 
-	if err := schema.ValidateLabV1(localTemplate); err != nil {
-		return nil, err
+	kind, err := schema.ValidateAll(value)
+	if err != nil {
+		return nil, errors.Wrapf(err, "invalid schema %s", value)
 	}
 
-	var labSchema LabV1
-	if err := yaml.Unmarshal([]byte(localTemplate), &labSchema); err != nil {
-		return nil, fmt.Errorf("decode error: %v", err)
+	switch request.Format {
+	case YamlFormat.String():
+		return &ResponseLocalTemplate{kind, value}, nil
+	case JsonFormat.String():
+		if jsonValue, err := ConvertFromYamlToJson(kind, value); err != nil {
+			return nil, errors.Wrap(err, "conversion from yaml to json failed")
+		} else {
+			// adds newline only for json
+			return &ResponseLocalTemplate{kind, fmt.Sprintf("%s\n", jsonValue)}, nil
+		}
+	default:
+		return nil, fmt.Errorf("invalid Format %s", request.Format)
 	}
-	return &labSchema, nil
 }

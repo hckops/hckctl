@@ -34,7 +34,7 @@ func version() string {
 func versionJson() string {
 	type version struct{ Commit, Timestamp string }
 
-	jsonString, _ := util.ToJson(version{
+	jsonString, _ := util.EncodeJson(version{
 		Commit:    commit,
 		Timestamp: timestamp,
 	})

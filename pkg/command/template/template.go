@@ -2,10 +2,10 @@ package template
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"strings"
 
 	"github.com/MakeNowJust/heredoc"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag/v2"
@@ -80,19 +80,18 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// TODO
 func printLocalTemplate(format, path string) error {
 	log.Debug().Msgf("print local template: format=%v path=%s", format, path)
 
-	localTemplate, err := template.LoadLocalBoxTemplate(path)
-	if err != nil {
-		return errors.Wrapf(err, "invalid local template %s", localTemplate)
+	request := &template.RequestLocalTemplate{Path: path, Format: format}
+	if response, err := template.LoadLocalTemplate(request); err != nil {
+		log.Warn().Err(err).Msgf("error printing local template: path=%s", path)
+		return errors.New("invalid")
+	} else {
+		log.Info().Msgf("print template: path=%s kind=%s\n%s", path, response.Kind.String(), response.Value)
+		fmt.Println(fmt.Sprintf("# %s", path))
+		fmt.Print(response.Value)
 	}
-
-	//value, _ := util.ToJsonIndent(box)
-
-	fmt.Println(fmt.Sprintf("# %s", path))
-	fmt.Print(localTemplate)
 	return nil
 }
 

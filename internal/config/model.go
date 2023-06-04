@@ -86,7 +86,7 @@ func NewConfig() *ConfigV1 {
 }
 
 func (config *ConfigV1) Print() {
-	value, err := util.ToYaml(&config)
+	value, err := util.EncodeYaml(&config)
 	if err != nil {
 		log.Warn().Msg("invalid config")
 	}

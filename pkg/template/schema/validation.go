@@ -27,7 +27,7 @@ func ValidateAll(data string) (SchemaKind, error) {
 			validationErrors = append(validationErrors, errors.Wrapf(err, "failed to match schema %s", sv.kind))
 		}
 	}
-	return -1, fmt.Errorf("invalid schema %v", validationErrors)
+	return -1, fmt.Errorf("unable to find matching schema %v", validationErrors)
 }
 
 func ValidateBoxV1(data string) error {

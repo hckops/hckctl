@@ -31,7 +31,7 @@ func NewConfigCmd(configRef *common.ConfigRef) *cobra.Command {
 			env HCK_CONFIG_LOG.LEVEL=error hckctl config --log-level debug
 		`),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if value, err := util.ToYaml(configRef.Config); err != nil {
+			if value, err := util.EncodeYaml(configRef.Config); err != nil {
 				return errors.Wrap(err, "error encoding config")
 			} else {
 				fmt.Println(fmt.Sprintf("# %s", viper.ConfigFileUsed()))

@@ -93,6 +93,6 @@ func (box *BoxV1) NetworkPorts() []PortV1 {
 }
 
 func (box *BoxV1) Pretty() string {
-	value, _ := util.ToJsonIndent(box)
+	value, _ := util.EncodeJsonIndent(box)
 	return value
 }

@@ -70,7 +70,7 @@ func InitCliConfig() {
 			cliConfig := config.NewConfig()
 
 			var configString string
-			if configString, err = util.ToYaml(&cliConfig); err != nil {
+			if configString, err = util.EncodeYaml(&cliConfig); err != nil {
 				log.Fatal().Err(err).Msg("error encoding config")
 			}
 			if err := viper.ReadConfig(strings.NewReader(configString)); err != nil {

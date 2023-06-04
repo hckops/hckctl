@@ -2,10 +2,10 @@ package template
 
 import (
 	"fmt"
-	"github.com/rs/zerolog/log"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
 	"github.com/hckops/hckctl/pkg/template"
@@ -49,12 +49,13 @@ func (opts *templateValidateCmdOptions) run(cmd *cobra.Command, args []string) e
 func validateLocalTemplate(path string) error {
 	log.Debug().Msgf("validate local template: path=%s", path)
 
-	if kind, err := template.LoadLocalTemplate(path); err != nil {
-		log.Warn().Err(err).Msgf("invalid local template: path=%s", path)
+	request := &template.RequestLocalTemplate{Path: path, Format: template.YamlFormat.String()}
+	if response, err := template.LoadLocalTemplate(request); err != nil {
+		log.Warn().Err(err).Msgf("error validating local template: path=%s", path)
 		return errors.New("KO")
 	} else {
-		log.Info().Msgf("valid template: path=%s kind=%s", path, kind.String())
-		fmt.Println(fmt.Sprintf("OK %s", kind.String()))
+		log.Info().Msgf("valid template: path=%s kind=%s", path, response.Kind.String())
+		fmt.Println(fmt.Sprintf("OK %s", response.Kind.String()))
 	}
 	return nil
 }

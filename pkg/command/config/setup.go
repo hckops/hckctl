@@ -90,7 +90,7 @@ func createDefaultConfig(configPath string) error {
 	cliConfig := common.NewConfig(logFile)
 
 	var configString string
-	if configString, err = util.ToYaml(&cliConfig); err != nil {
+	if configString, err = util.EncodeYaml(&cliConfig); err != nil {
 		return errors.Wrap(err, "error encoding config")
 	}
 	if err := viper.ReadConfig(strings.NewReader(configString)); err != nil {
