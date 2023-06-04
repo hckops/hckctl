@@ -2,19 +2,18 @@ package lab
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/command/config"
 
 	"github.com/spf13/cobra"
-
-	"github.com/hckops/hckctl/pkg/command/common"
 )
 
 // TODO command create, list, describe, delete
 
 type labCmdOptions struct {
-	configRef *common.ConfigRef
+	configRef *config.ConfigRef
 }
 
-func NewLabCmd(configRef *common.ConfigRef) *cobra.Command {
+func NewLabCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	opts := labCmdOptions{
 		configRef: configRef,

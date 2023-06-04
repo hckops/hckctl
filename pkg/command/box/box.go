@@ -2,6 +2,7 @@ package box
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/command/config"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -11,12 +12,12 @@ import (
 )
 
 type boxCmdOptions struct {
-	configRef *common.ConfigRef
+	configRef *config.ConfigRef
 	path      string
 	revision  string
 }
 
-func NewBoxCmd(configRef *common.ConfigRef) *cobra.Command {
+func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	opts := &boxCmdOptions{
 		configRef: configRef,
@@ -44,8 +45,8 @@ func NewBoxCmd(configRef *common.ConfigRef) *cobra.Command {
 	command.MarkFlagsMutuallyExclusive(pathFlag, revisionFlag)
 
 	// --provider
-	command.Flags().StringP(providerFlag, common.NoneFlagShortHand, string(common.Docker), fmt.Sprintf("change box provider, one of %s",
-		strings.Join([]string{string(common.Docker), string(common.Kubernetes), string(common.Argo), string(common.Cloud)}, "|")))
+	command.Flags().StringP(providerFlag, common.NoneFlagShortHand, string(config.Docker), fmt.Sprintf("change box provider, one of %s",
+		strings.Join([]string{string(config.Docker), string(config.Kubernetes), string(config.Argo), string(config.Cloud)}, "|")))
 	viper.BindPFlag(fmt.Sprintf("box.%s", providerFlag), command.Flags().Lookup(providerFlag))
 
 	command.AddCommand(NewBoxCopyCmd(opts))

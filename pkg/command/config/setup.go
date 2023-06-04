@@ -79,7 +79,7 @@ func createDefaultConfig(configPath string) error {
 	}
 
 	// default config
-	cliConfig := common.NewConfig(logFile, getTemplateSourceDir())
+	cliConfig := newConfig(logFile, getTemplateSourceDir())
 
 	var configString string
 	if configString, err = util.EncodeYaml(&cliConfig); err != nil {
@@ -110,8 +110,8 @@ func getTemplateSourceDir() string {
 	return filepath.Join(xdg.CacheHome, common.DefaultDirName, common.TemplateSourceName)
 }
 
-func LoadConfig() (*common.ConfigV1, error) {
-	var configV1 *common.ConfigV1
+func LoadConfig() (*ConfigV1, error) {
+	var configV1 *ConfigV1
 	// "exact" makes sure to fail if fields are invalid
 	if err := viper.UnmarshalExact(&configV1); err != nil {
 		return nil, errors.Wrap(err, "error decoding config")

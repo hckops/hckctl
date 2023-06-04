@@ -19,7 +19,7 @@ import (
 func NewRootCmd() *cobra.Command {
 
 	// define pointer/reference to pass around in all commands and initialize in each PersistentPreRunE
-	configRef := &commonCmd.ConfigRef{}
+	configRef := &configCmd.ConfigRef{}
 	var logCallback func() error
 
 	rootCmd := &cobra.Command{
@@ -77,7 +77,7 @@ func NewRootCmd() *cobra.Command {
 }
 
 // loads configs or initialize the default
-func setupConfig() (*commonCmd.ConfigV1, error) {
+func setupConfig() (*configCmd.ConfigV1, error) {
 	err := configCmd.InitConfig(false)
 	if err != nil {
 		return nil, err
@@ -85,7 +85,7 @@ func setupConfig() (*commonCmd.ConfigV1, error) {
 	return configCmd.LoadConfig()
 }
 
-func setupLogger(configRef *commonCmd.ConfigRef) (func() error, error) {
+func setupLogger(configRef *configCmd.ConfigRef) (func() error, error) {
 	logConfig := configRef.Config.Log
 	logger.SetTimestamp()
 	logger.SetLevel(logger.ParseLevel(logConfig.Level))

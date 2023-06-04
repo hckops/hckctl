@@ -1,9 +1,11 @@
-package common
+package config
 
 import (
 	"net"
 	"strconv"
 
+	"github.com/hckops/hckctl/pkg/command/common"
+	"github.com/hckops/hckctl/pkg/logger"
 	"github.com/hckops/hckctl/pkg/template/schema"
 )
 
@@ -68,15 +70,15 @@ type KubeResources struct {
 	Cpu    string `yaml:"cpu"`
 }
 
-func NewConfig(logFile, sourceDir string) *ConfigV1 {
+func newConfig(logFile, sourceDir string) *ConfigV1 {
 	return &ConfigV1{
 		Kind: schema.KindConfigV1.String(),
 		Log: LogConfig{
-			Level:    "info", // TODO enum
+			Level:    logger.InfoLogLevel.String(),
 			FilePath: logFile,
 		},
 		Template: TemplateConfig{
-			Revision: TemplateRevision,
+			Revision: common.TemplateRevision,
 			DirPath:  sourceDir,
 		},
 		Box: BoxConfig{

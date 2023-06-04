@@ -8,13 +8,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
 // TODO add command to "set" a field with dot notation
 
-func NewConfigCmd(configRef *common.ConfigRef) *cobra.Command {
+func NewConfigCmd(configRef *ConfigRef) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "config",
