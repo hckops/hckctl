@@ -33,10 +33,13 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 		Short: "validate and print templates",
 		Example: heredoc.Doc(`
 
-			# prints remote alpine template
+			# prints remote template (supports multiple formats)
 			hckctl template alpine
+			hckctl template official/parrot
+			hckctl template boxes/vulnerable/dvwa
+			hckctl template labs/official/htb-alpine.yml
 
-			# prints specific version (branch|tag|sha) of alpine template
+			# prints specific version (branch|tag|sha)
 			hckctl template alpine --revision main
 
 			# prints template in json format (default yaml)

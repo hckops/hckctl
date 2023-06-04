@@ -1,12 +1,17 @@
 package loader
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 
 	"github.com/hckops/hckctl/pkg/command/common"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 type RemoteTemplateOpts struct {
@@ -27,24 +32,63 @@ func NewRemoteTemplateLoader(opts *RemoteTemplateOpts) *RemoteTemplateLoader {
 	}
 }
 
-// TODO list files https://gosamples.dev/list-files
-
 func (l *RemoteTemplateLoader) Load() (*TemplateValue, error) {
 
 	if err := l.refreshRevision(); err != nil {
-		return nil, errors.Wrap(err, "invalid revision")
+		return nil, errors.Wrap(err, "invalid template revision")
 	}
 
-	// check if git source exists
-	// > if not download --> (if fail exit)
-	// > otherwise update --> (if fail WARN offline but continue)
-	// BUILD PATH -> load local template
-	// list all templates
+	path, err := l.resolvePath()
+	if err != nil {
+		return nil, errors.Wrap(err, "invalid template name")
+	}
 
-	localOpts := &LocalTemplateOpts{Path: "../megalopolis/boxes/official/alpine.yml", Format: l.opts.Format}
+	localOpts := &LocalTemplateOpts{Path: path, Format: l.opts.Format}
 	return NewLocalTemplateLoader(localOpts).Load()
 }
 
+func (l *RemoteTemplateLoader) resolvePath() (string, error) {
+
+	// list all base directories
+	var directories []string
+	if err := filepath.Walk(l.opts.SourceCacheDir, func(path string, info os.FileInfo, err error) error {
+		// excludes "docker" and hidden directories i.e. ".git", ".github"
+		if info.IsDir() &&
+			!strings.HasPrefix(path, fmt.Sprintf("%s/.", l.opts.SourceCacheDir)) &&
+			!strings.HasPrefix(path, fmt.Sprintf("%s/docker", l.opts.SourceCacheDir)) {
+			directories = append(directories, path)
+		}
+		return nil
+	}); err != nil {
+		return "", errors.Wrap(err, "unable to resolve path directories")
+	}
+
+	// paths to attempts
+	var paths []string
+	for _, directory := range directories {
+		paths = append(paths,
+			fmt.Sprintf("%s/%s", directory, l.opts.Name),
+			fmt.Sprintf("%s/%s.yml", directory, l.opts.Name),
+			fmt.Sprintf("%s/%s.yaml", directory, l.opts.Name))
+	}
+
+	// match name with predefined paths
+	var match []string
+	for _, path := range paths {
+		if _, err := util.ReadFile(path); err == nil {
+			match = append(match, path)
+		}
+	}
+
+	if len(match) == 1 {
+		return match[0], nil
+	} else if len(match) > 1 {
+		return "", fmt.Errorf("unexpected match of multiple templates %v", match)
+	}
+	return "", errors.New("path not found")
+}
+
+// TODO allow offline refresh if the repository already exists
 func (l *RemoteTemplateLoader) refreshRevision() error {
 
 	// first time clone repo always with default revision
@@ -82,12 +126,6 @@ func (l *RemoteTemplateLoader) refreshRevision() error {
 	// checkout latest revision
 	if err := workTree.Checkout(&git.CheckoutOptions{Hash: *hash}); err != nil {
 		return errors.Wrap(err, "unable to checkout revision")
-	}
-
-	if head, err := repository.Head(); err != nil {
-		return errors.Wrap(err, "unable to verify revision")
-	} else {
-		log.Debug().Msgf("use revision revision=%s hash=%s", l.opts.Revision, head.Hash())
 	}
 
 	return nil
