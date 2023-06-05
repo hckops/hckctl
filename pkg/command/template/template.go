@@ -2,6 +2,7 @@ package template
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/template"
 	"strings"
 
 	"github.com/MakeNowJust/heredoc"
@@ -52,9 +53,8 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 	}
 
 	const (
-		formatFlagName   = "format"
-		localFlagName    = "local"
-		revisionFlagName = "revision"
+		formatFlagName = "format"
+		localFlagName  = "local"
 	)
 
 	// --format (enum)
@@ -65,10 +65,10 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 	// --local
 	command.Flags().BoolVarP(&opts.local, localFlagName, common.NoneFlagShortHand, false, "use local template")
 	// --revision
-	command.Flags().StringVarP(&opts.revision, revisionFlagName, "r", common.TemplateRevision, common.TemplateRevisionUsage)
+	revisionFlagName := common.AddRevisionFlag(command, &opts.revision)
 	command.MarkFlagsMutuallyExclusive(localFlagName, revisionFlagName)
 
-	command.AddCommand(NewTemplateListCmd())
+	command.AddCommand(NewTemplateListCmd(configRef))
 	command.AddCommand(NewTemplateValidateCmd())
 
 	return command
@@ -87,11 +87,14 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	} else if len(args) == 1 {
 		remoteOpts := &loader.RemoteTemplateOpts{
-			SourceCacheDir: opts.configRef.Config.Template.CacheDir,
-			SourceUrl:      common.TemplateSourceUrl,
-			Revision:       opts.revision,
-			Name:           args[0],
-			Format:         format,
+			RevisionOpts: &template.RevisionOpts{
+				SourceCacheDir: opts.configRef.Config.Template.CacheDir,
+				SourceUrl:      common.TemplateSourceUrl,
+				SourceRevision: common.TemplateSourceRevision,
+				Revision:       opts.revision,
+			},
+			Name:   args[0],
+			Format: format,
 		}
 		log.Debug().Msgf("print remote template: %+v", remoteOpts)
 		return printTemplate(loader.NewRemoteTemplateLoader(remoteOpts))

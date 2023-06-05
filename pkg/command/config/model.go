@@ -78,7 +78,7 @@ func newConfig(logFile, cacheDir string) *ConfigV1 {
 			FilePath: logFile,
 		},
 		Template: TemplateConfig{
-			Revision: common.TemplateRevision,
+			Revision: common.TemplateSourceRevision,
 			CacheDir: cacheDir,
 		},
 		Box: BoxConfig{

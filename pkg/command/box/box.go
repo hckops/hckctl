@@ -2,13 +2,13 @@ package box
 
 import (
 	"fmt"
-	"github.com/hckops/hckctl/pkg/command/config"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/hckops/hckctl/pkg/command/common"
+	"github.com/hckops/hckctl/pkg/command/config"
 )
 
 type boxCmdOptions struct {
@@ -30,24 +30,20 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 	}
 
 	const (
-		pathFlag     = "path"
-		revisionFlag = "revision"
-		providerFlag = "provider"
+		pathFlagName     = "path"
+		providerFlagName = "provider"
 	)
 
 	// --path
-	command.Flags().StringVarP(&opts.path, pathFlag, "p", "", "local path")
-
+	command.Flags().StringVarP(&opts.path, pathFlagName, "p", "", "local path")
 	// --revision
-	command.Flags().StringVarP(&opts.revision, revisionFlag, "r", common.TemplateRevision, common.TemplateRevisionUsage)
-	viper.BindPFlag(fmt.Sprintf("template.%s", revisionFlag), command.Flags().Lookup(revisionFlag))
-
-	command.MarkFlagsMutuallyExclusive(pathFlag, revisionFlag)
+	revisionFlagName := common.AddRevisionFlag(command, &opts.revision)
+	command.MarkFlagsMutuallyExclusive(pathFlagName, revisionFlagName)
 
 	// --provider
-	command.Flags().StringP(providerFlag, common.NoneFlagShortHand, string(config.Docker), fmt.Sprintf("change box provider, one of %s",
+	command.Flags().StringP(providerFlagName, common.NoneFlagShortHand, string(config.Docker), fmt.Sprintf("change box provider, one of %s",
 		strings.Join([]string{string(config.Docker), string(config.Kubernetes), string(config.Argo), string(config.Cloud)}, "|")))
-	viper.BindPFlag(fmt.Sprintf("box.%s", providerFlag), command.Flags().Lookup(providerFlag))
+	viper.BindPFlag(fmt.Sprintf("box.%s", providerFlagName), command.Flags().Lookup(providerFlagName))
 
 	command.AddCommand(NewBoxCopyCmd(opts))
 	command.AddCommand(NewBoxCreateCmd(opts))

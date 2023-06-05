@@ -6,20 +6,16 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/pkg/errors"
 
-	"github.com/hckops/hckctl/pkg/command/common"
+	"github.com/hckops/hckctl/pkg/template"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
 type RemoteTemplateOpts struct {
-	SourceCacheDir string
-	SourceUrl      string
-	Revision       string
-	Name           string
-	Format         string
+	RevisionOpts *template.RevisionOpts
+	Name         string
+	Format       string
 }
 
 type RemoteTemplateLoader struct {
@@ -34,11 +30,11 @@ func NewRemoteTemplateLoader(opts *RemoteTemplateOpts) *RemoteTemplateLoader {
 
 func (l *RemoteTemplateLoader) Load() (*TemplateValue, error) {
 
-	if err := l.refreshRevision(); err != nil {
+	if err := template.RefreshRevision(l.opts.RevisionOpts); err != nil {
 		return nil, errors.Wrap(err, "invalid template revision")
 	}
 
-	path, err := l.resolvePath()
+	path, err := resolvePath(l.opts.RevisionOpts.SourceCacheDir, l.opts.Name)
 	if err != nil {
 		return nil, errors.Wrap(err, "invalid template name")
 	}
@@ -47,15 +43,16 @@ func (l *RemoteTemplateLoader) Load() (*TemplateValue, error) {
 	return NewLocalTemplateLoader(localOpts).Load()
 }
 
-func (l *RemoteTemplateLoader) resolvePath() (string, error) {
+func resolvePath(sourceCacheDir, name string) (string, error) {
 
 	// list all base directories
 	var directories []string
-	if err := filepath.Walk(l.opts.SourceCacheDir, func(path string, info os.FileInfo, err error) error {
+	if err := filepath.Walk(sourceCacheDir, func(path string, info os.FileInfo, err error) error {
+		// TODO whitelist vs blacklist
 		// excludes "docker" and hidden directories i.e. ".git", ".github"
 		if info.IsDir() &&
-			!strings.HasPrefix(path, fmt.Sprintf("%s/.", l.opts.SourceCacheDir)) &&
-			!strings.HasPrefix(path, fmt.Sprintf("%s/docker", l.opts.SourceCacheDir)) {
+			!strings.HasPrefix(path, fmt.Sprintf("%s/.", sourceCacheDir)) &&
+			!strings.HasPrefix(path, fmt.Sprintf("%s/docker", sourceCacheDir)) {
 			directories = append(directories, path)
 		}
 		return nil
@@ -67,9 +64,9 @@ func (l *RemoteTemplateLoader) resolvePath() (string, error) {
 	var paths []string
 	for _, directory := range directories {
 		paths = append(paths,
-			fmt.Sprintf("%s/%s", directory, l.opts.Name),
-			fmt.Sprintf("%s/%s.yml", directory, l.opts.Name),
-			fmt.Sprintf("%s/%s.yaml", directory, l.opts.Name))
+			fmt.Sprintf("%s/%s", directory, name),
+			fmt.Sprintf("%s/%s.yml", directory, name),
+			fmt.Sprintf("%s/%s.yaml", directory, name))
 	}
 
 	// match name with predefined paths
@@ -86,47 +83,4 @@ func (l *RemoteTemplateLoader) resolvePath() (string, error) {
 		return "", fmt.Errorf("unexpected match of multiple templates %v", match)
 	}
 	return "", errors.New("path not found")
-}
-
-// TODO allow offline refresh if the repository already exists
-func (l *RemoteTemplateLoader) refreshRevision() error {
-
-	// first time clone repo always with default revision
-	// assume that path doesn't exist, or it's empty
-	if _, err := git.PlainClone(l.opts.SourceCacheDir, false, &git.CloneOptions{
-		URL:               l.opts.SourceUrl,
-		RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
-		ReferenceName:     plumbing.NewBranchReferenceName(common.TemplateRevision),
-	}); err != nil && err != git.ErrRepositoryAlreadyExists {
-		return errors.Wrap(err, "unable to clone repository")
-	}
-
-	// access repository
-	repository, err := git.PlainOpen(l.opts.SourceCacheDir)
-	if err != nil {
-		return errors.Wrap(err, "unable to open repository")
-	}
-	workTree, err := repository.Worktree()
-	if err != nil {
-		return errors.Wrap(err, "unable to access repository")
-	}
-
-	// update previous revision and fetch latest changes
-	// set automatically default revision in case override is invalid
-	if err := workTree.Pull(&git.PullOptions{}); err != nil && err != git.NoErrAlreadyUpToDate {
-		return errors.Wrap(err, "unable to update previous revision")
-	}
-
-	// resolve supported revision to hash
-	hash, err := repository.ResolveRevision(plumbing.Revision(l.opts.Revision))
-	if err != nil {
-		return errors.Wrap(err, "unable to resolve hash revision")
-	}
-
-	// checkout latest revision
-	if err := workTree.Checkout(&git.CheckoutOptions{Hash: *hash}); err != nil {
-		return errors.Wrap(err, "unable to checkout revision")
-	}
-
-	return nil
 }
