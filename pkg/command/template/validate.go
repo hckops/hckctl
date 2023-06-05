@@ -21,11 +21,14 @@ func NewTemplateValidateCmd() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "validate [path]",
-		Short: "validate template",
+		Short: "validate templates",
 		Example: heredoc.Doc(`
 
 			# validates local template
 			hckctl template validate ../megalopolis/boxes/official/alpine.yml
+
+			# validates all templates in the matching path (supports wildcard)
+			hckctl template validate ../megalopolis/boxes/*
 		`),
 		RunE: opts.run,
 	}
@@ -35,6 +38,9 @@ func NewTemplateValidateCmd() *cobra.Command {
 
 	return command
 }
+
+// TODO check if file or use "filepath.Glob" - make sure to include (optional) yaml/yml
+// https://gosamples.dev/list-files
 
 // TODO use in gh-action: validate multiple templates in the given path (not only single file) + add regex filter
 func (opts *templateValidateCmdOptions) run(cmd *cobra.Command, args []string) error {

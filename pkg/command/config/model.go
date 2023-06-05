@@ -30,7 +30,7 @@ type LogConfig struct {
 
 type TemplateConfig struct {
 	Revision string `yaml:"revision"`
-	DirPath  string `yaml:"dirPath"`
+	CacheDir string `yaml:"cacheDir"`
 }
 
 type BoxConfig struct {
@@ -70,7 +70,7 @@ type KubeResources struct {
 	Cpu    string `yaml:"cpu"`
 }
 
-func newConfig(logFile, sourceDir string) *ConfigV1 {
+func newConfig(logFile, cacheDir string) *ConfigV1 {
 	return &ConfigV1{
 		Kind: schema.KindConfigV1.String(),
 		Log: LogConfig{
@@ -79,7 +79,7 @@ func newConfig(logFile, sourceDir string) *ConfigV1 {
 		},
 		Template: TemplateConfig{
 			Revision: common.TemplateRevision,
-			DirPath:  sourceDir,
+			CacheDir: cacheDir,
 		},
 		Box: BoxConfig{
 			Provider: Docker,

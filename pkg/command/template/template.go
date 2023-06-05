@@ -87,7 +87,7 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	} else if len(args) == 1 {
 		remoteOpts := &loader.RemoteTemplateOpts{
-			SourceCacheDir: opts.configRef.Config.Template.DirPath,
+			SourceCacheDir: opts.configRef.Config.Template.CacheDir,
 			SourceUrl:      common.TemplateSourceUrl,
 			Revision:       opts.revision,
 			Name:           args[0],

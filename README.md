@@ -192,6 +192,7 @@ TODO
 * release: verify archives + add brew + add VERSION
 * `pkg/client` replace callback with channels
 * `pkg/client` review: docker/kube methods
+* make sure directories to exclude from megalopolis is up-to-date
 * cmd
   ```bash
   # client and server: docker|kube|cloud

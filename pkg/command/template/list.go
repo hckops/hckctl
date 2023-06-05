@@ -18,7 +18,7 @@ func NewTemplateListCmd() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "list",
-		Short: "list templates",
+		Short: "list available templates",
 		RunE:  opts.run,
 	}
 
