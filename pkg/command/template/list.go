@@ -2,13 +2,13 @@ package template
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/template/source"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/spf13/cobra"
 
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/command/config"
-	"github.com/hckops/hckctl/pkg/template"
 )
 
 type templateListCmdOptions struct {
@@ -47,7 +47,7 @@ func NewTemplateListCmd(configRef *config.ConfigRef) *cobra.Command {
 
 func (opts *templateListCmdOptions) run(cmd *cobra.Command, args []string) error {
 
-	_ = template.RevisionOpts{
+	_ = source.RevisionOpts{
 		SourceCacheDir: opts.configRef.Config.Template.CacheDir,
 		SourceUrl:      common.TemplateSourceUrl,
 		SourceRevision: common.TemplateSourceRevision,

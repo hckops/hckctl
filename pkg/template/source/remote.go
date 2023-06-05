@@ -1,4 +1,4 @@
-package loader
+package source
 
 import (
 	"fmt"
@@ -8,39 +8,29 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/hckops/hckctl/pkg/template"
+	"github.com/hckops/hckctl/pkg/template/model"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-type RemoteTemplateOpts struct {
-	RevisionOpts *template.RevisionOpts
-	Name         string
-	Format       string
-}
-
-type RemoteTemplateLoader struct {
-	opts *RemoteTemplateOpts
-}
-
-func NewRemoteTemplateLoader(opts *RemoteTemplateOpts) *RemoteTemplateLoader {
-	return &RemoteTemplateLoader{
-		opts: opts,
+func readRemoteTemplate(opts *RevisionOpts, name string) (*TemplateValue, error) {
+	if path, err := resolvePathWithRevision(opts, name); err != nil {
+		return nil, err
+	} else {
+		return readTemplate(path)
 	}
 }
 
-func (l *RemoteTemplateLoader) Load() (*TemplateValue, error) {
-
-	if err := template.RefreshRevision(l.opts.RevisionOpts); err != nil {
-		return nil, errors.Wrap(err, "invalid template revision")
+func resolvePathWithRevision(opts *RevisionOpts, name string) (string, error) {
+	if err := refreshRevision(opts); err != nil {
+		return "", errors.Wrap(err, "invalid template revision")
 	}
 
-	path, err := resolvePath(l.opts.RevisionOpts.SourceCacheDir, l.opts.Name)
+	path, err := resolvePath(opts.SourceCacheDir, name)
 	if err != nil {
-		return nil, errors.Wrap(err, "invalid template name")
+		return "", errors.Wrap(err, "invalid template name")
 	}
 
-	localOpts := &LocalTemplateOpts{Path: path, Format: l.opts.Format}
-	return NewLocalTemplateLoader(localOpts).Load()
+	return path, nil
 }
 
 func resolvePath(sourceCacheDir, name string) (string, error) {
@@ -83,4 +73,30 @@ func resolvePath(sourceCacheDir, name string) (string, error) {
 		return "", fmt.Errorf("unexpected match of multiple templates %v", match)
 	}
 	return "", errors.New("path not found")
+}
+
+func readRemoteTemplates(opts *RevisionOpts) ([]*TemplateValidated, error) {
+	if err := refreshRevision(opts); err != nil {
+		return nil, errors.Wrap(err, "invalid template revision")
+	}
+
+	// TODO [yml|yaml] https://pkg.go.dev/path/filepath#Match
+	wildcard := fmt.Sprintf("%s/*.yml", opts.SourceCacheDir)
+	return readTemplates(wildcard)
+}
+
+func readRemoteBoxTemplate(opts *RevisionOpts, name string) (*model.BoxV1, error) {
+	if path, err := resolvePathWithRevision(opts, name); err != nil {
+		return nil, err
+	} else {
+		return readBoxTemplate(path)
+	}
+}
+
+func readRemoteLabTemplate(opts *RevisionOpts, name string) (*model.LabV1, error) {
+	if path, err := resolvePathWithRevision(opts, name); err != nil {
+		return nil, err
+	} else {
+		return readLabTemplate(path)
+	}
 }

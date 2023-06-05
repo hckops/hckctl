@@ -1,4 +1,4 @@
-package template
+package source
 
 import (
 	"github.com/go-git/go-git/v5"
@@ -16,7 +16,7 @@ type RevisionOpts struct {
 	Revision       string
 }
 
-func RefreshRevision(opts *RevisionOpts) error {
+func refreshRevision(opts *RevisionOpts) error {
 
 	// first time clone repo always with default revision
 	// assume that path doesn't exist, or it's empty

@@ -2,7 +2,7 @@ package template
 
 import (
 	"fmt"
-	"github.com/hckops/hckctl/pkg/template"
+	"github.com/hckops/hckctl/pkg/template/source"
 	"strings"
 
 	"github.com/MakeNowJust/heredoc"
@@ -87,7 +87,7 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	} else if len(args) == 1 {
 		remoteOpts := &loader.RemoteTemplateOpts{
-			RevisionOpts: &template.RevisionOpts{
+			RevisionOpts: &source.RevisionOpts{
 				SourceCacheDir: opts.configRef.Config.Template.CacheDir,
 				SourceUrl:      common.TemplateSourceUrl,
 				SourceRevision: common.TemplateSourceRevision,
