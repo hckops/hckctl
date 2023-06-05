@@ -33,16 +33,15 @@ func resolvePathWithRevision(opts *RevisionOpts, name string) (string, error) {
 	return path, nil
 }
 
-// TODO whitelist vs blacklist
 func resolvePath(sourceCacheDir, name string) (string, error) {
 
 	// list all base directories
 	var directories []string
 	if err := filepath.Walk(sourceCacheDir, func(path string, info os.FileInfo, err error) error {
-		// whitelist
+		// excludes "docker" and hidden directories e.g. ".git", ".github"
 		if info.IsDir() &&
-			strings.HasPrefix(path, fmt.Sprintf("%s/boxes", sourceCacheDir)) &&
-			strings.HasPrefix(path, fmt.Sprintf("%s/labs", sourceCacheDir)) {
+			!strings.HasPrefix(path, fmt.Sprintf("%s/.", sourceCacheDir)) &&
+			!strings.HasPrefix(path, fmt.Sprintf("%s/docker", sourceCacheDir)) {
 			directories = append(directories, path)
 		}
 		return nil

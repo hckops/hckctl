@@ -76,8 +76,7 @@ func (src *RemoteSource) Read() (*TemplateValue, error) {
 }
 
 func (src *RemoteSource) ReadAll() ([]*TemplateValidated, error) {
-	// TODO match [yml|yaml] https://github.com/bmatcuk/doublestar
-	wildcard := fmt.Sprintf("%s/**/*.yml", src.opts.SourceCacheDir)
+	wildcard := fmt.Sprintf("%s/**/*.{yml,yaml}", src.opts.SourceCacheDir)
 	return readRemoteTemplates(src.opts, wildcard)
 }
 func (src *RemoteSource) ReadBox() (*model.BoxV1, error) {
