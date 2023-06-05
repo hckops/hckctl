@@ -27,7 +27,8 @@ func NewTemplateValidateCmd() *cobra.Command {
 			hckctl template validate ../megalopolis/boxes/official/alpine.yml
 
 			# validates all templates in the given path (supports wildcard)
-			hckctl template validate ../megalopolis/boxes/*
+			hckctl template validate ../megalopolis/**/*.yml
+			hckctl template validate "../megalopolis/**/*alpine*"
 		`),
 		RunE: opts.run,
 	}
@@ -50,20 +51,19 @@ func validateTemplate(path string) error {
 
 	// attempt single file validation
 	if templateValue, err := src.Read(); err == nil {
-		printValidTemplate(templateValue)
+		printValidTemplate(path, templateValue)
 
 		// attempt wildcard validation
 	} else if validations, err := src.ReadAll(); err == nil {
-		log.Debug().Msgf("validated templates: %d", len(validations))
-		fmt.Println(fmt.Sprintf("total: %d", len(validations)))
-
 		for _, validation := range validations {
 			if validation.IsValid {
-				printValidTemplate(templateValue)
+				printValidTemplate(validation.Path, validation.Value)
 			} else {
-				printInvalidTemplate(templateValue)
+				printInvalidTemplate(validation.Path)
 			}
 		}
+		log.Debug().Msgf("validated templates: %d", len(validations))
+		fmt.Println(fmt.Sprintf("total: %d", len(validations)))
 
 	} else {
 		log.Warn().Err(err).Msgf("error validating template: path=%s", path)
@@ -73,12 +73,12 @@ func validateTemplate(path string) error {
 	return nil
 }
 
-func printValidTemplate(value *source.TemplateValue) {
-	log.Debug().Msgf("valid template: kind=%s path=%s", value.Kind.String(), value.Path)
-	fmt.Println(fmt.Sprintf("[OK] %s\t%s", value.Kind.String(), value.Path))
+func printValidTemplate(path string, value *source.TemplateValue) {
+	log.Debug().Msgf("valid template: kind=%s path=%s", value.Kind.String(), path)
+	fmt.Println(fmt.Sprintf("[OK] %s\t%s", value.Kind.String(), path))
 }
 
-func printInvalidTemplate(value *source.TemplateValue) {
-	log.Warn().Msgf("invalid template: kind=%s path=%s", value.Kind.String(), value.Path)
-	fmt.Println(fmt.Sprintf("[KO] %s\t%s <<<<<<<<<<", value.Kind.String(), value.Path))
+func printInvalidTemplate(path string) {
+	log.Warn().Msgf("invalid template: path=%s", path)
+	fmt.Println(fmt.Sprintf("[KO] >>>>>>>>>>\t%s", path))
 }

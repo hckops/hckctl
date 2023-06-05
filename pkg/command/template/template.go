@@ -105,7 +105,7 @@ func printTemplate(src source.TemplateSource, format string) error {
 	templateValue, err := src.Read()
 	if err != nil {
 		log.Warn().Err(err).Msg("error printing template")
-		return errors.New("invalid")
+		return errors.New("invalid template")
 	}
 
 	if format == source.JsonFormat.String() {

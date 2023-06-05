@@ -2,6 +2,7 @@ package template
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/pkg/errors"
@@ -61,14 +62,22 @@ func (opts *templateListCmdOptions) run(cmd *cobra.Command, args []string) error
 		return errors.New("error")
 
 	} else {
+		var total int
 		for _, validation := range validations {
 			if validation.IsValid {
-				log.Debug().Msgf("found template: kind=%s path=%s", validation.Value.Kind.String(), validation.Value.Path)
-				fmt.Println(fmt.Sprintf("%s\t%s", validation.Value.Kind.String(), validation.Value.Path))
+				total = total + 1
+				// remove prefix and suffix
+				basePath := fmt.Sprintf("%s/", opts.configRef.Config.Template.CacheDir)
+				prettyPath := strings.ReplaceAll(strings.ReplaceAll(validation.Path, basePath, ""), ".yml", "")
+
+				log.Debug().Msgf("found template: kind=%s pretty=%s path=%s", validation.Value.Kind.String(), prettyPath, validation.Path)
+				fmt.Println(fmt.Sprintf("%s\t%s", validation.Value.Kind.String(), prettyPath))
 			} else {
-				log.Warn().Msgf("skipping invalid template: kind=%s path=%s", validation.Value.Kind.String(), validation.Value.Path)
+				log.Warn().Msgf("skipping invalid template: path=%s", validation.Path)
 			}
 		}
+		log.Debug().Msgf("total templates: %d", total)
+		fmt.Println(fmt.Sprintf("total: %d", total))
 	}
 	return nil
 }

@@ -11,12 +11,12 @@ import (
 
 type TemplateValue struct {
 	Kind schema.SchemaKind
-	Path string
 	Data string
 }
 
 type TemplateValidated struct {
 	Value   *TemplateValue
+	Path    string
 	IsValid bool
 }
 
@@ -29,16 +29,8 @@ func (t *TemplateValue) ToJson() (*TemplateValue, error) {
 	}
 }
 
-func (t *TemplateValue) toValidated(isValid bool) *TemplateValidated {
-	return &TemplateValidated{t, isValid}
-}
-
-// https://github.com/hckops/megalopolis
-func sourcePrefixWhitelist() []string {
-	return []string{
-		"boxes",
-		"labs",
-	}
+func (t *TemplateValue) toValidated(path string, isValid bool) *TemplateValidated {
+	return &TemplateValidated{t, path, isValid}
 }
 
 type TemplateSource interface {
@@ -84,8 +76,8 @@ func (src *RemoteSource) Read() (*TemplateValue, error) {
 }
 
 func (src *RemoteSource) ReadAll() ([]*TemplateValidated, error) {
-	// TODO [yml|yaml] https://pkg.go.dev/path/filepath#Match
-	wildcard := fmt.Sprintf("%s/*.yml", src.opts.SourceCacheDir)
+	// TODO match [yml|yaml] https://github.com/bmatcuk/doublestar
+	wildcard := fmt.Sprintf("%s/**/*.yml", src.opts.SourceCacheDir)
 	return readRemoteTemplates(src.opts, wildcard)
 }
 func (src *RemoteSource) ReadBox() (*model.BoxV1, error) {
