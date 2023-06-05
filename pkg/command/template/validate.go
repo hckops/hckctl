@@ -8,12 +8,11 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/hckops/hckctl/pkg/template/loader"
+	"github.com/hckops/hckctl/pkg/template/source"
 )
 
-type templateValidateCmdOptions struct {
-	kind string
-}
+// TODO see common list options: kind (compare expected), order, column
+type templateValidateCmdOptions struct{}
 
 func NewTemplateValidateCmd() *cobra.Command {
 
@@ -33,32 +32,53 @@ func NewTemplateValidateCmd() *cobra.Command {
 		RunE: opts.run,
 	}
 
-	// TODO implement flag: parse value and compare with result
-	// command.Flags().StringVarP(&opts.kind, "kind", common.NoneFlagShortHand, "", "expected template kind")
-
 	return command
 }
 
-// TODO check if file or use "filepath.Glob" - make sure to include (optional) yaml/yml
-// https://gosamples.dev/list-files
-
-// TODO use in gh-action: validate multiple templates in the given path (not only single file) + add regex filter
 func (opts *templateValidateCmdOptions) run(cmd *cobra.Command, args []string) error {
 	if len(args) == 1 {
-		return validateLocalTemplate(args[0])
+		return validateTemplate(args[0])
 	} else {
 		cmd.HelpFunc()(cmd, args)
 	}
 	return nil
 }
 
-func validateLocalTemplate(path string) error {
-	if templateValue, err := loader.NewDefaultLocalTemplateLoader(path).Load(); err != nil {
-		log.Warn().Err(err).Msgf("error validating local template: path=%s", path)
-		return errors.New("KO")
+// TODO color output
+func validateTemplate(path string) error {
+	src := source.NewLocalSource(path)
+
+	// attempt single file validation
+	if templateValue, err := src.Read(); err == nil {
+		printValidTemplate(templateValue)
+
+		// attempt wildcard validation
+	} else if validations, err := src.ReadAll(); err == nil {
+		log.Debug().Msgf("validated templates: %d", len(validations))
+		fmt.Println(fmt.Sprintf("total: %d", len(validations)))
+
+		for _, validation := range validations {
+			if validation.IsValid {
+				printValidTemplate(templateValue)
+			} else {
+				printInvalidTemplate(templateValue)
+			}
+		}
+
 	} else {
-		log.Debug().Msgf("valid template: path=%s kind=%s", path, templateValue.Kind.String())
-		fmt.Println(fmt.Sprintf("OK %s", templateValue.Kind.String()))
+		log.Warn().Err(err).Msgf("error validating template: path=%s", path)
+		return errors.New("error")
 	}
+
 	return nil
+}
+
+func printValidTemplate(value *source.TemplateValue) {
+	log.Debug().Msgf("valid template: kind=%s path=%s", value.Kind.String(), value.Path)
+	fmt.Println(fmt.Sprintf("[OK] %s\t%s", value.Kind.String(), value.Path))
+}
+
+func printInvalidTemplate(value *source.TemplateValue) {
+	log.Warn().Msgf("invalid template: kind=%s path=%s", value.Kind.String(), value.Path)
+	fmt.Println(fmt.Sprintf("[KO] %s\t%s <<<<<<<<<<", value.Kind.String(), value.Path))
 }

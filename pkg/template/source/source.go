@@ -24,14 +24,21 @@ func (t *TemplateValue) ToJson() (*TemplateValue, error) {
 	if jsonValue, err := convertFromYamlToJson(t.Kind, t.Data); err != nil {
 		return nil, errors.Wrap(err, "conversion from yaml to json failed")
 	} else {
-		// adds newline only for json
-		t.Data = fmt.Sprintf("%s\n", jsonValue)
+		t.Data = jsonValue
 		return t, nil
 	}
 }
 
 func (t *TemplateValue) toValidated(isValid bool) *TemplateValidated {
 	return &TemplateValidated{t, isValid}
+}
+
+// https://github.com/hckops/megalopolis
+func sourcePrefixWhitelist() []string {
+	return []string{
+		"boxes",
+		"labs",
+	}
 }
 
 type TemplateSource interface {
@@ -77,7 +84,9 @@ func (src *RemoteSource) Read() (*TemplateValue, error) {
 }
 
 func (src *RemoteSource) ReadAll() ([]*TemplateValidated, error) {
-	return readRemoteTemplates(src.opts)
+	// TODO [yml|yaml] https://pkg.go.dev/path/filepath#Match
+	wildcard := fmt.Sprintf("%s/*.yml", src.opts.SourceCacheDir)
+	return readRemoteTemplates(src.opts, wildcard)
 }
 func (src *RemoteSource) ReadBox() (*model.BoxV1, error) {
 	return readRemoteBoxTemplate(src.opts, src.name)

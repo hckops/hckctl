@@ -34,6 +34,7 @@ func readTemplates(wildcard string) ([]*TemplateValidated, error) {
 	// validate all matching templates
 	var results []*TemplateValidated
 	for _, path := range paths {
+		// TODO whitelist vs blacklist
 		if value, err := readTemplate(path); err == nil {
 			results = append(results, value.toValidated(true))
 		} else {

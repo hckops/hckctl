@@ -75,13 +75,10 @@ func resolvePath(sourceCacheDir, name string) (string, error) {
 	return "", errors.New("path not found")
 }
 
-func readRemoteTemplates(opts *RevisionOpts) ([]*TemplateValidated, error) {
+func readRemoteTemplates(opts *RevisionOpts, wildcard string) ([]*TemplateValidated, error) {
 	if err := refreshRevision(opts); err != nil {
 		return nil, errors.Wrap(err, "invalid template revision")
 	}
-
-	// TODO [yml|yaml] https://pkg.go.dev/path/filepath#Match
-	wildcard := fmt.Sprintf("%s/*.yml", opts.SourceCacheDir)
 	return readTemplates(wildcard)
 }
 
