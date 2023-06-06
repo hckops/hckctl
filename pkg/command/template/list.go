@@ -67,8 +67,11 @@ func (opts *templateListCmdOptions) run(cmd *cobra.Command, args []string) error
 			if validation.IsValid {
 				total = total + 1
 				// remove prefix and suffix
-				basePath := fmt.Sprintf("%s/", opts.configRef.Config.Template.CacheDir)
-				prettyPath := strings.ReplaceAll(strings.ReplaceAll(validation.Path, basePath, ""), ".yml", "")
+				prettyPath := strings.NewReplacer(
+					fmt.Sprintf("%s/", opts.configRef.Config.Template.CacheDir), "",
+					".yml", "",
+					".yaml", "",
+				).Replace(validation.Path)
 
 				log.Debug().Msgf("found template: kind=%s pretty=%s path=%s", validation.Value.Kind.String(), prettyPath, validation.Path)
 				fmt.Println(fmt.Sprintf("%s\t%s", validation.Value.Kind.String(), prettyPath))
