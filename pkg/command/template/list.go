@@ -30,7 +30,7 @@ func NewTemplateListCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "list",
-		Short: "list available templates",
+		Short: "list public templates",
 		Example: heredoc.Doc(`
 
 			# list all templates
@@ -80,7 +80,7 @@ func (opts *templateListCmdOptions) run(cmd *cobra.Command, args []string) error
 			}
 		}
 		log.Debug().Msgf("total templates: %d", total)
-		fmt.Println(fmt.Sprintf("total: %d", total))
+		fmt.Println(fmt.Sprintf("\ntotal: %d", total))
 	}
 	return nil
 }

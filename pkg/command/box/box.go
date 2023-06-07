@@ -84,7 +84,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 	//command.AddCommand(NewBoxCreateCmd(opts))
 	//command.AddCommand(NewBoxDeleteCmd(opts))
 	//command.AddCommand(NewBoxExecCmd(opts))
-	command.AddCommand(NewBoxListCmd(opts))
+	command.AddCommand(NewBoxListCmd(configRef))
 	//command.AddCommand(NewBoxTunnelCmd(opts))
 
 	return command
