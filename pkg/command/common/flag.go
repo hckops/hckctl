@@ -24,3 +24,12 @@ func AddRevisionFlag(command *cobra.Command, revision *string) string {
 
 	return flagName
 }
+
+func AddLocalFlag(command *cobra.Command, local *bool) string {
+	const (
+		flagName  = "local"
+		flagUsage = "use a local template"
+	)
+	command.Flags().BoolVarP(local, flagName, NoneFlagShortHand, false, flagUsage)
+	return flagName
+}

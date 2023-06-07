@@ -21,7 +21,6 @@ builds:
       - goos: darwin
         goarch: 386
 
-# TODO https://goreleaser.com/customization/homebrew
 archives:
   - name_template: >-
       {{ .ProjectName }}-

@@ -62,16 +62,6 @@ curl -sSL https://github.com/hckops/hckctl/releases/download/v0.1.0/hckctl_linux
 
 ## Guide
 
-### Template
-
-```bash
-# validates and prints remote template
-hckctl template parrot | yq -o=json
-
-# validates and prints local template
-hckctl template -p ../megalopolis/boxes/official/alpine.yml
-```
-
 ### Box
 
 <!--
@@ -173,16 +163,13 @@ tail -f /tmp/hckctl-*.log
 
 TODO
 * template: add offline mode
-* template: make sure directories to exclude from megalopolis are up-to-date
+* template: update directories to exclude in `resolvePath`
 * box: refactor callbacks with channels
-* box: load from local path?
 * box: fix validation + vulnerable path
 * box: support distroless and different shell
-* box: list from megalopolis (hardcoded)
 * box: add detached mode + reconnect to existing + tunnel only
 * box: test with podman
 * box: add timeout
-* box: refactor box/template shared cmd
 * box: cloud ssh key auth only + remove InsecureIgnoreHostKey
 * box: docker/kube `cp` + `XDG_DATA_HOME`
 * box: verify remote docker daemon with `DOCKER_HOST`
@@ -190,7 +177,7 @@ TODO
 * man plugin
 * config: add set/reset cmd
 * version: print server/cloud
-* release: verify archives + add brew + add VERSION
+* release: add brew https://goreleaser.com/customization/homebrew
 * `pkg/client` replace callback with channels
 * `pkg/client` review: docker/kube methods
 * cmd

@@ -53,16 +53,14 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	const (
 		formatFlagName = "format"
-		localFlagName  = "local"
 	)
-
 	// --format (enum)
 	formatValue := enumflag.New(&opts.format, formatFlagName, formatIds, enumflag.EnumCaseInsensitive)
 	formatUsage := fmt.Sprintf("output format, one of %s", strings.Join(formatValues(), "|"))
 	command.Flags().Var(formatValue, formatFlagName, formatUsage)
 
 	// --local
-	command.Flags().BoolVarP(&opts.local, localFlagName, common.NoneFlagShortHand, false, "use local template")
+	localFlagName := common.AddLocalFlag(command, &opts.local)
 	// --revision
 	revisionFlagName := common.AddRevisionFlag(command, &opts.revision)
 	command.MarkFlagsMutuallyExclusive(localFlagName, revisionFlagName)
