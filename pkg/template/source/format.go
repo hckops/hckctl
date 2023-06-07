@@ -21,6 +21,26 @@ func (f Format) String() string {
 	return string(f)
 }
 
+// get rid of comments
+func convertFromYamlToYaml(kind schema.SchemaKind, value string) (string, error) {
+	switch kind {
+	case schema.KindBoxV1:
+		if box, err := decodeBoxFromYaml(value); err != nil {
+			return "", err
+		} else {
+			return util.EncodeYaml(box)
+		}
+	case schema.KindLabV1:
+		if lab, err := decodeLabFromYaml(value); err != nil {
+			return "", err
+		} else {
+			return util.EncodeYaml(lab)
+		}
+	default:
+		return "", fmt.Errorf("invalid kind: %v", kind)
+	}
+}
+
 func convertFromYamlToJson(kind schema.SchemaKind, value string) (string, error) {
 	switch kind {
 	case schema.KindBoxV1:

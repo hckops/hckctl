@@ -20,9 +20,18 @@ type TemplateValidated struct {
 	IsValid bool
 }
 
+func (t *TemplateValue) ToYaml() (*TemplateValue, error) {
+	if yamlValue, err := convertFromYamlToYaml(t.Kind, t.Data); err != nil {
+		return nil, errors.Wrap(err, "conversion to yaml failed")
+	} else {
+		t.Data = yamlValue
+		return t, nil
+	}
+}
+
 func (t *TemplateValue) ToJson() (*TemplateValue, error) {
 	if jsonValue, err := convertFromYamlToJson(t.Kind, t.Data); err != nil {
-		return nil, errors.Wrap(err, "conversion from yaml to json failed")
+		return nil, errors.Wrap(err, "conversion to json failed")
 	} else {
 		t.Data = jsonValue
 		return t, nil

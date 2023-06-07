@@ -102,24 +102,36 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 func printTemplate(src source.TemplateSource, format string) error {
 
-	templateValue, err := src.Read()
+	value, err := src.Read()
 	if err != nil {
-		log.Warn().Err(err).Msg("error printing template")
+		log.Warn().Err(err).Msg("error reading template")
 		return errors.New("invalid template")
 	}
 
-	if format == source.JsonFormat.String() {
-		if jsonTemplateValue, err := templateValue.ToJson(); err != nil {
-			return errors.New("format error")
-		} else {
-			log.Debug().Msgf("print template: kind=%s format=%s\n%s", jsonTemplateValue.Kind.String(), format, jsonTemplateValue.Data)
-			// add newline
-			fmt.Println(jsonTemplateValue.Data)
-		}
+	if formatted, err := formatTemplate(value, format); err != nil {
+		log.Warn().Err(err).Msg("error printing template")
+		return errors.New("format error")
 	} else {
-		log.Debug().Msgf("print template: kind=%s format=%s\n%s", templateValue.Kind.String(), format, templateValue.Data)
-		fmt.Print(templateValue.Data)
+		log.Debug().Msgf("print template: kind=%s format=%s\n%s", value.Kind.String(), format, formatted)
+		fmt.Print(formatted)
 	}
-
 	return nil
+}
+
+func formatTemplate(value *source.TemplateValue, format string) (string, error) {
+	switch format {
+	case source.JsonFormat.String():
+		if jsonValue, err := value.ToJson(); err != nil {
+			return "", err
+		} else {
+			// add newline
+			return fmt.Sprintf("%s\n", jsonValue.Data), nil
+		}
+	default:
+		if yamlValue, err := value.ToYaml(); err != nil {
+			return "", err
+		} else {
+			return yamlValue.Data, nil
+		}
+	}
 }
