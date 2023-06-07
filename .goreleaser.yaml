@@ -4,35 +4,36 @@ before:
     - go mod tidy
 
 builds:
-  - env:
+  - main: ./cmd/main.go
+    env:
       - CGO_ENABLED=0
+    # https://pkg.go.dev/cmd/link
+    ldflags:
+      # remove symbol table and debug information
+      - -s -w
+      - -X github.com/hckops/hckctl/pkg/command.commit={{ .Version }}
+      - -X github.com/hckops/hckctl/pkg/command.timestamp={{ .Date }}
     goos:
+      - darwin
       - linux
       - windows
-      - darwin
+    ignore:
+      - goos: darwin
+        goarch: 386
 
+# TODO https://goreleaser.com/customization/homebrew
 archives:
-  - format: tar.gz
-    name_template: >-
-      {{ .ProjectName }}_
-      {{- .Os }}_
+  - name_template: >-
+      {{ .ProjectName }}-
+      {{- .Version }}-
+      {{- .Os }}-
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
-      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    format: tar.gz
     format_overrides:
-    - goos: windows
-      format: zip
+      - goos: windows
+        format: zip
 
 checksum:
-  name_template: 'checksums.txt'
-
-snapshot:
-  name_template: "{{ incpatch .Version }}-next"
-
-changelog:
-  sort: asc
-  filters:
-    exclude:
-      - '^docs:'
-      - '^test:'
+  name_template: "{{ .ProjectName }}-{{ .Version }}-checksums.txt"
