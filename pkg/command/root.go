@@ -38,7 +38,7 @@ func NewRootCmd() *cobra.Command {
 			}
 
 			if callback, err := setupLogger(configRef); err != nil {
-				return errors.Wrap(err, "unable to init log")
+				return errors.Wrap(err, "unable to init logger")
 			} else {
 				logCallback = callback
 			}

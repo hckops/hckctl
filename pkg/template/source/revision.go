@@ -8,7 +8,7 @@ import (
 )
 
 // TODO allow offline refresh if the repository already exists
-// TODO add lock to support concurrency requests
+// TODO add lock to support concurrent requests
 
 type RevisionOpts struct {
 	SourceCacheDir string
