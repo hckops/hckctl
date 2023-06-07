@@ -1,8 +1,9 @@
 package template
 
 import (
-	templateFormat "github.com/hckops/hckctl/pkg/template/source"
 	"github.com/thediveo/enumflag/v2"
+
+	templateFormat "github.com/hckops/hckctl/pkg/template/source"
 )
 
 type formatFlag enumflag.Flag
