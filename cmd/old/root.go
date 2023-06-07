@@ -1,7 +1,8 @@
-package cmd
+package old
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/command"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -51,7 +52,7 @@ func addCommands() {
 }
 
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
+	if err := command.NewRootCmd().Execute(); err != nil {
 		log.Fatal().Err(err)
 	}
 }

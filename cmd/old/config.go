@@ -1,7 +1,8 @@
-package cmd
+package old
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/util"
 	"path/filepath"
 	"strings"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/thediveo/enumflag/v2"
 
 	"github.com/hckops/hckctl/internal/config"
-	"github.com/hckops/hckctl/pkg/util"
 )
 
 type ProviderFlag enumflag.Flag
@@ -70,7 +70,7 @@ func InitCliConfig() {
 			cliConfig := config.NewConfig()
 
 			var configString string
-			if configString, err = util.ToYaml(&cliConfig); err != nil {
+			if configString, err = util.EncodeYaml(&cliConfig); err != nil {
 				log.Fatal().Err(err).Msg("error encoding config")
 			}
 			if err := viper.ReadConfig(strings.NewReader(configString)); err != nil {

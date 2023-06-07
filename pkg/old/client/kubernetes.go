@@ -4,6 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/hckops/hckctl/pkg/old/common"
+	"github.com/hckops/hckctl/pkg/old/model"
+	"github.com/hckops/hckctl/pkg/old/schema"
+	"github.com/hckops/hckctl/pkg/old/util"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -28,11 +32,6 @@ import (
 	"k8s.io/client-go/util/homedir"
 	"k8s.io/kubectl/pkg/cmd/exec"
 	"k8s.io/kubectl/pkg/scheme"
-
-	"github.com/hckops/hckctl/pkg/common"
-	"github.com/hckops/hckctl/pkg/model"
-	"github.com/hckops/hckctl/pkg/schema"
-	"github.com/hckops/hckctl/pkg/util"
 )
 
 type KubeBox struct {

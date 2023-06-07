@@ -1,7 +1,8 @@
-package cmd
+package old
 
 import (
 	"fmt"
+	schema2 "github.com/hckops/hckctl/pkg/old/schema"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -9,7 +10,6 @@ import (
 	"github.com/thediveo/enumflag/v2"
 
 	"github.com/hckops/hckctl/internal/box"
-	"github.com/hckops/hckctl/pkg/schema"
 )
 
 func NewBoxCmd() *cobra.Command {
@@ -71,7 +71,7 @@ func NewBoxCmd() *cobra.Command {
 	return command
 }
 
-func requestBoxTemplate(name string, revision string) *schema.BoxV1 {
+func requestBoxTemplate(name string, revision string) *schema2.BoxV1 {
 	log.Info().Msgf("request box template: name=%s revision=%s", name, revision)
 
 	rawTemplate, err := requestTemplate(newBoxParam(name, revision))
@@ -79,7 +79,7 @@ func requestBoxTemplate(name string, revision string) *schema.BoxV1 {
 		printFatalError(err, "unable to fetch box template")
 	}
 
-	boxTemplate, err := schema.ParseValidBoxV1(rawTemplate)
+	boxTemplate, err := schema2.ParseValidBoxV1(rawTemplate)
 	if err != nil {
 		printFatalError(err, "invalid box template")
 	}

@@ -2,12 +2,11 @@ package schema
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/util"
 	"regexp"
 	"strings"
 
 	"github.com/dchest/uniuri"
-
-	"github.com/hckops/hckctl/pkg/util"
 )
 
 type BoxV1 struct {
@@ -94,6 +93,6 @@ func (box *BoxV1) NetworkPorts() []PortV1 {
 }
 
 func (box *BoxV1) Pretty() string {
-	value, _ := util.ToJson(box)
+	value, _ := util.EncodeJsonIndent(box)
 	return value
 }

@@ -172,6 +172,9 @@ tail -f /tmp/hckctl-*.log
 ```
 
 TODO
+* template: add offline mode
+* template: make sure directories to exclude from megalopolis are up-to-date
+* box: refactor callbacks with channels
 * box: load from local path?
 * box: fix validation + vulnerable path
 * box: support distroless and different shell
@@ -182,24 +185,16 @@ TODO
 * box: refactor box/template shared cmd
 * box: cloud ssh key auth only + remove InsecureIgnoreHostKey
 * box: docker/kube `cp` + `XDG_DATA_HOME`
-* box: move logs from `/tmp` to `XDG_STATE_HOME`
 * box: verify remote docker daemon with `DOCKER_HOST`
 * schema: convert to valid CRD?
-* schema: stable version + move in megalopolis?
 * man plugin
 * config: add set/reset cmd
-* add cmd version
-* release: verify archives + add brew
+* version: print server/cloud
+* release: verify archives + add brew + add VERSION
 * `pkg/client` replace callback with channels
 * `pkg/client` review: docker/kube methods
 * cmd
   ```bash
-  # client and server: docker|kube|cloud
-  hckctl version
-  
-  # current config
-  hckctl config
-  
   # --provider docker|kube|cloud
   # open
   hckctl box <TEMPLATE_NAME> [--revision <REVISION>]
@@ -215,8 +210,4 @@ TODO
   
   # all boxes: docker/kube
   hckctl box list
-  
-  hckctl template <TEMPLATE_NAME> [--revision <REVISION>]
-  hckctl template --path <TEMPLATE_PATH>
-  hckctl template list [box]
   ```

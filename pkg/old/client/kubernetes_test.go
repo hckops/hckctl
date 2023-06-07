@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"github.com/hckops/hckctl/pkg/old/schema"
 	"log"
 	"testing"
 
@@ -11,7 +12,6 @@ import (
 	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/client-go/kubernetes/scheme"
 
-	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/stretchr/testify/assert"
 )
 

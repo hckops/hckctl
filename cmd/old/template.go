@@ -1,15 +1,14 @@
-package cmd
+package old
 
 import (
 	"fmt"
-	"io/ioutil"
+	"github.com/hckops/hckctl/pkg/old/schema"
+	"github.com/hckops/hckctl/pkg/old/template"
+	"os"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-
-	"github.com/hckops/hckctl/pkg/schema"
-	"github.com/hckops/hckctl/pkg/template"
 )
 
 func NewTemplateCmd() *cobra.Command {
@@ -69,7 +68,7 @@ func runTemplateRemoteCmd(name, revision string) {
 }
 
 func loadTemplate(path string) (string, error) {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return "", errors.Wrapf(err, "unable to load template: %s", path)
 	}

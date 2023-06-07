@@ -2,14 +2,13 @@ package template
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/old/common"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"regexp"
 
 	"github.com/pkg/errors"
-
-	"github.com/hckops/hckctl/pkg/common"
 )
 
 type TemplateParam struct {
