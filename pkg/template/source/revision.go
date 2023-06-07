@@ -2,6 +2,7 @@ package source
 
 import (
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/pkg/errors"
 )
@@ -38,20 +39,22 @@ func refreshRevision(opts *RevisionOpts) error {
 		return errors.Wrap(err, "unable to access repository")
 	}
 
-	// update previous revision and fetch latest changes
-	// set automatically default revision in case override is invalid
-	if err := workTree.Pull(&git.PullOptions{}); err != nil && err != git.NoErrAlreadyUpToDate {
-		return errors.Wrap(err, "unable to update previous revision")
+	// fetch latest changes
+	// https://git-scm.com/book/en/v2/Git-Internals-The-Refspec
+	if err := repository.Fetch(&git.FetchOptions{
+		RefSpecs: []config.RefSpec{"+refs/*:refs/*"},
+	}); err != nil && err != git.NoErrAlreadyUpToDate {
+		return errors.Wrap(err, "unable to fetch repository")
 	}
 
 	// resolve revision (branch|tag|sha) to hash
 	hash, err := repository.ResolveRevision(plumbing.Revision(opts.Revision))
 	if err != nil {
-		return errors.Wrap(err, "unable to resolve hash revision")
+		return errors.Wrap(err, "unable to resolve revision")
 	}
 
-	// checkout latest revision
-	if err := workTree.Checkout(&git.CheckoutOptions{Hash: *hash}); err != nil {
+	// update latest revision
+	if err := workTree.Checkout(&git.CheckoutOptions{Hash: *hash, Force: true}); err != nil {
 		return errors.Wrap(err, "unable to checkout revision")
 	}
 

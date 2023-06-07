@@ -15,7 +15,7 @@ func AddRevisionFlag(command *cobra.Command, revision *string) string {
 	const (
 		flagName      = "revision"
 		flagShortName = "r"
-		flagUsage     = "megalopolis version i.e. branch|tag|sha"
+		flagUsage     = "megalopolis version, one of branch|tag|sha"
 	)
 
 	command.Flags().StringVarP(revision, flagName, flagShortName, TemplateSourceRevision, flagUsage)

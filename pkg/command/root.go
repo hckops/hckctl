@@ -62,7 +62,7 @@ func NewRootCmd() *cobra.Command {
 		logLevelConfigKey = "log.level"
 	)
 	// --log-level
-	logLevelUsage := fmt.Sprintf("set the logging level, one of: %s", strings.Join(logger.LevelValues(), "|"))
+	logLevelUsage := fmt.Sprintf("set the logging level, one of %s", strings.Join(logger.LevelValues(), "|"))
 	rootCmd.PersistentFlags().StringP(logLevelFlag, "l", commonCmd.NoneFlagShortHand, logLevelUsage)
 	viper.BindPFlag(logLevelConfigKey, rootCmd.PersistentFlags().Lookup(logLevelFlag))
 
