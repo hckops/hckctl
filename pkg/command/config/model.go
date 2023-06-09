@@ -76,7 +76,7 @@ func newConfig(logFile, cacheDir string) *ConfigV1 {
 		Box: BoxConfig{
 			Provider: box.Docker,
 			Kube: KubeConfig{
-				Namespace:  "labs",
+				Namespace:  common.ProjectName,
 				ConfigPath: "",
 				Resources: KubeResources{
 					Memory: "512Mi",

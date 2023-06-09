@@ -1,6 +1,7 @@
 package common
 
 const (
+	ProjectName    = "hckops"
 	CliName        = "hckctl"
 	DefaultDirName = "hck"
 
