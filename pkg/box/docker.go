@@ -1,7 +1,6 @@
-package docker
+package box
 
 import (
-	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/template/model"
 )
 
@@ -21,6 +20,6 @@ type DockerClient struct {
 	opts *DockerClientOpts
 }
 
-func (client *DockerClient) Open() (*box.Connection, error) {
+func (client *DockerClient) Open() (*Connection, error) {
 	return nil, nil
 }

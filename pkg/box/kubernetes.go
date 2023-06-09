@@ -1,7 +1,6 @@
-package kubernetes
+package box
 
 import (
-	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/template/model"
 )
 
@@ -13,6 +12,6 @@ type KubeClient struct {
 	opts *KubeClientOpts
 }
 
-func (client *KubeClient) Open() (*box.Connection, error) {
+func (client *KubeClient) Open() (*Connection, error) {
 	return nil, nil
 }

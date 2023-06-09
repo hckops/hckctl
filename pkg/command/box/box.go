@@ -127,8 +127,8 @@ func openBox(src source.TemplateSource, provider box.BoxProvider) error {
 		return errors.New("invalid template")
 	}
 
-	if client, err := newBoxClient(provider, boxTemplate); err != nil {
-		log.Warn().Err(err).Msg("error creating the client")
+	if client, err := box.NewBoxClient(provider, boxTemplate); err != nil {
+		log.Warn().Err(err).Msg("error creating client")
 		return errors.New("client error")
 	} else {
 		// TODO
