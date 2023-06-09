@@ -42,7 +42,7 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	if len(args) == 1 && opts.sourceFlag.Local {
 		path := args[0]
-		log.Debug().Msgf("create local box: %s", path)
+		log.Debug().Msgf("create box from local template: path=%s", path)
 
 		return createBox(source.NewLocalSource(path), opts.configRef)
 
@@ -54,7 +54,7 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 			SourceRevision: common.TemplateSourceRevision,
 			Revision:       opts.sourceFlag.Revision,
 		}
-		log.Debug().Msgf("create remote box: %s", name)
+		log.Debug().Msgf("create box from remote template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
 		return createBox(source.NewRemoteSource(revisionOpts, name), opts.configRef)
 

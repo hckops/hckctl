@@ -41,8 +41,8 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 			# prints specific version (branch|tag|sha)
 			hckctl template alpine --revision main
 
-			# prints template in json formatFlag (default yaml)
-			hckctl template alpine --formatFlag json
+			# prints template in json format (default yaml)
+			hckctl template alpine --format json
 
 			# validates and prints local template
 			hckctl template ../megalopolis/boxes/official/alpine.yml --local
@@ -51,11 +51,11 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 	}
 
 	const (
-		formatFlagName = "formatFlag"
+		formatFlagName = "format"
 	)
-	// --formatFlag (enum)
+	// --format (enum)
 	formatValue := enumflag.New(&opts.formatFlag, formatFlagName, formatIds, enumflag.EnumCaseInsensitive)
-	formatUsage := fmt.Sprintf("output formatFlag, one of %s", strings.Join(formatValues(), "|"))
+	formatUsage := fmt.Sprintf("output format, one of %s", strings.Join(formatValues(), "|"))
 	command.Flags().Var(formatValue, formatFlagName, formatUsage)
 
 	// --revision or --local
@@ -104,7 +104,7 @@ func printTemplate(src source.TemplateSource, format string) error {
 
 	if formatted, err := formatTemplate(value, format); err != nil {
 		log.Warn().Err(err).Msg("error printing template")
-		return errors.New("formatFlag error")
+		return errors.New("format error")
 	} else {
 		log.Debug().Msgf("print template: kind=%s format=%s\n%s", value.Kind.String(), format, formatted)
 		fmt.Print(formatted)
