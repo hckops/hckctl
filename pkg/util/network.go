@@ -6,8 +6,8 @@ import (
 	"strconv"
 )
 
-func GetLocalPort(port string) (string, error) {
-	if err := verifyOpenPort(port); err == nil {
+func FindOpenPort(port string) (string, error) {
+	if err := isPortOpen(port); err == nil {
 		return port, nil
 	} else {
 		p, errConv := strconv.Atoi(port)
@@ -17,11 +17,12 @@ func GetLocalPort(port string) (string, error) {
 		nextPort := strconv.Itoa(p + 1)
 		// WARN fmt.Printf("port %s is not available, attempt %s", port, nextPort)
 
-		return GetLocalPort(nextPort)
+		return FindOpenPort(nextPort)
 	}
 }
 
-func verifyOpenPort(port string) error {
+func isPortOpen(port string) error {
+
 	listener, err := net.Listen("tcp", fmt.Sprintf("[::]:%s", port))
 	if err != nil {
 		return fmt.Errorf("unable to listen on port %s: %v", port, err)

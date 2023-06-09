@@ -5,6 +5,7 @@ import (
 	"github.com/hckops/hckctl/pkg/old/model"
 	"github.com/hckops/hckctl/pkg/old/schema"
 	util2 "github.com/hckops/hckctl/pkg/old/util"
+	"github.com/hckops/hckctl/pkg/util"
 	"io"
 	"io/ioutil"
 	"sync"
@@ -128,7 +129,7 @@ func buildHostConfig(ports []schema.PortV1, onPortBindCallback func(port schema.
 	portBindings := make(nat.PortMap)
 	for _, port := range ports {
 
-		localPort, err := util2.GetLocalPort(port.Local)
+		localPort, err := util.FindOpenPort(port.Local)
 		if err != nil {
 			return nil, errors.Wrap(err, "error docker local port: hostConfig")
 		}

@@ -7,7 +7,7 @@ import (
 	"github.com/hckops/hckctl/pkg/old/common"
 	"github.com/hckops/hckctl/pkg/old/model"
 	"github.com/hckops/hckctl/pkg/old/schema"
-	"github.com/hckops/hckctl/pkg/old/util"
+	"github.com/hckops/hckctl/pkg/util"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -233,7 +233,7 @@ func (box *KubeBox) PortForward(podName, namespace string) {
 
 	var portBindings []string
 	for _, port := range box.Template.NetworkPorts() {
-		localPort, _ := util.GetLocalPort(port.Local)
+		localPort, _ := util.FindOpenPort(port.Local)
 
 		box.OnTunnelCallback(schema.PortV1{
 			Alias:  port.Alias,

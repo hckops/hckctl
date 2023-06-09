@@ -6,6 +6,7 @@ import (
 	"github.com/hckops/hckctl/pkg/old/common"
 	"github.com/hckops/hckctl/pkg/old/schema"
 	util2 "github.com/hckops/hckctl/pkg/old/util"
+	"github.com/hckops/hckctl/pkg/util"
 	"io"
 	"net"
 	"os"
@@ -101,7 +102,7 @@ func (remote *RemoteSshBox) sendRequest(payload string) string {
 func (remote *RemoteSshBox) tunnelBox(boxId string) {
 
 	for _, port := range remote.template.NetworkPorts() {
-		localPort, _ := util2.GetLocalPort(port.Local)
+		localPort, _ := util.FindOpenPort(port.Local)
 
 		openPort := schema.PortV1{
 			Alias:  port.Alias,
