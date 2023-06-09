@@ -54,26 +54,26 @@ func (opts *boxListCmdOptions) run(cmd *cobra.Command, args []string) error {
 		SourceRevision: common.TemplateSourceRevision,
 		Revision:       opts.revision,
 	}
-	if validations, err := source.NewRemoteSource(revisionOpts, "").ReadAll(); err != nil {
+	if templates, err := source.NewRemoteSource(revisionOpts, "").ReadTemplates(); err != nil {
 		log.Warn().Err(err).Msg("error listing boxes")
 		return errors.New("error")
 
 	} else {
 		var total int
-		for _, validation := range validations {
-			if validation.IsValid && validation.Value.Kind == schema.KindBoxV1 {
+		for _, template := range templates {
+			if template.IsValid && template.Value.Kind == schema.KindBoxV1 {
 				total = total + 1
 				// remove prefix and suffix
 				prettyPath := strings.NewReplacer(
 					fmt.Sprintf("%s/boxes/", opts.configRef.Config.Template.CacheDir), "",
 					".yml", "",
 					".yaml", "",
-				).Replace(validation.Path)
+				).Replace(template.Path)
 
-				log.Debug().Msgf("found template:pretty=%s path=%s", prettyPath, validation.Path)
+				log.Debug().Msgf("found template: pretty=%s path=%s", prettyPath, template.Path)
 				fmt.Println(prettyPath)
 			} else {
-				log.Warn().Msgf("skipping invalid template: path=%s", validation.Path)
+				log.Warn().Msgf("skipping invalid template: path=%s", template.Path)
 			}
 		}
 		log.Debug().Msgf("total templates: %d", total)

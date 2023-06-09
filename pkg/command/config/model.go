@@ -4,6 +4,7 @@ import (
 	"net"
 	"strconv"
 
+	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/logger"
 	"github.com/hckops/hckctl/pkg/template/schema"
@@ -34,19 +35,10 @@ type TemplateConfig struct {
 }
 
 type BoxConfig struct {
-	Provider Provider    `yaml:"provider"`
-	Kube     KubeConfig  `yaml:"kube"`
-	Cloud    CloudConfig `yaml:"cloud"`
+	Provider box.BoxProvider `yaml:"provider"`
+	Kube     KubeConfig      `yaml:"kube"`
+	Cloud    CloudConfig     `yaml:"cloud"`
 }
-
-type Provider string
-
-const (
-	Docker     Provider = "docker"
-	Kubernetes Provider = "kube"
-	Argo       Provider = "argo"
-	Cloud      Provider = "cloud"
-)
 
 type KubeConfig struct {
 	Namespace  string        `yaml:"namespace"`
@@ -82,7 +74,7 @@ func newConfig(logFile, cacheDir string) *ConfigV1 {
 			CacheDir: cacheDir,
 		},
 		Box: BoxConfig{
-			Provider: Docker,
+			Provider: box.Docker,
 			Kube: KubeConfig{
 				Namespace:  "labs",
 				ConfigPath: "",

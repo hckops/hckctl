@@ -57,7 +57,7 @@ func (opts *templateListCmdOptions) run(cmd *cobra.Command, args []string) error
 		Revision:       opts.revision,
 	}
 	// name is overridden with custom wildcard
-	if validations, err := source.NewRemoteSource(revisionOpts, "").ReadAll(); err != nil {
+	if validations, err := source.NewRemoteSource(revisionOpts, "").ReadTemplates(); err != nil {
 		log.Warn().Err(err).Msg("error listing templates")
 		return errors.New("error")
 

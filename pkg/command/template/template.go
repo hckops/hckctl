@@ -76,7 +76,7 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	if len(args) == 1 && opts.local {
 		path := args[0]
-		log.Debug().Msgf("print local template: %s", path)
+		log.Debug().Msgf("print local template: path=%s", path)
 
 		return printTemplate(source.NewLocalSource(path), format)
 
@@ -88,7 +88,7 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 			SourceRevision: common.TemplateSourceRevision,
 			Revision:       opts.revision,
 		}
-		log.Debug().Msgf("print remote template: %s", name)
+		log.Debug().Msgf("print remote template: name=%s revision=%s", name, opts.revision)
 
 		return printTemplate(source.NewRemoteSource(revisionOpts, name), format)
 
@@ -100,7 +100,7 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 func printTemplate(src source.TemplateSource, format string) error {
 
-	value, err := src.Read()
+	value, err := src.ReadTemplate()
 	if err != nil {
 		log.Warn().Err(err).Msg("error reading template")
 		return errors.New("invalid template")

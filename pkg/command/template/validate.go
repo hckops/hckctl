@@ -50,11 +50,11 @@ func validateTemplate(path string) error {
 	src := source.NewLocalSource(path)
 
 	// attempt single file validation
-	if templateValue, err := src.Read(); err == nil {
+	if templateValue, err := src.ReadTemplate(); err == nil {
 		printValidTemplate(path, templateValue)
 
 		// attempt wildcard validation
-	} else if validations, err := src.ReadAll(); err == nil {
+	} else if validations, err := src.ReadTemplates(); err == nil {
 		for _, validation := range validations {
 			if validation.IsValid {
 				printValidTemplate(validation.Path, validation.Value)

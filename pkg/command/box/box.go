@@ -5,10 +5,12 @@ import (
 	"strings"
 
 	"github.com/MakeNowJust/heredoc"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/template/source"
@@ -39,7 +41,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 			  Independently from the provider and the template used, it will spawn a shell
 			  that when closed will automatically remove and cleanup the running instance.
 
-			  The main purpose of a Box is to provide a ready-to-go and always up-to-date
+			  The main purpose of Boxes is to provide a ready-to-go and always up-to-date
 			  working environment with an uniformed experience, abstracting the actual providers
 			  e.g. Docker, Kubernetes, etc.
 
@@ -70,8 +72,8 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 		providerFlagName = "provider"
 	)
 	// --provider
-	command.Flags().StringP(providerFlagName, common.NoneFlagShortHand, string(config.Docker), fmt.Sprintf("switch box provider, one of %s",
-		strings.Join([]string{string(config.Docker), string(config.Kubernetes), string(config.Argo), string(config.Cloud)}, "|")))
+	command.Flags().StringP(providerFlagName, common.NoneFlagShortHand, string(box.Docker),
+		fmt.Sprintf("switch box provider, one of %s", strings.Join(box.BoxProviderValues(), "|")))
 	viper.BindPFlag(fmt.Sprintf("box.%s", providerFlagName), command.Flags().Lookup(providerFlagName))
 
 	// --local
@@ -91,19 +93,17 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 }
 
 func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
-	//fmt.Println(fmt.Sprintf("not implemented: local=%v revision=%s provider=%v",
-	//	opts.local, opts.revision, opts.configRef.Config.Box.Provider))
+	provider := opts.configRef.Config.Box.Provider
 
 	if len(args) == 1 && opts.local {
 		path := args[0]
 		log.Debug().Msgf("open local box: %s", path)
 
-		// TODO
-		return nil
+		return openBox(source.NewLocalSource(path), provider)
 
 	} else if len(args) == 1 {
 		name := args[0]
-		_ = &source.RevisionOpts{
+		revisionOpts := &source.RevisionOpts{
 			SourceCacheDir: opts.configRef.Config.Template.CacheDir,
 			SourceUrl:      common.TemplateSourceUrl,
 			SourceRevision: common.TemplateSourceRevision,
@@ -111,11 +111,28 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 		}
 		log.Debug().Msgf("open remote box: %s", name)
 
-		// TODO revisionOpts
-		return nil
+		return openBox(source.NewRemoteSource(revisionOpts, name), provider)
 
 	} else {
 		cmd.HelpFunc()(cmd, args)
+	}
+	return nil
+}
+
+func openBox(src source.TemplateSource, provider box.BoxProvider) error {
+	log.Debug().Msg("TODO")
+	boxTemplate, err := src.ReadBox()
+	if err != nil {
+		log.Warn().Err(err).Msg("error reading template")
+		return errors.New("invalid template")
+	}
+
+	if client, err := newBoxClient(provider, boxTemplate); err != nil {
+		log.Warn().Err(err).Msg("error creating the client")
+		return errors.New("client error")
+	} else {
+		// TODO
+		client.Open()
 	}
 	return nil
 }

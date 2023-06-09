@@ -43,8 +43,8 @@ func (t *TemplateValue) toValidated(path string, isValid bool) *TemplateValidate
 }
 
 type TemplateSource interface {
-	Read() (*TemplateValue, error)
-	ReadAll() ([]*TemplateValidated, error)
+	ReadTemplate() (*TemplateValue, error)
+	ReadTemplates() ([]*TemplateValidated, error)
 	ReadBox() (*model.BoxV1, error)
 	ReadLab() (*model.LabV1, error)
 }
@@ -57,11 +57,11 @@ func NewLocalSource(path string) *LocalSource {
 	return &LocalSource{path}
 }
 
-func (src *LocalSource) Read() (*TemplateValue, error) {
+func (src *LocalSource) ReadTemplate() (*TemplateValue, error) {
 	return readTemplate(src.path)
 }
 
-func (src *LocalSource) ReadAll() ([]*TemplateValidated, error) {
+func (src *LocalSource) ReadTemplates() ([]*TemplateValidated, error) {
 	return readTemplates(src.path)
 }
 func (src *LocalSource) ReadBox() (*model.BoxV1, error) {
@@ -80,11 +80,11 @@ func NewRemoteSource(opts *RevisionOpts, name string) *RemoteSource {
 	return &RemoteSource{opts, name}
 }
 
-func (src *RemoteSource) Read() (*TemplateValue, error) {
+func (src *RemoteSource) ReadTemplate() (*TemplateValue, error) {
 	return readRemoteTemplate(src.opts, src.name)
 }
 
-func (src *RemoteSource) ReadAll() ([]*TemplateValidated, error) {
+func (src *RemoteSource) ReadTemplates() ([]*TemplateValidated, error) {
 	wildcard := fmt.Sprintf("%s/**/*.{yml,yaml}", src.opts.SourceCacheDir)
 	return readRemoteTemplates(src.opts, wildcard)
 }
