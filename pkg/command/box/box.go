@@ -17,9 +17,8 @@ import (
 )
 
 type boxCmdOptions struct {
-	configRef *config.ConfigRef
-	local     bool
-	revision  string
+	configRef  *config.ConfigRef
+	sourceFlag *common.SourceFlag
 }
 
 func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -30,11 +29,11 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "box [name]",
-		Short: "attach and tunnel containers",
+		Short: "attach and tunnel boxes",
 		Long: heredoc.Doc(`
-			attach and tunnel containers
+			attach and tunnel boxes
 
-			  Create and attach to an ephemeral container, tunnelling locally all the open ports.
+			  Create and attach to an ephemeral box, tunnelling locally all the open ports.
 			  All public templates are versioned under the /boxes/ sub-path on GitHub
 			  at https://github.com/hckops/megalopolis
 
@@ -42,7 +41,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 			  that when closed will automatically remove and cleanup the running instance.
 
 			  The main purpose of Boxes is to provide a ready-to-go and always up-to-date
-			  working environment with an uniformed experience, abstracting the actual providers
+			  hacking environment with an uniformed experience, abstracting the actual providers
 			  e.g. Docker, Kubernetes, etc.
 
 			  Boxes are a simple building block, for more advanced scenarios prefer Labs.
@@ -76,14 +75,11 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 		fmt.Sprintf("switch box provider, one of %s", strings.Join(box.BoxProviderValues(), "|")))
 	viper.BindPFlag(fmt.Sprintf("box.%s", providerFlagName), command.Flags().Lookup(providerFlagName))
 
-	// --local
-	localFlagName := common.AddLocalFlag(command, &opts.local)
-	// --revision
-	revisionFlagName := common.AddRevisionFlag(command, &opts.revision)
-	command.MarkFlagsMutuallyExclusive(localFlagName, revisionFlagName)
+	// --revision or --local
+	opts.sourceFlag = common.AddTemplateSourceFlag(command)
 
 	//command.AddCommand(NewBoxCopyCmd(opts))
-	//command.AddCommand(NewBoxCreateCmd(opts))
+	command.AddCommand(NewBoxCreateCmd(configRef))
 	//command.AddCommand(NewBoxDeleteCmd(opts))
 	//command.AddCommand(NewBoxExecCmd(opts))
 	command.AddCommand(NewBoxListCmd(configRef))
@@ -95,7 +91,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 	provider := opts.configRef.Config.Box.Provider
 
-	if len(args) == 1 && opts.local {
+	if len(args) == 1 && opts.sourceFlag.Local {
 		path := args[0]
 		log.Debug().Msgf("open local box: %s", path)
 
@@ -107,7 +103,7 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 			SourceCacheDir: opts.configRef.Config.Template.CacheDir,
 			SourceUrl:      common.TemplateSourceUrl,
 			SourceRevision: common.TemplateSourceRevision,
-			Revision:       opts.revision,
+			Revision:       opts.sourceFlag.Revision,
 		}
 		log.Debug().Msgf("open remote box: %s", name)
 

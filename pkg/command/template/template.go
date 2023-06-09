@@ -16,10 +16,9 @@ import (
 )
 
 type templateCmdOptions struct {
-	configRef *config.ConfigRef
-	format    formatFlag
-	local     bool
-	revision  string
+	configRef  *config.ConfigRef
+	formatFlag formatFlag
+	sourceFlag *common.SourceFlag
 }
 
 func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -42,8 +41,8 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 			# prints specific version (branch|tag|sha)
 			hckctl template alpine --revision main
 
-			# prints template in json format (default yaml)
-			hckctl template alpine --format json
+			# prints template in json formatFlag (default yaml)
+			hckctl template alpine --formatFlag json
 
 			# validates and prints local template
 			hckctl template ../megalopolis/boxes/official/alpine.yml --local
@@ -52,18 +51,15 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 	}
 
 	const (
-		formatFlagName = "format"
+		formatFlagName = "formatFlag"
 	)
-	// --format (enum)
-	formatValue := enumflag.New(&opts.format, formatFlagName, formatIds, enumflag.EnumCaseInsensitive)
-	formatUsage := fmt.Sprintf("output format, one of %s", strings.Join(formatValues(), "|"))
+	// --formatFlag (enum)
+	formatValue := enumflag.New(&opts.formatFlag, formatFlagName, formatIds, enumflag.EnumCaseInsensitive)
+	formatUsage := fmt.Sprintf("output formatFlag, one of %s", strings.Join(formatValues(), "|"))
 	command.Flags().Var(formatValue, formatFlagName, formatUsage)
 
-	// --local
-	localFlagName := common.AddLocalFlag(command, &opts.local)
-	// --revision
-	revisionFlagName := common.AddRevisionFlag(command, &opts.revision)
-	command.MarkFlagsMutuallyExclusive(localFlagName, revisionFlagName)
+	// --revision or --local
+	opts.sourceFlag = common.AddTemplateSourceFlag(command)
 
 	command.AddCommand(NewTemplateListCmd(configRef))
 	command.AddCommand(NewTemplateValidateCmd())
@@ -72,9 +68,9 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 }
 
 func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
-	format := opts.format.value()
+	format := opts.formatFlag.value()
 
-	if len(args) == 1 && opts.local {
+	if len(args) == 1 && opts.sourceFlag.Local {
 		path := args[0]
 		log.Debug().Msgf("print local template: path=%s", path)
 
@@ -86,9 +82,9 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 			SourceCacheDir: opts.configRef.Config.Template.CacheDir,
 			SourceUrl:      common.TemplateSourceUrl,
 			SourceRevision: common.TemplateSourceRevision,
-			Revision:       opts.revision,
+			Revision:       opts.sourceFlag.Revision,
 		}
-		log.Debug().Msgf("print remote template: name=%s revision=%s", name, opts.revision)
+		log.Debug().Msgf("print remote template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
 		return printTemplate(source.NewRemoteSource(revisionOpts, name), format)
 
@@ -108,7 +104,7 @@ func printTemplate(src source.TemplateSource, format string) error {
 
 	if formatted, err := formatTemplate(value, format); err != nil {
 		log.Warn().Err(err).Msg("error printing template")
-		return errors.New("format error")
+		return errors.New("formatFlag error")
 	} else {
 		log.Debug().Msgf("print template: kind=%s format=%s\n%s", value.Kind.String(), format, formatted)
 		fmt.Print(formatted)

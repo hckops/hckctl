@@ -4,29 +4,30 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
+	"github.com/hckops/hckctl/pkg/command/common"
+	"github.com/hckops/hckctl/pkg/command/config"
 )
 
 type boxCreateCmdOptions struct {
-	box      *boxCmdOptions
-	path     string
-	revision string
+	configRef  *config.ConfigRef
+	sourceFlag *common.SourceFlag
 }
 
-func NewBoxCreateCmd(boxOpts *boxCmdOptions) *cobra.Command {
+func NewBoxCreateCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	opts := &boxCreateCmdOptions{
-		box: boxOpts,
+		configRef: configRef,
 	}
 
 	command := &cobra.Command{
-		Use:   "create",
-		Short: "TODO create",
+		Use:   "create [name]",
+		Short: "create a detached box",
 		RunE:  opts.run,
 	}
 
-	command.Flags().StringVarP(&opts.path, "path", "p", "", "load a local template")
-	command.Flags().StringVarP(&opts.revision, "revision", "r", "main", "megalopolis version i.e. branch|tag|sha")
-	command.MarkFlagsMutuallyExclusive("path", "revision")
+	// --revision or --local
+	opts.sourceFlag = common.AddTemplateSourceFlag(command)
 
 	return command
 }

@@ -162,6 +162,7 @@ tail -f /tmp/hckctl-*.log
 ```
 
 TODO
+* autocomplete
 * template: add offline mode
 * template: update directories to exclude in `resolvePath`
 * box: refactor callbacks with channels

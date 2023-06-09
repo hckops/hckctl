@@ -11,6 +11,11 @@ const (
 	NoneFlagShortHand = ""
 )
 
+type SourceFlag struct {
+	Revision string
+	Local    bool
+}
+
 func AddRevisionFlag(command *cobra.Command, revision *string) string {
 	const (
 		flagName      = "revision"
@@ -32,4 +37,12 @@ func AddLocalFlag(command *cobra.Command, local *bool) string {
 	)
 	command.Flags().BoolVarP(local, flagName, NoneFlagShortHand, false, flagUsage)
 	return flagName
+}
+
+func AddTemplateSourceFlag(command *cobra.Command) *SourceFlag {
+	sourceFlag := &SourceFlag{}
+	revisionFlagName := AddRevisionFlag(command, &sourceFlag.Revision)
+	localFlagName := AddLocalFlag(command, &sourceFlag.Local)
+	command.MarkFlagsMutuallyExclusive(revisionFlagName, localFlagName)
+	return sourceFlag
 }
