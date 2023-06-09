@@ -2,6 +2,7 @@ package box
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/old/client"
 	"github.com/hckops/hckctl/pkg/old/model"
 	"github.com/hckops/hckctl/pkg/old/schema"
@@ -11,12 +12,11 @@ import (
 	logger "github.com/rs/zerolog/log"
 
 	"github.com/hckops/hckctl/internal/config"
-	"github.com/hckops/hckctl/internal/terminal"
 )
 
 type LocalKubeBox struct {
 	log     zerolog.Logger
-	loader  *terminal.Loader
+	loader  *common.Loader
 	box     *client.KubeBox
 	streams *model.BoxStreams
 }
@@ -39,7 +39,7 @@ func NewKubeBox(template *schema.BoxV1, config *config.KubeConfig) *LocalKubeBox
 
 	return &LocalKubeBox{
 		log:     l,
-		loader:  terminal.NewLoader(),
+		loader:  common.NewLoader(),
 		box:     box,
 		streams: model.NewDefaultStreams(true), // TODO tty
 	}

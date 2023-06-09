@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/hckops/hckctl/pkg/old/model"
 	"github.com/hckops/hckctl/pkg/old/schema"
-	util2 "github.com/hckops/hckctl/pkg/old/util"
 	"github.com/hckops/hckctl/pkg/util"
 	"io"
 	"io/ioutil"
@@ -195,7 +194,7 @@ func (box *DockerBox) Exec(containerId string, streams *model.BoxStreams) error 
 	handleStreams(&execAttachResponse, streams, removeContainerCallback, box.OnStreamErrorCallback)
 
 	// fixes echoes and handle SIGTERM interrupt properly
-	if terminal, err := util2.NewRawTerminal(streams.Stdin); err == nil {
+	if terminal, err := util.NewRawTerminal(streams.Stdin); err == nil {
 		defer terminal.Restore()
 	}
 

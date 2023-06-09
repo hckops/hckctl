@@ -33,7 +33,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 		Long: heredoc.Doc(`
 			attach and tunnel boxes
 
-			  Create and attach to an ephemeral box, tunnelling locally all the open ports.
+			  Create and attach to an ephemeral Box, tunnelling locally all the open ports.
 			  All public templates are versioned under the /boxes/ sub-path on GitHub
 			  at https://github.com/hckops/megalopolis
 
@@ -117,18 +117,27 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 func openBox(src source.TemplateSource, provider box.BoxProvider) error {
 	log.Debug().Msg("TODO")
+	loader := common.NewLoader()
+	loader.Start("TODO")
+
 	boxTemplate, err := src.ReadBox()
 	if err != nil {
 		log.Warn().Err(err).Msg("error reading template")
 		return errors.New("invalid template")
 	}
 
+	loader.Sleep(2)
+	loader.Refresh("update")
+	loader.Sleep(2)
+
 	if client, err := box.NewBoxClient(provider, boxTemplate); err != nil {
 		log.Warn().Err(err).Msg("error creating client")
 		return errors.New("client error")
 	} else {
 		// TODO
-		client.Open()
+		client.Setup()
 	}
+
+	loader.Stop()
 	return nil
 }

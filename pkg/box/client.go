@@ -2,7 +2,6 @@ package box
 
 import (
 	"context"
-
 	"github.com/pkg/errors"
 
 	"github.com/hckops/hckctl/pkg/template/model"
@@ -14,7 +13,8 @@ type Connection struct {
 }
 
 type BoxClient interface {
-	Open() (*Connection, error)
+	Setup() (*Connection, error)
+	Create() (string, error)
 }
 
 func NewBoxClient(provider BoxProvider, template *model.BoxV1) (BoxClient, error) {

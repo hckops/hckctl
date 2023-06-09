@@ -2,20 +2,19 @@ package box
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/old/client"
 	"github.com/hckops/hckctl/pkg/old/model"
 	"github.com/hckops/hckctl/pkg/old/schema"
 
 	"github.com/rs/zerolog"
 	logger "github.com/rs/zerolog/log"
-
-	"github.com/hckops/hckctl/internal/terminal"
 )
 
 type LocalDockerBox struct {
 	// TODO dockerConfig
 	log     zerolog.Logger
-	loader  *terminal.Loader
+	loader  *common.Loader
 	box     *client.DockerBox
 	streams *model.BoxStreams
 }
@@ -30,7 +29,7 @@ func NewDockerBox(template *schema.BoxV1) *LocalDockerBox {
 
 	return &LocalDockerBox{
 		log:     l,
-		loader:  terminal.NewLoader(),
+		loader:  common.NewLoader(),
 		box:     box,
 		streams: model.NewDefaultStreams(true), // TODO tty
 	}

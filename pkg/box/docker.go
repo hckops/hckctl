@@ -20,6 +20,12 @@ type DockerClient struct {
 	opts *DockerClientOpts
 }
 
-func (client *DockerClient) Open() (*Connection, error) {
+func (client *DockerClient) Setup() (*Connection, error) {
 	return nil, nil
+}
+
+// TODO BoxInfo e.g. id, template
+
+func (client *DockerClient) Create() (string, error) {
+	return "", nil
 }

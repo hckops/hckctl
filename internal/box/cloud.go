@@ -3,9 +3,9 @@ package box
 import (
 	"encoding/hex"
 	"fmt"
+	common2 "github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/old/common"
 	"github.com/hckops/hckctl/pkg/old/schema"
-	util2 "github.com/hckops/hckctl/pkg/old/util"
 	"github.com/hckops/hckctl/pkg/util"
 	"io"
 	"net"
@@ -17,12 +17,11 @@ import (
 	"golang.org/x/crypto/ssh"
 
 	"github.com/hckops/hckctl/internal/config"
-	"github.com/hckops/hckctl/internal/terminal"
 )
 
 type RemoteSshBox struct {
 	log      zerolog.Logger
-	loader   *terminal.Loader
+	loader   *common2.Loader
 	config   *config.CloudConfig
 	revision string
 	template *schema.BoxV1 // only name is actually needed
@@ -34,7 +33,7 @@ func NewRemoteSshBox(template *schema.BoxV1, revision string, config *config.Clo
 
 	return &RemoteSshBox{
 		log:      l,
-		loader:   terminal.NewLoader(),
+		loader:   common2.NewLoader(),
 		config:   config,
 		revision: revision,
 		template: template,
@@ -170,7 +169,7 @@ func (remote *RemoteSshBox) exec(boxId string) {
 		remote.loader.Halt(err, "error streams")
 	}
 
-	if rawTerminal, err := util2.NewRawTerminal(os.Stdin); err == nil {
+	if rawTerminal, err := util.NewRawTerminal(os.Stdin); err == nil {
 		defer rawTerminal.Restore()
 	} else {
 		remote.log.Warn().Err(err).Msg("error terminal")
