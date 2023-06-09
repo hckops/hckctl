@@ -1,18 +1,18 @@
 package config
 
 import (
-	"github.com/hckops/hckctl/pkg/box"
 	"net"
 	"strconv"
 
+	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/logger"
 	"github.com/hckops/hckctl/pkg/template/schema"
 )
 
-// ConfigRef is a wrapper used to avoid global variables and to reference the config value in the commands
+// ConfigRef is a wrapper used to avoid global variables.
+// It's used to reference the config value in the commands
 // before they are actually loaded with viper in each PersistentPreRunE.
-// The ConfigV1 model is in a common package to avoid "import cycle not allowed"
 type ConfigRef struct {
 	Config *ConfigV1
 }

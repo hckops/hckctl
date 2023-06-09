@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/dchest/uniuri"
+
 	"github.com/hckops/hckctl/pkg/util"
 )
 
