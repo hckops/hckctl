@@ -13,8 +13,13 @@ type Connection struct {
 }
 
 type BoxClient interface {
-	Setup() (*Connection, error)
+	//Copy()
 	Create() (string, error)
+	//Delete()
+	//Exec()
+	//List() ([]string, error)
+	//Open()
+	//Tunnel()
 }
 
 func NewBoxClient(provider BoxProvider, template *model.BoxV1) (BoxClient, error) {

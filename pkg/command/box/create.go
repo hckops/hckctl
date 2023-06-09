@@ -64,8 +64,6 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// TODO before return error invoke stop or it will screw the terminal
-
 func createBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 
 	boxTemplate, err := src.ReadBox()
@@ -78,8 +76,7 @@ func createBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 	loader.Start("loading template %s", boxTemplate.Name)
 
 	provider := configRef.Config.Box.Provider
-	boxId := boxTemplate.GenerateName(common.BoxPrefix)
-	log.Debug().Msgf("creating box provider=%s name=%s boxId=%s\n%s", provider, boxTemplate.Name, boxId, boxTemplate.Pretty())
+	log.Debug().Msgf("creating box: provider=%s name=%s\n%s", provider, boxTemplate.Name, boxTemplate.Pretty())
 
 	client, err := box.NewBoxClient(provider, boxTemplate)
 	if err != nil {
@@ -88,9 +85,15 @@ func createBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 		return errors.New("client error")
 	}
 
-	// TODO
-	client.Setup()
+	boxId, err := client.Create()
+	if err != nil {
+		log.Warn().Err(err).Msg("error creating box")
+		loader.Stop()
+		return errors.New("create error")
+	}
+
 	loader.Stop()
+	log.Info().Msgf("new box successfully created: boxId=%s", boxId)
 	fmt.Println(boxId)
 	return nil
 }

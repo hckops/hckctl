@@ -25,7 +25,7 @@ var testBox = &BoxV1{
 }
 
 func TestGenerateName(t *testing.T) {
-	boxId := testBox.GenerateName("box")
+	boxId := testBox.GenerateName()
 	assert.True(t, strings.HasPrefix(boxId, "box-my-test-"))
 	assert.Equal(t, 17, len(boxId))
 }

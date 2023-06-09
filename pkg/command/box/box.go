@@ -72,20 +72,19 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 	command.AddCommand(NewBoxCreateCmd(configRef))
 	//command.AddCommand(NewBoxDeleteCmd(opts))
 	//command.AddCommand(NewBoxExecCmd(opts))
-	command.AddCommand(NewBoxListCmd(configRef))
+	command.AddCommand(NewBoxListCmd(configRef)) // TODO list of instances not templates
 	//command.AddCommand(NewBoxTunnelCmd(opts))
 
 	return command
 }
 
 func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
-	provider := opts.configRef.Config.Box.Provider
 
 	if len(args) == 1 && opts.sourceFlag.Local {
 		path := args[0]
 		log.Debug().Msgf("open box from local template: path=%s", path)
 
-		return openBox(source.NewLocalSource(path), provider)
+		return openBox(source.NewLocalSource(path), opts.configRef)
 
 	} else if len(args) == 1 {
 		name := args[0]
@@ -97,7 +96,7 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 		}
 		log.Debug().Msgf("open box from remote template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
-		return openBox(source.NewRemoteSource(revisionOpts, name), provider)
+		return openBox(source.NewRemoteSource(revisionOpts, name), opts.configRef)
 
 	} else {
 		cmd.HelpFunc()(cmd, args)
@@ -105,10 +104,7 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func openBox(src source.TemplateSource, provider box.BoxProvider) error {
-	log.Debug().Msg("TODO")
-	loader := common.NewLoader()
-	loader.Start("TODO")
+func openBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 
 	boxTemplate, err := src.ReadBox()
 	if err != nil {
@@ -116,18 +112,20 @@ func openBox(src source.TemplateSource, provider box.BoxProvider) error {
 		return errors.New("invalid template")
 	}
 
-	loader.Sleep(2)
-	loader.Refresh("update")
-	loader.Sleep(2)
+	loader := common.NewLoader()
+	loader.Start("loading template %s", boxTemplate.Name)
 
-	if client, err := box.NewBoxClient(provider, boxTemplate); err != nil {
+	provider := configRef.Config.Box.Provider
+	log.Debug().Msgf("opening box: provider=%s name=%s\n%s", provider, boxTemplate.Name, boxTemplate.Pretty())
+
+	_, err = box.NewBoxClient(provider, boxTemplate)
+	if err != nil {
 		log.Warn().Err(err).Msg("error creating client")
+		loader.Stop()
 		return errors.New("client error")
-	} else {
-		// TODO
-		client.Setup()
 	}
 
+	// TODO
 	loader.Stop()
 	return nil
 }

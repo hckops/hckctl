@@ -29,8 +29,8 @@ type BoxPort struct {
 	Public bool // TODO not used, always false
 }
 
-func (box *BoxV1) GenerateName(prefix string) string {
-	return fmt.Sprintf("%s-%s-%s", prefix, box.Name, strings.ToLower(uniuri.NewLen(5)))
+func (box *BoxV1) GenerateName() string {
+	return fmt.Sprintf("box-%s-%s", box.Name, strings.ToLower(uniuri.NewLen(5)))
 }
 
 func (box *BoxV1) ImageName() string {

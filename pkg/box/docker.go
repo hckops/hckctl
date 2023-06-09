@@ -10,6 +10,7 @@ type DockerClientOpts struct {
 
 func NewDockerClient(template *model.BoxV1) *DockerClient {
 	return &DockerClient{
+		connection: &Connection{},
 		opts: &DockerClientOpts{
 			template: template,
 		},
@@ -17,7 +18,8 @@ func NewDockerClient(template *model.BoxV1) *DockerClient {
 }
 
 type DockerClient struct {
-	opts *DockerClientOpts
+	connection *Connection
+	opts       *DockerClientOpts
 }
 
 func (client *DockerClient) Setup() (*Connection, error) {
@@ -27,5 +29,5 @@ func (client *DockerClient) Setup() (*Connection, error) {
 // TODO BoxInfo e.g. id, template
 
 func (client *DockerClient) Create() (string, error) {
-	return "", nil
+	return client.opts.template.GenerateName(), nil
 }
