@@ -3,6 +3,9 @@ package model
 import (
 	"fmt"
 	"strings"
+
+	"github.com/dchest/uniuri"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 type BoxV1 struct {
@@ -24,6 +27,10 @@ type BoxPort struct {
 	Local  string
 	Remote string
 	Public bool // TODO not used, always false
+}
+
+func (box *BoxV1) GenerateName(prefix string) string {
+	return fmt.Sprintf("%s-%s-%s", prefix, box.Name, strings.ToLower(uniuri.NewLen(5)))
 }
 
 func (box *BoxV1) ImageName() string {
@@ -72,4 +79,9 @@ func (box *BoxV1) NetworkPorts() []BoxPort {
 	}
 
 	return ports
+}
+
+func (box *BoxV1) Pretty() string {
+	value, _ := util.EncodeJsonIndent(box)
+	return value
 }

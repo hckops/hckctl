@@ -7,4 +7,6 @@ const (
 	TemplateSourceName     = "megalopolis"
 	TemplateSourceUrl      = "https://github.com/hckops/megalopolis"
 	TemplateSourceRevision = "main"
+
+	BoxPrefix = "hckops-box"
 )

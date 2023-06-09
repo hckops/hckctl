@@ -46,6 +46,8 @@ func NewBoxListCmd(configRef *config.ConfigRef) *cobra.Command {
 	return command
 }
 
+// TODO list running boxes !!! remove revision
+
 func (opts *boxListCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	revisionOpts := &source.RevisionOpts{

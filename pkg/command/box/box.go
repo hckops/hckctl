@@ -1,14 +1,10 @@
 package box
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/MakeNowJust/heredoc"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/command/common"
@@ -67,14 +63,8 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 		RunE: opts.run,
 	}
 
-	const (
-		providerFlagName = "provider"
-	)
 	// --provider
-	command.Flags().StringP(providerFlagName, common.NoneFlagShortHand, string(box.Docker),
-		fmt.Sprintf("switch box provider, one of %s", strings.Join(box.BoxProviderValues(), "|")))
-	viper.BindPFlag(fmt.Sprintf("box.%s", providerFlagName), command.Flags().Lookup(providerFlagName))
-
+	addBoxProviderFlag(command)
 	// --revision or --local
 	opts.sourceFlag = common.AddTemplateSourceFlag(command)
 

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,13 +9,13 @@ import (
 
 var testBox = &BoxV1{
 	Kind: "box/v1",
-	Name: "my-box",
+	Name: "my-test",
 	Tags: []string{"my-test"},
 	Image: struct {
 		Repository string
 		Version    string
 	}{
-		Repository: "hckops/my-box",
+		Repository: "hckops/my-test",
 	},
 	Shell: "/bin/bash",
 	Network: struct{ Ports []string }{Ports: []string{
@@ -23,8 +24,14 @@ var testBox = &BoxV1{
 	}},
 }
 
+func TestGenerateName(t *testing.T) {
+	boxId := testBox.GenerateName("box")
+	assert.True(t, strings.HasPrefix(boxId, "box-my-test-"))
+	assert.Equal(t, 17, len(boxId))
+}
+
 func TestImageName(t *testing.T) {
-	assert.Equal(t, "hckops/my-box:latest", testBox.ImageName())
+	assert.Equal(t, "hckops/my-test:latest", testBox.ImageName())
 }
 
 func TestImageVersion(t *testing.T) {
@@ -45,4 +52,26 @@ func TestNetworkPorts(t *testing.T) {
 		{Alias: "bbb", Local: "456", Remote: "789", Public: false},
 	}
 	assert.Equal(t, ports, testBox.NetworkPorts())
+}
+
+func TestPretty(t *testing.T) {
+	json := `{
+  "Kind": "box/v1",
+  "Name": "my-test",
+  "Tags": [
+    "my-test"
+  ],
+  "Image": {
+    "Repository": "hckops/my-test",
+    "Version": ""
+  },
+  "Shell": "/bin/bash",
+  "Network": {
+    "Ports": [
+      "aaa:123",
+      "bbb:456:789"
+    ]
+  }
+}`
+	assert.Equal(t, json, testBox.Pretty())
 }
