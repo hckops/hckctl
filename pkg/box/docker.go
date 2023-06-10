@@ -54,7 +54,7 @@ func (c *DockerClient) Create() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	c.eventBus.PublishInfoEvent("create", "create box: templateName=%s boxName=%s boxId=%s", c.template.Name, boxName, boxId)
+	c.eventBus.PublishDebugEvent("create", "create box: templateName=%s boxName=%s boxId=%s", c.template.Name, boxName, boxId)
 
 	return boxName, nil
 }
@@ -74,7 +74,7 @@ func (c *DockerClient) setup() error {
 	}
 	defer reader.Close()
 
-	c.eventBus.PublishPriorityEvent("setup", "pulling %s", imageName)
+	c.eventBus.PublishInfoEvent("setup", "pulling %s", imageName)
 
 	// suppress default output
 	if _, err := io.Copy(io.Discard, reader); err != nil {
@@ -96,9 +96,9 @@ func (c *DockerClient) createContainer(containerName string) (string, error) {
 	}
 
 	onPortBindCallback := func(port model.BoxPort) {
-		c.eventBus.PublishInfoEvent("createContainer",
-			"[%s][%s] exposing %s (local) -> %s (container)",
-			containerName, port.Alias, port.Local, port.Remote)
+		c.eventBus.PublishPriorityEvent("createContainer",
+			"[%s][%s]   \texpose (container) %s -> (local) http://localhost:%s",
+			containerName, port.Alias, port.Remote, port.Local)
 	}
 
 	hostConfig, err := buildHostConfig(c.template.NetworkPorts(), onPortBindCallback)
@@ -115,6 +115,10 @@ func (c *DockerClient) createContainer(containerName string) (string, error) {
 		containerName)
 	if err != nil {
 		return "", errors.Wrap(err, "error container create")
+	}
+
+	if err := c.dockerApi.ContainerStart(c.ctx, newContainer.ID, types.ContainerStartOptions{}); err != nil {
+		return "", errors.Wrap(err, "error container start")
 	}
 
 	return newContainer.ID, nil

@@ -2,7 +2,6 @@ package box
 
 import (
 	"fmt"
-
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -85,12 +84,16 @@ func createBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 		return errors.New("client error")
 	}
 
+	var messages []string
 	client.Events().SubscribeEvents(func(event box.Event) {
 		loader.Reload()
 		switch event.Kind {
 		case box.PriorityEvent:
-			loader.Refresh(event.Message)
+			// print to console only upon success
+			messages = append(messages, event.Message)
+			log.Info().Msgf("[%s] %s", event.Source, event.Message)
 		case box.InfoEvent:
+			loader.Refresh(event.Message)
 			log.Info().Msgf("[%s] %s", event.Source, event.Message)
 		default:
 			log.Debug().Msgf("[%s] %s", event.Source, event.Message)
@@ -102,8 +105,9 @@ func createBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 		log.Warn().Err(err).Msg("error creating box")
 		return errors.New("create error")
 	}
-
 	log.Info().Msgf("new box successfully created: boxId=%s", boxId)
-	fmt.Println(boxId)
+	for _, message := range messages {
+		fmt.Println(message)
+	}
 	return nil
 }
