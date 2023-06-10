@@ -85,23 +85,17 @@ func createBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 		return errors.New("client error")
 	}
 
-	// TODO
-	go func() {
-		for {
-			select {
-			case event := <-client.Events():
-				loader.Refresh(event.Message)
-				switch event.Kind {
-				case box.SuccessEvent:
-					log.Info().Msgf(">>> %s", event.Message)
-				case box.ErrorEvent:
-					log.Warn().Msgf(">>> %s", event.Message)
-				default:
-					log.Debug().Msgf(">>> %s", event.Message)
-				}
-			}
+	client.Events().SubscribeEvents(func(event box.Event) {
+		loader.Refresh(event.Message)
+		switch event.Kind {
+		case box.SuccessEvent:
+			log.Info().Msgf(">>> %s", event.Message)
+		case box.ErrorEvent:
+			log.Warn().Msgf(">>> %s", event.Message)
+		default:
+			log.Debug().Msgf(">>> %s", event.Message)
 		}
-	}()
+	})
 
 	boxId, err := client.Create()
 	if err != nil {

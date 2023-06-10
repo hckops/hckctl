@@ -3,15 +3,13 @@ package box
 import (
 	"context"
 	"fmt"
-	"io"
-	"sync"
-
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/hckops/hckctl/pkg/util"
 	"github.com/pkg/errors"
+	"io"
 
 	"github.com/hckops/hckctl/pkg/template/model"
 )
@@ -20,11 +18,10 @@ type DockerClient struct {
 	ctx       context.Context
 	dockerApi *client.Client
 	template  *model.BoxV1
-	eventChan chan BoxEvent
-	wg        sync.WaitGroup
+	eventBus  *EventBus
 }
 
-func NewDockerClient(template *model.BoxV1) (*DockerClient, error) {
+func NewDockerClient(template *model.BoxV1, eventBus *EventBus) (*DockerClient, error) {
 
 	dockerApi, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -35,41 +32,12 @@ func NewDockerClient(template *model.BoxV1) (*DockerClient, error) {
 		ctx:       context.Background(),
 		dockerApi: dockerApi,
 		template:  template,
-		eventChan: make(chan BoxEvent),
+		eventBus:  eventBus,
 	}, nil
 }
 
-func (c *DockerClient) Events() <-chan BoxEvent {
-	return c.eventChan
-}
-
-func (c *DockerClient) sendDebugEvent(source, message string) {
-	c.wg.Add(1)
-	go func() {
-		c.eventChan <- BoxEvent{
-			Kind:    DebugEvent,
-			Source:  source,
-			Message: message,
-		}
-		c.wg.Done()
-	}()
-}
-
-func (c *DockerClient) sendSuccessEvent(source string) {
-	c.wg.Add(1)
-	go func() {
-		c.eventChan <- BoxEvent{
-			Kind:    SuccessEvent,
-			Source:  source,
-			Message: "",
-		}
-		c.wg.Done()
-	}()
-}
-
-func (c *DockerClient) close() error {
-	close(c.eventChan)
-	return c.dockerApi.Close()
+func (c *DockerClient) Events() *EventBus {
+	return c.eventBus
 }
 
 func (c *DockerClient) Create() (string, error) {
@@ -86,16 +54,19 @@ func (c *DockerClient) Create() (string, error) {
 		return "", err
 	}
 
-	c.wg.Wait()
-
 	return boxId, nil
+}
+
+func (c *DockerClient) close() error {
+	c.eventBus.Close()
+	return c.dockerApi.Close()
 }
 
 func (c *DockerClient) setup() error {
 
 	// TODO delete dangling images
 
-	c.sendDebugEvent("setup", "step-1")
+	c.eventBus.PublishDebugEvent("setup", "step-1")
 
 	reader, err := c.dockerApi.ImagePull(c.ctx, c.template.ImageName(), types.ImagePullOptions{})
 	if err != nil {
@@ -104,21 +75,21 @@ func (c *DockerClient) setup() error {
 	defer reader.Close()
 
 	// TODO
-	c.sendDebugEvent("setup", "step-2")
+	c.eventBus.PublishDebugEvent("setup", "step-2")
 
 	// suppress default output
 	if _, err := io.Copy(io.Discard, reader); err != nil {
 		return errors.Wrap(err, "error image pull output message")
 	}
 
-	c.sendDebugEvent("setup", "step-3")
+	c.eventBus.PublishDebugEvent("setup", "step-3")
 
 	return nil
 }
 
 func (c *DockerClient) createContainer(containerName string) (string, error) {
 
-	c.sendDebugEvent("create", "step-1")
+	c.eventBus.PublishDebugEvent("create", "step-1")
 
 	containerConfig, err := buildContainerConfig(
 		c.template.ImageName(),
@@ -130,7 +101,7 @@ func (c *DockerClient) createContainer(containerName string) (string, error) {
 	}
 
 	onPortBindCallback := func(port model.BoxPort) {
-		c.sendDebugEvent("create-port", fmt.Sprintf("port %v", port))
+		c.eventBus.PublishDebugEvent("create-port", fmt.Sprintf("port %v", port))
 	}
 
 	hostConfig, err := buildHostConfig(c.template.NetworkPorts(), onPortBindCallback)
@@ -149,7 +120,7 @@ func (c *DockerClient) createContainer(containerName string) (string, error) {
 		return "", errors.Wrap(err, "error container create")
 	}
 
-	c.sendSuccessEvent("create")
+	c.eventBus.PublishEmptySuccessEvent("create")
 
 	return newContainer.ID, nil
 }

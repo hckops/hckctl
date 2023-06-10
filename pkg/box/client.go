@@ -6,25 +6,8 @@ import (
 	"github.com/hckops/hckctl/pkg/template/model"
 )
 
-// https://go.dev/blog/pipelines
-
-type EventKind uint8
-
-const (
-	DebugEvent EventKind = iota
-	InfoEvent
-	SuccessEvent
-	ErrorEvent
-)
-
-type BoxEvent struct {
-	Kind    EventKind
-	Source  string
-	Message string
-}
-
 type BoxClient interface {
-	Events() <-chan BoxEvent
+	Events() *EventBus
 	Create() (string, error)
 	//Copy()
 	//Delete()
@@ -35,9 +18,10 @@ type BoxClient interface {
 }
 
 func NewBoxClient(provider BoxProvider, template *model.BoxV1) (BoxClient, error) {
+	eventBus := NewEventBus()
 	switch provider {
 	case Docker:
-		return NewDockerClient(template)
+		return NewDockerClient(template, eventBus)
 	case Kubernetes:
 		// TODO
 		return nil, nil
