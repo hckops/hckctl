@@ -88,7 +88,7 @@ func createBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 	client.Events().SubscribeEvents(func(event box.Event) {
 		loader.Reload()
 		switch event.Kind {
-		case box.PriorityEvent:
+		case box.ConsoleEvent:
 			// print to console only upon success
 			messages = append(messages, event.Message)
 			log.Info().Msgf("[%s] %s", event.Source, event.Message)
@@ -100,12 +100,10 @@ func createBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 		}
 	})
 
-	boxId, err := client.Create()
-	if err != nil {
+	if _, err := client.Create(); err != nil {
 		log.Warn().Err(err).Msg("error creating box")
 		return errors.New("create error")
 	}
-	log.Info().Msgf("new box successfully created: boxId=%s", boxId)
 	for _, message := range messages {
 		fmt.Println(message)
 	}

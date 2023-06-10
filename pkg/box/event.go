@@ -14,7 +14,8 @@ const (
 	DebugEvent EventKind = iota
 	InfoEvent
 	ErrorEvent
-	PriorityEvent
+	ConsoleEvent
+	ActionEvent
 )
 
 type Event struct {
@@ -58,8 +59,13 @@ func (bus *EventBus) PublishErrorEvent(source, message string, values ...any) {
 	bus.publishEvent(ErrorEvent, source, fmt.Sprintf(message, values...))
 }
 
-func (bus *EventBus) PublishPriorityEvent(source string, message string, values ...any) {
-	bus.publishEvent(PriorityEvent, source, fmt.Sprintf(message, values...))
+func (bus *EventBus) PublishConsoleEvent(source string, message string, values ...any) {
+	bus.publishEvent(ConsoleEvent, source, fmt.Sprintf(message, values...))
+}
+
+// TODO refactor interface ?
+func (bus *EventBus) PublishActionEvent(source string, message string) {
+	bus.publishEvent(ActionEvent, source, message)
 }
 
 func (bus *EventBus) SubscribeEvents(callback func(event Event)) {

@@ -114,18 +114,29 @@ func openBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 
 	loader := common.NewLoader()
 	loader.Start("loading template %s", boxTemplate.Name)
+	defer loader.Stop()
 
 	provider := configRef.Config.Box.Provider
 	log.Debug().Msgf("opening box: provider=%s name=%s\n%s", provider, boxTemplate.Name, boxTemplate.Pretty())
 
-	_, err = box.NewBoxClient(provider, boxTemplate)
+	client, err := box.NewBoxClient(provider, boxTemplate)
 	if err != nil {
 		log.Warn().Err(err).Msg("error creating client")
-		loader.Stop()
 		return errors.New("client error")
 	}
 
-	// TODO
-	loader.Stop()
+	client.Events().SubscribeEvents(func(event box.Event) {
+		log.Info().Msgf("[%s] %s", event.Source, event.Message)
+		switch event.Kind {
+		case box.ConsoleEvent:
+			loader.Stop()
+		}
+	})
+
+	if err := client.Open(); err != nil {
+		log.Warn().Err(err).Msg("error opening box")
+		return errors.New("open error")
+	}
+
 	return nil
 }
