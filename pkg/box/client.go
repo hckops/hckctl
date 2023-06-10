@@ -1,20 +1,32 @@
 package box
 
 import (
-	"context"
 	"github.com/pkg/errors"
 
 	"github.com/hckops/hckctl/pkg/template/model"
 )
 
-type Connection struct {
-	ctx context.Context
-	Out chan string // TODO
+// https://go.dev/blog/pipelines
+
+type EventKind uint8
+
+const (
+	DebugEvent EventKind = iota
+	InfoEvent
+	SuccessEvent
+	ErrorEvent
+)
+
+type BoxEvent struct {
+	Kind    EventKind
+	Source  string
+	Message string
 }
 
 type BoxClient interface {
-	//Copy()
+	Events() <-chan BoxEvent
 	Create() (string, error)
+	//Copy()
 	//Delete()
 	//Exec()
 	//List() ([]string, error)
@@ -25,7 +37,7 @@ type BoxClient interface {
 func NewBoxClient(provider BoxProvider, template *model.BoxV1) (BoxClient, error) {
 	switch provider {
 	case Docker:
-		return NewDockerClient(template), nil
+		return NewDockerClient(template)
 	case Kubernetes:
 		// TODO
 		return nil, nil

@@ -74,6 +74,7 @@ func createBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 
 	loader := common.NewLoader()
 	loader.Start("loading template %s", boxTemplate.Name)
+	defer loader.Stop()
 
 	provider := configRef.Config.Box.Provider
 	log.Debug().Msgf("creating box: provider=%s name=%s\n%s", provider, boxTemplate.Name, boxTemplate.Pretty())
@@ -81,18 +82,33 @@ func createBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 	client, err := box.NewBoxClient(provider, boxTemplate)
 	if err != nil {
 		log.Warn().Err(err).Msg("error creating client")
-		loader.Stop()
 		return errors.New("client error")
 	}
+
+	// TODO
+	go func() {
+		for {
+			select {
+			case event := <-client.Events():
+				loader.Refresh(event.Message)
+				switch event.Kind {
+				case box.SuccessEvent:
+					log.Info().Msgf(">>> %s", event.Message)
+				case box.ErrorEvent:
+					log.Warn().Msgf(">>> %s", event.Message)
+				default:
+					log.Debug().Msgf(">>> %s", event.Message)
+				}
+			}
+		}
+	}()
 
 	boxId, err := client.Create()
 	if err != nil {
 		log.Warn().Err(err).Msg("error creating box")
-		loader.Stop()
 		return errors.New("create error")
 	}
 
-	loader.Stop()
 	log.Info().Msgf("new box successfully created: boxId=%s", boxId)
 	fmt.Println(boxId)
 	return nil

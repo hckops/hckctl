@@ -14,40 +14,49 @@ import (
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-type DockerBox struct {
-	ctx      context.Context
-	docker   *client.Client
-	template *model.BoxV1
-
-	OutChan chan string
-	ErrChan chan string
+type DockerBoxOld struct {
+	ctx        context.Context
+	docker     *client.Client
+	template   *model.BoxV1
+	statusChan chan string
+	errorChan  chan error
 }
 
-// TODO don't forget to invoke "defer dockerClient.Close()"
-
-func NewDockerBox(template *model.BoxV1) (*DockerBox, error) {
+func NewDockerBoxOld(template *model.BoxV1, statusChan chan string, errorChan chan error) (*DockerBoxOld, error) {
 
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, errors.Wrap(err, "error docker client")
 	}
 
-	return &DockerBox{
-		ctx:      context.Background(),
-		docker:   dockerClient,
-		template: template,
+	return &DockerBoxOld{
+		ctx:        context.Background(),
+		docker:     dockerClient,
+		template:   template,
+		statusChan: statusChan,
+		errorChan:  errorChan,
 	}, nil
 }
 
-func (box *DockerBox) Close() error {
+// TODO don't forget to invoke "defer dockerClient.Close()"
+
+func (box *DockerBoxOld) updateStatus(value string) {
+	go func() {
+		box.statusChan <- value
+	}()
+}
+
+func (box *DockerBoxOld) Close() error {
+	close(box.statusChan)
+	close(box.errorChan)
 	return box.docker.Close()
 }
 
-func (box *DockerBox) Setup() error {
+func (box *DockerBoxOld) Setup() error {
 
 	// TODO delete dangling images
 
-	box.OutChan <- "setup"
+	box.updateStatus("setup")
 
 	reader, err := box.docker.ImagePull(box.ctx, box.template.ImageName(), types.ImagePullOptions{})
 	if err != nil {
@@ -56,19 +65,21 @@ func (box *DockerBox) Setup() error {
 	defer reader.Close()
 
 	// TODO
-	box.OutChan <- "setup-image-pull"
+	box.updateStatus("setup-image-pull")
 
 	// suppress default output
 	if _, err := io.Copy(io.Discard, reader); err != nil {
 		return errors.Wrap(err, "error image pull output message")
 	}
 
-	box.OutChan <- "setup-copy"
+	box.updateStatus("setup-copy")
 
 	return nil
 }
 
-func (box *DockerBox) Create(containerName string) (string, error) {
+func (box *DockerBoxOld) Create(containerName string) (string, error) {
+
+	box.updateStatus("create")
 
 	containerConfig, err := buildContainerConfig(
 		box.template.ImageName(),
@@ -79,7 +90,7 @@ func (box *DockerBox) Create(containerName string) (string, error) {
 		return "", err
 	}
 
-	hostConfig, err := buildHostConfig(box.template.NetworkPorts(), box.OutChan)
+	hostConfig, err := buildHostConfig(box.template.NetworkPorts(), box.statusChan)
 	if err != nil {
 		return "", err
 	}
@@ -95,6 +106,9 @@ func (box *DockerBox) Create(containerName string) (string, error) {
 		return "", errors.Wrap(err, "error container create")
 	}
 
+	go func() {
+		box.errorChan <- nil
+	}()
 	return newContainer.ID, nil
 }
 
@@ -145,7 +159,9 @@ func buildHostConfig(ports []model.BoxPort, outChan chan string) (*container.Hos
 			Remote: port.Remote,
 		}
 		// TODO
-		outChan <- "onPortBindCallback"
+		go func() {
+			outChan <- "onPortBindCallback"
+		}()
 
 		portBindings[remotePort] = []nat.PortBinding{{
 			HostIP:   "0.0.0.0",
