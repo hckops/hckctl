@@ -2,16 +2,16 @@ package box
 
 import (
 	"context"
-	"fmt"
+	"io"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
-	"github.com/hckops/hckctl/pkg/util"
 	"github.com/pkg/errors"
-	"io"
 
 	"github.com/hckops/hckctl/pkg/template/model"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 type DockerClient struct {
@@ -42,54 +42,49 @@ func (c *DockerClient) Events() *EventBus {
 
 func (c *DockerClient) Create() (string, error) {
 	defer c.close()
+
+	// TODO delete dangling images
+
 	if err := c.setup(); err != nil {
-		// TODO
 		return "", err
 	}
 
 	boxName := c.template.GenerateName()
 	boxId, err := c.createContainer(boxName)
 	if err != nil {
-		// TODO
 		return "", err
 	}
+	c.eventBus.PublishInfoEvent("create", "create box: templateName=%s boxName=%s boxId=%s", c.template.Name, boxName, boxId)
 
-	return boxId, nil
+	return boxName, nil
 }
 
 func (c *DockerClient) close() error {
+	c.eventBus.PublishDebugEvent("close", "closing event bus and docker client")
 	c.eventBus.Close()
 	return c.dockerApi.Close()
 }
 
 func (c *DockerClient) setup() error {
+	imageName := c.template.ImageName()
 
-	// TODO delete dangling images
-
-	c.eventBus.PublishDebugEvent("setup", "step-1")
-
-	reader, err := c.dockerApi.ImagePull(c.ctx, c.template.ImageName(), types.ImagePullOptions{})
+	reader, err := c.dockerApi.ImagePull(c.ctx, imageName, types.ImagePullOptions{})
 	if err != nil {
 		return errors.Wrap(err, "error image pull")
 	}
 	defer reader.Close()
 
-	// TODO
-	c.eventBus.PublishDebugEvent("setup", "step-2")
+	c.eventBus.PublishPriorityEvent("setup", "pulling %s", imageName)
 
 	// suppress default output
 	if _, err := io.Copy(io.Discard, reader); err != nil {
 		return errors.Wrap(err, "error image pull output message")
 	}
 
-	c.eventBus.PublishDebugEvent("setup", "step-3")
-
 	return nil
 }
 
 func (c *DockerClient) createContainer(containerName string) (string, error) {
-
-	c.eventBus.PublishDebugEvent("create", "step-1")
 
 	containerConfig, err := buildContainerConfig(
 		c.template.ImageName(),
@@ -101,7 +96,9 @@ func (c *DockerClient) createContainer(containerName string) (string, error) {
 	}
 
 	onPortBindCallback := func(port model.BoxPort) {
-		c.eventBus.PublishDebugEvent("create-port", fmt.Sprintf("port %v", port))
+		c.eventBus.PublishInfoEvent("createContainer",
+			"[%s][%s] exposing %s (local) -> %s (container)",
+			containerName, port.Alias, port.Local, port.Remote)
 	}
 
 	hostConfig, err := buildHostConfig(c.template.NetworkPorts(), onPortBindCallback)
@@ -119,8 +116,6 @@ func (c *DockerClient) createContainer(containerName string) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "error container create")
 	}
-
-	c.eventBus.PublishEmptySuccessEvent("create")
 
 	return newContainer.ID, nil
 }

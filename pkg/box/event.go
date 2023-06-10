@@ -1,6 +1,7 @@
 package box
 
 import (
+	"fmt"
 	"sync"
 )
 
@@ -12,8 +13,8 @@ type EventKind uint8
 const (
 	DebugEvent EventKind = iota
 	InfoEvent
-	SuccessEvent
 	ErrorEvent
+	PriorityEvent
 )
 
 type Event struct {
@@ -45,16 +46,20 @@ func (bus *EventBus) publishEvent(kind EventKind, source, message string) {
 	}()
 }
 
-func (bus *EventBus) Close() {
-	bus.wg.Wait()
+func (bus *EventBus) PublishDebugEvent(source, message string, values ...any) {
+	bus.publishEvent(DebugEvent, source, fmt.Sprintf(message, values...))
 }
 
-func (bus *EventBus) PublishDebugEvent(source, message string) {
-	bus.publishEvent(DebugEvent, source, message)
+func (bus *EventBus) PublishInfoEvent(source, message string, values ...any) {
+	bus.publishEvent(InfoEvent, source, fmt.Sprintf(message, values...))
 }
 
-func (bus *EventBus) PublishEmptySuccessEvent(source string) {
-	bus.publishEvent(SuccessEvent, source, "")
+func (bus *EventBus) PublishErrorEvent(source, message string, values ...any) {
+	bus.publishEvent(ErrorEvent, source, fmt.Sprintf(message, values...))
+}
+
+func (bus *EventBus) PublishPriorityEvent(source string, message string, values ...any) {
+	bus.publishEvent(PriorityEvent, source, fmt.Sprintf(message, values...))
 }
 
 func (bus *EventBus) SubscribeEvents(callback func(event Event)) {
@@ -66,4 +71,12 @@ func (bus *EventBus) SubscribeEvents(callback func(event Event)) {
 			}
 		}
 	}()
+}
+
+func (bus *EventBus) Drain() {
+	bus.SubscribeEvents(func(event Event) {})
+}
+
+func (bus *EventBus) Close() {
+	bus.wg.Wait()
 }

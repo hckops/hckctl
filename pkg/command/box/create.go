@@ -86,14 +86,14 @@ func createBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 	}
 
 	client.Events().SubscribeEvents(func(event box.Event) {
-		loader.Refresh(event.Message)
+		loader.Reload()
 		switch event.Kind {
-		case box.SuccessEvent:
-			log.Info().Msgf(">>> %s", event.Message)
-		case box.ErrorEvent:
-			log.Warn().Msgf(">>> %s", event.Message)
+		case box.PriorityEvent:
+			loader.Refresh(event.Message)
+		case box.InfoEvent:
+			log.Info().Msgf("[%s] %s", event.Source, event.Message)
 		default:
-			log.Debug().Msgf(">>> %s", event.Message)
+			log.Debug().Msgf("[%s] %s", event.Source, event.Message)
 		}
 	})
 

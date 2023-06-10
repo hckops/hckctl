@@ -32,10 +32,14 @@ func (l *Loader) Start(message string, values ...any) {
 	l.spinner.Start()
 }
 
-func (l *Loader) Refresh(message string, values ...any) {
-	l.update(message, values...)
+func (l *Loader) Reload() {
 	l.spinner.Reverse()
 	l.spinner.Restart()
+}
+
+func (l *Loader) Refresh(message string, values ...any) {
+	l.update(message, values...)
+	l.Reload()
 }
 
 func (l *Loader) Sleep(seconds int) {
