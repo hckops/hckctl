@@ -78,7 +78,7 @@ func createBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 	provider := configRef.Config.Box.Provider
 	log.Debug().Msgf("creating box: provider=%s name=%s\n%s", provider, boxTemplate.Name, boxTemplate.Pretty())
 
-	boxClient, err := box.NewBoxClient(provider, boxTemplate)
+	boxClient, err := box.NewBoxClient(provider)
 	if err != nil {
 		log.Warn().Err(err).Msg("error creating client")
 		return errors.New("client error")
@@ -86,7 +86,7 @@ func createBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 
 	handleOpenEvents(boxClient, loader)
 
-	if boxInfo, err := boxClient.Create(); err != nil {
+	if boxInfo, err := boxClient.Create(boxTemplate); err != nil {
 		log.Warn().Err(err).Msg("error creating box")
 		return errors.New("create error")
 	} else {

@@ -9,17 +9,17 @@ import (
 
 type BoxClient interface {
 	Events() *client.EventBus
-	Create() (*BoxInfo, error)
+	Create(template *model.BoxV1) (*BoxInfo, error)
 	Exec(info BoxInfo) error
 	Copy(info BoxInfo, from string, to string) error
 	List() ([]BoxInfo, error)
-	Open() error
+	Open(template *model.BoxV1) error
 	Tunnel(info BoxInfo) error
 	Delete(info BoxInfo) error
 }
 
-func NewBoxClient(provider BoxProvider, template *model.BoxV1) (BoxClient, error) {
-	opts := newBoxOpts(template)
+func NewBoxClient(provider BoxProvider) (BoxClient, error) {
+	opts := newBoxOpts()
 	switch provider {
 	case Docker:
 		return NewDockerBox(opts)

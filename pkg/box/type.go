@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/hckops/hckctl/pkg/client"
-	"github.com/hckops/hckctl/pkg/template/model"
 )
 
 type BoxProvider string
@@ -22,14 +21,13 @@ func BoxProviderValues() []string {
 }
 
 type boxOpts struct {
-	template *model.BoxV1
+	//template *model.BoxV1
 	streams  *boxStreams
 	eventBus *client.EventBus
 }
 
-func newBoxOpts(template *model.BoxV1) *boxOpts {
+func newBoxOpts() *boxOpts {
 	return &boxOpts{
-		template: template,
 		streams:  newDefaultStreams(true),
 		eventBus: client.NewEventBus(),
 	}
@@ -52,6 +50,7 @@ func newDefaultStreams(tty bool) *boxStreams {
 }
 
 type BoxInfo struct {
-	Id   string
-	Name string
+	Id    string
+	Name  string
+	Shell string
 }

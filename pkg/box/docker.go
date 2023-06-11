@@ -34,15 +34,15 @@ func (b *DockerBox) Events() *client.EventBus {
 	return b.opts.eventBus
 }
 
-func (b *DockerBox) Create() (*BoxInfo, error) {
+func (b *DockerBox) Create(template *model.BoxV1) (*BoxInfo, error) {
 	defer b.client.Close()
-	return b.createBox()
+	return b.createBox(template)
 }
 
 // TODO exclude tty experimental port
-func (b *DockerBox) createBox() (*BoxInfo, error) {
+func (b *DockerBox) createBox(template *model.BoxV1) (*BoxInfo, error) {
 
-	imageName := b.opts.template.ImageName()
+	imageName := template.ImageName()
 	setupImageOpts := &docker.SetupImageOpts{
 		ImageName: imageName,
 		OnPullImageCallback: func() {
@@ -54,11 +54,11 @@ func (b *DockerBox) createBox() (*BoxInfo, error) {
 	}
 
 	// boxName
-	containerName := b.opts.template.GenerateName()
+	containerName := template.GenerateName()
 	containerConfig, err := buildContainerConfig(
-		b.opts.template.ImageName(),
+		template.ImageName(),
 		containerName,
-		b.opts.template.NetworkPorts(),
+		template.NetworkPorts(),
 	)
 	if err != nil {
 		return nil, err
@@ -68,7 +68,7 @@ func (b *DockerBox) createBox() (*BoxInfo, error) {
 		b.opts.eventBus.Publish(newBindPortBoxEvent(containerName, port))
 	}
 
-	hostConfig, err := buildHostConfig(b.opts.template.NetworkPorts(), onPortBindCallback)
+	hostConfig, err := buildHostConfig(template.NetworkPorts(), onPortBindCallback)
 	if err != nil {
 		return nil, err
 	}
@@ -86,9 +86,9 @@ func (b *DockerBox) createBox() (*BoxInfo, error) {
 	}
 
 	b.opts.eventBus.Publish(newGenericBoxEvent("new box created successfully: templateName=%s boxName=%s boxId=%s",
-		b.opts.template.Name, containerName, containerId))
+		template.Name, containerName, containerId))
 
-	return &BoxInfo{Id: containerId, Name: containerName}, nil
+	return &BoxInfo{Id: containerId, Name: containerName, Shell: template.Shell}, nil
 }
 
 func buildContainerConfig(imageName string, containerName string, ports []model.BoxPort) (*container.Config, error) {
@@ -154,7 +154,7 @@ func (b *DockerBox) Exec(info BoxInfo) error {
 
 	execContainerOpts := &docker.ExecContainerOpts{
 		ContainerId: info.Id,
-		Shell:       b.opts.template.Shell,
+		Shell:       info.Shell,
 		InStream:    b.opts.streams.in,
 		OutStream:   b.opts.streams.out,
 		ErrStream:   b.opts.streams.err,
@@ -186,10 +186,10 @@ func (b *DockerBox) List() ([]BoxInfo, error) {
 	return result, nil
 }
 
-func (b *DockerBox) Open() error {
+func (b *DockerBox) Open(template *model.BoxV1) error {
 	defer b.client.Close()
 
-	info, err := b.createBox()
+	info, err := b.createBox(template)
 	if err != nil {
 		return err
 	}

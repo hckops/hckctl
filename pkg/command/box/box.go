@@ -75,7 +75,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 	command.AddCommand(NewBoxCreateCmd(configRef))
 	//command.AddCommand(NewBoxDeleteCmd(opts))
 	//command.AddCommand(NewBoxExecCmd(opts))
-	command.AddCommand(NewBoxListCmd(configRef)) // TODO list of instances not templates
+	command.AddCommand(NewBoxListCmd(configRef))
 	//command.AddCommand(NewBoxTunnelCmd(opts))
 
 	return command
@@ -122,7 +122,7 @@ func openBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 	provider := configRef.Config.Box.Provider
 	log.Debug().Msgf("opening box: provider=%s name=%s\n%s", provider, boxTemplate.Name, boxTemplate.Pretty())
 
-	boxClient, err := box.NewBoxClient(provider, boxTemplate)
+	boxClient, err := box.NewBoxClient(provider)
 	if err != nil {
 		log.Warn().Err(err).Msg("error creating client")
 		return errors.New("client error")
@@ -130,7 +130,7 @@ func openBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 
 	handleOpenEvents(boxClient, loader)
 
-	if err := boxClient.Open(); err != nil {
+	if err := boxClient.Open(boxTemplate); err != nil {
 		log.Warn().Err(err).Msg("error opening box")
 		return errors.New("open error")
 	}

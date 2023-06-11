@@ -107,6 +107,9 @@ type ExecContainerOpts struct {
 	OnContainerWaitingCallback func()
 }
 
+// TODO handle distroless i.e. shell == none
+// TODO issue with powershell i.e. /usr/bin/pwsh
+
 func (cli *DockerClient) ExecContainer(opts *ExecContainerOpts) error {
 	cli.eventBus.Publish(newExecContainerDockerEvent(opts.ContainerId))
 
