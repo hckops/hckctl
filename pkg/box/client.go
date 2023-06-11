@@ -10,12 +10,12 @@ import (
 type BoxClient interface {
 	Events() *client.EventBus
 	Create() (*BoxInfo, error)
-	Exec(info *BoxInfo) error
-	Copy(info *BoxInfo, from string, to string) error
-	List() ([]string, error)
+	Exec(info BoxInfo) error
+	Copy(info BoxInfo, from string, to string) error
+	List() ([]BoxInfo, error)
 	Open() error
-	Tunnel() error
-	Delete(boxId string) error
+	Tunnel(info BoxInfo) error
+	Delete(info BoxInfo) error
 }
 
 func NewBoxClient(provider BoxProvider, template *model.BoxV1) (BoxClient, error) {

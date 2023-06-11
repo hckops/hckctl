@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/hckops/hckctl/pkg/box"
-	"github.com/hckops/hckctl/pkg/client"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/template/source"
@@ -86,27 +85,13 @@ func createBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 		return errors.New("client error")
 	}
 
-	var messages []string
-	boxClient.Events().Subscribe(func(event client.Event) {
-		loader.Reload()
-		// TODO
-		//switch event.Kind {
-		//case box.ConsoleEvent:
-		//	// print to console only upon success
-		//	messages = append(messages, event.Message)
-		//	log.Info().Msgf("[%s] %s", event.Source, event.Message)
-		//case box.InfoEvent:
-		//	loader.Refresh(event.Message)
-		//	log.Info().Msgf("[%s] %s", event.Source, event.Message)
-		//default:
-		//	log.Debug().Msgf("[%s] %s", event.Source, event.Message)
-		//}
-	})
+	messages := handleOpenEvents(boxClient, loader)
 
 	if _, err := boxClient.Create(); err != nil {
 		log.Warn().Err(err).Msg("error creating box")
 		return errors.New("create error")
 	}
+	// TODO on Create prints ports only for docker
 	for _, message := range messages {
 		fmt.Println(message)
 	}

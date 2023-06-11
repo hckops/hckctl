@@ -10,10 +10,10 @@ import (
 	"github.com/docker/docker/api/types/container"
 	dockerApi "github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
-	"github.com/hckops/hckctl/pkg/util"
 	"github.com/pkg/errors"
 
 	"github.com/hckops/hckctl/pkg/client"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 type DockerClient struct {
@@ -43,18 +43,24 @@ func (cli *DockerClient) Close() error {
 	return cli.docker.Close()
 }
 
-func (cli *DockerClient) Setup(imageName string) error {
-	cli.eventBus.Publish(newSetupImageDockerEvent(imageName))
+type SetupImageOpts struct {
+	ImageName           string
+	OnPullImageCallback func()
+}
+
+func (cli *DockerClient) Setup(opts *SetupImageOpts) error {
+	cli.eventBus.Publish(newSetupImageDockerEvent(opts.ImageName))
 
 	// TODO delete dangling images
 
-	reader, err := cli.docker.ImagePull(cli.ctx, imageName, types.ImagePullOptions{})
+	reader, err := cli.docker.ImagePull(cli.ctx, opts.ImageName, types.ImagePullOptions{})
 	if err != nil {
 		return errors.Wrap(err, "error image pull")
 	}
 	defer reader.Close()
 
-	cli.eventBus.Publish(newPullImageDockerEvent(imageName))
+	cli.eventBus.Publish(newPullImageDockerEvent(opts.ImageName))
+	opts.OnPullImageCallback()
 
 	// suppress default output
 	if _, err := io.Copy(io.Discard, reader); err != nil {
@@ -92,12 +98,13 @@ func (cli *DockerClient) CreateContainer(opts *CreateContainerOpts) (string, err
 }
 
 type ExecContainerOpts struct {
-	ContainerId string
-	Shell       string
-	InStream    io.Reader
-	OutStream   io.Writer
-	ErrStream   io.Writer
-	IsTty       bool
+	ContainerId                string
+	Shell                      string
+	InStream                   io.Reader
+	OutStream                  io.Writer
+	ErrStream                  io.Writer
+	IsTty                      bool
+	OnContainerWaitingCallback func()
 }
 
 func (cli *DockerClient) ExecContainer(opts *ExecContainerOpts) error {
@@ -132,7 +139,7 @@ func (cli *DockerClient) ExecContainer(opts *ExecContainerOpts) error {
 	defer execAttachResponse.Close()
 
 	removeContainerCallback := func() {
-		if err := cli.removeContainer(opts.ContainerId); err != nil {
+		if err := cli.RemoveContainer(opts.ContainerId); err != nil {
 			cli.eventBus.Publish(newExecContainerErrorDockerEvent(opts.ContainerId, errors.Wrap(err, "remove container")))
 		}
 	}
@@ -149,6 +156,7 @@ func (cli *DockerClient) ExecContainer(opts *ExecContainerOpts) error {
 	}
 
 	cli.eventBus.Publish(newExecContainerWaitingDockerEvent(opts.ContainerId))
+	opts.OnContainerWaitingCallback()
 
 	// waits for interrupt signals
 	statusCh, errCh := cli.docker.ContainerWait(cli.ctx, opts.ContainerId, container.WaitConditionNotRunning)
@@ -162,7 +170,7 @@ func (cli *DockerClient) ExecContainer(opts *ExecContainerOpts) error {
 	return nil
 }
 
-func (cli *DockerClient) removeContainer(containerId string) error {
+func (cli *DockerClient) RemoveContainer(containerId string) error {
 	cli.eventBus.Publish(newRemoveContainerDockerEvent(containerId))
 
 	if err := cli.docker.ContainerRemove(cli.ctx, containerId, types.ContainerRemoveOptions{Force: true}); err != nil {
@@ -200,4 +208,28 @@ func handleStreams(
 
 		once.Do(onCloseCallback)
 	}()
+}
+
+// TODO filter with prefix
+
+type DockerContainerInfo struct {
+	ContainerId   string
+	ContainerName string
+	// TODO command, ports, check status, etc
+}
+
+func (cli *DockerClient) ListContainers() ([]DockerContainerInfo, error) {
+
+	containers, err := cli.docker.ContainerList(cli.ctx, types.ContainerListOptions{})
+	if err != nil {
+		return nil, errors.Wrap(err, "error docker list")
+	}
+
+	var result []DockerContainerInfo
+	for index, c := range containers {
+		cli.eventBus.Publish(newListContainersDockerEvent(index, c.ID, c.Names[0]))
+		result = append(result, DockerContainerInfo{ContainerId: c.ID, ContainerName: c.Names[0]})
+	}
+
+	return result, nil
 }

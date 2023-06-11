@@ -1,8 +1,9 @@
 package box
 
 import (
-	"github.com/MakeNowJust/heredoc"
+	"fmt"
 
+	"github.com/MakeNowJust/heredoc"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -127,19 +128,36 @@ func openBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 		return errors.New("client error")
 	}
 
-	boxClient.Events().Subscribe(func(event client.Event) {
-		log.Debug().Msgf("[%v] %s", box.BoxProviderFromEventSource(event.Source()), event.String())
-		// TODO
-		//switch event.Kind {
-		//case box.ConsoleEvent: // c.eventBus.PublishConsoleEvent("execContainer", "waiting")
-		//	loader.Stop()
-		//}
-	})
+	messages := handleOpenEvents(boxClient, loader)
 
 	if err := boxClient.Open(); err != nil {
 		log.Warn().Err(err).Msg("error opening box")
 		return errors.New("open error")
 	}
-
+	for _, message := range messages {
+		fmt.Println(message)
+	}
 	return nil
+}
+
+func handleOpenEvents(boxClient box.BoxClient, loader *common.Loader) []string {
+	var messages []string
+	boxClient.Events().Subscribe(func(event client.Event) {
+		if boxEvent, ok := box.IsBoxEvent(event); ok {
+			switch boxEvent.Kind {
+			case box.Console:
+				// prints to console only upon success, or it will screw the loader
+				messages = append(messages, event.String())
+				log.Info().Msgf("[%v] console: %s", event.Source(), event.String())
+			case box.LoaderUpdate:
+				loader.Refresh(event.String())
+				log.Info().Msgf("[%v] loader: %s", event.Source(), event.String())
+			case box.LoaderClose:
+				loader.Stop()
+			}
+		} else {
+			log.Debug().Msgf("[%v] %s", event.Source(), event.String())
+		}
+	})
+	return messages
 }

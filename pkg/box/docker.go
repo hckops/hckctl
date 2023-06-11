@@ -17,6 +17,7 @@ type DockerBox struct {
 }
 
 func NewDockerBox(opts *boxOpts) (*DockerBox, error) {
+	opts.eventBus.Publish(newInitBoxEvent())
 
 	dockerClient, err := docker.NewDockerClient(opts.eventBus)
 	if err != nil {
@@ -38,10 +39,17 @@ func (b *DockerBox) Create() (*BoxInfo, error) {
 	return b.createBox()
 }
 
+// TODO exclude tty experimental port
 func (b *DockerBox) createBox() (*BoxInfo, error) {
 
 	imageName := b.opts.template.ImageName()
-	if err := b.client.Setup(imageName); err != nil {
+	setupImageOpts := &docker.SetupImageOpts{
+		ImageName: imageName,
+		OnPullImageCallback: func() {
+			b.opts.eventBus.Publish(newPullImageBoxEvent(imageName))
+		},
+	}
+	if err := b.client.Setup(setupImageOpts); err != nil {
 		return nil, err
 	}
 
@@ -57,10 +65,7 @@ func (b *DockerBox) createBox() (*BoxInfo, error) {
 	}
 
 	onPortBindCallback := func(port model.BoxPort) {
-		// TODO generic or docker?
-		//c.eventBus.PublishConsoleEvent("createContainer",
-		//	"[%s][%s]   \texpose (container) %s -> (local) http://localhost:%s",
-		//	containerName, port.Alias, port.Remote, port.Local)
+		b.opts.eventBus.Publish(newBindPortBoxEvent(containerName, port))
 	}
 
 	hostConfig, err := buildHostConfig(b.opts.template.NetworkPorts(), onPortBindCallback)
@@ -79,8 +84,9 @@ func (b *DockerBox) createBox() (*BoxInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	// TODO generic or docker?
-	//c.eventBus.PublishDebugEvent("create", "create box: templateName=%s boxName=%s boxId=%s", c.template.Name, boxName, boxId)
+
+	b.opts.eventBus.Publish(newGenericBoxEvent("new box created successfully: templateName=%s boxName=%s boxId=%s",
+		b.opts.template.Name, containerName, containerId))
 
 	return &BoxInfo{Id: containerId, Name: containerName}, nil
 }
@@ -142,7 +148,9 @@ func buildHostConfig(ports []model.BoxPort, onPortBindCallback func(port model.B
 	}, nil
 }
 
-func (b *DockerBox) Exec(info *BoxInfo) error {
+func (b *DockerBox) Exec(info BoxInfo) error {
+
+	// TODO resolve id by name
 
 	execContainerOpts := &docker.ExecContainerOpts{
 		ContainerId: info.Id,
@@ -151,17 +159,31 @@ func (b *DockerBox) Exec(info *BoxInfo) error {
 		OutStream:   b.opts.streams.out,
 		ErrStream:   b.opts.streams.err,
 		IsTty:       b.opts.streams.isTty,
+		OnContainerWaitingCallback: func() {
+			b.opts.eventBus.Publish(newContainerWaitingBoxEvent())
+		},
 	}
 
 	return b.client.ExecContainer(execContainerOpts)
 }
 
-func (b *DockerBox) Copy(info *BoxInfo, from string, to string) error {
+func (b *DockerBox) Copy(info BoxInfo, from string, to string) error {
 	return nil
 }
 
-func (b *DockerBox) List() ([]string, error) {
-	return nil, nil
+func (b *DockerBox) List() ([]BoxInfo, error) {
+	defer b.client.Close()
+
+	containers, err := b.client.ListContainers()
+	if err != nil {
+		return nil, err
+	}
+	var result []BoxInfo
+	for _, c := range containers {
+		result = append(result, BoxInfo{Id: c.ContainerId, Name: c.ContainerName})
+	}
+
+	return result, nil
 }
 
 func (b *DockerBox) Open() error {
@@ -172,13 +194,15 @@ func (b *DockerBox) Open() error {
 		return err
 	}
 
-	return b.Exec(info)
+	return b.Exec(*info)
 }
 
-func (b *DockerBox) Tunnel() error {
-	return nil
+func (b *DockerBox) Tunnel(BoxInfo) error {
+	return errors.New("not supported")
 }
 
-func (b *DockerBox) Delete(boxId string) error {
-	return nil
+func (b *DockerBox) Delete(info BoxInfo) error {
+	defer b.client.Close()
+	// TODO resolve id by name
+	return b.client.RemoveContainer(info.Id)
 }

@@ -12,6 +12,7 @@ const (
 	KubeSource
 	ArgoSource
 	CloudSource
+	BoxSource
 )
 
 type Event interface {
