@@ -1,6 +1,8 @@
 package box
 
 import (
+	"strings"
+
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
 	"github.com/pkg/errors"
@@ -39,7 +41,8 @@ func (b *DockerBox) Create(template *model.BoxV1) (*BoxInfo, error) {
 	return b.createBox(template)
 }
 
-// TODO exclude tty experimental port
+// TODO exclude virtual-tty port
+
 func (b *DockerBox) createBox(template *model.BoxV1) (*BoxInfo, error) {
 
 	imageName := template.ImageName()
@@ -88,7 +91,7 @@ func (b *DockerBox) createBox(template *model.BoxV1) (*BoxInfo, error) {
 	b.opts.eventBus.Publish(newGenericBoxEvent("new box created successfully: templateName=%s boxName=%s boxId=%s",
 		template.Name, containerName, containerId))
 
-	return &BoxInfo{Id: containerId, Name: containerName, Shell: template.Shell}, nil
+	return &BoxInfo{Id: containerId, Name: containerName}, nil
 }
 
 func buildContainerConfig(imageName string, containerName string, ports []model.BoxPort) (*container.Config, error) {
@@ -148,13 +151,21 @@ func buildHostConfig(ports []model.BoxPort, onPortBindCallback func(port model.B
 	}, nil
 }
 
-func (b *DockerBox) Exec(info BoxInfo) error {
+func (b *DockerBox) Exec(name string, command string) error {
+	defer b.client.Close()
+	return b.execBox(name, command, false)
+}
 
-	// TODO resolve id by name
+func (b *DockerBox) execBox(name string, command string, removeOnExit bool) error {
+
+	info, err := b.findBox(name)
+	if err != nil {
+		return err
+	}
 
 	execContainerOpts := &docker.ExecContainerOpts{
 		ContainerId: info.Id,
-		Shell:       info.Shell,
+		Shell:       command,
 		InStream:    b.opts.streams.in,
 		OutStream:   b.opts.streams.out,
 		ErrStream:   b.opts.streams.err,
@@ -164,26 +175,60 @@ func (b *DockerBox) Exec(info BoxInfo) error {
 		},
 	}
 
+	if removeOnExit {
+		execContainerOpts.OnExitCallback = func() {
+			if err := b.client.RemoveContainer(info.Id); err != nil {
+				// silent error
+				b.opts.eventBus.Publish(newGenericBoxEvent("error remove container: containerId=%s error=%s", info.Id, err))
+			}
+		}
+	}
+
 	return b.client.ExecContainer(execContainerOpts)
 }
 
-func (b *DockerBox) Copy(info BoxInfo, from string, to string) error {
+// TODO copy
+
+func (b *DockerBox) Copy(name string, from string, to string) error {
 	return nil
 }
 
 func (b *DockerBox) List() ([]BoxInfo, error) {
 	defer b.client.Close()
+	return b.listBoxes()
+}
 
-	containers, err := b.client.ListContainers()
+// TODO filter prefix
+
+func (b *DockerBox) listBoxes() ([]BoxInfo, error) {
+
+	containers, err := b.client.ListContainers("box-")
 	if err != nil {
 		return nil, err
 	}
 	var result []BoxInfo
 	for _, c := range containers {
-		result = append(result, BoxInfo{Id: c.ContainerId, Name: c.ContainerName})
+		// names start with slash
+		boxName := strings.TrimPrefix(c.ContainerName, "/")
+		result = append(result, BoxInfo{Id: c.ContainerId, Name: boxName})
 	}
 
 	return result, nil
+}
+
+func (b *DockerBox) findBox(name string) (*BoxInfo, error) {
+
+	boxes, err := b.listBoxes()
+	if err != nil {
+		return nil, err
+	}
+	for _, boxInfo := range boxes {
+		if boxInfo.Name == name {
+			return &boxInfo, nil
+		}
+	}
+
+	return nil, errors.New("box not found")
 }
 
 func (b *DockerBox) Open(template *model.BoxV1) error {
@@ -194,15 +239,20 @@ func (b *DockerBox) Open(template *model.BoxV1) error {
 		return err
 	}
 
-	return b.Exec(*info)
+	return b.execBox(info.Name, template.Shell, true)
 }
 
-func (b *DockerBox) Tunnel(BoxInfo) error {
+func (b *DockerBox) Tunnel(string) error {
 	return errors.New("not supported")
 }
 
-func (b *DockerBox) Delete(info BoxInfo) error {
+func (b *DockerBox) Delete(name string) error {
 	defer b.client.Close()
-	// TODO resolve id by name
+
+	info, err := b.findBox(name)
+	if err != nil {
+		return err
+	}
+
 	return b.client.RemoveContainer(info.Id)
 }

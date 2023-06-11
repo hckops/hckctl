@@ -8,6 +8,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
 	dockerApi "github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/pkg/errors"
@@ -105,6 +106,7 @@ type ExecContainerOpts struct {
 	ErrStream                  io.Writer
 	IsTty                      bool
 	OnContainerWaitingCallback func()
+	OnExitCallback             func()
 }
 
 // TODO handle distroless i.e. shell == none
@@ -141,17 +143,18 @@ func (cli *DockerClient) ExecContainer(opts *ExecContainerOpts) error {
 	}
 	defer execAttachResponse.Close()
 
-	removeContainerCallback := func() {
-		if err := cli.RemoveContainer(opts.ContainerId); err != nil {
-			cli.eventBus.Publish(newExecContainerErrorDockerEvent(opts.ContainerId, errors.Wrap(err, "remove container")))
-		}
-	}
-
 	onStreamErrorCallback := func(err error) {
 		cli.eventBus.Publish(newExecContainerErrorDockerEvent(opts.ContainerId, errors.Wrap(err, "stream container")))
 	}
+	if opts.OnExitCallback == nil {
+		opts.OnExitCallback = func() {
+			// FIXME find a clean way to detach without hanging forever
+			cli.docker.ContainerStop(cli.ctx, opts.ContainerId, container.StopOptions{})
+			cli.docker.ContainerStart(cli.ctx, opts.ContainerId, types.ContainerStartOptions{})
+		}
+	}
 
-	handleStreams(opts, &execAttachResponse, removeContainerCallback, onStreamErrorCallback)
+	handleStreams(opts, &execAttachResponse, opts.OnExitCallback, onStreamErrorCallback)
 
 	// fixes echoes and handle SIGTERM interrupt properly
 	if terminal, err := util.NewRawTerminal(opts.InStream); err == nil {
@@ -213,7 +216,7 @@ func handleStreams(
 	}()
 }
 
-// TODO filter with prefix
+// TODO VERIFY filter with prefix
 
 type DockerContainerInfo struct {
 	ContainerId   string
@@ -221,9 +224,13 @@ type DockerContainerInfo struct {
 	// TODO command, ports, check status, etc
 }
 
-func (cli *DockerClient) ListContainers() ([]DockerContainerInfo, error) {
+func (cli *DockerClient) ListContainers(namePrefix string) ([]DockerContainerInfo, error) {
 
-	containers, err := cli.docker.ContainerList(cli.ctx, types.ContainerListOptions{})
+	containers, err := cli.docker.ContainerList(cli.ctx, types.ContainerListOptions{
+		Filters: filters.NewArgs(filters.KeyValuePair{
+			Key: "name", Value: namePrefix,
+		}),
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "error docker list")
 	}

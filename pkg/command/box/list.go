@@ -2,8 +2,6 @@ package box
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/MakeNowJust/heredoc"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -69,7 +67,7 @@ func listByProvider(provider box.BoxProvider) error {
 		return fmt.Errorf("%v list error", provider)
 	}
 	for _, b := range boxes {
-		fmt.Println(strings.TrimPrefix(b.Name, "/"))
+		fmt.Println(b.Name)
 	}
 	fmt.Println(fmt.Sprintf("total: %v", len(boxes)))
 	return nil

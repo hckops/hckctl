@@ -34,6 +34,12 @@ func (box *BoxV1) GenerateName() string {
 	return fmt.Sprintf("box-%s-%s", box.Name, strings.ToLower(uniuri.NewLen(5)))
 }
 
+func ToBoxTemplateName(boxName string) string {
+	values := strings.Split(boxName, "-")
+	// removes prefix and suffix
+	return strings.Join(values[1:len(values)-1], "-")
+}
+
 func (box *BoxV1) ImageName() string {
 	return fmt.Sprintf("%s:%s", box.Image.Repository, box.ImageVersion())
 }

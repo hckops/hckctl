@@ -30,6 +30,11 @@ func TestGenerateName(t *testing.T) {
 	assert.Equal(t, 17, len(boxId))
 }
 
+func TestToBoxTemplateName(t *testing.T) {
+	boxName := ToBoxTemplateName("box-my-long-name-example-12345")
+	assert.Equal(t, "my-long-name-example", boxName)
+}
+
 func TestImageName(t *testing.T) {
 	assert.Equal(t, "hckops/my-test:latest", testBox.ImageName())
 }

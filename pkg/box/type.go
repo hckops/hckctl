@@ -29,7 +29,6 @@ func BoxProviderValues() []string {
 }
 
 type boxOpts struct {
-	//template *model.BoxV1
 	streams  *boxStreams
 	eventBus *client.EventBus
 }
@@ -58,7 +57,6 @@ func newDefaultStreams(tty bool) *boxStreams {
 }
 
 type BoxInfo struct {
-	Id    string
-	Name  string
-	Shell string
+	Id   string
+	Name string
 }
