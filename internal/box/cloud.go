@@ -3,8 +3,8 @@ package box
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/hckops/hckctl/internal/old/common"
-	"github.com/hckops/hckctl/internal/old/schema"
+	"github.com/hckops/hckctl/internal/common"
+	"github.com/hckops/hckctl/internal/schema"
 	common2 "github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/util"
 	"io"

@@ -23,7 +23,7 @@ func (e *DockerEvent) Source() client.EventSource {
 }
 
 func (e *DockerEvent) String() string {
-	return "todo-string"
+	return e.Value
 }
 
 func IsDockerEvent(event client.Event) (*DockerEvent, bool) {

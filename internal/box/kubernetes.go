@@ -2,9 +2,9 @@ package box
 
 import (
 	"fmt"
-	"github.com/hckops/hckctl/internal/old/client"
-	"github.com/hckops/hckctl/internal/old/model"
-	"github.com/hckops/hckctl/internal/old/schema"
+	"github.com/hckops/hckctl/internal/client"
+	"github.com/hckops/hckctl/internal/model"
+	"github.com/hckops/hckctl/internal/schema"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"k8s.io/apimachinery/pkg/util/runtime"
 

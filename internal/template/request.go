@@ -2,7 +2,7 @@ package template
 
 import (
 	"fmt"
-	"github.com/hckops/hckctl/internal/old/common"
+	"github.com/hckops/hckctl/internal/common"
 	"io/ioutil"
 	"net/http"
 	"net/url"
