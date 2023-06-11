@@ -2,13 +2,14 @@ package box
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/MakeNowJust/heredoc"
-	"github.com/hckops/hckctl/pkg/box"
-	"github.com/hckops/hckctl/pkg/client"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
+	"github.com/hckops/hckctl/pkg/box"
+	"github.com/hckops/hckctl/pkg/client"
 	"github.com/hckops/hckctl/pkg/command/config"
 )
 
@@ -38,20 +39,38 @@ func NewBoxListCmd(configRef *config.ConfigRef) *cobra.Command {
 }
 
 func (opts *boxListCmdOptions) run(cmd *cobra.Command, args []string) error {
-
-	boxClient, err := box.NewBoxClient(box.Docker)
-	if err != nil {
-		log.Warn().Err(err).Msg("error creating client")
-		return errors.New("client error")
+	for _, provider := range box.BoxProviders() {
+		if err := listByProvider(provider); err != nil {
+			return err
+		}
 	}
+	return nil
+}
+
+func listByProvider(provider box.BoxProvider) error {
+	boxClient, err := box.NewBoxClient(provider)
+	if err != nil {
+		log.Warn().Err(err).Msgf("error creating client: provider=%v", provider)
+		return fmt.Errorf("%v client error", provider)
+	}
+	// provider not implemented
+	if boxClient == nil {
+		return nil
+	}
+
 	boxClient.Events().Subscribe(func(event client.Event) {
 		log.Debug().Msg(event.String())
 	})
 
-	fmt.Println(fmt.Sprintf("# %s", box.Docker))
-	dockerBoxes, err := boxClient.List()
-	for _, dockerBox := range dockerBoxes {
-		fmt.Println(dockerBox.Name)
+	fmt.Println(fmt.Sprintf("# %v", provider))
+	boxes, err := boxClient.List()
+	if err != nil {
+		log.Warn().Err(err).Msgf("error listing %v boxes", provider)
+		return fmt.Errorf("%v list error", provider)
 	}
+	for _, b := range boxes {
+		fmt.Println(strings.TrimPrefix(b.Name, "/"))
+	}
+	fmt.Println(fmt.Sprintf("total: %v", len(boxes)))
 	return nil
 }

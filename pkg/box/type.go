@@ -16,8 +16,16 @@ const (
 	Cloud      BoxProvider = "cloud"
 )
 
+func BoxProviders() []BoxProvider {
+	return []BoxProvider{Docker, Kubernetes, Argo, Cloud}
+}
+
 func BoxProviderValues() []string {
-	return []string{string(Docker), string(Kubernetes), string(Argo), string(Cloud)}
+	var values []string
+	for _, provider := range BoxProviders() {
+		values = append(values, string(provider))
+	}
+	return values
 }
 
 type boxOpts struct {
