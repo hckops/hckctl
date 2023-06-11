@@ -2,11 +2,13 @@ package box
 
 import (
 	"github.com/MakeNowJust/heredoc"
+
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
 	"github.com/hckops/hckctl/pkg/box"
+	"github.com/hckops/hckctl/pkg/client"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/template/source"
@@ -119,21 +121,22 @@ func openBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 	provider := configRef.Config.Box.Provider
 	log.Debug().Msgf("opening box: provider=%s name=%s\n%s", provider, boxTemplate.Name, boxTemplate.Pretty())
 
-	client, err := box.NewBoxClient(provider, boxTemplate)
+	boxClient, err := box.NewBoxClient(provider, boxTemplate)
 	if err != nil {
 		log.Warn().Err(err).Msg("error creating client")
 		return errors.New("client error")
 	}
 
-	client.Events().SubscribeEvents(func(event box.Event) {
-		log.Info().Msgf("[%s] %s", event.Source, event.Message)
-		switch event.Kind {
-		case box.ConsoleEvent:
-			loader.Stop()
-		}
+	boxClient.Events().Subscribe(func(event client.Event) {
+		log.Debug().Msgf("[%v] %s", event.Source(), event.String())
+		// TODO
+		//switch event.Kind {
+		//case box.ConsoleEvent: // c.eventBus.PublishConsoleEvent("execContainer", "waiting")
+		//	loader.Stop()
+		//}
 	})
 
-	if err := client.Open(); err != nil {
+	if err := boxClient.Open(); err != nil {
 		log.Warn().Err(err).Msg("error opening box")
 		return errors.New("open error")
 	}

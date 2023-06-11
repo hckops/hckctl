@@ -2,11 +2,13 @@ package box
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
 	"github.com/hckops/hckctl/pkg/box"
+	"github.com/hckops/hckctl/pkg/client"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/template/source"
@@ -78,29 +80,30 @@ func createBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 	provider := configRef.Config.Box.Provider
 	log.Debug().Msgf("creating box: provider=%s name=%s\n%s", provider, boxTemplate.Name, boxTemplate.Pretty())
 
-	client, err := box.NewBoxClient(provider, boxTemplate)
+	boxClient, err := box.NewBoxClient(provider, boxTemplate)
 	if err != nil {
 		log.Warn().Err(err).Msg("error creating client")
 		return errors.New("client error")
 	}
 
 	var messages []string
-	client.Events().SubscribeEvents(func(event box.Event) {
+	boxClient.Events().Subscribe(func(event client.Event) {
 		loader.Reload()
-		switch event.Kind {
-		case box.ConsoleEvent:
-			// print to console only upon success
-			messages = append(messages, event.Message)
-			log.Info().Msgf("[%s] %s", event.Source, event.Message)
-		case box.InfoEvent:
-			loader.Refresh(event.Message)
-			log.Info().Msgf("[%s] %s", event.Source, event.Message)
-		default:
-			log.Debug().Msgf("[%s] %s", event.Source, event.Message)
-		}
+		// TODO
+		//switch event.Kind {
+		//case box.ConsoleEvent:
+		//	// print to console only upon success
+		//	messages = append(messages, event.Message)
+		//	log.Info().Msgf("[%s] %s", event.Source, event.Message)
+		//case box.InfoEvent:
+		//	loader.Refresh(event.Message)
+		//	log.Info().Msgf("[%s] %s", event.Source, event.Message)
+		//default:
+		//	log.Debug().Msgf("[%s] %s", event.Source, event.Message)
+		//}
 	})
 
-	if _, err := client.Create(); err != nil {
+	if _, err := boxClient.Create(); err != nil {
 		log.Warn().Err(err).Msg("error creating box")
 		return errors.New("create error")
 	}
