@@ -12,6 +12,7 @@ import (
 )
 
 // TODO add command to "set" a field with dot notation
+// TODO add confirmation prompt before reset
 
 func NewConfigCmd(configRef *ConfigRef) *cobra.Command {
 

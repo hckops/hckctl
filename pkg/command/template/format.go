@@ -2,8 +2,6 @@ package template
 
 import (
 	"github.com/thediveo/enumflag/v2"
-
-	templateFormat "github.com/hckops/hckctl/pkg/template/source"
 )
 
 type formatFlag enumflag.Flag
@@ -14,8 +12,8 @@ const (
 )
 
 var formatIds = map[formatFlag][]string{
-	yamlFlag: {templateFormat.YamlFormat.String(), "yml"},
-	jsonFlag: {templateFormat.JsonFormat.String()},
+	yamlFlag: {"yaml", "yml"},
+	jsonFlag: {"json"},
 }
 
 func (f formatFlag) value() string {

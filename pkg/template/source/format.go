@@ -10,17 +10,6 @@ import (
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-type Format string
-
-const (
-	YamlFormat Format = "yaml"
-	JsonFormat Format = "json"
-)
-
-func (f Format) String() string {
-	return string(f)
-}
-
 // get rid of comments and print optional empty fields
 func convertFromYamlToYaml(kind schema.SchemaKind, value string) (string, error) {
 	switch kind {

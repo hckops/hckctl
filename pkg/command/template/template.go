@@ -114,7 +114,7 @@ func printTemplate(src source.TemplateSource, format string) error {
 
 func formatTemplate(value *source.TemplateValue, format string) (string, error) {
 	switch format {
-	case source.JsonFormat.String():
+	case jsonFlag.value():
 		if jsonValue, err := value.ToJson(); err != nil {
 			return "", err
 		} else {
