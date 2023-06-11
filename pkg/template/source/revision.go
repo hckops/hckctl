@@ -22,9 +22,8 @@ func refreshRevision(opts *RevisionOpts) error {
 	// first time clone repo always with default revision
 	// assume that path doesn't exist, or it's empty
 	if _, err := git.PlainClone(opts.SourceCacheDir, false, &git.CloneOptions{
-		URL:               opts.SourceUrl,
-		RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
-		ReferenceName:     plumbing.NewBranchReferenceName(opts.SourceRevision),
+		URL:           opts.SourceUrl,
+		ReferenceName: plumbing.NewBranchReferenceName(opts.SourceRevision),
 	}); err != nil && err != git.ErrRepositoryAlreadyExists {
 		return errors.Wrap(err, "unable to clone repository")
 	}
