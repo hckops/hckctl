@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/hckops/hckctl/pkg/old/schema"
+	"github.com/hckops/hckctl/internal/old/schema"
 	"testing"
 
 	"github.com/docker/docker/api/types/container"

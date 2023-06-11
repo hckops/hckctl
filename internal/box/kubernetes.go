@@ -2,10 +2,10 @@ package box
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/internal/old/client"
+	"github.com/hckops/hckctl/internal/old/model"
+	"github.com/hckops/hckctl/internal/old/schema"
 	"github.com/hckops/hckctl/pkg/command/common"
-	"github.com/hckops/hckctl/pkg/old/client"
-	"github.com/hckops/hckctl/pkg/old/model"
-	"github.com/hckops/hckctl/pkg/old/schema"
 	"k8s.io/apimachinery/pkg/util/runtime"
 
 	"github.com/rs/zerolog"

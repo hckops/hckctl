@@ -2,8 +2,8 @@ package client
 
 import (
 	"context"
-	"github.com/hckops/hckctl/pkg/old/model"
-	"github.com/hckops/hckctl/pkg/old/schema"
+	"github.com/hckops/hckctl/internal/old/model"
+	"github.com/hckops/hckctl/internal/old/schema"
 	"github.com/hckops/hckctl/pkg/util"
 	"io"
 	"io/ioutil"

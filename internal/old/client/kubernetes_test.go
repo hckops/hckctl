@@ -2,7 +2,7 @@ package client
 
 import (
 	"bytes"
-	"github.com/hckops/hckctl/pkg/old/schema"
+	"github.com/hckops/hckctl/internal/old/schema"
 	"log"
 	"testing"
 
