@@ -1,15 +1,15 @@
-package client
+package box
 
 import (
-	"github.com/hckops/hckctl/internal/schema"
 	"testing"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
+	"github.com/hckops/hckctl/pkg/template/model"
 	"github.com/stretchr/testify/assert"
 )
 
-var testPorts = []schema.PortV1{
+var testPorts = []model.BoxPort{
 	{Alias: "aaa", Local: "123", Remote: "123"},
 	{Alias: "bbb", Local: "456", Remote: "789"},
 }
@@ -44,7 +44,7 @@ func TestBuildHostConfig(t *testing.T) {
 		},
 	}
 
-	result, err := buildHostConfig(testPorts, func(port schema.PortV1) {})
+	result, err := buildHostConfig(testPorts, func(port model.BoxPort) {})
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 }

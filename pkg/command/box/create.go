@@ -2,7 +2,6 @@ package box
 
 import (
 	"fmt"
-
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -85,15 +84,14 @@ func createBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 		return errors.New("client error")
 	}
 
-	messages := handleOpenEvents(boxClient, loader)
+	handleOpenEvents(boxClient, loader)
 
-	if _, err := boxClient.Create(); err != nil {
+	if boxInfo, err := boxClient.Create(); err != nil {
 		log.Warn().Err(err).Msg("error creating box")
 		return errors.New("create error")
-	}
-	// TODO on Create prints ports only for docker
-	for _, message := range messages {
-		fmt.Println(message)
+	} else {
+		loader.Stop()
+		fmt.Println(boxInfo.Name)
 	}
 	return nil
 }
