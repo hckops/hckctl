@@ -128,7 +128,7 @@ func openBox(src source.TemplateSource, configRef *config.ConfigRef) error {
 	}
 
 	boxClient.Events().Subscribe(func(event client.Event) {
-		log.Debug().Msgf("[%v] %s", event.Source(), event.String())
+		log.Debug().Msgf("[%v] %s", box.BoxProviderFromEventSource(event.Source()), event.String())
 		// TODO
 		//switch event.Kind {
 		//case box.ConsoleEvent: // c.eventBus.PublishConsoleEvent("execContainer", "waiting")

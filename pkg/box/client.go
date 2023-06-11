@@ -10,8 +10,8 @@ import (
 type BoxClient interface {
 	Events() *client.EventBus
 	Create() (*BoxInfo, error)
-	Exec(boxId string) error // boxId == containerName
-	Copy(boxId string, from string, to string) error
+	Exec(info *BoxInfo) error
+	Copy(info *BoxInfo, from string, to string) error
 	List() ([]string, error)
 	Open() error
 	Tunnel() error

@@ -65,21 +65,21 @@ func (cli *DockerClient) Setup(imageName string) error {
 }
 
 type CreateContainerOpts struct {
-	containerName   string
-	containerConfig *container.Config
-	hostConfig      *container.HostConfig
+	ContainerName   string
+	ContainerConfig *container.Config
+	HostConfig      *container.HostConfig
 }
 
 func (cli *DockerClient) CreateContainer(opts *CreateContainerOpts) (string, error) {
-	cli.eventBus.Publish(newCreateContainerDockerEvent(opts.containerName))
+	cli.eventBus.Publish(newCreateContainerDockerEvent(opts.ContainerName))
 
 	newContainer, err := cli.docker.ContainerCreate(
 		cli.ctx,
-		opts.containerConfig,
-		opts.hostConfig,
+		opts.ContainerConfig,
+		opts.HostConfig,
 		nil, // networkingConfig
 		nil, // platform
-		opts.containerName)
+		opts.ContainerName)
 	if err != nil {
 		return "", errors.Wrap(err, "error container create")
 	}
@@ -92,31 +92,31 @@ func (cli *DockerClient) CreateContainer(opts *CreateContainerOpts) (string, err
 }
 
 type ExecContainerOpts struct {
-	containerId string
-	shell       string
-	inStream    io.Reader
-	outStream   io.Writer
-	errStream   io.Writer
-	isTty       bool
+	ContainerId string
+	Shell       string
+	InStream    io.Reader
+	OutStream   io.Writer
+	ErrStream   io.Writer
+	IsTty       bool
 }
 
 func (cli *DockerClient) ExecContainer(opts *ExecContainerOpts) error {
-	cli.eventBus.Publish(newExecContainerDockerEvent(opts.containerId))
+	cli.eventBus.Publish(newExecContainerDockerEvent(opts.ContainerId))
 
 	// default shell
 	var shellCmd string
-	if strings.TrimSpace(opts.shell) != "" {
-		shellCmd = opts.shell
+	if strings.TrimSpace(opts.Shell) != "" {
+		shellCmd = opts.Shell
 	} else {
 		shellCmd = "/bin/bash"
 	}
 
-	execCreateResponse, err := cli.docker.ContainerExecCreate(cli.ctx, opts.containerId, types.ExecConfig{
+	execCreateResponse, err := cli.docker.ContainerExecCreate(cli.ctx, opts.ContainerId, types.ExecConfig{
 		AttachStdin:  true,
 		AttachStdout: true,
 		AttachStderr: true,
 		Detach:       false,
-		Tty:          opts.isTty,
+		Tty:          opts.IsTty,
 		Cmd:          []string{shellCmd},
 	})
 	if err != nil {
@@ -124,7 +124,7 @@ func (cli *DockerClient) ExecContainer(opts *ExecContainerOpts) error {
 	}
 
 	execAttachResponse, err := cli.docker.ContainerExecAttach(cli.ctx, execCreateResponse.ID, types.ExecStartCheck{
-		Tty: opts.isTty,
+		Tty: opts.IsTty,
 	})
 	if err != nil {
 		return errors.Wrap(err, "error container exec attach")
@@ -132,26 +132,26 @@ func (cli *DockerClient) ExecContainer(opts *ExecContainerOpts) error {
 	defer execAttachResponse.Close()
 
 	removeContainerCallback := func() {
-		if err := cli.removeContainer(opts.containerId); err != nil {
-			cli.eventBus.Publish(newExecContainerErrorDockerEvent(opts.containerId, errors.Wrap(err, "remove container")))
+		if err := cli.removeContainer(opts.ContainerId); err != nil {
+			cli.eventBus.Publish(newExecContainerErrorDockerEvent(opts.ContainerId, errors.Wrap(err, "remove container")))
 		}
 	}
 
 	onStreamErrorCallback := func(err error) {
-		cli.eventBus.Publish(newExecContainerErrorDockerEvent(opts.containerId, errors.Wrap(err, "stream container")))
+		cli.eventBus.Publish(newExecContainerErrorDockerEvent(opts.ContainerId, errors.Wrap(err, "stream container")))
 	}
 
 	handleStreams(opts, &execAttachResponse, removeContainerCallback, onStreamErrorCallback)
 
 	// fixes echoes and handle SIGTERM interrupt properly
-	if terminal, err := util.NewRawTerminal(opts.inStream); err == nil {
+	if terminal, err := util.NewRawTerminal(opts.InStream); err == nil {
 		defer terminal.Restore()
 	}
 
-	cli.eventBus.Publish(newExecContainerWaitingDockerEvent(opts.containerId))
+	cli.eventBus.Publish(newExecContainerWaitingDockerEvent(opts.ContainerId))
 
 	// waits for interrupt signals
-	statusCh, errCh := cli.docker.ContainerWait(cli.ctx, opts.containerId, container.WaitConditionNotRunning)
+	statusCh, errCh := cli.docker.ContainerWait(cli.ctx, opts.ContainerId, container.WaitConditionNotRunning)
 	select {
 	case err := <-errCh:
 		if err != nil {
@@ -181,12 +181,12 @@ func handleStreams(
 	var once sync.Once
 	go func() {
 
-		if opts.isTty {
-			if _, err := io.Copy(opts.outStream, execAttachResponse.Reader); err != nil {
+		if opts.IsTty {
+			if _, err := io.Copy(opts.OutStream, execAttachResponse.Reader); err != nil {
 				onStreamErrorCallback(errors.Wrap(err, "error copy stdout docker->local"))
 			}
 		} else {
-			if _, err := stdcopy.StdCopy(opts.outStream, opts.errStream, execAttachResponse.Reader); err != nil {
+			if _, err := stdcopy.StdCopy(opts.OutStream, opts.ErrStream, execAttachResponse.Reader); err != nil {
 				onStreamErrorCallback(errors.Wrap(err, "error copy stdout and stderr docker->local"))
 			}
 		}
@@ -194,7 +194,7 @@ func handleStreams(
 		once.Do(onCloseCallback)
 	}()
 	go func() {
-		if _, err := io.Copy(execAttachResponse.Conn, opts.inStream); err != nil {
+		if _, err := io.Copy(execAttachResponse.Conn, opts.InStream); err != nil {
 			onStreamErrorCallback(errors.Wrap(err, "error copy stdin local->docker"))
 		}
 

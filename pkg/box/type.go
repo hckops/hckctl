@@ -21,6 +21,21 @@ func BoxProviderValues() []string {
 	return []string{string(Docker), string(Kubernetes), string(Argo), string(Cloud)}
 }
 
+func BoxProviderFromEventSource(source client.EventSource) BoxProvider {
+	switch source {
+	case client.DockerSource:
+		return Docker
+	case client.KubeSource:
+		return Kubernetes
+	case client.ArgoSource:
+		return Argo
+	case client.CloudSource:
+		return Cloud
+	default:
+		return "INVALID_SOURCE"
+	}
+}
+
 type boxOpts struct {
 	template *model.BoxV1
 	streams  *boxStreams
