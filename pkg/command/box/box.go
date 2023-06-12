@@ -55,7 +55,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 			hckctl box parrot
 
 			# opens a box deployed on kubernetes (docker|kube|argo|cloud)
-			hckctl box kali --revision kube
+			hckctl box kali --provider kube
 
 			# opens a box using a specific version (branch|tag|sha)
 			hckctl box vulnerable/dvwa --revision main

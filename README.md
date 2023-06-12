@@ -18,7 +18,7 @@
   <a href="#development">Development</a>
 </p>
 
-A novel BAS engine with a declarative approach to launch manual and simulated attacks, either against a sandbox lab or your infrastructure. It leverages pre-defined and always up-to-date recipes to probe and verify your security posture, designed to be integrated in automated pipelines and to analyze, aggregate and export reports.
+A novel Breach and Attach Simulation (BAS) engine with a declarative approach to launch manual and simulated attacks, either against a sandbox lab or your infrastructure. It leverages pre-defined and always up-to-date recipes to probe and verify your security posture, designed to be integrated in automated pipelines and to analyze, aggregate and export reports.
 
 > TODO screenshot/gif
 
@@ -76,13 +76,17 @@ just
 
 TODO
 * general
-    - autocomplete
+    - autocomplete commands
+    - autocomplete values e.g. `box exec <list of boxes>`
+    - add go reference badge
+    - public parrot image
 * template
     - add offline mode source revision
     - update directories to exclude in `resolvePath` e.g. charts
 * box
+    - IMPORTANT refactor Exec and wait condition to detach without remove
+    - issue open (kali): `zerolog: could not write event: write ... file already closed`
     - kube replace resources with size
-    - refactor Exec and wait condition to detach without remove
     - verify support for remote docker daemon with `DOCKER_HOST`
     - review logs and errors output
     - support distroless
