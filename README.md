@@ -18,7 +18,11 @@
   <a href="#development">Development</a>
 </p>
 
-A novel Breach and Attach Simulation (BAS) engine with a declarative approach to launch manual and simulated attacks, either against a sandbox lab or your infrastructure. It leverages pre-defined and always up-to-date recipes to probe and verify your security posture, designed to be integrated in automated pipelines and to analyze, aggregate and export reports.
+A novel Breach and Attack Simulation (BAS) engine with a declarative approach to launch manual and automated attacks, either against a sandbox lab or your infrastructure.
+It leverages pre-defined and always up-to-date recipes of your everyday tools to probe and verify your security posture.
+Designed to transparently run locally, remotely or integrated in pipelines and to analyze, aggregate and export reports.
+
+See also the companion [repository](https://github.com/hckops/megalopolis)
 
 > TODO screenshot/gif
 
