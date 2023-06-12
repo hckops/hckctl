@@ -18,11 +18,9 @@
   <a href="#development">Development</a>
 </p>
 
-<!--
-A novel BAS tool with a declarative approach to launch manual and simulated attacks either against self-contained labs or your infrastructure. It uses pre-defined always up-to-date recipes to probe and verify your security posture, designed to be integrated in automated pipelines and with the possibility to analyze, aggregate and export reports.
--->
+A novel BAS engine with a declarative approach to launch manual and simulated attacks, either against a sandbox lab or your infrastructure. It leverages pre-defined and always up-to-date recipes to probe and verify your security posture, designed to be integrated in automated pipelines and to analyze, aggregate and export reports.
 
-> TODO description and screenshot/gif
+> TODO screenshot/gif
 
 ## Quick start
 
@@ -62,86 +60,7 @@ curl -sSL https://github.com/hckops/hckctl/releases/download/v0.1.0/hckctl_linux
 
 ## Guide
 
-### Box
-
-<!--
-**Boxes** are ready-to-go docker images designed for security enthusiasts that want to spend more time hacking and need both an attacker and a vulnerable environment that is constantly updated, quick to start and just work
-
-Main features:
-* unified local and remote experience - run the same environments locally or in a remote cluster
-* open source and publicly maintained - you want to know what you are running!
-  - see [templates](https://github.com/hckops/megalopolis/tree/main/boxes)
-  - see [docker images](https://github.com/hckops/megalopolis/tree/main/docker)
-* constantly updated
-  - see scheduled [action](https://github.com/hckops/megalopolis/blob/main/.github/workflows/docker-ci.yml)
-* all declared ports are exposed and forwarded by default
-* resources are automatically deleted once you close a box
-* *the cloud provider is not publicly available at this time*
--->
-
-```bash
-# lists boxes
-hckctl box list
-
-# starts a docker box (default)
-hckctl box alpine
-hckctl box alpine --provider docker
-
-# starts a kubernetes box
-hckctl box alpine --provider kube
-
-# starts a remote box (over ssh tunnel)
-hckctl box alpine --provider cloud
-```
-
-<!--
-### Lab
-
-> **Labs** are user-defined hacking environments
-
-Main features:
-* override defaults e.g. credentials, environment variables, etc.
-* attach volumes
-* connect multiple boxes
-
-> WIP coming soon
--->
-
-### Config
-
-```bash
-# prints current config
-hckctl config
-
-# edits config file
-vim ~/.config/hck/config.yml
-```
-
-Default
-```yaml
-kind: config/v1
-box:
-  # branch, tag or sha of https://github.com/hckops/megalopolis
-  revision: main
-  # docker|kube|cloud
-  provider: docker
-  kube:
-    namespace: labs
-    # absolute path, default "~/.kube/config"
-    configPath: ""
-    resources:
-      memory: 512Mi
-      cpu: 500m
-  cloud:
-    host: 0.0.0.0
-    port: 2222
-    username: ""
-    token: ""
-log:
-  # debug|info|warning|error
-  level: info
-  filePath: /tmp/hckctl-ubuntu.log
-```
+> TODO
 
 ## Development
 
@@ -149,53 +68,38 @@ log:
 
 ```bash
 # run
-go run main.go
+go run cmd/main.go
 
 # build
 just
-
-# debug
-./build/hckctl <CMD> --log-level debug
-
-# logs
-tail -f /tmp/hckctl-*.log
 ```
 
 TODO
-* autocomplete
-* template: add offline mode
-* template: update directories to exclude in `resolvePath`
-* box: refactor callbacks with channels
-* box: fix validation + vulnerable path
-* box: support distroless and different shell
-* box: add detached mode + reconnect to existing + tunnel only
-* box: test with podman
-* box: add timeout
-* box: cloud ssh key auth only + remove InsecureIgnoreHostKey
-* box: docker/kube `cp` + `XDG_DATA_HOME`
-* box: verify remote docker daemon with `DOCKER_HOST`
-* schema: convert to valid CRD?
-* man plugin
-* config: add set/reset cmd
-* version: print server/cloud
-* release: add brew https://goreleaser.com/customization/homebrew
-* `pkg/client` replace callback with channels
-* `pkg/client` review: docker/kube methods
-* cmd
-  ```bash
-  # --provider docker|kube|cloud
-  # open
-  hckctl box <TEMPLATE_NAME> [--revision <REVISION>]
-  hckctl box --path <TEMPLATE_PATH>
-  
-  # returns BOX_ID
-  hckctl box create <TEMPLATE_NAME> [--revision <REVISION>]
-  hckctl box exec <BOX_ID>
-  hckctl box tunnel <BOX_ID>
-  hckctl box delete <BOX_ID>
-  # new
-  hckctl box cp <PATH_FROM> <PATH_TO>
-  
-  # all boxes: docker/kube
-  hckctl box list
-  ```
+* general
+    - autocomplete
+* template
+    - add offline mode source revision
+    - update directories to exclude in `resolvePath` e.g. charts
+* box
+    - kube replace resources with size
+    - refactor Exec and wait condition to detach without remove
+    - verify support for remote docker daemon with `DOCKER_HOST`
+    - review logs and errors output
+    - support distroless
+    - add podman provider
+    - add context timeout
+    - cloud ssh key auth only + remove InsecureIgnoreHostKey
+    - docker/kube `cp` + `XDG_DATA_HOME`
+* config
+    - add set command
+    - add confirmation before reset
+* version
+    - print server/cloud
+    - print if new version
+    - auto update
+    - rename fields i.e. commit vs version or print both
+* release
+    - add brew https://goreleaser.com/customization/homebrew
+    - test windows
+* plugins
+    - man

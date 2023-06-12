@@ -146,11 +146,10 @@ func (cli *DockerClient) ExecContainer(opts *ExecContainerOpts) error {
 	onStreamErrorCallback := func(err error) {
 		cli.eventBus.Publish(newExecContainerErrorDockerEvent(opts.ContainerId, errors.Wrap(err, "stream container")))
 	}
+	// TODO move back internally OnExitCallback and refactor ExecWait/ExecWaitRemove vs Exec: issue WaitConditionNotRunning
 	if opts.OnExitCallback == nil {
 		opts.OnExitCallback = func() {
-			// FIXME find a clean way to detach without hanging forever
-			cli.docker.ContainerStop(cli.ctx, opts.ContainerId, container.StopOptions{})
-			cli.docker.ContainerStart(cli.ctx, opts.ContainerId, types.ContainerStartOptions{})
+			cli.docker.ContainerRestart(cli.ctx, opts.ContainerId, container.StopOptions{})
 		}
 	}
 
