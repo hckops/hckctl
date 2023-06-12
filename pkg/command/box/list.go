@@ -2,7 +2,7 @@ package box
 
 import (
 	"fmt"
-	"github.com/MakeNowJust/heredoc"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
@@ -24,13 +24,8 @@ func NewBoxListCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "list",
-		Short: "list available templates",
-		Example: heredoc.Doc(`
-
-			# list all running boxes
-			hckctl box list
-		`),
-		RunE: opts.run,
+		Short: "list running boxes",
+		RunE:  opts.run,
 	}
 
 	return command

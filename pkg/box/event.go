@@ -8,6 +8,8 @@ import (
 
 type boxEventKind uint8
 
+// TODO review all events
+// TODO review i.e. remove Loader > LogDebug, LogConsole, LogError, Refresh, Terminate/Close/Finish
 const (
 	Debug boxEventKind = iota
 	Console
@@ -52,6 +54,10 @@ func newBindPortBoxEvent(boxName string, port model.BoxPort) *BoxEvent {
 
 func newPullImageBoxEvent(imageName string) *BoxEvent {
 	return &BoxEvent{Kind: LoaderUpdate, value: fmt.Sprintf("pulling image %s", imageName)}
+}
+
+func newSkipVirtualPortBoxEvent(boxName string) *BoxEvent {
+	return &BoxEvent{Kind: Debug, value: fmt.Sprintf("skipping virtual port %s", boxName)}
 }
 
 func newContainerWaitingBoxEvent() *BoxEvent {

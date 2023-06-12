@@ -89,6 +89,9 @@ TODO
     - update directories to exclude in `resolvePath` e.g. charts
 * box
     - IMPORTANT refactor Exec and wait condition to detach without remove
+    - verify provider flag override
+    - review box events
+    - docker: mount volume to copy `XDG_DATA_HOME`
     - issue open (kali): `zerolog: could not write event: write ... file already closed`
     - kube replace resources with size
     - verify support for remote docker daemon with `DOCKER_HOST`
@@ -97,7 +100,6 @@ TODO
     - add podman provider
     - add context timeout
     - cloud ssh key auth only + remove InsecureIgnoreHostKey
-    - docker/kube `cp` + `XDG_DATA_HOME`
 * config
     - add set command
     - add confirmation before reset

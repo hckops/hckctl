@@ -9,6 +9,11 @@ import (
 	"github.com/hckops/hckctl/pkg/util"
 )
 
+const (
+	BoxPrefixName        = "box-"
+	BoxPrefixVirtualPort = "virtual-"
+)
+
 type BoxV1 struct {
 	Kind  string
 	Name  string
@@ -31,7 +36,7 @@ type BoxPort struct {
 }
 
 func (box *BoxV1) GenerateName() string {
-	return fmt.Sprintf("box-%s-%s", box.Name, strings.ToLower(uniuri.NewLen(5)))
+	return fmt.Sprintf("%s%s-%s", BoxPrefixName, box.Name, strings.ToLower(uniuri.NewLen(5)))
 }
 
 func ToBoxTemplateName(boxName string) string {

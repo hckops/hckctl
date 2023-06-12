@@ -77,5 +77,5 @@ func newRemoveContainerDockerEvent(containerId string) *dockerEvent {
 }
 
 func newListContainersDockerEvent(index int, containerId string, containerName string) *dockerEvent {
-	return &dockerEvent{kind: listContainers, value: fmt.Sprintf("[%d] list containers: containerId=%s containerName=%s", index, containerId, containerName)}
+	return &dockerEvent{kind: listContainers, value: fmt.Sprintf("(%d) list containers: containerId=%s containerName=%s", index, containerId, containerName)}
 }

@@ -41,8 +41,6 @@ func (b *DockerBox) Create(template *model.BoxV1) (*BoxInfo, error) {
 	return b.createBox(template)
 }
 
-// TODO exclude virtual-tty port
-
 func (b *DockerBox) createBox(template *model.BoxV1) (*BoxInfo, error) {
 
 	imageName := template.ImageName()
@@ -56,12 +54,22 @@ func (b *DockerBox) createBox(template *model.BoxV1) (*BoxInfo, error) {
 		return nil, err
 	}
 
+	// skip not supported virtual-* ports
+	var networkPorts []model.BoxPort
+	for _, networkPort := range template.NetworkPorts() {
+		if strings.HasPrefix(networkPort.Alias, model.BoxPrefixVirtualPort) {
+			b.opts.eventBus.Publish(newSkipVirtualPortBoxEvent(imageName))
+		} else {
+			networkPorts = append(networkPorts, networkPort)
+		}
+	}
+
 	// boxName
 	containerName := template.GenerateName()
 	containerConfig, err := buildContainerConfig(
 		template.ImageName(),
 		containerName,
-		template.NetworkPorts(),
+		networkPorts,
 	)
 	if err != nil {
 		return nil, err
@@ -71,7 +79,7 @@ func (b *DockerBox) createBox(template *model.BoxV1) (*BoxInfo, error) {
 		b.opts.eventBus.Publish(newBindPortBoxEvent(containerName, port))
 	}
 
-	hostConfig, err := buildHostConfig(template.NetworkPorts(), onPortBindCallback)
+	hostConfig, err := buildHostConfig(networkPorts, onPortBindCallback)
 	if err != nil {
 		return nil, err
 	}
@@ -198,11 +206,9 @@ func (b *DockerBox) List() ([]BoxInfo, error) {
 	return b.listBoxes()
 }
 
-// TODO filter prefix
-
 func (b *DockerBox) listBoxes() ([]BoxInfo, error) {
 
-	containers, err := b.client.ListContainers("box-")
+	containers, err := b.client.ListContainers(model.BoxPrefixName)
 	if err != nil {
 		return nil, err
 	}
