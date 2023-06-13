@@ -13,18 +13,10 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/pkg/errors"
 
-	"github.com/hckops/hckctl/pkg/client"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-type DockerClient struct {
-	ctx      context.Context
-	docker   *dockerApi.Client
-	eventBus *client.EventBus
-}
-
-func NewDockerClient(eventBus *client.EventBus) (*DockerClient, error) {
-	eventBus.Publish(newClientInitDockerEvent())
+func NewDockerClient() (*DockerClient, error) {
 
 	dockerClient, err := dockerApi.NewClientWithOpts(dockerApi.FromEnv, dockerApi.WithAPIVersionNegotiation())
 	if err != nil {
@@ -32,27 +24,18 @@ func NewDockerClient(eventBus *client.EventBus) (*DockerClient, error) {
 	}
 
 	return &DockerClient{
-		ctx:      context.Background(),
-		docker:   dockerClient,
-		eventBus: eventBus,
+		ctx:    context.Background(),
+		docker: dockerClient,
 	}, nil
 }
 
-func (cli *DockerClient) Close() error {
-	cli.eventBus.Publish(newClientCloseDockerEvent())
-	cli.eventBus.Close()
-	return cli.docker.Close()
+func (client *DockerClient) Close() error {
+	return client.docker.Close()
 }
 
-type ImagePullOpts struct {
-	ImageName           string
-	OnImagePullCallback func()
-}
+func (client *DockerClient) ImagePull(opts *ImagePullOpts) error {
 
-func (cli *DockerClient) ImagePull(opts *ImagePullOpts) error {
-	cli.eventBus.Publish(newImagePullDockerEvent(opts.ImageName))
-
-	reader, err := cli.docker.ImagePull(cli.ctx, opts.ImageName, types.ImagePullOptions{})
+	reader, err := client.docker.ImagePull(client.ctx, opts.ImageName, types.ImagePullOptions{})
 	if err != nil {
 		return errors.Wrap(err, "error image pull")
 	}
@@ -65,18 +48,13 @@ func (cli *DockerClient) ImagePull(opts *ImagePullOpts) error {
 		return errors.Wrap(err, "error image pull output")
 	}
 
-	// cleanup old images
-	if err := cli.removeDanglingImages(); err != nil {
-		return errors.Wrap(err, "error image cleanup")
-	}
-
 	return nil
 }
 
-func (cli *DockerClient) removeDanglingImages() error {
+func (client *DockerClient) ImageRemoveDangling(opts *ImageRemoveOpts) error {
 
 	// dangling images have no tags <none>
-	images, err := cli.docker.ImageList(cli.ctx, types.ImageListOptions{
+	images, err := client.docker.ImageList(client.ctx, types.ImageListOptions{
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key: "dangling", Value: "true",
 		}),
@@ -85,29 +63,22 @@ func (cli *DockerClient) removeDanglingImages() error {
 		return errors.Wrap(err, "error image list dangling")
 	}
 	for _, image := range images {
-		cli.eventBus.Publish(newImageRemoveDockerEvent(image.ID))
+		opts.OnImageRemoveCallback(image.ID)
 
-		_, err := cli.docker.ImageRemove(cli.ctx, image.ID, types.ImageRemoveOptions{})
+		_, err := client.docker.ImageRemove(client.ctx, image.ID, types.ImageRemoveOptions{})
 		if err != nil {
 			// ignore failures: there might be running containers with old images
-			cli.eventBus.Publish(newImageRemoveErrorDockerEvent(image.ID, err))
+			opts.OnImageRemoveErrorCallback(image.ID, err)
 		}
 	}
 
 	return nil
 }
 
-type ContainerCreateOpts struct {
-	ContainerName   string
-	ContainerConfig *container.Config
-	HostConfig      *container.HostConfig
-}
+func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, error) {
 
-func (cli *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, error) {
-	cli.eventBus.Publish(newContainerCreateDockerEvent(opts.ContainerName))
-
-	newContainer, err := cli.docker.ContainerCreate(
-		cli.ctx,
+	newContainer, err := client.docker.ContainerCreate(
+		client.ctx,
 		opts.ContainerConfig,
 		opts.HostConfig,
 		nil, // networkingConfig
@@ -117,21 +88,11 @@ func (cli *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, err
 		return "", errors.Wrap(err, "error container create")
 	}
 
-	if err := cli.docker.ContainerStart(cli.ctx, newContainer.ID, types.ContainerStartOptions{}); err != nil {
+	if err := client.docker.ContainerStart(client.ctx, newContainer.ID, types.ContainerStartOptions{}); err != nil {
 		return "", errors.Wrap(err, "error container start")
 	}
 
 	return newContainer.ID, nil
-}
-
-type ContainerAttachOpts struct {
-	ContainerId               string
-	Shell                     string
-	InStream                  io.Reader
-	OutStream                 io.Writer
-	ErrStream                 io.Writer
-	IsTty                     bool
-	OnContainerAttachCallback func()
 }
 
 // TODO handle distroless i.e. shell == none
@@ -140,8 +101,11 @@ type ContainerAttachOpts struct {
 
 // TODO exec -it NAME shell
 
-func (cli *DockerClient) ContainerAttach(opts *ContainerAttachOpts) error {
-	cli.eventBus.Publish(newContainerAttachDockerEvent(opts.ContainerId))
+func (client *DockerClient) ContainerExec(opts *ContainerExecOpts) error {
+	return nil
+}
+
+func (client *DockerClient) ContainerAttach(opts *ContainerAttachOpts) error {
 
 	// default shell
 	var shellCmd string
@@ -151,7 +115,7 @@ func (cli *DockerClient) ContainerAttach(opts *ContainerAttachOpts) error {
 		shellCmd = "/bin/bash"
 	}
 
-	execCreateResponse, err := cli.docker.ContainerExecCreate(cli.ctx, opts.ContainerId, types.ExecConfig{
+	execCreateResponse, err := client.docker.ContainerExecCreate(client.ctx, opts.ContainerId, types.ExecConfig{
 		AttachStdin:  true,
 		AttachStdout: true,
 		AttachStderr: true,
@@ -163,7 +127,7 @@ func (cli *DockerClient) ContainerAttach(opts *ContainerAttachOpts) error {
 		return errors.Wrap(err, "error container exec create")
 	}
 
-	execAttachResponse, err := cli.docker.ContainerExecAttach(cli.ctx, execCreateResponse.ID, types.ExecStartCheck{
+	execAttachResponse, err := client.docker.ContainerExecAttach(client.ctx, execCreateResponse.ID, types.ExecStartCheck{
 		Tty: opts.IsTty,
 	})
 	if err != nil {
@@ -171,19 +135,15 @@ func (cli *DockerClient) ContainerAttach(opts *ContainerAttachOpts) error {
 	}
 	defer execAttachResponse.Close()
 
-	onStreamErrorCallback := func(err error) {
-		cli.eventBus.Publish(newContainerAttachErrorDockerEvent(opts.ContainerId, errors.Wrap(err, "stream")))
-	}
-
 	onCloseCallback := func() {
-		cli.eventBus.Publish(newContainerAttachExitDockerEvent(opts.ContainerId))
+		opts.OnStreamCloseCallback()
 
-		if err := cli.ContainerRemove(opts.ContainerId); err != nil {
-			cli.eventBus.Publish(newContainerAttachErrorDockerEvent(opts.ContainerId, errors.Wrap(err, "exit")))
+		if err := client.ContainerRemove(opts.ContainerId); err != nil {
+			opts.OnStreamErrorCallback(errors.Wrap(err, "error container exec remove"))
 		}
 	}
 
-	handleStreams(opts, &execAttachResponse, onStreamErrorCallback, onCloseCallback)
+	handleStreams(opts, &execAttachResponse, onCloseCallback, opts.OnStreamErrorCallback)
 
 	// fixes echoes and handle SIGTERM interrupt properly
 	if terminal, err := util.NewRawTerminal(opts.InStream); err == nil {
@@ -193,7 +153,7 @@ func (cli *DockerClient) ContainerAttach(opts *ContainerAttachOpts) error {
 	opts.OnContainerAttachCallback()
 
 	// waits for interrupt signals
-	statusCh, errCh := cli.docker.ContainerWait(cli.ctx, opts.ContainerId, container.WaitConditionNotRunning)
+	statusCh, errCh := client.docker.ContainerWait(client.ctx, opts.ContainerId, container.WaitConditionNotRunning)
 	select {
 	case err := <-errCh:
 		if err != nil {
@@ -204,20 +164,11 @@ func (cli *DockerClient) ContainerAttach(opts *ContainerAttachOpts) error {
 	return nil
 }
 
-func (cli *DockerClient) ContainerRemove(containerId string) error {
-	cli.eventBus.Publish(newContainerRemoveDockerEvent(containerId))
-
-	if err := cli.docker.ContainerRemove(cli.ctx, containerId, types.ContainerRemoveOptions{Force: true}); err != nil {
-		return errors.Wrap(err, "error docker remove")
-	}
-	return nil
-}
-
 func handleStreams(
 	opts *ContainerAttachOpts,
 	execAttachResponse *types.HijackedResponse,
+	onStreamCloseCallback func(),
 	onStreamErrorCallback func(error),
-	onCloseCallback func(),
 ) {
 
 	var once sync.Once
@@ -233,25 +184,27 @@ func handleStreams(
 			}
 		}
 
-		once.Do(onCloseCallback)
+		once.Do(onStreamCloseCallback)
 	}()
 	go func() {
 		if _, err := io.Copy(execAttachResponse.Conn, opts.InStream); err != nil {
 			onStreamErrorCallback(errors.Wrap(err, "error copy stdin local->docker"))
 		}
 
-		once.Do(onCloseCallback)
+		once.Do(onStreamCloseCallback)
 	}()
 }
 
-type ContainerInfo struct {
-	ContainerId   string
-	ContainerName string
+func (client *DockerClient) ContainerRemove(containerId string) error {
+	if err := client.docker.ContainerRemove(client.ctx, containerId, types.ContainerRemoveOptions{Force: true}); err != nil {
+		return errors.Wrap(err, "error docker remove")
+	}
+	return nil
 }
 
-func (cli *DockerClient) ContainerList(namePrefix string) ([]ContainerInfo, error) {
+func (client *DockerClient) ContainerList(namePrefix string) ([]ContainerInfo, error) {
 
-	containers, err := cli.docker.ContainerList(cli.ctx, types.ContainerListOptions{
+	containers, err := client.docker.ContainerList(client.ctx, types.ContainerListOptions{
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key: "name", Value: namePrefix,
 		}),
@@ -261,12 +214,11 @@ func (cli *DockerClient) ContainerList(namePrefix string) ([]ContainerInfo, erro
 	}
 
 	var result []ContainerInfo
-	for index, c := range containers {
+	for _, c := range containers {
 		// see types.ContainerState
 		if c.State == "running" {
 			// name starts with slash
 			containerName := strings.TrimPrefix(c.Names[0], "/")
-			cli.eventBus.Publish(newContainerListDockerEvent(index, c.ID, containerName))
 			result = append(result, ContainerInfo{ContainerId: c.ID, ContainerName: containerName})
 		}
 	}

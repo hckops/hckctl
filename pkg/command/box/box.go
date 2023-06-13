@@ -1,15 +1,10 @@
 package box
 
 import (
-	"fmt"
-
 	"github.com/MakeNowJust/heredoc"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/hckops/hckctl/pkg/box"
-	"github.com/hckops/hckctl/pkg/client"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/template/source"
@@ -103,53 +98,4 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 		cmd.HelpFunc()(cmd, args)
 	}
 	return nil
-}
-
-func openBox(src source.TemplateSource, configRef *config.ConfigRef) error {
-
-	boxTemplate, err := src.ReadBox()
-	if err != nil {
-		log.Warn().Err(err).Msg("error reading template")
-		return errors.New("invalid template")
-	}
-
-	loader := common.NewLoader()
-	loader.Start("loading template %s", boxTemplate.Name)
-	defer loader.Stop()
-
-	provider := configRef.Config.Box.Provider
-	log.Debug().Msgf("opening box: provider=%s name=%s\n%s", provider, boxTemplate.Name, boxTemplate.Pretty())
-
-	boxClient, err := box.NewBoxClient(provider)
-	if err != nil {
-		log.Warn().Err(err).Msg("error creating client")
-		return errors.New("client error")
-	}
-
-	handleOpenEvents(boxClient, loader)
-
-	if err := boxClient.Open(boxTemplate); err != nil {
-		log.Warn().Err(err).Msg("error opening box")
-		return errors.New("open error")
-	}
-	return nil
-}
-
-func handleOpenEvents(boxClient box.BoxClient, loader *common.Loader) {
-	boxClient.Events().Subscribe(func(event client.Event) {
-		if boxEvent, ok := box.IsBoxEvent(event); ok {
-			switch boxEvent.Kind {
-			case box.Console:
-				loader.Refresh("loading")
-				fmt.Println(event.String())
-				log.Info().Msg(event.String())
-			case box.LoaderUpdate:
-				loader.Refresh(event.String())
-			case box.LoaderClose:
-				loader.Stop()
-			}
-		} else {
-			log.Debug().Msgf("[%v] %s", event.Source(), event.String())
-		}
-	})
 }

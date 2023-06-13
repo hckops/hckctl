@@ -68,7 +68,7 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 }
 
 func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
-	format := opts.formatFlag.value()
+	format := opts.formatFlag.String()
 
 	if len(args) == 1 && opts.sourceFlag.Local {
 		path := args[0]
@@ -114,7 +114,7 @@ func printTemplate(src source.TemplateSource, format string) error {
 
 func formatTemplate(value *source.TemplateValue, format string) (string, error) {
 	switch format {
-	case jsonFlag.value():
+	case jsonFlag.String():
 		if jsonValue, err := value.ToJson(); err != nil {
 			return "", err
 		} else {

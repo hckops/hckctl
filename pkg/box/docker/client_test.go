@@ -1,4 +1,4 @@
-package box
+package docker
 
 import (
 	"testing"

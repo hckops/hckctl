@@ -1,12 +1,9 @@
-package client
+package box
 
 import (
 	"fmt"
 	"sync"
 )
-
-// TODO review: source vs provider + add visibility/type: public/private/log + debug/info/error
-// TODO move "box" in client pkg
 
 type EventSource uint8
 
@@ -15,15 +12,31 @@ const (
 	KubeSource
 	ArgoSource
 	CloudSource
-	BoxSource
 )
 
 func (e EventSource) String() string {
 	return []string{"docker", "kube", "argo", "cloud", "box"}[e]
 }
 
+type EventKind uint8
+
+const (
+	LogDebug EventKind = iota
+	LogInfo
+	LogWarning
+	LogError
+	PrintConsole
+	LoaderUpdate
+	LoaderStop
+)
+
+func (e EventKind) String() string {
+	return []string{"debug", "info", "warning", "console", "update", "stop"}[e]
+}
+
 type Event interface {
 	Source() EventSource
+	Kind() EventKind
 	fmt.Stringer
 }
 
@@ -32,7 +45,7 @@ type EventBus struct {
 	wg        sync.WaitGroup
 }
 
-func NewEventBus() *EventBus {
+func newEventBus() *EventBus {
 	return &EventBus{
 		eventChan: make(chan Event),
 	}

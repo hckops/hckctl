@@ -3,16 +3,15 @@ package box
 import (
 	"io"
 	"os"
-
-	"github.com/hckops/hckctl/pkg/client"
 )
 
+// TODO refactor to iota and type map[][] + String
 type BoxProvider string
 
 const (
 	Docker     BoxProvider = "docker"
 	Kubernetes BoxProvider = "kube"
-	Argo       BoxProvider = "argo" // TODO remove, only labs
+	Argo       BoxProvider = "argo"
 	Cloud      BoxProvider = "cloud"
 )
 
@@ -28,35 +27,36 @@ func BoxProviderValues() []string {
 	return values
 }
 
-type boxOpts struct {
-	streams  *boxStreams
-	eventBus *client.EventBus
-}
-
-func newBoxOpts() *boxOpts {
-	return &boxOpts{
-		streams:  newDefaultStreams(true),
-		eventBus: client.NewEventBus(),
-	}
-}
-
-type boxStreams struct {
-	in    io.Reader
-	out   io.Writer
-	err   io.Writer
-	isTty bool // tty false for tunnel only
-}
-
-func newDefaultStreams(tty bool) *boxStreams {
-	return &boxStreams{
-		in:    os.Stdin,
-		out:   os.Stdout,
-		err:   os.Stderr,
-		isTty: tty,
-	}
-}
-
+// TODO add provider
 type BoxInfo struct {
 	Id   string
 	Name string
+}
+
+type BoxOpts struct {
+	Streams  *BoxStreams
+	EventBus *EventBus
+}
+
+func newBoxOpts() *BoxOpts {
+	return &BoxOpts{
+		Streams:  newDefaultStreams(true),
+		EventBus: newEventBus(),
+	}
+}
+
+type BoxStreams struct {
+	In    io.Reader
+	Out   io.Writer
+	Err   io.Writer
+	IsTty bool // tty false for tunnel only
+}
+
+func newDefaultStreams(tty bool) *BoxStreams {
+	return &BoxStreams{
+		In:    os.Stdin,
+		Out:   os.Stdout,
+		Err:   os.Stderr,
+		IsTty: tty,
+	}
 }

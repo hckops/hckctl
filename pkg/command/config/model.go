@@ -35,7 +35,7 @@ type TemplateConfig struct {
 }
 
 type BoxConfig struct {
-	Provider box.BoxProvider `yaml:"provider"`
+	Provider box.BoxProvider `yaml:"provider"` // TODO refactor to iota and type map[][] + String
 	Kube     KubeConfig      `yaml:"kube"`
 	Cloud    CloudConfig     `yaml:"cloud"`
 }

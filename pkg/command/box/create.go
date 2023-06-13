@@ -1,13 +1,9 @@
 package box
 
 import (
-	"fmt"
-
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/template/source"
@@ -60,39 +56,6 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	} else {
 		cmd.HelpFunc()(cmd, args)
-	}
-	return nil
-}
-
-func createBox(src source.TemplateSource, configRef *config.ConfigRef) error {
-
-	boxTemplate, err := src.ReadBox()
-	if err != nil {
-		log.Warn().Err(err).Msg("error reading template")
-		return errors.New("invalid template")
-	}
-
-	loader := common.NewLoader()
-	loader.Start("loading template %s", boxTemplate.Name)
-	defer loader.Stop()
-
-	provider := configRef.Config.Box.Provider
-	log.Debug().Msgf("creating box: provider=%s name=%s\n%s", provider, boxTemplate.Name, boxTemplate.Pretty())
-
-	boxClient, err := box.NewBoxClient(provider)
-	if err != nil {
-		log.Warn().Err(err).Msg("error creating client")
-		return errors.New("client error")
-	}
-
-	handleOpenEvents(boxClient, loader)
-
-	if boxInfo, err := boxClient.Create(boxTemplate); err != nil {
-		log.Warn().Err(err).Msg("error creating box")
-		return errors.New("create error")
-	} else {
-		loader.Stop()
-		fmt.Println(boxInfo.Name)
 	}
 	return nil
 }

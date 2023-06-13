@@ -7,13 +7,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/hckops/hckctl/pkg/box"
-	"github.com/hckops/hckctl/pkg/client"
 	"github.com/hckops/hckctl/pkg/command/config"
 )
 
 type boxListCmdOptions struct {
 	configRef *config.ConfigRef
-	provider  string // TODO filter by provider, default all
+	providers string // TODO filter by provider (comma separated list), default all
 }
 
 func NewBoxListCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -51,7 +50,7 @@ func listByProvider(provider box.BoxProvider) error {
 		return nil
 	}
 
-	boxClient.Events().Subscribe(func(event client.Event) {
+	boxClient.Events().Subscribe(func(event box.Event) {
 		log.Debug().Msg(event.String())
 	})
 

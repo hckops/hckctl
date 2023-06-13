@@ -16,7 +16,7 @@ var formatIds = map[formatFlag][]string{
 	jsonFlag: {"json"},
 }
 
-func (f formatFlag) value() string {
+func (f formatFlag) String() string {
 	return formatIds[f][0]
 }
 
