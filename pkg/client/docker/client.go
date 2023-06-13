@@ -44,13 +44,13 @@ func (cli *DockerClient) Close() error {
 	return cli.docker.Close()
 }
 
-type SetupImageOpts struct {
+type ImagePullOpts struct {
 	ImageName           string
-	OnPullImageCallback func()
+	OnImagePullCallback func()
 }
 
-func (cli *DockerClient) Setup(opts *SetupImageOpts) error {
-	cli.eventBus.Publish(newImageSetupDockerEvent(opts.ImageName))
+func (cli *DockerClient) ImagePull(opts *ImagePullOpts) error {
+	cli.eventBus.Publish(newImagePullDockerEvent(opts.ImageName))
 
 	reader, err := cli.docker.ImagePull(cli.ctx, opts.ImageName, types.ImagePullOptions{})
 	if err != nil {
@@ -58,8 +58,7 @@ func (cli *DockerClient) Setup(opts *SetupImageOpts) error {
 	}
 	defer reader.Close()
 
-	cli.eventBus.Publish(newImagePullDockerEvent(opts.ImageName))
-	opts.OnPullImageCallback()
+	opts.OnImagePullCallback()
 
 	// suppress default output
 	if _, err := io.Copy(io.Discard, reader); err != nil {
@@ -68,7 +67,7 @@ func (cli *DockerClient) Setup(opts *SetupImageOpts) error {
 
 	// cleanup old images
 	if err := cli.removeDanglingImages(); err != nil {
-		return errors.Wrap(err, "error setup cleanup")
+		return errors.Wrap(err, "error image cleanup")
 	}
 
 	return nil
@@ -88,10 +87,9 @@ func (cli *DockerClient) removeDanglingImages() error {
 	for _, image := range images {
 		cli.eventBus.Publish(newImageRemoveDockerEvent(image.ID))
 
-		// do not force: there might be running containers with old images
 		_, err := cli.docker.ImageRemove(cli.ctx, image.ID, types.ImageRemoveOptions{})
 		if err != nil {
-			// ignore failures
+			// ignore failures: there might be running containers with old images
 			cli.eventBus.Publish(newImageRemoveErrorDockerEvent(image.ID, err))
 		}
 	}
@@ -99,13 +97,13 @@ func (cli *DockerClient) removeDanglingImages() error {
 	return nil
 }
 
-type CreateContainerOpts struct {
+type ContainerCreateOpts struct {
 	ContainerName   string
 	ContainerConfig *container.Config
 	HostConfig      *container.HostConfig
 }
 
-func (cli *DockerClient) CreateContainer(opts *CreateContainerOpts) (string, error) {
+func (cli *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, error) {
 	cli.eventBus.Publish(newContainerCreateDockerEvent(opts.ContainerName))
 
 	newContainer, err := cli.docker.ContainerCreate(
@@ -126,22 +124,24 @@ func (cli *DockerClient) CreateContainer(opts *CreateContainerOpts) (string, err
 	return newContainer.ID, nil
 }
 
-type ExecContainerOpts struct {
-	ContainerId                string
-	Shell                      string
-	InStream                   io.Reader
-	OutStream                  io.Writer
-	ErrStream                  io.Writer
-	IsTty                      bool
-	OnContainerWaitingCallback func()
-	OnExitCallback             func()
+type ContainerAttachOpts struct {
+	ContainerId               string
+	Shell                     string
+	InStream                  io.Reader
+	OutStream                 io.Writer
+	ErrStream                 io.Writer
+	IsTty                     bool
+	OnContainerAttachCallback func()
 }
 
 // TODO handle distroless i.e. shell == none
 // TODO issue with powershell i.e. /usr/bin/pwsh
+// TODO https://github.com/moby/moby/pull/41548
 
-func (cli *DockerClient) ExecContainer(opts *ExecContainerOpts) error {
-	cli.eventBus.Publish(newContainerExecDockerEvent(opts.ContainerId))
+// TODO exec -it NAME shell
+
+func (cli *DockerClient) ContainerAttach(opts *ContainerAttachOpts) error {
+	cli.eventBus.Publish(newContainerAttachDockerEvent(opts.ContainerId))
 
 	// default shell
 	var shellCmd string
@@ -166,32 +166,31 @@ func (cli *DockerClient) ExecContainer(opts *ExecContainerOpts) error {
 	execAttachResponse, err := cli.docker.ContainerExecAttach(cli.ctx, execCreateResponse.ID, types.ExecStartCheck{
 		Tty: opts.IsTty,
 	})
-	// TODO command, ports, check status, etc
 	if err != nil {
 		return errors.Wrap(err, "error container exec attach")
 	}
 	defer execAttachResponse.Close()
 
 	onStreamErrorCallback := func(err error) {
-		cli.eventBus.Publish(newContainerExecErrorDockerEvent(opts.ContainerId, errors.Wrap(err, "stream container")))
+		cli.eventBus.Publish(newContainerAttachErrorDockerEvent(opts.ContainerId, errors.Wrap(err, "stream")))
 	}
-	// TODO move back internally OnExitCallback and refactor ExecWait/ExecWaitRemove vs Exec: issue WaitConditionNotRunning
-	// newExecContainerExitDockerEvent
-	if opts.OnExitCallback == nil {
-		opts.OnExitCallback = func() {
-			cli.docker.ContainerRestart(cli.ctx, opts.ContainerId, container.StopOptions{})
+
+	onCloseCallback := func() {
+		cli.eventBus.Publish(newContainerAttachExitDockerEvent(opts.ContainerId))
+
+		if err := cli.ContainerRemove(opts.ContainerId); err != nil {
+			cli.eventBus.Publish(newContainerAttachErrorDockerEvent(opts.ContainerId, errors.Wrap(err, "exit")))
 		}
 	}
 
-	handleStreams(opts, &execAttachResponse, opts.OnExitCallback, onStreamErrorCallback)
+	handleStreams(opts, &execAttachResponse, onStreamErrorCallback, onCloseCallback)
 
 	// fixes echoes and handle SIGTERM interrupt properly
 	if terminal, err := util.NewRawTerminal(opts.InStream); err == nil {
 		defer terminal.Restore()
 	}
 
-	cli.eventBus.Publish(newContainerExecWaitDockerEvent(opts.ContainerId))
-	opts.OnContainerWaitingCallback()
+	opts.OnContainerAttachCallback()
 
 	// waits for interrupt signals
 	statusCh, errCh := cli.docker.ContainerWait(cli.ctx, opts.ContainerId, container.WaitConditionNotRunning)
@@ -205,7 +204,7 @@ func (cli *DockerClient) ExecContainer(opts *ExecContainerOpts) error {
 	return nil
 }
 
-func (cli *DockerClient) RemoveContainer(containerId string) error {
+func (cli *DockerClient) ContainerRemove(containerId string) error {
 	cli.eventBus.Publish(newContainerRemoveDockerEvent(containerId))
 
 	if err := cli.docker.ContainerRemove(cli.ctx, containerId, types.ContainerRemoveOptions{Force: true}); err != nil {
@@ -215,10 +214,10 @@ func (cli *DockerClient) RemoveContainer(containerId string) error {
 }
 
 func handleStreams(
-	opts *ExecContainerOpts,
+	opts *ContainerAttachOpts,
 	execAttachResponse *types.HijackedResponse,
-	onCloseCallback func(),
 	onStreamErrorCallback func(error),
+	onCloseCallback func(),
 ) {
 
 	var once sync.Once
@@ -250,7 +249,7 @@ type DockerContainerInfo struct {
 	ContainerName string
 }
 
-func (cli *DockerClient) ListContainers(namePrefix string) ([]DockerContainerInfo, error) {
+func (cli *DockerClient) ContainerList(namePrefix string) ([]DockerContainerInfo, error) {
 
 	containers, err := cli.docker.ContainerList(cli.ctx, types.ContainerListOptions{
 		Filters: filters.NewArgs(filters.KeyValuePair{

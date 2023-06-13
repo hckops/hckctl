@@ -12,15 +12,13 @@ type dockerEventKind uint8
 const (
 	clientInit dockerEventKind = iota
 	clientClose
-	imageSetup
 	imagePull
 	imageRemove
 	imageRemoveError
 	containerCreate
-	containerExec
-	containerExecWait
-	containerExecError
-	containerExecExit
+	containerAttach
+	containerAttachExit
+	containerAttachError
 	containerRemove
 	containerList
 )
@@ -46,10 +44,6 @@ func newClientCloseDockerEvent() *dockerEvent {
 	return &dockerEvent{kind: clientClose, value: "close docker client"}
 }
 
-func newImageSetupDockerEvent(imageName string) *dockerEvent {
-	return &dockerEvent{kind: imageSetup, value: fmt.Sprintf("image setup: imageName=%s", imageName)}
-}
-
 func newImagePullDockerEvent(imageName string) *dockerEvent {
 	return &dockerEvent{kind: imagePull, value: fmt.Sprintf("image pull: imageName=%s", imageName)}
 }
@@ -58,6 +52,7 @@ func newImageRemoveDockerEvent(imageId string) *dockerEvent {
 	return &dockerEvent{kind: imageRemove, value: fmt.Sprintf("image remove: imageId=%s", imageId)}
 }
 
+// TODO level WARN
 func newImageRemoveErrorDockerEvent(imageId string, err error) *dockerEvent {
 	return &dockerEvent{kind: imageRemoveError, value: fmt.Sprintf("image remove error: imageId=%s error=%v", imageId, err)}
 }
@@ -66,21 +61,16 @@ func newContainerCreateDockerEvent(containerName string) *dockerEvent {
 	return &dockerEvent{kind: containerCreate, value: fmt.Sprintf("container create: containerName=%s", containerName)}
 }
 
-func newContainerExecDockerEvent(containerId string) *dockerEvent {
-	return &dockerEvent{kind: containerExec, value: fmt.Sprintf("container exec: containerId=%s", containerId)}
+func newContainerAttachDockerEvent(containerId string) *dockerEvent {
+	return &dockerEvent{kind: containerAttach, value: fmt.Sprintf("container attach: containerId=%s", containerId)}
 }
 
-func newContainerExecWaitDockerEvent(containerId string) *dockerEvent {
-	return &dockerEvent{kind: containerExecWait, value: fmt.Sprintf("container exec wait: containerId=%s", containerId)}
+func newContainerAttachExitDockerEvent(containerId string) *dockerEvent {
+	return &dockerEvent{kind: containerAttachExit, value: fmt.Sprintf("container attach exit: containerId=%s", containerId)}
 }
 
-func newContainerExecErrorDockerEvent(containerId string, err error) *dockerEvent {
-	return &dockerEvent{kind: containerExecError, value: fmt.Sprintf("container exec error: containerId=%s error=%v", containerId, err)}
-}
-
-// TODO not used
-func newContainerExecExitDockerEvent(containerId string) *dockerEvent {
-	return &dockerEvent{kind: containerExecExit, value: fmt.Sprintf("container exec exit: containerId=%s", containerId)}
+func newContainerAttachErrorDockerEvent(containerId string, err error) *dockerEvent {
+	return &dockerEvent{kind: containerAttachError, value: fmt.Sprintf("container attach error: containerId=%s error=%v", containerId, err)}
 }
 
 func newContainerRemoveDockerEvent(containerId string) *dockerEvent {

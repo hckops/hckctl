@@ -42,10 +42,6 @@ func newGenericBoxEvent(message string, values ...any) *BoxEvent {
 	return &BoxEvent{Kind: Debug, value: fmt.Sprintf(message, values...)}
 }
 
-func newInitBoxEvent() *BoxEvent {
-	return &BoxEvent{Kind: Debug, value: "init box client"}
-}
-
 func newBindPortBoxEvent(boxName string, port model.BoxPort) *BoxEvent {
 	return &BoxEvent{Kind: Console, value: fmt.Sprintf(
 		"[%s][%s]   \texpose (remote) %s -> (local) http://localhost:%s",
@@ -60,6 +56,7 @@ func newSkipVirtualPortBoxEvent(boxName string) *BoxEvent {
 	return &BoxEvent{Kind: Debug, value: fmt.Sprintf("skipping virtual port %s", boxName)}
 }
 
+// TODO wait
 func newContainerWaitingBoxEvent() *BoxEvent {
 	return &BoxEvent{Kind: LoaderClose, value: "waiting"}
 }

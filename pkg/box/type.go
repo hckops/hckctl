@@ -12,7 +12,7 @@ type BoxProvider string
 const (
 	Docker     BoxProvider = "docker"
 	Kubernetes BoxProvider = "kube"
-	Argo       BoxProvider = "argo"
+	Argo       BoxProvider = "argo" // TODO remove, only labs
 	Cloud      BoxProvider = "cloud"
 )
 

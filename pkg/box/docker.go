@@ -19,7 +19,6 @@ type DockerBox struct {
 }
 
 func NewDockerBox(opts *boxOpts) (*DockerBox, error) {
-	opts.eventBus.Publish(newInitBoxEvent())
 
 	dockerClient, err := docker.NewDockerClient(opts.eventBus)
 	if err != nil {
@@ -44,13 +43,14 @@ func (b *DockerBox) Create(template *model.BoxV1) (*BoxInfo, error) {
 func (b *DockerBox) createBox(template *model.BoxV1) (*BoxInfo, error) {
 
 	imageName := template.ImageName()
-	setupImageOpts := &docker.SetupImageOpts{
+	imageOpts := &docker.ImagePullOpts{
 		ImageName: imageName,
-		OnPullImageCallback: func() {
+		OnImagePullCallback: func() {
+			// TODO refresh loader
 			b.opts.eventBus.Publish(newPullImageBoxEvent(imageName))
 		},
 	}
-	if err := b.client.Setup(setupImageOpts); err != nil {
+	if err := b.client.ImagePull(imageOpts); err != nil {
 		return nil, err
 	}
 
@@ -58,6 +58,7 @@ func (b *DockerBox) createBox(template *model.BoxV1) (*BoxInfo, error) {
 	var networkPorts []model.BoxPort
 	for _, networkPort := range template.NetworkPorts() {
 		if strings.HasPrefix(networkPort.Alias, model.BoxPrefixVirtualPort) {
+			// TODO debug
 			b.opts.eventBus.Publish(newSkipVirtualPortBoxEvent(imageName))
 		} else {
 			networkPorts = append(networkPorts, networkPort)
@@ -76,6 +77,7 @@ func (b *DockerBox) createBox(template *model.BoxV1) (*BoxInfo, error) {
 	}
 
 	onPortBindCallback := func(port model.BoxPort) {
+		// TODO console
 		b.opts.eventBus.Publish(newBindPortBoxEvent(containerName, port))
 	}
 
@@ -84,18 +86,19 @@ func (b *DockerBox) createBox(template *model.BoxV1) (*BoxInfo, error) {
 		return nil, err
 	}
 
-	createContainerOpts := &docker.CreateContainerOpts{
+	containerOpts := &docker.ContainerCreateOpts{
 		ContainerName:   containerName,
 		ContainerConfig: containerConfig,
 		HostConfig:      hostConfig,
 	}
 
 	// boxId
-	containerId, err := b.client.CreateContainer(createContainerOpts)
+	containerId, err := b.client.ContainerCreate(containerOpts)
 	if err != nil {
 		return nil, err
 	}
 
+	// TODO ??? move in cli
 	b.opts.eventBus.Publish(newGenericBoxEvent("new box created successfully: templateName=%s boxName=%s boxId=%s",
 		template.Name, containerName, containerId))
 
@@ -171,28 +174,24 @@ func (b *DockerBox) execBox(name string, command string, removeOnExit bool) erro
 		return err
 	}
 
-	execContainerOpts := &docker.ExecContainerOpts{
+	containerOpts := &docker.ContainerAttachOpts{
 		ContainerId: info.Id,
 		Shell:       command,
 		InStream:    b.opts.streams.in,
 		OutStream:   b.opts.streams.out,
 		ErrStream:   b.opts.streams.err,
 		IsTty:       b.opts.streams.isTty,
-		OnContainerWaitingCallback: func() {
+		OnContainerAttachCallback: func() {
+			// TODO close loader: newBoxExecReady
 			b.opts.eventBus.Publish(newContainerWaitingBoxEvent())
 		},
 	}
 
 	if removeOnExit {
-		execContainerOpts.OnExitCallback = func() {
-			if err := b.client.RemoveContainer(info.Id); err != nil {
-				// silent error
-				b.opts.eventBus.Publish(newGenericBoxEvent("error remove container: containerId=%s error=%s", info.Id, err))
-			}
-		}
+		// TODO
 	}
 
-	return b.client.ExecContainer(execContainerOpts)
+	return b.client.ContainerAttach(containerOpts)
 }
 
 // TODO copy
@@ -208,7 +207,7 @@ func (b *DockerBox) List() ([]BoxInfo, error) {
 
 func (b *DockerBox) listBoxes() ([]BoxInfo, error) {
 
-	containers, err := b.client.ListContainers(model.BoxPrefixName)
+	containers, err := b.client.ContainerList(model.BoxPrefixName)
 	if err != nil {
 		return nil, err
 	}
@@ -260,5 +259,5 @@ func (b *DockerBox) Delete(name string) error {
 		return err
 	}
 
-	return b.client.RemoveContainer(info.Id)
+	return b.client.ContainerRemove(info.Id)
 }
