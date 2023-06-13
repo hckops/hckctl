@@ -167,6 +167,8 @@ func (b *DockerBox) Exec(name string, command string) error {
 	return b.execBox(name, command, false)
 }
 
+// TODO exec vs attach
+
 func (b *DockerBox) execBox(name string, command string, removeOnExit bool) error {
 
 	info, err := b.findBox(name)
@@ -213,9 +215,7 @@ func (b *DockerBox) listBoxes() ([]BoxInfo, error) {
 	}
 	var result []BoxInfo
 	for _, c := range containers {
-		// names start with slash
-		boxName := strings.TrimPrefix(c.ContainerName, "/")
-		result = append(result, BoxInfo{Id: c.ContainerId, Name: boxName})
+		result = append(result, BoxInfo{Id: c.ContainerId, Name: c.ContainerName})
 	}
 
 	return result, nil

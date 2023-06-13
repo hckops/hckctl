@@ -244,12 +244,12 @@ func handleStreams(
 	}()
 }
 
-type DockerContainerInfo struct {
+type ContainerInfo struct {
 	ContainerId   string
 	ContainerName string
 }
 
-func (cli *DockerClient) ContainerList(namePrefix string) ([]DockerContainerInfo, error) {
+func (cli *DockerClient) ContainerList(namePrefix string) ([]ContainerInfo, error) {
 
 	containers, err := cli.docker.ContainerList(cli.ctx, types.ContainerListOptions{
 		Filters: filters.NewArgs(filters.KeyValuePair{
@@ -260,10 +260,15 @@ func (cli *DockerClient) ContainerList(namePrefix string) ([]DockerContainerInfo
 		return nil, errors.Wrap(err, "error container list")
 	}
 
-	var result []DockerContainerInfo
+	var result []ContainerInfo
 	for index, c := range containers {
-		cli.eventBus.Publish(newContainerListDockerEvent(index, c.ID, c.Names[0]))
-		result = append(result, DockerContainerInfo{ContainerId: c.ID, ContainerName: c.Names[0]})
+		// see types.ContainerState
+		if c.State == "running" {
+			// name starts with slash
+			containerName := strings.TrimPrefix(c.Names[0], "/")
+			cli.eventBus.Publish(newContainerListDockerEvent(index, c.ID, containerName))
+			result = append(result, ContainerInfo{ContainerId: c.ID, ContainerName: containerName})
+		}
 	}
 
 	return result, nil
