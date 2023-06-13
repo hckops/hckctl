@@ -71,12 +71,10 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 	// --revision or --local
 	opts.sourceFlag = common.AddTemplateSourceFlag(command)
 
-	//command.AddCommand(NewBoxCopyCmd(opts))
 	command.AddCommand(NewBoxCreateCmd(configRef))
-	//command.AddCommand(NewBoxDeleteCmd(opts))
+	command.AddCommand(NewBoxDeleteCmd(configRef))
 	command.AddCommand(NewBoxExecCmd(configRef))
 	command.AddCommand(NewBoxListCmd(configRef))
-	//command.AddCommand(NewBoxTunnelCmd(opts))
 
 	return command
 }

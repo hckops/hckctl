@@ -1,24 +1,27 @@
 package box
 
 import (
-	"fmt"
-
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+
+	"github.com/hckops/hckctl/pkg/box"
+	"github.com/hckops/hckctl/pkg/command/config"
+	"github.com/hckops/hckctl/pkg/template/model"
 )
 
 type boxDeleteCmdOptions struct {
-	box *boxCmdOptions
+	configRef *config.ConfigRef
 }
 
-func NewBoxDeleteCmd(boxOpts *boxCmdOptions) *cobra.Command {
+func NewBoxDeleteCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	opts := &boxDeleteCmdOptions{
-		box: boxOpts,
+		configRef: configRef,
 	}
 
 	command := &cobra.Command{
-		Use:   "delete",
-		Short: "TODO delete",
+		Use:   "delete [name]",
+		Short: "delete running boxes",
 		RunE:  opts.run,
 	}
 
@@ -26,6 +29,19 @@ func NewBoxDeleteCmd(boxOpts *boxCmdOptions) *cobra.Command {
 }
 
 func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
-	fmt.Println("not implemented")
+
+	if len(args) == 1 {
+		boxName := args[0]
+		log.Debug().Msgf("delete remote box: boxName=%s", boxName)
+
+		execClient := func(boxClient box.BoxClient, boxTemplate *model.BoxV1) error {
+			return boxClient.Delete(boxName)
+		}
+		return runBoxClient(opts.configRef, boxName, execClient)
+
+	} else {
+		cmd.HelpFunc()(cmd, args)
+	}
+
 	return nil
 }

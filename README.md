@@ -93,6 +93,7 @@ TODO
     - docker: IMPORTANT refactor Exec and wait condition to detach without remove
     - docker: support distroless
     - docker: fix powershell
+    - docker: create container with Labels=revision to resolve template by name
     - verify provider flag override
     - review box events
     - docker: mount volume to copy `XDG_DATA_HOME`
