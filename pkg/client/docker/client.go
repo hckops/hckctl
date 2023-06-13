@@ -24,7 +24,7 @@ type DockerClient struct {
 }
 
 func NewDockerClient(eventBus *client.EventBus) (*DockerClient, error) {
-	eventBus.Publish(newInitClientDockerEvent())
+	eventBus.Publish(newClientInitDockerEvent())
 
 	dockerClient, err := dockerApi.NewClientWithOpts(dockerApi.FromEnv, dockerApi.WithAPIVersionNegotiation())
 	if err != nil {
@@ -39,7 +39,7 @@ func NewDockerClient(eventBus *client.EventBus) (*DockerClient, error) {
 }
 
 func (cli *DockerClient) Close() error {
-	cli.eventBus.Publish(newCloseClientDockerEvent())
+	cli.eventBus.Publish(newClientCloseDockerEvent())
 	cli.eventBus.Close()
 	return cli.docker.Close()
 }
@@ -50,9 +50,7 @@ type SetupImageOpts struct {
 }
 
 func (cli *DockerClient) Setup(opts *SetupImageOpts) error {
-	cli.eventBus.Publish(newSetupImageDockerEvent(opts.ImageName))
-
-	// TODO delete dangling images
+	cli.eventBus.Publish(newImageSetupDockerEvent(opts.ImageName))
 
 	reader, err := cli.docker.ImagePull(cli.ctx, opts.ImageName, types.ImagePullOptions{})
 	if err != nil {
@@ -60,12 +58,42 @@ func (cli *DockerClient) Setup(opts *SetupImageOpts) error {
 	}
 	defer reader.Close()
 
-	cli.eventBus.Publish(newPullImageDockerEvent(opts.ImageName))
+	cli.eventBus.Publish(newImagePullDockerEvent(opts.ImageName))
 	opts.OnPullImageCallback()
 
 	// suppress default output
 	if _, err := io.Copy(io.Discard, reader); err != nil {
-		return errors.Wrap(err, "error image pull output message")
+		return errors.Wrap(err, "error image pull output")
+	}
+
+	// cleanup old images
+	if err := cli.removeDanglingImages(); err != nil {
+		return errors.Wrap(err, "error setup cleanup")
+	}
+
+	return nil
+}
+
+func (cli *DockerClient) removeDanglingImages() error {
+
+	// dangling images have no tags <none>
+	images, err := cli.docker.ImageList(cli.ctx, types.ImageListOptions{
+		Filters: filters.NewArgs(filters.KeyValuePair{
+			Key: "dangling", Value: "true",
+		}),
+	})
+	if err != nil {
+		return errors.Wrap(err, "error image list dangling")
+	}
+	for _, image := range images {
+		cli.eventBus.Publish(newImageRemoveDockerEvent(image.ID))
+
+		// do not force: there might be running containers with old images
+		_, err := cli.docker.ImageRemove(cli.ctx, image.ID, types.ImageRemoveOptions{})
+		if err != nil {
+			// ignore failures
+			cli.eventBus.Publish(newImageRemoveErrorDockerEvent(image.ID, err))
+		}
 	}
 
 	return nil
@@ -78,7 +106,7 @@ type CreateContainerOpts struct {
 }
 
 func (cli *DockerClient) CreateContainer(opts *CreateContainerOpts) (string, error) {
-	cli.eventBus.Publish(newCreateContainerDockerEvent(opts.ContainerName))
+	cli.eventBus.Publish(newContainerCreateDockerEvent(opts.ContainerName))
 
 	newContainer, err := cli.docker.ContainerCreate(
 		cli.ctx,
@@ -113,7 +141,7 @@ type ExecContainerOpts struct {
 // TODO issue with powershell i.e. /usr/bin/pwsh
 
 func (cli *DockerClient) ExecContainer(opts *ExecContainerOpts) error {
-	cli.eventBus.Publish(newExecContainerDockerEvent(opts.ContainerId))
+	cli.eventBus.Publish(newContainerExecDockerEvent(opts.ContainerId))
 
 	// default shell
 	var shellCmd string
@@ -138,15 +166,17 @@ func (cli *DockerClient) ExecContainer(opts *ExecContainerOpts) error {
 	execAttachResponse, err := cli.docker.ContainerExecAttach(cli.ctx, execCreateResponse.ID, types.ExecStartCheck{
 		Tty: opts.IsTty,
 	})
+	// TODO command, ports, check status, etc
 	if err != nil {
 		return errors.Wrap(err, "error container exec attach")
 	}
 	defer execAttachResponse.Close()
 
 	onStreamErrorCallback := func(err error) {
-		cli.eventBus.Publish(newExecContainerErrorDockerEvent(opts.ContainerId, errors.Wrap(err, "stream container")))
+		cli.eventBus.Publish(newContainerExecErrorDockerEvent(opts.ContainerId, errors.Wrap(err, "stream container")))
 	}
 	// TODO move back internally OnExitCallback and refactor ExecWait/ExecWaitRemove vs Exec: issue WaitConditionNotRunning
+	// newExecContainerExitDockerEvent
 	if opts.OnExitCallback == nil {
 		opts.OnExitCallback = func() {
 			cli.docker.ContainerRestart(cli.ctx, opts.ContainerId, container.StopOptions{})
@@ -160,7 +190,7 @@ func (cli *DockerClient) ExecContainer(opts *ExecContainerOpts) error {
 		defer terminal.Restore()
 	}
 
-	cli.eventBus.Publish(newExecContainerWaitingDockerEvent(opts.ContainerId))
+	cli.eventBus.Publish(newContainerExecWaitDockerEvent(opts.ContainerId))
 	opts.OnContainerWaitingCallback()
 
 	// waits for interrupt signals
@@ -176,7 +206,7 @@ func (cli *DockerClient) ExecContainer(opts *ExecContainerOpts) error {
 }
 
 func (cli *DockerClient) RemoveContainer(containerId string) error {
-	cli.eventBus.Publish(newRemoveContainerDockerEvent(containerId))
+	cli.eventBus.Publish(newContainerRemoveDockerEvent(containerId))
 
 	if err := cli.docker.ContainerRemove(cli.ctx, containerId, types.ContainerRemoveOptions{Force: true}); err != nil {
 		return errors.Wrap(err, "error docker remove")
@@ -215,12 +245,9 @@ func handleStreams(
 	}()
 }
 
-// TODO VERIFY filter with prefix
-
 type DockerContainerInfo struct {
 	ContainerId   string
 	ContainerName string
-	// TODO command, ports, check status, etc
 }
 
 func (cli *DockerClient) ListContainers(namePrefix string) ([]DockerContainerInfo, error) {
@@ -231,12 +258,12 @@ func (cli *DockerClient) ListContainers(namePrefix string) ([]DockerContainerInf
 		}),
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "error docker list")
+		return nil, errors.Wrap(err, "error container list")
 	}
 
 	var result []DockerContainerInfo
 	for index, c := range containers {
-		cli.eventBus.Publish(newListContainersDockerEvent(index, c.ID, c.Names[0]))
+		cli.eventBus.Publish(newContainerListDockerEvent(index, c.ID, c.Names[0]))
 		result = append(result, DockerContainerInfo{ContainerId: c.ID, ContainerName: c.Names[0]})
 	}
 

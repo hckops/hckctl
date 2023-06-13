@@ -18,9 +18,11 @@
   <a href="#development">Development</a>
 </p>
 
+<!--
 A novel Breach and Attack Simulation (BAS) engine with a declarative approach to launch manual and automated attacks, either against a sandbox lab or your infrastructure.
 It leverages pre-defined and always up-to-date recipes of your everyday tools to probe and verify your security posture.
 Designed to transparently run locally, remotely or integrated in pipelines and to analyze, aggregate and export reports.
+-->
 
 See also the companion [repository](https://github.com/hckops/megalopolis)
 
@@ -88,7 +90,9 @@ TODO
     - add offline mode source revision
     - update directories to exclude in `resolvePath` e.g. charts
 * box
-    - IMPORTANT refactor Exec and wait condition to detach without remove
+    - docker: IMPORTANT refactor Exec and wait condition to detach without remove
+    - docker: support distroless
+    - docker: fix powershell
     - verify provider flag override
     - review box events
     - docker: mount volume to copy `XDG_DATA_HOME`
@@ -96,7 +100,6 @@ TODO
     - kube replace resources with size
     - verify support for remote docker daemon with `DOCKER_HOST`
     - review logs and errors output
-    - support distroless
     - add podman provider
     - add context timeout
     - cloud ssh key auth only + remove InsecureIgnoreHostKey

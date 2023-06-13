@@ -23,7 +23,7 @@ func NewLoader() *Loader {
 
 func (l *Loader) update(message string, values ...any) {
 	msg := fmt.Sprintf(message, values...)
-	log.Debug().Msgf("update: %s", msg)
+	//log.Debug().Msgf("update: %s", msg)
 	l.spinner.Suffix = fmt.Sprintf("  %s", msg)
 }
 

@@ -5,6 +5,9 @@ import (
 	"sync"
 )
 
+// TODO review: source vs provider + add visibility/type: public/private/log + debug/info/error
+// TODO move "box" in client pkg
+
 type EventSource uint8
 
 const (
@@ -14,6 +17,10 @@ const (
 	CloudSource
 	BoxSource
 )
+
+func (e EventSource) String() string {
+	return []string{"docker", "kube", "argo", "cloud", "box"}[e]
+}
 
 type Event interface {
 	Source() EventSource
