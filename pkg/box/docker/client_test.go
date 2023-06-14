@@ -5,8 +5,9 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
-	"github.com/hckops/hckctl/pkg/template/model"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/hckops/hckctl/pkg/box/model"
 )
 
 var testPorts = []model.BoxPort{

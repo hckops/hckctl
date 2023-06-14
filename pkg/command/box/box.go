@@ -7,7 +7,7 @@ import (
 
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/command/config"
-	"github.com/hckops/hckctl/pkg/template/source"
+	"github.com/hckops/hckctl/pkg/template"
 )
 
 type boxCmdOptions struct {
@@ -63,7 +63,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	// --provider
 	addBoxProviderFlag(command)
-	// --revision or --local
+	// --revision or --localtemplate
 	opts.sourceFlag = common.AddTemplateSourceFlag(command)
 
 	command.AddCommand(NewBoxCreateCmd(configRef))
@@ -80,11 +80,11 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 		path := args[0]
 		log.Debug().Msgf("open box from local template: path=%s", path)
 
-		return openBox(source.NewLocalSource(path), opts.configRef)
+		return openBox(template.NewLocalSource(path), opts.configRef)
 
 	} else if len(args) == 1 {
 		name := args[0]
-		revisionOpts := &source.RevisionOpts{
+		revisionOpts := &template.RevisionOpts{
 			SourceCacheDir: opts.configRef.Config.Template.CacheDir,
 			SourceUrl:      common.TemplateSourceUrl,
 			SourceRevision: common.TemplateSourceRevision,
@@ -92,7 +92,7 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 		}
 		log.Debug().Msgf("open box from remote template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
-		return openBox(source.NewRemoteSource(revisionOpts, name), opts.configRef)
+		return openBox(template.NewRemoteSource(revisionOpts, name), opts.configRef)
 
 	} else {
 		cmd.HelpFunc()(cmd, args)

@@ -1,8 +1,10 @@
-package box
+package model
 
 import (
 	"io"
 	"os"
+
+	"github.com/hckops/hckctl/pkg/event"
 )
 
 // TODO refactor to iota and type map[][] + String
@@ -35,13 +37,13 @@ type BoxInfo struct {
 
 type BoxOpts struct {
 	Streams  *BoxStreams
-	EventBus *EventBus
+	EventBus *event.EventBus
 }
 
-func newBoxOpts() *BoxOpts {
+func NewBoxOpts() *BoxOpts {
 	return &BoxOpts{
 		Streams:  newDefaultStreams(true),
-		EventBus: newEventBus(),
+		EventBus: event.NewEventBus(),
 	}
 }
 

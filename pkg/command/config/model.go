@@ -4,7 +4,7 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/hckops/hckctl/pkg/box"
+	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/logger"
 	"github.com/hckops/hckctl/pkg/template/schema"
@@ -35,9 +35,9 @@ type TemplateConfig struct {
 }
 
 type BoxConfig struct {
-	Provider box.BoxProvider `yaml:"provider"` // TODO refactor to iota and type map[][] + String
-	Kube     KubeConfig      `yaml:"kube"`
-	Cloud    CloudConfig     `yaml:"cloud"`
+	Provider model.BoxProvider `yaml:"provider"` // TODO refactor to iota and type map[][] + String
+	Kube     KubeConfig        `yaml:"kube"`
+	Cloud    CloudConfig       `yaml:"cloud"`
 }
 
 type KubeConfig struct {
@@ -74,7 +74,7 @@ func newConfig(logFile, cacheDir string) *ConfigV1 {
 			CacheDir: cacheDir,
 		},
 		Box: BoxConfig{
-			Provider: box.Docker,
+			Provider: model.Docker,
 			Kube: KubeConfig{
 				Namespace:  common.ProjectName,
 				ConfigPath: "",

@@ -11,7 +11,7 @@ import (
 
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/command/config"
-	"github.com/hckops/hckctl/pkg/template/source"
+	. "github.com/hckops/hckctl/pkg/template"
 )
 
 type templateListCmdOptions struct {
@@ -50,14 +50,14 @@ func NewTemplateListCmd(configRef *config.ConfigRef) *cobra.Command {
 
 func (opts *templateListCmdOptions) run(cmd *cobra.Command, args []string) error {
 
-	revisionOpts := &source.RevisionOpts{
+	revisionOpts := &RevisionOpts{
 		SourceCacheDir: opts.configRef.Config.Template.CacheDir,
 		SourceUrl:      common.TemplateSourceUrl,
 		SourceRevision: common.TemplateSourceRevision,
 		Revision:       opts.revision,
 	}
 	// name is overridden with custom wildcard
-	if validations, err := source.NewRemoteSource(revisionOpts, "").ReadTemplates(); err != nil {
+	if validations, err := NewRemoteSource(revisionOpts, "").ReadTemplates(); err != nil {
 		log.Warn().Err(err).Msg("error listing templates")
 		return errors.New("error")
 

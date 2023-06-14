@@ -1,22 +1,9 @@
-package box
+package event
 
 import (
 	"fmt"
 	"sync"
 )
-
-type EventSource uint8
-
-const (
-	DockerSource EventSource = iota
-	KubeSource
-	ArgoSource
-	CloudSource
-)
-
-func (e EventSource) String() string {
-	return []string{"docker", "kube", "argo", "cloud", "box"}[e]
-}
 
 type EventKind uint8
 
@@ -35,8 +22,8 @@ func (e EventKind) String() string {
 }
 
 type Event interface {
-	Source() EventSource
 	Kind() EventKind
+	Source() string
 	fmt.Stringer
 }
 
@@ -45,7 +32,7 @@ type EventBus struct {
 	wg        sync.WaitGroup
 }
 
-func newEventBus() *EventBus {
+func NewEventBus() *EventBus {
 	return &EventBus{
 		eventChan: make(chan Event),
 	}

@@ -1,4 +1,4 @@
-package source
+package template
 
 import (
 	"github.com/go-git/go-git/v5"

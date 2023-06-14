@@ -6,7 +6,7 @@ import (
 
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/command/config"
-	"github.com/hckops/hckctl/pkg/template/source"
+	"github.com/hckops/hckctl/pkg/template"
 )
 
 type boxCreateCmdOptions struct {
@@ -40,11 +40,11 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 		path := args[0]
 		log.Debug().Msgf("create box from local template: path=%s", path)
 
-		return createBox(source.NewLocalSource(path), opts.configRef)
+		return createBox(template.NewLocalSource(path), opts.configRef)
 
 	} else if len(args) == 1 {
 		name := args[0]
-		revisionOpts := &source.RevisionOpts{
+		revisionOpts := &template.RevisionOpts{
 			SourceCacheDir: opts.configRef.Config.Template.CacheDir,
 			SourceUrl:      common.TemplateSourceUrl,
 			SourceRevision: common.TemplateSourceRevision,
@@ -52,7 +52,7 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 		}
 		log.Debug().Msgf("create box from remote template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
-		return createBox(source.NewRemoteSource(revisionOpts, name), opts.configRef)
+		return createBox(template.NewRemoteSource(revisionOpts, name), opts.configRef)
 
 	} else {
 		cmd.HelpFunc()(cmd, args)

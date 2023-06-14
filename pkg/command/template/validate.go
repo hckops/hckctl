@@ -8,7 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/hckops/hckctl/pkg/template/source"
+	. "github.com/hckops/hckctl/pkg/template"
 )
 
 // TODO see common list options: kind (compare expected), order, column
@@ -47,7 +47,7 @@ func (opts *templateValidateCmdOptions) run(cmd *cobra.Command, args []string) e
 
 // TODO color output
 func validateTemplate(path string) error {
-	src := source.NewLocalSource(path)
+	src := NewLocalSource(path)
 
 	// attempt single file validation
 	if templateValue, err := src.ReadTemplate(); err == nil {
@@ -73,7 +73,7 @@ func validateTemplate(path string) error {
 	return nil
 }
 
-func printValidTemplate(path string, value *source.TemplateValue) {
+func printValidTemplate(path string, value *TemplateValue) {
 	log.Debug().Msgf("valid template: kind=%s path=%s", value.Kind.String(), path)
 	fmt.Println(fmt.Sprintf("[OK] %s\t%s", value.Kind.String(), path))
 }

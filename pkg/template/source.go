@@ -1,11 +1,12 @@
-package source
+package template
 
 import (
 	"fmt"
 
 	"github.com/pkg/errors"
 
-	"github.com/hckops/hckctl/pkg/template/model"
+	box "github.com/hckops/hckctl/pkg/box/model"
+	lab "github.com/hckops/hckctl/pkg/lab/model"
 	"github.com/hckops/hckctl/pkg/template/schema"
 )
 
@@ -45,8 +46,8 @@ func (t *TemplateValue) toValidated(path string, isValid bool) *TemplateValidate
 type TemplateSource interface {
 	ReadTemplate() (*TemplateValue, error)
 	ReadTemplates() ([]*TemplateValidated, error)
-	ReadBox() (*model.BoxV1, error)
-	ReadLab() (*model.LabV1, error)
+	ReadBox() (*box.BoxV1, error)
+	ReadLab() (*lab.LabV1, error)
 }
 
 type LocalSource struct {
@@ -64,10 +65,10 @@ func (src *LocalSource) ReadTemplate() (*TemplateValue, error) {
 func (src *LocalSource) ReadTemplates() ([]*TemplateValidated, error) {
 	return readTemplates(src.path)
 }
-func (src *LocalSource) ReadBox() (*model.BoxV1, error) {
+func (src *LocalSource) ReadBox() (*box.BoxV1, error) {
 	return readBoxTemplate(src.path)
 }
-func (src *LocalSource) ReadLab() (*model.LabV1, error) {
+func (src *LocalSource) ReadLab() (*lab.LabV1, error) {
 	return readLabTemplate(src.path)
 }
 
@@ -88,9 +89,9 @@ func (src *RemoteSource) ReadTemplates() ([]*TemplateValidated, error) {
 	wildcard := fmt.Sprintf("%s/**/*.{yml,yaml}", src.opts.SourceCacheDir)
 	return readRemoteTemplates(src.opts, wildcard)
 }
-func (src *RemoteSource) ReadBox() (*model.BoxV1, error) {
+func (src *RemoteSource) ReadBox() (*box.BoxV1, error) {
 	return readRemoteBoxTemplate(src.opts, src.name)
 }
-func (src *RemoteSource) ReadLab() (*model.LabV1, error) {
+func (src *RemoteSource) ReadLab() (*lab.LabV1, error) {
 	return readRemoteLabTemplate(src.opts, src.name)
 }

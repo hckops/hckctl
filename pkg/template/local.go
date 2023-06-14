@@ -1,10 +1,11 @@
-package source
+package template
 
 import (
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/pkg/errors"
 
-	"github.com/hckops/hckctl/pkg/template/model"
+	box "github.com/hckops/hckctl/pkg/box/model"
+	lab "github.com/hckops/hckctl/pkg/lab/model"
 	"github.com/hckops/hckctl/pkg/template/schema"
 	"github.com/hckops/hckctl/pkg/util"
 )
@@ -44,7 +45,7 @@ func readTemplates(wildcard string) ([]*TemplateValidated, error) {
 	return results, nil
 }
 
-func readBoxTemplate(path string) (*model.BoxV1, error) {
+func readBoxTemplate(path string) (*box.BoxV1, error) {
 	if value, err := readTemplate(path); err != nil {
 		return nil, err
 	} else {
@@ -52,7 +53,7 @@ func readBoxTemplate(path string) (*model.BoxV1, error) {
 	}
 }
 
-func readLabTemplate(path string) (*model.LabV1, error) {
+func readLabTemplate(path string) (*lab.LabV1, error) {
 	if value, err := readTemplate(path); err != nil {
 		return nil, err
 	} else {

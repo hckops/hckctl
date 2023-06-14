@@ -1,4 +1,4 @@
-package source
+package template
 
 import (
 	"fmt"
@@ -8,7 +8,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/hckops/hckctl/pkg/template/model"
+	box "github.com/hckops/hckctl/pkg/box/model"
+	lab "github.com/hckops/hckctl/pkg/lab/model"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
@@ -81,7 +82,7 @@ func readRemoteTemplates(opts *RevisionOpts, wildcard string) ([]*TemplateValida
 	return readTemplates(wildcard)
 }
 
-func readRemoteBoxTemplate(opts *RevisionOpts, name string) (*model.BoxV1, error) {
+func readRemoteBoxTemplate(opts *RevisionOpts, name string) (*box.BoxV1, error) {
 	if path, err := resolvePathWithRevision(opts, name); err != nil {
 		return nil, err
 	} else {
@@ -89,7 +90,7 @@ func readRemoteBoxTemplate(opts *RevisionOpts, name string) (*model.BoxV1, error
 	}
 }
 
-func readRemoteLabTemplate(opts *RevisionOpts, name string) (*model.LabV1, error) {
+func readRemoteLabTemplate(opts *RevisionOpts, name string) (*lab.LabV1, error) {
 	if path, err := resolvePathWithRevision(opts, name); err != nil {
 		return nil, err
 	} else {

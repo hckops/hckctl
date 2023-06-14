@@ -12,7 +12,7 @@ import (
 
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/command/config"
-	"github.com/hckops/hckctl/pkg/template/source"
+	. "github.com/hckops/hckctl/pkg/template"
 )
 
 type templateCmdOptions struct {
@@ -74,11 +74,11 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 		path := args[0]
 		log.Debug().Msgf("print local template: path=%s", path)
 
-		return printTemplate(source.NewLocalSource(path), format)
+		return printTemplate(NewLocalSource(path), format)
 
 	} else if len(args) == 1 {
 		name := args[0]
-		revisionOpts := &source.RevisionOpts{
+		revisionOpts := &RevisionOpts{
 			SourceCacheDir: opts.configRef.Config.Template.CacheDir,
 			SourceUrl:      common.TemplateSourceUrl,
 			SourceRevision: common.TemplateSourceRevision,
@@ -86,7 +86,7 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 		}
 		log.Debug().Msgf("print remote template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
-		return printTemplate(source.NewRemoteSource(revisionOpts, name), format)
+		return printTemplate(NewRemoteSource(revisionOpts, name), format)
 
 	} else {
 		cmd.HelpFunc()(cmd, args)
@@ -94,7 +94,7 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func printTemplate(src source.TemplateSource, format string) error {
+func printTemplate(src TemplateSource, format string) error {
 
 	value, err := src.ReadTemplate()
 	if err != nil {
@@ -112,7 +112,7 @@ func printTemplate(src source.TemplateSource, format string) error {
 	return nil
 }
 
-func formatTemplate(value *source.TemplateValue, format string) (string, error) {
+func formatTemplate(value *TemplateValue, format string) (string, error) {
 	switch format {
 	case jsonFlag.String():
 		if jsonValue, err := value.ToJson(); err != nil {
