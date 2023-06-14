@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
+	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/event"
@@ -41,7 +42,7 @@ func (opts *boxListCmdOptions) run(cmd *cobra.Command, args []string) error {
 }
 
 func listByProvider(provider model.BoxProvider) error {
-	boxClient, err := NewBoxClient(provider)
+	boxClient, err := box.NewBoxClient(provider)
 	if err != nil {
 		log.Warn().Err(err).Msgf("error creating client: provider=%v", provider)
 		return fmt.Errorf("%v client error", provider)
@@ -58,7 +59,7 @@ func listByProvider(provider model.BoxProvider) error {
 	fmt.Println(fmt.Sprintf("# %v", provider))
 	boxes, err := boxClient.List()
 	if err != nil {
-		log.Warn().Err(err).Msgf("error listing %v boxes", provider)
+		log.Warn().Err(err).Msgf("error listing boxes: provider=%v", provider)
 		return fmt.Errorf("%v list error", provider)
 	}
 	for _, b := range boxes {

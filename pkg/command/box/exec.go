@@ -20,8 +20,8 @@ func NewBoxExecCmd(configRef *config.ConfigRef) *cobra.Command {
 	}
 
 	command := &cobra.Command{
-		Use:   "exec",
-		Short: "exec in a box",
+		Use:   "exec [name]",
+		Short: "exec box",
 		RunE:  opts.run,
 	}
 
@@ -32,12 +32,12 @@ func (opts *boxExecCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	if len(args) == 1 {
 		boxName := args[0]
-		log.Debug().Msgf("exec remote box: boxName=%s", boxName)
+		log.Debug().Msgf("exec box: boxName=%s", boxName)
 
-		execClient := func(boxClient box.BoxClient, boxTemplate *model.BoxV1) error {
-			return boxClient.Exec(boxName, boxTemplate.Shell)
+		execClient := func(client box.BoxClient, template *model.BoxV1) error {
+			return client.Exec(boxName, template.Shell)
 		}
-		return runBoxClient(opts.configRef, boxName, execClient)
+		return runRemoteBoxClient(opts.configRef, boxName, execClient)
 
 	} else {
 		cmd.HelpFunc()(cmd, args)

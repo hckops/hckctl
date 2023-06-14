@@ -21,7 +21,7 @@ func NewBoxDeleteCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "delete [name]",
-		Short: "delete running boxes",
+		Short: "delete running box",
 		RunE:  opts.run,
 	}
 
@@ -32,12 +32,12 @@ func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	if len(args) == 1 {
 		boxName := args[0]
-		log.Debug().Msgf("delete remote box: boxName=%s", boxName)
+		log.Debug().Msgf("delete box: boxName=%s", boxName)
 
-		execClient := func(boxClient box.BoxClient, boxTemplate *model.BoxV1) error {
-			return boxClient.Delete(boxName)
+		deleteClient := func(client box.BoxClient, _ *model.BoxV1) error {
+			return client.Delete(boxName)
 		}
-		return runBoxClient(opts.configRef, boxName, execClient)
+		return runRemoteBoxClient(opts.configRef, boxName, deleteClient)
 
 	} else {
 		cmd.HelpFunc()(cmd, args)

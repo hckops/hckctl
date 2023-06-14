@@ -1,9 +1,13 @@
 package box
 
 import (
+	"fmt"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
+	"github.com/hckops/hckctl/pkg/box"
+	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/template"
@@ -58,4 +62,19 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 		cmd.HelpFunc()(cmd, args)
 	}
 	return nil
+}
+
+func createBox(src template.TemplateSource, configRef *config.ConfigRef) error {
+	provider := configRef.Config.Box.Provider
+
+	createClient := func(client box.BoxClient, template *model.BoxV1) error {
+		if boxInfo, err := client.Create(template); err != nil {
+			return err
+		} else {
+			// TODO loader.Stop()
+			fmt.Println(boxInfo.Name)
+		}
+		return nil
+	}
+	return runBoxClient(src, provider, createClient)
 }
