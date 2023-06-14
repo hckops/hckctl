@@ -26,7 +26,13 @@ func addBoxProviderFlag(command *cobra.Command) {
 	viper.BindPFlag(fmt.Sprintf("box.%s", providerFlagName), command.Flags().Lookup(providerFlagName))
 }
 
-func runBoxClient(src template.TemplateSource, provider model.BoxProvider, invokeClient func(box.BoxClient, *model.BoxV1) error) error {
+type boxClientOpts struct {
+	client   box.BoxClient
+	template *model.BoxV1
+	loader   *common.Loader
+}
+
+func runBoxClient(src template.TemplateSource, provider model.BoxProvider, invokeClient func(*boxClientOpts) error) error {
 
 	boxTemplate, err := src.ReadBox()
 	if err != nil {
@@ -60,8 +66,12 @@ func runBoxClient(src template.TemplateSource, provider model.BoxProvider, invok
 		}
 	})
 
-	// TODO create loader.Stop()
-	if err := invokeClient(boxClient, boxTemplate); err != nil {
+	opts := &boxClientOpts{
+		client:   boxClient,
+		template: boxTemplate,
+		loader:   loader,
+	}
+	if err := invokeClient(opts); err != nil {
 		log.Warn().Err(err).Msgf("error invoking client: provider=%v", provider)
 		return fmt.Errorf("invoke %v client error", provider)
 	}

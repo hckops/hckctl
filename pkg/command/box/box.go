@@ -5,8 +5,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/hckops/hckctl/pkg/box"
-	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/template"
@@ -105,8 +103,8 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 func openBox(src template.TemplateSource, configRef *config.ConfigRef) error {
 	provider := configRef.Config.Box.Provider
 
-	openClient := func(client box.BoxClient, template *model.BoxV1) error {
-		return client.Open(template)
+	openClient := func(opts *boxClientOpts) error {
+		return opts.client.Open(opts.template)
 	}
 	return runBoxClient(src, provider, openClient)
 }

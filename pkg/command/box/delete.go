@@ -11,6 +11,7 @@ import (
 
 type boxDeleteCmdOptions struct {
 	configRef *config.ConfigRef
+	prune     bool
 }
 
 func NewBoxDeleteCmd(configRef *config.ConfigRef) *cobra.Command {

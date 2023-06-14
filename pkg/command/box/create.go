@@ -6,8 +6,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/hckops/hckctl/pkg/box"
-	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/template"
@@ -67,11 +65,11 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 func createBox(src template.TemplateSource, configRef *config.ConfigRef) error {
 	provider := configRef.Config.Box.Provider
 
-	createClient := func(client box.BoxClient, template *model.BoxV1) error {
-		if boxInfo, err := client.Create(template); err != nil {
+	createClient := func(opts *boxClientOpts) error {
+		if boxInfo, err := opts.client.Create(opts.template); err != nil {
 			return err
 		} else {
-			// TODO loader.Stop()
+			opts.loader.Stop()
 			fmt.Println(boxInfo.Name)
 		}
 		return nil
