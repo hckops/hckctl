@@ -10,6 +10,7 @@ import (
 
 // go tool nm ./build/hckctl | grep commit
 var (
+	version   string
 	commit    string
 	timestamp string
 )
@@ -19,22 +20,23 @@ func NewVersionCmd() *cobra.Command {
 		Use:   "version",
 		Short: "print client version",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(version())
+			fmt.Println(readVersion())
 		},
 	}
 }
 
-func version() string {
-	if commit == "" || timestamp == "" {
+func readVersion() string {
+	if version == "" || commit == "" || timestamp == "" {
 		return "dev"
 	}
 	return versionJson()
 }
 
 func versionJson() string {
-	type version struct{ Commit, Timestamp string }
+	type model struct{ Version, Commit, Timestamp string }
 
-	jsonString, _ := util.EncodeJson(version{
+	jsonString, _ := util.EncodeJson(model{
+		Version:   version,
 		Commit:    commit,
 		Timestamp: timestamp,
 	})
