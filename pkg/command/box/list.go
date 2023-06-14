@@ -6,10 +6,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/command/config"
-	"github.com/hckops/hckctl/pkg/event"
 )
 
 type boxListCmdOptions struct {
@@ -33,7 +31,8 @@ func NewBoxListCmd(configRef *config.ConfigRef) *cobra.Command {
 }
 
 func (opts *boxListCmdOptions) run(cmd *cobra.Command, args []string) error {
-	for _, provider := range model.BoxProviders() {
+	// TODO model.BoxProviders()
+	for _, provider := range []model.BoxProvider{model.Docker} {
 		if err := listByProvider(provider); err != nil {
 			return err
 		}
@@ -42,19 +41,10 @@ func (opts *boxListCmdOptions) run(cmd *cobra.Command, args []string) error {
 }
 
 func listByProvider(provider model.BoxProvider) error {
-	boxClient, err := box.NewBoxClient(provider)
+	boxClient, err := newDefaultBoxClient(provider)
 	if err != nil {
-		log.Warn().Err(err).Msgf("error creating client: provider=%v", provider)
-		return fmt.Errorf("%v client error", provider)
+		return err
 	}
-	// provider not implemented
-	if boxClient == nil {
-		return nil
-	}
-
-	boxClient.Events().Subscribe(func(event event.Event) {
-		log.Debug().Msg(event.String())
-	})
 
 	fmt.Println(fmt.Sprintf("# %v", provider))
 	boxes, err := boxClient.List()

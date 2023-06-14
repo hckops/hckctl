@@ -17,6 +17,7 @@ type BoxClient interface {
 	Open(template *model.BoxV1) error
 	Tunnel(name string) error
 	Delete(name string) error
+	DeleteAll() ([]model.BoxInfo, error)
 }
 
 func NewBoxClient(provider model.BoxProvider) (BoxClient, error) {

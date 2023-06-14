@@ -279,6 +279,27 @@ func (box *DockerBox) Delete(name string) error {
 		return err
 	}
 
-	box.opts.EventBus.Publish(newContainerRemoveDockerEvent(info.Id))
-	return box.client.ContainerRemove(info.Id)
+	return box.deleteBox(info.Id)
+}
+
+func (box *DockerBox) deleteBox(id string) error {
+	box.opts.EventBus.Publish(newContainerRemoveDockerEvent(id))
+	return box.client.ContainerRemove(id)
+}
+
+func (box *DockerBox) DeleteAll() ([]model.BoxInfo, error) {
+	defer box.client.Close()
+
+	boxes, err := box.listBoxes()
+	if err != nil {
+		return nil, err
+	}
+	var deleted []model.BoxInfo
+	for _, boxInfo := range boxes {
+		if err := box.deleteBox(boxInfo.Id); err == nil {
+			deleted = append(deleted, boxInfo)
+		}
+	}
+
+	return deleted, nil
 }

@@ -95,22 +95,31 @@ func runRemoteBoxClient(configRef *config.ConfigRef, boxName string, invokeClien
 		return errors.New("invalid template")
 	}
 
-	// TODO attempt all providers
-	providers := []model.BoxProvider{model.Docker}
-	provider := providers[0]
+	// TODO attempt all providers: model.BoxProviders()
+	for _, provider := range []model.BoxProvider{model.Docker} {
+		boxClient, err := newDefaultBoxClient(provider)
+		if err != nil {
+			return err
+		}
 
+		if err := invokeClient(boxClient, boxTemplate); err != nil {
+			log.Warn().Err(err).Msgf("error invoking client: provider=%v", provider)
+			return fmt.Errorf("invoke %v client error", provider)
+		}
+	}
+
+	return nil
+}
+
+func newDefaultBoxClient(provider model.BoxProvider) (box.BoxClient, error) {
 	boxClient, err := box.NewBoxClient(provider)
 	if err != nil {
 		log.Warn().Err(err).Msgf("error creating client: provider=%v", provider)
-		return fmt.Errorf("create %v client error", provider)
+		return nil, fmt.Errorf("create %v client error", provider)
 	}
+
 	boxClient.Events().Subscribe(func(e event.Event) {
 		log.Debug().Msgf("[%v][%s] %s", e.Source(), e.Kind(), e.String())
 	})
-
-	if err := invokeClient(boxClient, boxTemplate); err != nil {
-		log.Warn().Err(err).Msgf("error invoking client: provider=%v", provider)
-		return fmt.Errorf("invoke %v client error", provider)
-	}
-	return nil
+	return boxClient, nil
 }
