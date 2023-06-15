@@ -99,13 +99,15 @@ func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, 
 // TODO issue with powershell i.e. /usr/bin/pwsh
 // TODO https://github.com/moby/moby/pull/41548
 
+// TODO kube <<<
+// TODO copy ??? or wait
 // TODO exec -it NAME shell
 
 func (client *DockerClient) ContainerExec(opts *ContainerExecOpts) error {
 	return nil
 }
 
-func (client *DockerClient) ContainerAttach(opts *ContainerAttachOpts) error {
+func (client *DockerClient) ContainerAttachAndRemove(opts *ContainerAttachOpts) error {
 
 	// default shell
 	var shellCmd string
