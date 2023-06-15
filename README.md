@@ -67,16 +67,19 @@ hckctl lab htb-kali --provider argo
 
 ### Flow
 
-> TODO
+> WIP
 
 ```bash
-hckctl flow atomic-red-team T1485 <TARGET>
+hckctl flow atomic-red-team T1485
 ```
+
+### Template
 
 You can list all the templates available remotely with
 ```bash
 hckctl template list
 ```
+
 Consider pinning a specific stable git `revision` with the commands above if you need to ensure reliability in a CI/CD pipeline.
 If you like the project, please contribute to the companion [repository](https://github.com/hckops/megalopolis) and add more templates!
 
