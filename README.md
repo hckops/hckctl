@@ -38,14 +38,11 @@ hckctl box alpine
 hckctl box alpine --provider kube
 ```
 
-Spin-up a `parrot` box to start hacking!
+Spin-up a `parrot` box and access all port-forwarded ports locally to start hacking!
 ```bash
 # credentials: parrot|changeme
 hckctl box parrot
-```
 
-Access locally all port-forwarded ports
-```bash
 # vnc
 vncviewer localhost:5900
 
@@ -76,6 +73,11 @@ hckctl lab htb-kali --provider argo
 hckctl flow atomic-red-team T1485 <TARGET>
 ```
 
+You can list all the templates available remotely with
+```bash
+hckctl template list
+```
+Consider pinning a specific stable git `revision` with the commands above if you need to ensure reliability in a CI/CD pipeline.
 If you like the project, please contribute to the companion [repository](https://github.com/hckops/megalopolis) and add more templates!
 
 ## Setup
@@ -88,7 +90,12 @@ curl -sSL https://github.com/hckops/hckctl/releases/download/v0.1.0/hckctl_linux
   tar -xzf - -C /usr/local/bin
 ```
 
-If you are looking for a quick way to start with [ArgoCD](https://argo-cd.readthedocs.io/en/stable) consider [kube-template](https://github.com/hckops/kube-template).
+Edit the config to override the defaults
+```bash
+hckctl config
+```
+
+If you are looking for a quick way to start with ArgoCD consider [kube-template](https://github.com/hckops/kube-template).
 Just follow the readme, you'll be able to create and deploy a cluster on DigitalOcean using GitHub actions with literally a `git push`.
 Once ready, update the `box.kube.configpath` config to use `clusters/do-template-kubeconfig.yaml`, that's all!
 
