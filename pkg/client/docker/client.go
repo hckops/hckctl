@@ -95,6 +95,8 @@ func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, 
 	return newContainer.ID, nil
 }
 
+// TODO handle distroless i.e. shell == none
+// TODO issue with powershell i.e. /usr/bin/pwsh
 func defaultShell(command string) string {
 	if shellCmd := strings.TrimSpace(command); shellCmd != "" {
 		return shellCmd
@@ -103,19 +105,15 @@ func defaultShell(command string) string {
 	}
 }
 
-// TODO handle distroless i.e. shell == none
-// TODO issue with powershell i.e. /usr/bin/pwsh
-// TODO https://github.com/moby/moby/pull/41548
-
-// TODO kube <<<
-// TODO copy ??? or wait
-// TODO exec -it NAME shell
-
 func (client *DockerClient) ContainerExec(opts *ContainerExecOpts) error {
+
+	// TODO ContainerExecKill https://github.com/moby/moby/pull/41548
+	// TODO detach streams properly https://github.com/docker/cli/blob/master/cli/command/container/exec.go
+
 	return nil
 }
 
-func (client *DockerClient) ContainerAttachAndRemove(opts *ContainerAttachOpts) error {
+func (client *DockerClient) ContainerAttach(opts *ContainerAttachOpts) error {
 
 	execCreateResponse, err := client.docker.ContainerExecCreate(client.ctx, opts.ContainerId, types.ExecConfig{
 		AttachStdin:  true,
@@ -137,15 +135,7 @@ func (client *DockerClient) ContainerAttachAndRemove(opts *ContainerAttachOpts) 
 	}
 	defer execAttachResponse.Close()
 
-	onCloseCallback := func() {
-		opts.OnStreamCloseCallback()
-
-		if err := client.ContainerRemove(opts.ContainerId); err != nil {
-			opts.OnStreamErrorCallback(errors.Wrap(err, "error container exec remove"))
-		}
-	}
-
-	handleStreams(opts, &execAttachResponse, onCloseCallback, opts.OnStreamErrorCallback)
+	handleStreams(opts, &execAttachResponse, opts.OnStreamCloseCallback, opts.OnStreamErrorCallback)
 
 	// fixes echoes and handle SIGTERM interrupt properly
 	if terminal, err := util.NewRawTerminal(opts.InStream); err == nil {
@@ -195,6 +185,13 @@ func handleStreams(
 
 		once.Do(onStreamCloseCallback)
 	}()
+}
+
+func (client *DockerClient) ContainerRestart(containerId string) error {
+	if err := client.docker.ContainerRestart(client.ctx, containerId, container.StopOptions{}); err != nil {
+		return errors.Wrap(err, "error docker restart")
+	}
+	return nil
 }
 
 func (client *DockerClient) ContainerRemove(containerId string) error {

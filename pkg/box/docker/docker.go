@@ -167,11 +167,35 @@ func (box *DockerBox) execBox(name string, command string) error {
 	}
 	box.opts.EventBus.Publish(newContainerAttachDockerEvent(info.Id, info.Name, command))
 
-	containerOpts := &docker.ContainerExecOpts{
-		ContainerId: info.Id,
-		Shell:       command,
+	// TODO
+	//containerOpts := &docker.ContainerExecOpts{
+	//	ContainerId: info.Id,
+	//	Shell:       command,
+	//}
+	//return box.client.ContainerExec(containerOpts)
+
+	// TODO restart as temporary solution to close streams
+	containerOpts := &docker.ContainerAttachOpts{
+		ContainerId:               info.Id,
+		Shell:                     command,
+		InStream:                  box.opts.Streams.In,
+		OutStream:                 box.opts.Streams.Out,
+		ErrStream:                 box.opts.Streams.Err,
+		IsTty:                     box.opts.Streams.IsTty,
+		OnContainerAttachCallback: func() {},
+		OnStreamCloseCallback: func() {
+			box.opts.EventBus.Publish(newContainerAttachExitDockerEvent(info.Id))
+
+			if err := box.client.ContainerRestart(info.Id); err != nil {
+				box.opts.EventBus.Publish(newContainerAttachErrorDockerEvent(info.Id, errors.Wrap(err, "error container exec restart")))
+			}
+		},
+		OnStreamErrorCallback: func(err error) {
+			box.opts.EventBus.Publish(newContainerAttachErrorDockerEvent(info.Id, err))
+		},
 	}
-	return box.client.ContainerExec(containerOpts)
+
+	return box.client.ContainerAttach(containerOpts)
 }
 
 func (box *DockerBox) openBox(template *model.BoxV1) error {
@@ -197,13 +221,17 @@ func (box *DockerBox) attachAndRemoveBox(info *model.BoxInfo, command string) er
 		},
 		OnStreamCloseCallback: func() {
 			box.opts.EventBus.Publish(newContainerAttachExitDockerEvent(info.Id))
+
+			if err := box.client.ContainerRemove(info.Id); err != nil {
+				box.opts.EventBus.Publish(newContainerAttachErrorDockerEvent(info.Id, errors.Wrap(err, "error container exec remove")))
+			}
 		},
 		OnStreamErrorCallback: func(err error) {
 			box.opts.EventBus.Publish(newContainerAttachErrorDockerEvent(info.Id, err))
 		},
 	}
 
-	return box.client.ContainerAttachAndRemove(containerOpts)
+	return box.client.ContainerAttach(containerOpts)
 }
 
 func (box *DockerBox) listBoxes() ([]model.BoxInfo, error) {

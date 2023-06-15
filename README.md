@@ -115,27 +115,29 @@ just
 ```
 
 TODO
+* verify:
+    - review provider flag override
+    - review box events
+    - review logs and errors output
+    - issue open (kali): `zerolog: could not write event: write ... file already closed`
 * general
-    - autocomplete commands
-    - autocomplete values e.g. `box exec <list of boxes>`
+    - autocomplete commands and values e.g. `box exec <list of boxes>` with `ValidArgsFunction`
+    - improve command validation e.g. docker `Args: cli.ExactArgs(1)`
     - add go reference badge
-    - public parrot image
+    - public `parrot-core` image
+    - public `kali-core` image
 * template
     - add offline mode source revision
     - update directories to exclude in `resolvePath` e.g. charts
 * box
-    - docker: IMPORTANT refactor Exec and wait condition to detach without remove
+    - IMPORTANT docker: fix `ContainerExec` and wait condition to detach without restart
     - docker: support distroless
-    - docker: fix powershell
-    - docker: create container with Labels=revision to resolve template by name
-    - verify provider flag override
-    - review box events
+    - docker: support powershell
+    - docker: create container with `Labels=["com.hckops.revision"=<REVISION>"]` to resolve template by name
+    - docker: add support for remote docker daemon with `DOCKER_HOST`
+    - docker: add podman provider
     - docker: mount volume to copy `XDG_DATA_HOME`
-    - issue open (kali): `zerolog: could not write event: write ... file already closed`
     - kube replace resources with size
-    - verify support for remote docker daemon with `DOCKER_HOST`
-    - review logs and errors output
-    - add podman provider
     - add context timeout
     - cloud ssh key auth only + remove InsecureIgnoreHostKey
 * config
