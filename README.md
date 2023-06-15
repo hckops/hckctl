@@ -55,7 +55,7 @@ vncviewer localhost:5900
 
 ### Lab
 
-> Unleash the full power of Kubernetes with GitOps and Argo to kick-off whole infrastructures, both for red and blue teams
+> Unleash the full power of Kubernetes with GitOps to kick-off whole infrastructures, both for red and blue teams
 
 Easily start your remote pwnbox `htb-kali` connected to the [Hack The Box](https://www.hackthebox.com) VPN to sharpen your skills!
 ```bash
