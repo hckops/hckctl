@@ -14,23 +14,22 @@
   <i>The Cloud Native HaCKing Tool</i><br>
   <a href="#quick-start">Quick start</a>&nbsp;&bull;
   <a href="#setup">Setup</a>&nbsp;&bull;
-  <a href="#guide">Guide</a>&nbsp;&bull;
   <a href="#development">Development</a>
 </p>
 
 <!--
+TODO description/screenshot/video/gif
+
 A novel Breach and Attack Simulation (BAS) engine with a declarative approach to launch manual and automated attacks, either against a sandbox lab or your infrastructure.
 It leverages pre-defined and always up-to-date recipes of your everyday tools to probe and verify your security posture.
 Designed to transparently run locally, remotely or integrated in pipelines and to analyze, aggregate and export reports.
 -->
 
-See also the companion [repository](https://github.com/hckops/megalopolis)
-
-> TODO screenshot/gif
-
 ## Quick start
 
-Create an `alpine` box to see how it works
+### Box
+
+Create an `alpine` box to get the feeling of how it works
 ```bash
 # spawns a docker box locally
 hckctl box alpine
@@ -41,7 +40,7 @@ hckctl box alpine --provider kube
 
 Spin-up a `parrot` box to start hacking!
 ```bash
-# credentials: parrot|password
+# credentials: parrot|changeme
 hckctl box parrot
 
 # vnc
@@ -54,6 +53,25 @@ vncviewer localhost:5900
 [open|xdg-open] http://localhost:7681
 ```
 
+### Lab
+
+Unleash the full power of Kubernetes with GitOps and Argo to deploy whole infrastructures.
+Create a `htb-kali` lab already connected to the Hack The Box vpn. 
+```bash
+# credentials: kali|changeme
+hckctl lab htb-kali
+```
+
+If you are looking for a quick way to start with ArgoCD consider [kube-template](https://github.com/hckops/kube-template).
+Just follow the readme, you'll be able to create and deploy a cluster on DigitalOcean using GitHub actions with literally a `git push`.
+Once ready, update the `box.kube.configpath` config path to use `clusters/do-template-kubeconfig.yaml`, that's all!
+
+### Job
+
+> TODO
+
+If you like the project, contribute to the companion [repository](https://github.com/hckops/megalopolis) to add more templates!
+
 ## Setup
 
 > TODO
@@ -63,10 +81,6 @@ vncviewer localhost:5900
 curl -sSL https://github.com/hckops/hckctl/releases/download/v0.1.0/hckctl_linux_x86_64.tar.gz | \
   tar -xzf - -C /usr/local/bin
 ```
-
-## Guide
-
-> TODO
 
 ## Development
 

@@ -178,10 +178,6 @@ func buildHostConfig(ports []model.BoxPort, onPortBindCallback func(port model.B
 
 func (box *DockerBox) Exec(name string, command string) error {
 	defer box.client.Close()
-	return box.execBox(name, command)
-}
-
-func (box *DockerBox) execBox(name string, command string) error {
 	// TODO
 	return errors.New("not implemented")
 }
@@ -252,7 +248,6 @@ func (box *DockerBox) listBoxes() ([]model.BoxInfo, error) {
 }
 
 func (box *DockerBox) findBox(name string) (*model.BoxInfo, error) {
-
 	boxes, err := box.listBoxes()
 	if err != nil {
 		return nil, err
@@ -262,7 +257,6 @@ func (box *DockerBox) findBox(name string) (*model.BoxInfo, error) {
 			return &boxInfo, nil
 		}
 	}
-
 	return nil, errors.New("box not found")
 }
 
@@ -278,7 +272,6 @@ func (box *DockerBox) Delete(name string) error {
 	if err != nil {
 		return err
 	}
-
 	return box.deleteBox(info.Id)
 }
 
@@ -300,6 +293,5 @@ func (box *DockerBox) DeleteAll() ([]model.BoxInfo, error) {
 			deleted = append(deleted, boxInfo)
 		}
 	}
-
 	return deleted, nil
 }
