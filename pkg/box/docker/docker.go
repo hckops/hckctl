@@ -185,10 +185,6 @@ func (box *DockerBox) execBox(name string, command string) error {
 		OnContainerAttachCallback: func() {},
 		OnStreamCloseCallback: func() {
 			box.opts.EventBus.Publish(newContainerAttachExitDockerEvent(info.Id))
-
-			if err := box.client.ContainerRestart(info.Id); err != nil {
-				box.opts.EventBus.Publish(newContainerAttachErrorDockerEvent(info.Id, errors.Wrap(err, "error container exec restart")))
-			}
 		},
 		OnStreamErrorCallback: func(err error) {
 			box.opts.EventBus.Publish(newContainerAttachErrorDockerEvent(info.Id, err))

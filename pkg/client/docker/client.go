@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+	"github.com/hckops/hckctl/pkg/util"
 	"io"
 	"strings"
 	"sync"
@@ -12,8 +13,6 @@ import (
 	dockerApi "github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/pkg/errors"
-
-	"github.com/hckops/hckctl/pkg/util"
 )
 
 func NewDockerClient() (*DockerClient, error) {
@@ -105,14 +104,6 @@ func defaultShell(command string) string {
 	}
 }
 
-func (client *DockerClient) ContainerExec(opts *ContainerExecOpts) error {
-
-	// TODO ContainerExecKill https://github.com/moby/moby/pull/41548
-	// TODO detach streams properly https://github.com/docker/cli/blob/master/cli/command/container/exec.go
-
-	return nil
-}
-
 func (client *DockerClient) ContainerAttach(opts *ContainerAttachOpts) error {
 
 	execCreateResponse, err := client.docker.ContainerExecCreate(client.ctx, opts.ContainerId, types.ExecConfig{
@@ -135,25 +126,30 @@ func (client *DockerClient) ContainerAttach(opts *ContainerAttachOpts) error {
 	}
 	defer execAttachResponse.Close()
 
-	handleStreams(opts, &execAttachResponse, opts.OnStreamCloseCallback, opts.OnStreamErrorCallback)
-
 	// fixes echoes and handle SIGTERM interrupt properly
-	if terminal, err := util.NewRawTerminal(opts.InStream); err == nil {
-		defer terminal.Restore()
+	terminal, err := util.NewRawTerminal(opts.InStream)
+	if err != nil {
+		return errors.Wrap(err, "error container exec terminal")
 	}
+
+	doneChan := make(chan struct{})
+	onStreamCloseCallback := func() {
+		terminal.Restore()
+		opts.OnStreamCloseCallback()
+		close(doneChan)
+	}
+
+	handleStreams(opts, &execAttachResponse, onStreamCloseCallback, opts.OnStreamErrorCallback)
 
 	opts.OnContainerAttachCallback()
 
-	// waits for interrupt signals
-	statusCh, errCh := client.docker.ContainerWait(client.ctx, opts.ContainerId, container.WaitConditionNotRunning)
+	// waits for interrupt signals, alternative ContainerExecKill https://github.com/moby/moby/pull/41548
 	select {
-	case err := <-errCh:
-		if err != nil {
-			return errors.Wrap(err, "error container wait")
-		}
-	case <-statusCh:
+	case <-client.ctx.Done():
+		return client.ctx.Err()
+	case <-doneChan:
+		return nil
 	}
-	return nil
 }
 
 func handleStreams(
@@ -162,7 +158,6 @@ func handleStreams(
 	onStreamCloseCallback func(),
 	onStreamErrorCallback func(error),
 ) {
-
 	var once sync.Once
 	go func() {
 

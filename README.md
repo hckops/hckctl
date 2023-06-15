@@ -129,7 +129,6 @@ TODO
     - add offline mode source revision
     - update directories to exclude in `resolvePath` e.g. charts
 * box
-    - IMPORTANT docker: fix `ContainerExec` and wait condition to detach without restart
     - docker: support distroless
     - docker: support powershell
     - docker: create container with `Labels=["com.hckops.revision"=<REVISION>"]` to resolve template by name
