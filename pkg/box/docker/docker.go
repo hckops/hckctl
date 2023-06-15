@@ -160,8 +160,18 @@ func buildHostConfig(ports []model.BoxPort, onPortBindCallback func(port model.B
 }
 
 func (box *DockerBox) execBox(name string, command string) error {
-	// TODO
-	return errors.New("not implemented")
+
+	info, err := box.findBox(name)
+	if err != nil {
+		return err
+	}
+	box.opts.EventBus.Publish(newContainerAttachDockerEvent(info.Id, info.Name, command))
+
+	containerOpts := &docker.ContainerExecOpts{
+		ContainerId: info.Id,
+		Shell:       command,
+	}
+	return box.client.ContainerExec(containerOpts)
 }
 
 func (box *DockerBox) openBox(template *model.BoxV1) error {

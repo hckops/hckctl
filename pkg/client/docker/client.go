@@ -95,6 +95,14 @@ func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, 
 	return newContainer.ID, nil
 }
 
+func defaultShell(command string) string {
+	if shellCmd := strings.TrimSpace(command); shellCmd != "" {
+		return shellCmd
+	} else {
+		return "/bin/bash"
+	}
+}
+
 // TODO handle distroless i.e. shell == none
 // TODO issue with powershell i.e. /usr/bin/pwsh
 // TODO https://github.com/moby/moby/pull/41548
@@ -109,21 +117,13 @@ func (client *DockerClient) ContainerExec(opts *ContainerExecOpts) error {
 
 func (client *DockerClient) ContainerAttachAndRemove(opts *ContainerAttachOpts) error {
 
-	// default shell
-	var shellCmd string
-	if strings.TrimSpace(opts.Shell) != "" {
-		shellCmd = opts.Shell
-	} else {
-		shellCmd = "/bin/bash"
-	}
-
 	execCreateResponse, err := client.docker.ContainerExecCreate(client.ctx, opts.ContainerId, types.ExecConfig{
 		AttachStdin:  true,
 		AttachStdout: true,
 		AttachStderr: true,
 		Detach:       false,
 		Tty:          opts.IsTty,
-		Cmd:          []string{shellCmd},
+		Cmd:          []string{defaultShell(opts.Shell)},
 	})
 	if err != nil {
 		return errors.Wrap(err, "error container exec create")

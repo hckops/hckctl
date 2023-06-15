@@ -36,6 +36,9 @@ hckctl box alpine
 
 # deploys a box to your kubernetes cluster
 hckctl box alpine --provider kube
+
+# (mac|linux) tty credentials: alpine|changeme
+[open|xdg-open] http://localhost:7681
 ```
 
 Spin-up a `parrot` box and access all port-forwarded ports locally to start hacking!
@@ -48,16 +51,13 @@ vncviewer localhost:5900
 
 # (mac|linux) novnc
 [open|xdg-open] http://localhost:6080
-
-# (mac|linux) tty
-[open|xdg-open] http://localhost:7681
 ```
 
 ### Lab
 
-> Unleash the full power of Kubernetes with GitOps and Argo to kick-off whole infrastructures
+> Unleash the full power of Kubernetes with GitOps and Argo to kick-off whole infrastructures, both for red and blue teams
 
-Easily start a `htb-kali` lab already connected to the [Hack The Box](https://www.hackthebox.com) vpn to sharpen your skills!
+Easily start your remote pwnbox `htb-kali` connected to the [Hack The Box](https://www.hackthebox.com) VPN to sharpen your skills!
 ```bash
 # TODO create kube secret
 
