@@ -165,44 +165,29 @@ func (box *DockerBox) execBox(name string, command string) error {
 	if err != nil {
 		return err
 	}
-	box.opts.EventBus.Publish(newContainerAttachDockerEvent(info.Id, info.Name, command))
-
-	// TODO
-	//containerOpts := &docker.ContainerExecOpts{
-	//	ContainerId: info.Id,
-	//	Shell:       command,
-	//}
-	//return box.client.ContainerExec(containerOpts)
-
-	// TODO restart as temporary solution to close streams
-	containerOpts := &docker.ContainerAttachOpts{
-		ContainerId:               info.Id,
-		Shell:                     command,
-		InStream:                  box.opts.Streams.In,
-		OutStream:                 box.opts.Streams.Out,
-		ErrStream:                 box.opts.Streams.Err,
-		IsTty:                     box.opts.Streams.IsTty,
-		OnContainerAttachCallback: func() {},
-		OnStreamCloseCallback: func() {
-			box.opts.EventBus.Publish(newContainerAttachExitDockerEvent(info.Id))
-		},
-		OnStreamErrorCallback: func(err error) {
-			box.opts.EventBus.Publish(newContainerAttachErrorDockerEvent(info.Id, err))
-		},
+	if command == model.BoxShellNone {
+		return box.logsBox(info.Id)
 	}
 
-	return box.client.ContainerAttach(containerOpts)
+	return box.attachBox(info, command, false)
 }
 
 func (box *DockerBox) openBox(template *model.BoxV1) error {
+
 	info, err := box.createBox(template)
 	if err != nil {
 		return err
 	}
-	return box.attachAndRemoveBox(info, template.Shell)
+	if template.Shell == model.BoxShellNone {
+		// stop loader
+		box.opts.EventBus.Publish(newContainerAttachDockerLoaderEvent())
+		return box.logsBox(info.Id)
+	}
+
+	return box.attachBox(info, template.Shell, true)
 }
 
-func (box *DockerBox) attachAndRemoveBox(info *model.BoxInfo, command string) error {
+func (box *DockerBox) attachBox(info *model.BoxInfo, command string, removeOnExit bool) error {
 	box.opts.EventBus.Publish(newContainerAttachDockerEvent(info.Id, info.Name, command))
 
 	containerOpts := &docker.ContainerAttachOpts{
@@ -213,21 +198,42 @@ func (box *DockerBox) attachAndRemoveBox(info *model.BoxInfo, command string) er
 		ErrStream:   box.opts.Streams.Err,
 		IsTty:       box.opts.Streams.IsTty,
 		OnContainerAttachCallback: func() {
-			box.opts.EventBus.Publish(newContainerAttachDockerLoaderEvent())
+			if removeOnExit {
+				// stop loader
+				box.opts.EventBus.Publish(newContainerAttachDockerLoaderEvent())
+			}
 		},
 		OnStreamCloseCallback: func() {
-			box.opts.EventBus.Publish(newContainerAttachExitDockerEvent(info.Id))
+			box.opts.EventBus.Publish(newContainerExecExitDockerEvent(info.Id))
 
-			if err := box.client.ContainerRemove(info.Id); err != nil {
-				box.opts.EventBus.Publish(newContainerAttachErrorDockerEvent(info.Id, errors.Wrap(err, "error container exec remove")))
+			if removeOnExit {
+				if err := box.client.ContainerRemove(info.Id); err != nil {
+					box.opts.EventBus.Publish(newContainerExecErrorDockerEvent(info.Id, errors.Wrap(err, "error container exec remove")))
+				}
 			}
 		},
 		OnStreamErrorCallback: func(err error) {
-			box.opts.EventBus.Publish(newContainerAttachErrorDockerEvent(info.Id, err))
+			box.opts.EventBus.Publish(newContainerExecErrorDockerEvent(info.Id, err))
 		},
 	}
 
 	return box.client.ContainerAttach(containerOpts)
+}
+
+func (box *DockerBox) logsBox(containerId string) error {
+
+	opts := &docker.ContainerLogsOpts{
+		ContainerId: containerId,
+		OutStream:   box.opts.Streams.Out,
+		ErrStream:   box.opts.Streams.Err,
+		OnStreamCloseCallback: func() {
+			box.opts.EventBus.Publish(newContainerExecExitDockerEvent(containerId))
+		},
+		OnStreamErrorCallback: func(err error) {
+			box.opts.EventBus.Publish(newContainerExecErrorDockerEvent(containerId, err))
+		},
+	}
+	return box.client.ContainerLogs(opts)
 }
 
 func (box *DockerBox) listBoxes() ([]model.BoxInfo, error) {

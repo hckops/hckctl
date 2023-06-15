@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	dockerApi "github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
@@ -132,7 +131,7 @@ func (client *DockerClient) ContainerAttach(opts *ContainerAttachOpts) error {
 		return errors.Wrap(err, "error container exec terminal")
 	}
 
-	doneChan := make(chan struct{})
+	doneChan := make(chan struct{}, 1)
 	onStreamCloseCallback := func() {
 		terminal.Restore()
 		opts.OnStreamCloseCallback()
@@ -182,13 +181,6 @@ func handleStreams(
 	}()
 }
 
-func (client *DockerClient) ContainerRestart(containerId string) error {
-	if err := client.docker.ContainerRestart(client.ctx, containerId, container.StopOptions{}); err != nil {
-		return errors.Wrap(err, "error docker restart")
-	}
-	return nil
-}
-
 func (client *DockerClient) ContainerRemove(containerId string) error {
 	if err := client.docker.ContainerRemove(client.ctx, containerId, types.ContainerRemoveOptions{Force: true}); err != nil {
 		return errors.Wrap(err, "error docker remove")
@@ -218,4 +210,40 @@ func (client *DockerClient) ContainerList(namePrefix string) ([]ContainerInfo, e
 	}
 
 	return result, nil
+}
+
+func (client *DockerClient) ContainerLogs(opts *ContainerLogsOpts) error {
+
+	outStream, err := client.docker.ContainerLogs(client.ctx, opts.ContainerId, types.ContainerLogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Timestamps: true,
+		Follow:     true,
+		Details:    true,
+	})
+	if err != nil {
+		return errors.Wrap(err, "error container logs")
+	}
+
+	doneChan := make(chan struct{}, 1)
+	onStreamCloseCallback := func() {
+		// sometimes event is lost if too fast
+		opts.OnStreamCloseCallback()
+		close(doneChan)
+	}
+
+	var once sync.Once
+	go func() {
+		if _, err := io.Copy(opts.OutStream, outStream); err != nil {
+			opts.OnStreamErrorCallback(errors.Wrap(err, "error copy stdout and stderr docker->local"))
+		}
+		once.Do(onStreamCloseCallback)
+	}()
+
+	select {
+	case <-client.ctx.Done():
+		return client.ctx.Err()
+	case <-doneChan:
+		return nil
+	}
 }

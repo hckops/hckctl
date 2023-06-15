@@ -48,7 +48,7 @@ func NewBoxOpts() *BoxOpts {
 }
 
 type BoxStreams struct {
-	In    io.Reader
+	In    io.ReadCloser
 	Out   io.Writer
 	Err   io.Writer
 	IsTty bool // tty false for tunnel only

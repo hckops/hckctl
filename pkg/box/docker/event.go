@@ -76,12 +76,12 @@ func newContainerAttachDockerLoaderEvent() *dockerEvent {
 	return &dockerEvent{kind: event.LoaderStop, value: "waiting"}
 }
 
-func newContainerAttachExitDockerEvent(containerId string) *dockerEvent {
-	return &dockerEvent{kind: event.LogDebug, value: fmt.Sprintf("container attach exit: containerId=%s", containerId)}
+func newContainerExecExitDockerEvent(containerId string) *dockerEvent {
+	return &dockerEvent{kind: event.LogDebug, value: fmt.Sprintf("container exec exit: containerId=%s", containerId)}
 }
 
-func newContainerAttachErrorDockerEvent(containerId string, err error) *dockerEvent {
-	return &dockerEvent{kind: event.LogDebug, value: fmt.Sprintf("container attach error: containerId=%s error=%v", containerId, err)}
+func newContainerExecErrorDockerEvent(containerId string, err error) *dockerEvent {
+	return &dockerEvent{kind: event.LogDebug, value: fmt.Sprintf("container exec error: containerId=%s error=%v", containerId, err)}
 }
 
 func newContainerListDockerEvent(index int, containerName string, containerId string) *dockerEvent {

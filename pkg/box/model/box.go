@@ -12,6 +12,7 @@ import (
 const (
 	BoxPrefixName        = "box-"
 	BoxPrefixVirtualPort = "virtual-"
+	BoxShellNone         = "none" // distroless
 )
 
 type BoxV1 struct {

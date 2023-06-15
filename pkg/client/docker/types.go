@@ -37,7 +37,7 @@ type ContainerExecOpts struct {
 type ContainerAttachOpts struct {
 	ContainerId               string
 	Shell                     string
-	InStream                  io.Reader
+	InStream                  io.ReadCloser
 	OutStream                 io.Writer
 	ErrStream                 io.Writer
 	IsTty                     bool
@@ -49,4 +49,12 @@ type ContainerAttachOpts struct {
 type ContainerInfo struct {
 	ContainerId   string
 	ContainerName string
+}
+
+type ContainerLogsOpts struct {
+	ContainerId           string
+	OutStream             io.Writer
+	ErrStream             io.Writer
+	OnStreamCloseCallback func()
+	OnStreamErrorCallback func(error)
 }

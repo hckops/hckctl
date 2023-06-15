@@ -115,10 +115,7 @@ just
 
 TODO
 * verify:
-    - review provider flag override
-    - review box events
-    - review logs and errors output
-    - issue open (kali): `zerolog: could not write event: write ... file already closed`
+    - ISSUE provider flag override
 * general
     - autocomplete commands and values e.g. `box exec <list of boxes>` with `ValidArgsFunction`
     - improve command validation e.g. docker `Args: cli.ExactArgs(1)`
@@ -129,7 +126,6 @@ TODO
     - add offline mode source revision
     - update directories to exclude in `resolvePath` e.g. charts
 * box
-    - docker: support distroless
     - docker: support powershell
     - docker: create container with `Labels=["com.hckops.revision"=<REVISION>"]` to resolve template by name
     - docker: add support for remote docker daemon with `DOCKER_HOST`
