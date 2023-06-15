@@ -55,7 +55,7 @@ vncviewer localhost:5900
 
 ### Lab
 
-> Unleash the full power of Kubernetes with GitOps to kick-off whole infrastructures, both for red and blue teams
+> Unleash the power of Kubernetes with GitOps to kick-off whole infrastructures, for both red and blue teams
 
 Easily start your remote pwnbox `htb-kali` connected to the [Hack The Box](https://www.hackthebox.com) VPN to sharpen your skills!
 ```bash
@@ -75,12 +75,12 @@ hckctl flow atomic-red-team T1485
 
 ### Template
 
-Explore all the available remote templates, and consider pinning a git `revision` if you need to ensure reliability in a CI/CD pipeline
+Explore the available templates, and consider pinning a git `revision` to ensure reliability in a CI/CD pipeline
 ```bash
 hckctl template list
 ```
 
-If you like the project, please contribute to the companion [repository](https://github.com/hckops/megalopolis) and add more templates!
+Please, feel free to contribute to the companion [repository](https://github.com/hckops/megalopolis) and add more templates!
 
 ## Setup
 
@@ -126,7 +126,7 @@ TODO
     - add offline mode source revision
     - update directories to exclude in `resolvePath` e.g. charts
 * box
-    - docker: support powershell
+    - docker: support powershell `/usr/bin/pwsh`
     - docker: create container with `Labels=["com.hckops.revision"=<REVISION>"]` to resolve template by name
     - docker: add support for remote docker daemon with `DOCKER_HOST`
     - docker: add podman provider

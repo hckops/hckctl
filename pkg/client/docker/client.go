@@ -2,7 +2,6 @@ package docker
 
 import (
 	"context"
-	"github.com/hckops/hckctl/pkg/util"
 	"io"
 	"strings"
 	"sync"
@@ -12,6 +11,8 @@ import (
 	dockerApi "github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/pkg/errors"
+
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 func NewDockerClient() (*DockerClient, error) {
@@ -93,8 +94,6 @@ func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, 
 	return newContainer.ID, nil
 }
 
-// TODO handle distroless i.e. shell == none
-// TODO issue with powershell i.e. /usr/bin/pwsh
 func defaultShell(command string) string {
 	if shellCmd := strings.TrimSpace(command); shellCmd != "" {
 		return shellCmd
