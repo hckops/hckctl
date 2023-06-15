@@ -75,12 +75,10 @@ hckctl flow atomic-red-team T1485
 
 ### Template
 
-Explore all the available remote templates
+Explore all the available remote templates, and consider pinning a git `revision` if you need to ensure reliability in a CI/CD pipeline
 ```bash
 hckctl template list
 ```
-
-Consider pinning a git `revision` if you need to ensure reliability in a CI/CD pipeline.
 
 If you like the project, please contribute to the companion [repository](https://github.com/hckops/megalopolis) and add more templates!
 
