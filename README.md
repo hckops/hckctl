@@ -29,7 +29,7 @@ Designed to transparently run locally, remotely or integrated in pipelines and t
 
 ### Box
 
-Create an `alpine` box to get the feeling of how it works
+Create an `alpine` box to see how it works
 ```bash
 # spawns a docker box locally
 hckctl box alpine
@@ -42,7 +42,10 @@ Spin-up a `parrot` box to start hacking!
 ```bash
 # credentials: parrot|changeme
 hckctl box parrot
+```
 
+Access locally all port-forwarded ports
+```bash
 # vnc
 vncviewer localhost:5900
 
@@ -55,22 +58,25 @@ vncviewer localhost:5900
 
 ### Lab
 
-Unleash the full power of Kubernetes with GitOps and Argo to deploy whole infrastructures.
-Create a `htb-kali` lab already connected to the Hack The Box vpn. 
+> Unleash the full power of Kubernetes with GitOps and Argo to kick-off whole infrastructures
+
+Easily start a `htb-kali` lab already connected to the [Hack The Box](https://www.hackthebox.com) vpn to sharpen your skills!
 ```bash
+# TODO create kube secret
+
 # credentials: kali|changeme
-hckctl lab htb-kali
+hckctl lab htb-kali --provider argo
 ```
 
-If you are looking for a quick way to start with ArgoCD consider [kube-template](https://github.com/hckops/kube-template).
-Just follow the readme, you'll be able to create and deploy a cluster on DigitalOcean using GitHub actions with literally a `git push`.
-Once ready, update the `box.kube.configpath` config path to use `clusters/do-template-kubeconfig.yaml`, that's all!
-
-### Job
+### Flow
 
 > TODO
 
-If you like the project, contribute to the companion [repository](https://github.com/hckops/megalopolis) to add more templates!
+```bash
+hckctl flow atomic-red-team T1485 <TARGET>
+```
+
+If you like the project, please contribute to the companion [repository](https://github.com/hckops/megalopolis) and add more templates!
 
 ## Setup
 
@@ -81,6 +87,10 @@ If you like the project, contribute to the companion [repository](https://github
 curl -sSL https://github.com/hckops/hckctl/releases/download/v0.1.0/hckctl_linux_x86_64.tar.gz | \
   tar -xzf - -C /usr/local/bin
 ```
+
+If you are looking for a quick way to start with [ArgoCD](https://argo-cd.readthedocs.io/en/stable) consider [kube-template](https://github.com/hckops/kube-template).
+Just follow the readme, you'll be able to create and deploy a cluster on DigitalOcean using GitHub actions with literally a `git push`.
+Once ready, update the `box.kube.configpath` config to use `clusters/do-template-kubeconfig.yaml`, that's all!
 
 ## Development
 
