@@ -29,7 +29,7 @@ Designed to transparently run locally, remotely or integrated in pipelines and t
 
 ### Box
 
-Create an `alpine` box to see how it works
+Create an [`alpine`](https://github.com/hckops/megalopolis/blob/main/boxes/base/alpine.yml) box to see how it works
 ```bash
 # spawns a docker box locally
 hckctl box alpine
@@ -41,7 +41,7 @@ hckctl box alpine --provider kube
 [open|xdg-open] http://localhost:7681
 ```
 
-Spin-up a `parrot` box and access all port-forwarded ports locally to start hacking!
+Spin-up a [`parrot`](https://github.com/hckops/megalopolis/blob/main/boxes/base/parrot.yml) box and access all port-forwarded ports locally to start hacking!
 ```bash
 # credentials: parrot|changeme
 hckctl box parrot
@@ -57,7 +57,7 @@ vncviewer localhost:5900
 
 > Unleash the power of Kubernetes with GitOps to kick-off whole infrastructures, for both red and blue teams
 
-Easily start your remote pwnbox `htb-kali` connected to the [Hack The Box](https://www.hackthebox.com) VPN to sharpen your skills!
+Easily start your remote pwnbox [`htb-kali`](https://github.com/hckops/megalopolis/blob/main/labs/ctf/htb-alpine.yaml) connected to the [Hack The Box](https://www.hackthebox.com) VPN to sharpen your skills!
 ```bash
 # TODO create kube secret
 
