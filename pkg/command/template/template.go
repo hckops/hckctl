@@ -36,9 +36,9 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 			hckctl template alpine
 			hckctl template base/parrot
 			hckctl template boxes/vulnerable/dvwa
-			hckctl template labs/ctf/htb-alpine.yml
+			hckctl template labs/ctf/htb-alpine.yaml
 
-			# prints a specific version (branch|tag|sha)
+			# prints a specific version (branch|tag|sha) of the template
 			hckctl template alpine --revision main
 
 			# prints a template in json format (default yaml)

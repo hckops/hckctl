@@ -26,7 +26,7 @@ func NewTemplateValidateCmd() *cobra.Command {
 			# validates a local template
 			hckctl template validate ../megalopolis/boxes/official/alpine.yml
 
-			# validates all templates in the given path (supports wildcard)
+			# validates all templates in the given path (supports wildcards)
 			hckctl template validate "../megalopolis/**/*.{yml,yaml}"
 			hckctl template validate "../megalopolis/**/*alpine*"
 		`),
