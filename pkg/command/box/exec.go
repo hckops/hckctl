@@ -21,7 +21,7 @@ func NewBoxExecCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "exec [name]",
-		Short: "exec box",
+		Short: "Access a box",
 		RunE:  opts.run,
 	}
 

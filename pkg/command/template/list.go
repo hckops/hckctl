@@ -30,13 +30,13 @@ func NewTemplateListCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "list",
-		Short: "list public templates",
+		Short: "List public templates",
 		Example: heredoc.Doc(`
 
 			# list all templates
 			hckctl template list
 
-			# list templates from a specific version (branch|tag|sha)
+			# list templates using a specific git version (branch|tag|sha)
 			hckctl template list --revision main
 		`),
 		RunE: opts.run,

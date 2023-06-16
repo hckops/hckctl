@@ -23,7 +23,7 @@ func NewBoxListCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "list",
-		Short: "list running boxes",
+		Short: "List running boxes",
 		RunE:  opts.run,
 	}
 

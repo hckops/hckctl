@@ -23,9 +23,9 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "box [name]",
-		Short: "attach and tunnel boxes",
+		Short: "Attach and tunnel a box",
 		Long: heredoc.Doc(`
-			attach and tunnel boxes
+			Attach and tunnel a box
 
 			  Create and attach to an ephemeral Box, tunnelling locally all the open ports.
 			  All public templates are versioned under the /boxes/ sub-path on GitHub
@@ -34,7 +34,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 			  Independently from the provider and the template used, it will spawn a shell
 			  that when closed will automatically remove and cleanup the running instance.
 
-			  The main purpose of Boxes is to provide a ready-to-go and always up-to-date
+			  The main purpose of a Box is to provide a ready-to-go and always up-to-date
 			  hacking environment with an uniformed experience, abstracting the actual providers
 			  e.g. Docker, Kubernetes, etc.
 
@@ -42,7 +42,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 		`),
 		Example: heredoc.Doc(`
 
-			# creates and attaches to a "boxes/official/parrot" docker container,
+			# creates and attaches to a "boxes/base/parrot" docker container,
 			# spawns a /bin/bash shell and tunnels the following ports:
 			# (vnc)			vncviewer localhost:5900
 			# (novnc)		http://localhost:6080
@@ -56,7 +56,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 			hckctl box vulnerable/dvwa --revision main
 
 			# opens a box defined locally
-			hckctl box ../megalopolis/boxes/official/powershell.yml --local
+			hckctl box ../megalopolis/boxes/base/alpine.yml --local
 		`),
 		RunE: opts.run,
 	}

@@ -20,10 +20,10 @@ func NewTemplateValidateCmd() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "validate [path]",
-		Short: "validate templates",
+		Short: "Validate one or more templates",
 		Example: heredoc.Doc(`
 
-			# validates local template
+			# validates a local template
 			hckctl template validate ../megalopolis/boxes/official/alpine.yml
 
 			# validates all templates in the given path (supports wildcard)

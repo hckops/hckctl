@@ -18,7 +18,7 @@ var (
 func NewVersionCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
-		Short: "print client version",
+		Short: "Print the client version",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println(readVersion())
 		},

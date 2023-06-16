@@ -25,7 +25,7 @@ func NewBoxDeleteCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "delete [name]",
-		Short: "delete running box",
+		Short: "Delete one or more running boxes",
 		RunE:  opts.run,
 	}
 

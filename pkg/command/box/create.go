@@ -24,7 +24,7 @@ func NewBoxCreateCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "create [name]",
-		Short: "create a detached box",
+		Short: "Create a detached box",
 		RunE:  opts.run,
 	}
 

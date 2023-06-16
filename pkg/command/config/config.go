@@ -18,13 +18,13 @@ func NewConfigCmd(configRef *ConfigRef) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "config",
-		Short: "print current configurations",
+		Short: "Print the current configurations",
 		Example: heredoc.Doc(`
 
-			# prints current config, default path is XDG_CONFIG_HOME/hck/config.yml
+			# prints current configs, the default path is XDG_CONFIG_HOME/hck/config.yml
 			hckctl config
 
-			# override config path: nested folders are automatically created if they don't exist
+			# override configs path: nested folders are automatically created if they don't exist
 			HCK_CONFIG_DIR=/tmp/<PATH>/<SUB_PATH> hckctl config
 
 			# config value override precedence (add "env" prefix to use dot notation): flag > env > config
