@@ -31,7 +31,7 @@ Designed to transparently run locally, remotely or integrated in pipelines and t
 
 Create an [`alpine`](https://github.com/hckops/megalopolis/blob/main/boxes/base/alpine.yml) box to see how it works
 ```bash
-# spawns a docker box locally
+# spawns a docker box locally on a shared network
 hckctl box alpine
 
 # deploys a box to your kubernetes cluster
@@ -120,17 +120,17 @@ TODO
     - autocomplete commands and values e.g. `box exec <list of boxes>` with `ValidArgsFunction`
     - improve command validation e.g. docker `Args: cli.ExactArgs(1)`
     - add go reference badge
-    - public `parrot-core` image
     - public `kali-core` image
 * template
     - add offline mode source revision
     - update directories to exclude in `resolvePath` e.g. charts
 * box
+    - docker: `arch` with fish
+    - docker: COPY shared volume `XDG_DATA_HOME`
     - docker: support powershell `/usr/bin/pwsh`
     - docker: create container with `Labels=["com.hckops.revision"=<REVISION>"]` to resolve template by name
     - docker: add support for remote docker daemon with `DOCKER_HOST`
     - docker: add podman provider
-    - docker: mount volume to copy `XDG_DATA_HOME`
     - kube replace resources with size
     - add context timeout
     - cloud ssh key auth only + remove InsecureIgnoreHostKey

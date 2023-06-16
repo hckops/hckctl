@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 )
 
@@ -24,9 +25,10 @@ type ImageRemoveOpts struct {
 }
 
 type ContainerCreateOpts struct {
-	ContainerName   string
-	ContainerConfig *container.Config
-	HostConfig      *container.HostConfig
+	ContainerName    string
+	ContainerConfig  *container.Config
+	HostConfig       *container.HostConfig
+	NetworkingConfig *network.NetworkingConfig
 }
 
 type ContainerExecOpts struct {

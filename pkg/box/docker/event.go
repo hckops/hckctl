@@ -48,6 +48,10 @@ func newImageRemoveErrorDockerEvent(imageId string, err error) *dockerEvent {
 	return &dockerEvent{kind: event.LogWarning, value: fmt.Sprintf("image remove error: imageId=%s error=%v", imageId, err)}
 }
 
+func newNetworkUpsertDockerEvent(networkName string, networkId string) *dockerEvent {
+	return &dockerEvent{kind: event.LogDebug, value: fmt.Sprintf("network upsert: networkName=%s networkId=%s", networkName, networkId)}
+}
+
 func newContainerCreateSkipVirtualPortDockerEvent(containerName string, port model.BoxPort) *dockerEvent {
 	return &dockerEvent{kind: event.LogDebug, value: fmt.Sprintf("container create skipping virtual port: containerName=%s portAlias=%s", containerName, port.Alias)}
 }

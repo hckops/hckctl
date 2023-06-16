@@ -1,13 +1,17 @@
 package docker
 
 import (
+	"strings"
+
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
+	"github.com/pkg/errors"
+
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/docker"
+	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/util"
-	"github.com/pkg/errors"
-	"strings"
 )
 
 func newDockerBox(opts *model.BoxOpts) (*DockerBox, error) {
@@ -86,10 +90,18 @@ func (box *DockerBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 		return nil, err
 	}
 
+	networkName := common.ProjectName
+	networkId, err := box.client.NetworkUpsert(networkName)
+	if err != nil {
+		return nil, err
+	}
+	box.opts.EventBus.Publish(newNetworkUpsertDockerEvent(networkName, networkId))
+
 	containerOpts := &docker.ContainerCreateOpts{
-		ContainerName:   containerName,
-		ContainerConfig: containerConfig,
-		HostConfig:      hostConfig,
+		ContainerName:    containerName,
+		ContainerConfig:  containerConfig,
+		HostConfig:       hostConfig,
+		NetworkingConfig: buildNetworkingConfig(networkName, networkId), // all on the same network
 	}
 	// boxId
 	containerId, err := box.client.ContainerCreate(containerOpts)
@@ -157,6 +169,10 @@ func buildHostConfig(ports []model.BoxPort, onPortBindCallback func(port model.B
 	return &container.HostConfig{
 		PortBindings: portBindings,
 	}, nil
+}
+
+func buildNetworkingConfig(networkName, networkId string) *network.NetworkingConfig {
+	return &network.NetworkingConfig{EndpointsConfig: map[string]*network.EndpointSettings{networkName: {NetworkID: networkId}}}
 }
 
 func (box *DockerBox) execBox(name string, command string) error {

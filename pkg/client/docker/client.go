@@ -80,7 +80,7 @@ func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, 
 		client.ctx,
 		opts.ContainerConfig,
 		opts.HostConfig,
-		nil, // networkingConfig
+		opts.NetworkingConfig,
 		nil, // platform
 		opts.ContainerName)
 	if err != nil {
@@ -244,5 +244,24 @@ func (client *DockerClient) ContainerLogs(opts *ContainerLogsOpts) error {
 		return client.ctx.Err()
 	case <-doneChan:
 		return nil
+	}
+}
+
+func (client *DockerClient) NetworkUpsert(networkName string) (string, error) {
+
+	networks, err := client.docker.NetworkList(client.ctx, types.NetworkListOptions{})
+	if err != nil {
+		return "", errors.Wrap(err, "error docker network list")
+	}
+	for _, network := range networks {
+		if network.Name == networkName {
+			return network.ID, nil
+		}
+	}
+
+	if newNetwork, err := client.docker.NetworkCreate(client.ctx, networkName, types.NetworkCreate{CheckDuplicate: true}); err != nil {
+		return "", errors.Wrap(err, "error docker network create")
+	} else {
+		return newNetwork.ID, nil
 	}
 }
