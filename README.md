@@ -57,9 +57,10 @@ vncviewer localhost:5900
 
 > Unleash the power of Kubernetes with GitOps to kick-off whole infrastructures, for both red and blue teams
 
-Easily start your remote pwnbox [`htb-kali`](https://github.com/hckops/megalopolis/blob/main/labs/ctf/htb-alpine.yaml) connected to the [Hack The Box](https://www.hackthebox.com) VPN to sharpen your skills
+Easily start your remote pwnbox htb-kali connected to the [Hack The Box](https://www.hackthebox.com) VPN to sharpen your skills
 ```bash
 # TODO create kube secret
+# TODO htb-kali
 
 # credentials: kali|changeme
 hckctl lab htb-kali --provider argo
@@ -125,13 +126,12 @@ TODO
     - add offline mode source revision
     - update directories to exclude in `resolvePath` e.g. charts
 * box
-    - docker: `arch` with fish
     - docker: COPY shared volume `XDG_DATA_HOME`
-    - docker: support powershell `/usr/bin/pwsh`
+    - docker: support powershell `/usr/bin/pwsh` (no tty) see `docker run --rm -it mcr.microsoft.com/powershell`
     - docker: create container with `Labels=["com.hckops.revision"=<REVISION>"]` to resolve template by name
     - docker: add support for remote docker daemon with `DOCKER_HOST`
     - docker: add podman provider
-    - kube replace resources with size
+    - kube: replace resources with size
     - add context timeout
     - cloud ssh key auth only + remove InsecureIgnoreHostKey
 * config
@@ -139,9 +139,8 @@ TODO
     - add confirmation before reset
 * version
     - print server/cloud
-    - print if new version
+    - print if new version available
     - auto update
-    - rename fields i.e. commit vs version or print both
 * release
     - add brew https://goreleaser.com/customization/homebrew
     - test windows
