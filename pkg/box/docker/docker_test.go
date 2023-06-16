@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
 	"github.com/stretchr/testify/assert"
 
@@ -47,5 +48,12 @@ func TestBuildHostConfig(t *testing.T) {
 
 	result, err := buildHostConfig(testPorts, func(port model.BoxPort) {})
 	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+}
+
+func TestBuildHNetworkingConfig(t *testing.T) {
+	expected := &network.NetworkingConfig{EndpointsConfig: map[string]*network.EndpointSettings{"myNetwork": {NetworkID: "123"}}}
+
+	result := buildNetworkingConfig("myNetwork", "123")
 	assert.Equal(t, expected, result)
 }
