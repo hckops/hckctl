@@ -27,36 +27,36 @@ func (box *DockerBox) Create(template *model.BoxV1) (*model.BoxInfo, error) {
 }
 
 func (box *DockerBox) Exec(name string, command string) error {
-	defer box.client.Close()
+	defer box.close()
 	return box.execBox(name, command)
 }
 
 func (box *DockerBox) Open(template *model.BoxV1) error {
-	defer box.client.Close()
+	defer box.close()
 	return box.openBox(template)
 }
 
 func (box *DockerBox) List() ([]model.BoxInfo, error) {
-	defer box.client.Close()
+	defer box.close()
 	return box.listBoxes()
 }
 
 func (box *DockerBox) Copy(string, string, string) error {
-	defer box.client.Close()
+	defer box.close()
 	return errors.New("not implemented")
 }
 
 func (box *DockerBox) Tunnel(string) error {
-	defer box.client.Close()
+	defer box.close()
 	return errors.New("not supported")
 }
 
 func (box *DockerBox) Delete(name string) error {
-	defer box.client.Close()
+	defer box.close()
 	return box.deleteBoxByName(name)
 }
 
 func (box *DockerBox) DeleteAll() ([]model.BoxInfo, error) {
-	defer box.client.Close()
+	defer box.close()
 	return box.deleteBoxes()
 }

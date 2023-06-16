@@ -4,6 +4,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/hckops/hckctl/pkg/box/docker"
+	"github.com/hckops/hckctl/pkg/box/kubernetes"
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/event"
 )
@@ -26,8 +27,7 @@ func NewBoxClient(provider model.BoxProvider) (BoxClient, error) {
 	case model.Docker:
 		return docker.NewDockerBox(opts)
 	case model.Kubernetes:
-		// TODO
-		return nil, nil
+		return kubernetes.NewKubeBox(opts)
 	case model.Argo:
 		// TODO
 		return nil, nil
