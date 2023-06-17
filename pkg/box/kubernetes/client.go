@@ -19,6 +19,10 @@ func NewKubeBox(internalOpts *model.BoxInternalOpts, kubeConfig *kubernetes.Kube
 	return newKubeBox(internalOpts, kubeConfig)
 }
 
+func (box *KubeBox) Provider() model.BoxProvider {
+	return model.Kubernetes
+}
+
 func (box *KubeBox) Events() *event.EventBus {
 	return box.eventBus
 }

@@ -31,9 +31,10 @@ func NewBoxListCmd(configRef *config.ConfigRef) *cobra.Command {
 }
 
 func (opts *boxListCmdOptions) run(cmd *cobra.Command, args []string) error {
+	// silently fails attempting all the providers
 	for _, providerFlag := range boxProviders() {
 		if err := listByProvider(providerFlag, opts.configRef); err != nil {
-			return err
+			log.Warn().Err(err).Msgf("ignoring error list boxes: providerFlag=%v", providerFlag)
 		}
 	}
 	return nil
@@ -42,20 +43,16 @@ func (opts *boxListCmdOptions) run(cmd *cobra.Command, args []string) error {
 func listByProvider(providerFlag flag.ProviderFlag, configRef *config.ConfigRef) error {
 	log.Debug().Msgf("list boxes: providerFlag=%v", providerFlag)
 
-	provider, err := toBoxProvider(providerFlag)
-	if err != nil {
-		return err
-	}
-	boxClient, err := newDefaultBoxClient(provider, configRef)
+	boxClient, err := newDefaultBoxClient(providerFlag, configRef)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(fmt.Sprintf("# %v", provider))
+	fmt.Println(fmt.Sprintf("# %v", boxClient.Provider()))
 	boxes, err := boxClient.List()
 	if err != nil {
-		log.Warn().Err(err).Msgf("error listing boxes: provider=%v", provider)
-		return fmt.Errorf("%v list error", provider)
+		log.Warn().Err(err).Msgf("error listing boxes: provider=%v", boxClient.Provider())
+		return fmt.Errorf("%v list error", boxClient.Provider())
 	}
 	for _, b := range boxes {
 		fmt.Println(b.Name)

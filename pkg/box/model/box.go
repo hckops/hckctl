@@ -40,10 +40,28 @@ func (box *BoxV1) GenerateName() string {
 	return fmt.Sprintf("%s%s-%s", BoxPrefixName, box.Name, strings.ToLower(uniuri.NewLen(5)))
 }
 
+// ToBoxTemplateName returns the strictly validated template name, or the original trimmed name
 func ToBoxTemplateName(boxName string) string {
-	values := strings.Split(boxName, "-")
+	trimmed := strings.TrimSpace(boxName)
+	if trimmed == "" {
+		return trimmed
+	}
+	if strings.Count(trimmed, "-") < 2 {
+		return trimmed
+	}
+
 	// removes prefix and suffix
-	return strings.Join(values[1:len(values)-1], "-")
+	values := strings.Split(boxName, "-")
+	prefix := values[0]
+	names := values[1 : len(values)-1]
+	name := strings.Join(names, "-")
+	suffix := values[len(values)-1]
+
+	if len(prefix) > 0 && len(name) > 0 && len(suffix) == 5 {
+		return name
+	} else {
+		return trimmed
+	}
 }
 
 func (box *BoxV1) ImageName() string {

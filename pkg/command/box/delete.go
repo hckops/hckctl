@@ -41,9 +41,10 @@ func NewBoxDeleteCmd(configRef *config.ConfigRef) *cobra.Command {
 func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	if len(args) == 0 && opts.all {
+		// silently fails attempting all the providers
 		for _, providerFlag := range boxProviders() {
 			if err := deleteByProvider(providerFlag, opts.configRef); err != nil {
-				return err
+				log.Warn().Err(err).Msgf("ignoring error delete boxes: providerFlag=%v", providerFlag)
 			}
 		}
 		return nil
@@ -53,7 +54,11 @@ func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 		log.Debug().Msgf("delete box: boxName=%s", boxName)
 
 		deleteClient := func(client box.BoxClient, _ *model.BoxV1) error {
-			return client.Delete(boxName)
+			if err := client.Delete(boxName); err != nil {
+				return err
+			}
+			fmt.Println(boxName)
+			return nil
 		}
 		return runRemoteBoxClient(opts.configRef, boxName, deleteClient)
 
@@ -67,20 +72,16 @@ func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 func deleteByProvider(providerFlag flag.ProviderFlag, configRef *config.ConfigRef) error {
 	log.Debug().Msgf("delete boxes: providerFlag=%v", providerFlag)
 
-	provider, err := toBoxProvider(providerFlag)
-	if err != nil {
-		return err
-	}
-	boxClient, err := newDefaultBoxClient(provider, configRef)
+	boxClient, err := newDefaultBoxClient(providerFlag, configRef)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(fmt.Sprintf("# %v", provider))
+	fmt.Println(fmt.Sprintf("# %v", boxClient.Provider()))
 	boxes, err := boxClient.DeleteAll()
 	if err != nil {
-		log.Warn().Err(err).Msgf("error deleting boxes: provider=%v", provider)
-		return fmt.Errorf("%v delete error", provider)
+		log.Warn().Err(err).Msgf("error deleting boxes: provider=%v", boxClient.Provider())
+		return fmt.Errorf("%v delete error", boxClient.Provider())
 	}
 	for _, b := range boxes {
 		fmt.Println(b.Name)

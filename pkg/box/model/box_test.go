@@ -31,8 +31,20 @@ func TestGenerateName(t *testing.T) {
 }
 
 func TestToBoxTemplateName(t *testing.T) {
-	boxName := ToBoxTemplateName("box-my-long-name-example-12345")
-	assert.Equal(t, "my-long-name-example", boxName)
+	assert.Equal(t, "my-long-name-example", ToBoxTemplateName("box-my-long-name-example-12345"))
+	assert.Equal(t, "b", ToBoxTemplateName("a-b-12345"))
+}
+
+func TestToBoxTemplateNameInvalid(t *testing.T) {
+	assert.Equal(t, "", ToBoxTemplateName("  \n \t  "))
+	assert.Equal(t, "a", ToBoxTemplateName("a"))
+	assert.Equal(t, "-", ToBoxTemplateName("-"))
+	assert.Equal(t, "--", ToBoxTemplateName("--"))
+	assert.Equal(t, "a--", ToBoxTemplateName("a--"))
+	assert.Equal(t, "a-b-", ToBoxTemplateName("a-b-"))
+	assert.Equal(t, "a-b-c", ToBoxTemplateName("a-b-c"))
+	assert.Equal(t, "a--12345", ToBoxTemplateName("a--12345"))
+	assert.Equal(t, "-b-12345", ToBoxTemplateName("-b-12345"))
 }
 
 func TestImageName(t *testing.T) {

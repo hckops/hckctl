@@ -10,6 +10,7 @@ import (
 )
 
 type BoxClient interface {
+	Provider() model.BoxProvider
 	Events() *event.EventBus
 	Create(template *model.BoxV1) (*model.BoxInfo, error)
 	Exec(name string, command string) error

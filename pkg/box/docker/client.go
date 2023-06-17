@@ -18,6 +18,10 @@ func NewDockerBox(internalOpts *model.BoxInternalOpts) (*DockerBox, error) {
 	return newDockerBox(internalOpts)
 }
 
+func (box *DockerBox) Provider() model.BoxProvider {
+	return model.Docker
+}
+
 func (box *DockerBox) Events() *event.EventBus {
 	return box.eventBus
 }

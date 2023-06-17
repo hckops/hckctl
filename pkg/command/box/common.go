@@ -2,6 +2,7 @@ package box
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/command/common/flag"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -87,29 +88,30 @@ func runRemoteBoxClient(configRef *config.ConfigRef, boxName string, invokeClien
 		return errors.New("invalid template")
 	}
 
-	// TODO review logic: it should not return but silently fail attempting all the providers first and return nil on the first success
+	// silently fails attempting all the providers
 	for _, providerFlag := range boxProviders() {
-		log.Debug().Msgf("search box template: providerFlag=%v", providerFlag)
+		log.Debug().Msgf("attempt box template: providerFlag=%v", providerFlag)
 
-		provider, err := toBoxProvider(providerFlag)
+		boxClient, err := newDefaultBoxClient(providerFlag, configRef)
 		if err != nil {
-			return err
-		}
-		boxClient, err := newDefaultBoxClient(provider, configRef)
-		if err != nil {
-			return err
+			log.Warn().Err(err).Msgf("ignoring error default client: providerFlag=%v", providerFlag)
+			// skip to next provider
+			break
 		}
 
 		if err := invokeClient(boxClient, boxTemplate); err != nil {
-			log.Warn().Err(err).Msgf("error invoking client: provider=%v", provider)
-			return fmt.Errorf("invoke %v client error", provider)
+			log.Warn().Err(err).Msgf("ignoring error invoking client: providerFlag=%v", providerFlag)
+		} else {
+			// return as soon as the client is invoked with success
+			return nil
 		}
 	}
-	// TODO this should return error if all the clients silently failed after having attempted all providers
-	return nil
+	// it means that nothing happened and all the providers failed
+	return errors.New("not found")
 }
 
 func newBoxOpts(provider model.BoxProvider, configRef *config.ConfigRef) (*model.BoxOpts, error) {
+
 	kubeClientConfig, err := configRef.Config.Provider.Kube.ToKubeClientConfig()
 	if err != nil {
 		log.Warn().Err(err).Msgf("error kube config: kubeConfig=%v", configRef.Config.Provider.Kube)
@@ -122,8 +124,12 @@ func newBoxOpts(provider model.BoxProvider, configRef *config.ConfigRef) (*model
 	return boxOpts, nil
 }
 
-func newDefaultBoxClient(provider model.BoxProvider, configRef *config.ConfigRef) (box.BoxClient, error) {
+func newDefaultBoxClient(providerFlag flag.ProviderFlag, configRef *config.ConfigRef) (box.BoxClient, error) {
 
+	provider, err := toBoxProvider(providerFlag)
+	if err != nil {
+		return nil, err
+	}
 	opts, err := newBoxOpts(provider, configRef)
 	if err != nil {
 		return nil, err
