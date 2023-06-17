@@ -2,6 +2,7 @@ package template
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/command/common/flag"
 	"strings"
 
 	"github.com/MakeNowJust/heredoc"
@@ -43,7 +44,7 @@ func NewTemplateListCmd(configRef *config.ConfigRef) *cobra.Command {
 	}
 
 	// --revision
-	common.AddRevisionFlag(command, &opts.revision)
+	flag.AddRevisionFlag(command, &opts.revision)
 
 	return command
 }

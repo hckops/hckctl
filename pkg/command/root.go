@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/command/common/flag"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -63,7 +64,7 @@ func NewRootCmd() *cobra.Command {
 	)
 	// --log-level
 	logLevelUsage := fmt.Sprintf("set the logging level, one of %s", strings.Join(logger.LevelValues(), "|"))
-	rootCmd.PersistentFlags().StringP(logLevelFlag, "l", commonCmd.NoneFlagShortHand, logLevelUsage)
+	rootCmd.PersistentFlags().StringP(logLevelFlag, "l", flag.NoneFlagShortHand, logLevelUsage)
 	viper.BindPFlag(logLevelConfigKey, rootCmd.PersistentFlags().Lookup(logLevelFlag))
 
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})

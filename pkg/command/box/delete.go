@@ -2,13 +2,13 @@ package box
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/command/common/flag"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
 	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/box/model"
-	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/command/config"
 )
 
@@ -33,7 +33,7 @@ func NewBoxDeleteCmd(configRef *config.ConfigRef) *cobra.Command {
 		allFlagName  = "all"
 		allFlagUsage = "delete all boxes"
 	)
-	command.Flags().BoolVarP(&opts.all, allFlagName, common.NoneFlagShortHand, false, allFlagUsage)
+	command.Flags().BoolVarP(&opts.all, allFlagName, flag.NoneFlagShortHand, false, allFlagUsage)
 
 	return command
 }

@@ -9,90 +9,53 @@ import (
 	"github.com/thediveo/enumflag/v2"
 
 	"github.com/hckops/hckctl/pkg/box/model"
+	"github.com/hckops/hckctl/pkg/command/common/flag"
 )
 
-type providerFlag enumflag.Flag
-
-const (
-	unknownProviderFlag providerFlag = iota
-	dockerProviderFlag
-	kubeProviderFlag
-	argoProviderFlag
-	cloudProviderFlag
-)
-
-const (
-	unknownProvider = "unknown"
-)
-
-var providerIds = map[providerFlag][]string{
-	dockerProviderFlag: {"docker"},
-	kubeProviderFlag:   {"kube", "k8s", "kubernetes"},
-	argoProviderFlag:   {"argo", "argo-cd"},
-	cloudProviderFlag:  {"cloud"},
-}
-
-func (p providerFlag) String() string {
-	if p == unknownProviderFlag {
-		return unknownProvider
+func boxProviderIds() map[flag.ProviderFlag][]string {
+	// whitelist
+	var allowedBoxProviderIds = []flag.ProviderFlag{
+		flag.DockerProviderFlag,
+		flag.KubeProviderFlag,
 	}
-	return providerIds[p][0]
+
+	return flag.ProviderIds(allowedBoxProviderIds)
 }
 
-func (p providerFlag) toBoxProvider() (model.BoxProvider, error) {
+func toBoxProvider(p flag.ProviderFlag) (model.BoxProvider, error) {
 	switch p {
-	case dockerProviderFlag:
+	case flag.DockerProviderFlag:
 		return model.Docker, nil
-	case kubeProviderFlag:
+	case flag.KubeProviderFlag:
 		return model.Kubernetes, nil
-	case argoProviderFlag:
-		return model.ArgoCd, nil
-	case cloudProviderFlag:
-		return model.Cloud, nil
 	default:
-		return model.Docker, errors.New("invalid flag provider")
+		return model.Docker, errors.New("invalid provider")
 	}
 }
 
-func providerValues() []string {
-	var values []string
-	for _, providerId := range providerIds {
-		for _, provider := range providerId {
-			values = append(values, provider)
-		}
-	}
-	return values
-}
-
-func existProvider(value string) (model.BoxProvider, error) {
-	for flag, providerId := range providerIds {
-		for _, provider := range providerId {
-			if value == provider {
-				return flag.toBoxProvider()
-			}
-		}
-	}
-	return model.Docker, errors.New("invalid provider")
-}
-
-func validateProvider(configValue string, flagValue *providerFlag) (model.BoxProvider, error) {
-	if configProvider, err := existProvider(configValue); err != nil {
-		return configProvider, errors.New("invalid config provider")
-	} else if flagValue.String() == unknownProvider {
-		return configProvider, nil
+func validateBoxProvider(configValue string, providerId *flag.ProviderFlag) (model.BoxProvider, error) {
+	if configProvider, err := flag.ExistProvider(boxProviderIds(), configValue); err != nil {
+		// must return a valid iota
+		return model.Docker, errors.New("invalid config provider")
+	} else if providerId.String() == flag.UnknownProvider {
+		// default config
+		return toBoxProvider(configProvider)
 	} else {
-		return flagValue.toBoxProvider()
+		// flag config
+		return toBoxProvider(*providerId)
 	}
 }
 
-func addBoxProviderFlag(command *cobra.Command) *providerFlag {
+func addBoxProviderFlag(command *cobra.Command) *flag.ProviderFlag {
 	const (
 		flagName = "provider"
 	)
-	var enumFlagValue providerFlag
-	providerValue := enumflag.NewWithoutDefault(&enumFlagValue, flagName, providerIds, enumflag.EnumCaseInsensitive)
-	providerUsage := fmt.Sprintf("switch box provider, one of %s", strings.Join(providerValues(), "|"))
+	var boxProviderFlag flag.ProviderFlag
+	providerIds := boxProviderIds()
+	providerValue := enumflag.NewWithoutDefault(&boxProviderFlag, flagName, providerIds, enumflag.EnumCaseInsensitive)
+	providerUsageValues := strings.Join(flag.ProviderValues(boxProviderIds()), "|")
+	providerUsage := fmt.Sprintf("switch box provider, one of %s", providerUsageValues)
 	command.Flags().Var(providerValue, flagName, providerUsage)
 
-	return &enumFlagValue
+	return &boxProviderFlag
 }

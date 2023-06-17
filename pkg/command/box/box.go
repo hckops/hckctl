@@ -2,19 +2,21 @@ package box
 
 import (
 	"github.com/MakeNowJust/heredoc"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/command/common"
+	"github.com/hckops/hckctl/pkg/command/common/flag"
 	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/template"
 )
 
 type boxCmdOptions struct {
-	configRef         *config.ConfigRef
-	sourceFlag        *common.SourceFlag
-	providerValueFlag *providerFlag
+	configRef    *config.ConfigRef
+	sourceFlag   *flag.SourceFlag
+	providerFlag *flag.ProviderFlag
 }
 
 func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -64,9 +66,9 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 	}
 
 	// --provider
-	opts.providerValueFlag = addBoxProviderFlag(command)
+	opts.providerFlag = addBoxProviderFlag(command)
 	// --revision or --local
-	opts.sourceFlag = common.AddTemplateSourceFlag(command)
+	opts.sourceFlag = flag.AddTemplateSourceFlag(command)
 
 	command.AddCommand(NewBoxCreateCmd(configRef))
 	command.AddCommand(NewBoxDeleteCmd(configRef))
@@ -78,7 +80,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 
 func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 
-	provider, err := validateProvider(opts.configRef.Config.Box.Provider, opts.providerValueFlag)
+	provider, err := validateBoxProvider(opts.configRef.Config.Box.Provider, opts.providerFlag)
 	if err != nil {
 		return err
 	} else if len(args) == 1 && opts.sourceFlag.Local {

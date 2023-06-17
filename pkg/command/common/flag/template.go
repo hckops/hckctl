@@ -1,10 +1,12 @@
-package common
+package flag
 
 import (
 	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/hckops/hckctl/pkg/command/common"
 )
 
 const (
@@ -23,7 +25,7 @@ func AddRevisionFlag(command *cobra.Command, revision *string) string {
 		flagUsage     = "megalopolis version, one of branch|tag|sha"
 	)
 
-	command.Flags().StringVarP(revision, flagName, flagShortName, TemplateSourceRevision, flagUsage)
+	command.Flags().StringVarP(revision, flagName, flagShortName, common.TemplateSourceRevision, flagUsage)
 	// overrides default template val
 	_ = viper.BindPFlag(fmt.Sprintf("template.%s", flagName), command.Flags().Lookup(flagName))
 

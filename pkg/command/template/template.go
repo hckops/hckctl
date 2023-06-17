@@ -2,6 +2,7 @@ package template
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/command/common/flag"
 	"strings"
 
 	"github.com/MakeNowJust/heredoc"
@@ -18,7 +19,7 @@ import (
 type templateCmdOptions struct {
 	configRef  *config.ConfigRef
 	formatFlag formatFlag
-	sourceFlag *common.SourceFlag
+	sourceFlag *flag.SourceFlag
 }
 
 func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -59,7 +60,7 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 	command.Flags().Var(formatValue, formatFlagName, formatUsage)
 
 	// --revision or --local
-	opts.sourceFlag = common.AddTemplateSourceFlag(command)
+	opts.sourceFlag = flag.AddTemplateSourceFlag(command)
 
 	command.AddCommand(NewTemplateListCmd(configRef))
 	command.AddCommand(NewTemplateValidateCmd())
