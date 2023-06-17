@@ -2,11 +2,11 @@ package box
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/command/common/flag"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/command/config"
 )
 
@@ -31,15 +31,21 @@ func NewBoxListCmd(configRef *config.ConfigRef) *cobra.Command {
 }
 
 func (opts *boxListCmdOptions) run(cmd *cobra.Command, args []string) error {
-	for _, provider := range model.BoxProviders() {
-		if err := listByProvider(provider, opts.configRef); err != nil {
+	for _, providerFlag := range boxProviders() {
+		if err := listByProvider(providerFlag, opts.configRef); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func listByProvider(provider model.BoxProvider, configRef *config.ConfigRef) error {
+func listByProvider(providerFlag flag.ProviderFlag, configRef *config.ConfigRef) error {
+	log.Debug().Msgf("list boxes: providerFlag=%v", providerFlag)
+
+	provider, err := toBoxProvider(providerFlag)
+	if err != nil {
+		return err
+	}
 	boxClient, err := newDefaultBoxClient(provider, configRef)
 	if err != nil {
 		return err

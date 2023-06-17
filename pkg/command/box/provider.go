@@ -12,14 +12,12 @@ import (
 	"github.com/hckops/hckctl/pkg/command/common/flag"
 )
 
-func boxProviderIds() map[flag.ProviderFlag][]string {
-	// whitelist
-	var allowedBoxProviderIds = []flag.ProviderFlag{
+// whitelist of allowed box providers
+func boxProviders() []flag.ProviderFlag {
+	return []flag.ProviderFlag{
 		flag.DockerProviderFlag,
 		flag.KubeProviderFlag,
 	}
-
-	return flag.ProviderIds(allowedBoxProviderIds)
 }
 
 func toBoxProvider(p flag.ProviderFlag) (model.BoxProvider, error) {
@@ -31,6 +29,10 @@ func toBoxProvider(p flag.ProviderFlag) (model.BoxProvider, error) {
 	default:
 		return model.Docker, errors.New("invalid provider")
 	}
+}
+
+func boxProviderIds() map[flag.ProviderFlag][]string {
+	return flag.ProviderIds(boxProviders())
 }
 
 func validateBoxProvider(configValue string, providerId *flag.ProviderFlag) (model.BoxProvider, error) {

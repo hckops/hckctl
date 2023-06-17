@@ -41,8 +41,8 @@ func NewBoxDeleteCmd(configRef *config.ConfigRef) *cobra.Command {
 func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	if len(args) == 0 && opts.all {
-		for _, provider := range model.BoxProviders() {
-			if err := deleteByProvider(provider, opts.configRef); err != nil {
+		for _, providerFlag := range boxProviders() {
+			if err := deleteByProvider(providerFlag, opts.configRef); err != nil {
 				return err
 			}
 		}
@@ -64,9 +64,13 @@ func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func deleteByProvider(provider model.BoxProvider, configRef *config.ConfigRef) error {
-	log.Debug().Msgf("delete all boxes: provider=%v", provider)
+func deleteByProvider(providerFlag flag.ProviderFlag, configRef *config.ConfigRef) error {
+	log.Debug().Msgf("delete boxes: providerFlag=%v", providerFlag)
 
+	provider, err := toBoxProvider(providerFlag)
+	if err != nil {
+		return err
+	}
 	boxClient, err := newDefaultBoxClient(provider, configRef)
 	if err != nil {
 		return err

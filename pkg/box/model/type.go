@@ -18,11 +18,6 @@ const (
 	Cloud
 )
 
-func BoxProviders() []BoxProvider {
-	// only supported: Kubernetes, ArgoCd, Cloud
-	return []BoxProvider{Docker}
-}
-
 var providerValue = []string{"docker", "kube", "argo-cd", "cloud"}
 
 func (p BoxProvider) String() string {

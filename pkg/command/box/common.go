@@ -87,7 +87,14 @@ func runRemoteBoxClient(configRef *config.ConfigRef, boxName string, invokeClien
 		return errors.New("invalid template")
 	}
 
-	for _, provider := range model.BoxProviders() {
+	// TODO review logic: it should not return but silently fail attempting all the providers first and return nil on the first success
+	for _, providerFlag := range boxProviders() {
+		log.Debug().Msgf("search box template: providerFlag=%v", providerFlag)
+
+		provider, err := toBoxProvider(providerFlag)
+		if err != nil {
+			return err
+		}
 		boxClient, err := newDefaultBoxClient(provider, configRef)
 		if err != nil {
 			return err
@@ -98,7 +105,7 @@ func runRemoteBoxClient(configRef *config.ConfigRef, boxName string, invokeClien
 			return fmt.Errorf("invoke %v client error", provider)
 		}
 	}
-
+	// TODO this should return error if all the clients silently failed after having attempted all providers
 	return nil
 }
 
@@ -121,7 +128,6 @@ func newDefaultBoxClient(provider model.BoxProvider, configRef *config.ConfigRef
 	if err != nil {
 		return nil, err
 	}
-
 	boxClient, err := box.NewBoxClient(opts)
 	if err != nil {
 		log.Warn().Err(err).Msgf("error creating client: provider=%v", opts.Provider)
