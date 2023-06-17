@@ -9,16 +9,18 @@ import (
 )
 
 type KubeBox struct {
-	client *kubernetes.KubeClient
-	opts   *model.BoxOpts
+	client       *kubernetes.KubeClient
+	clientConfig *kubernetes.KubeClientConfig
+	streams      *model.BoxStreams
+	eventBus     *event.EventBus
 }
 
-func NewKubeBox(opts *model.BoxOpts) (*KubeBox, error) {
-	return newKubeBox(opts)
+func NewKubeBox(internalOpts *model.BoxInternalOpts, kubeConfig *kubernetes.KubeClientConfig) (*KubeBox, error) {
+	return newKubeBox(internalOpts, kubeConfig)
 }
 
 func (box *KubeBox) Events() *event.EventBus {
-	return nil
+	return box.eventBus
 }
 
 func (box *KubeBox) Create(template *model.BoxV1) (*model.BoxInfo, error) {

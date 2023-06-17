@@ -47,7 +47,7 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 		path := args[0]
 		log.Debug().Msgf("create box from local template: path=%s", path)
 
-		return createBox(template.NewLocalSource(path), provider)
+		return createBox(template.NewLocalSource(path), provider, opts.configRef)
 
 	} else if len(args) == 1 {
 		name := args[0]
@@ -59,7 +59,7 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 		}
 		log.Debug().Msgf("create box from remote template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
-		return createBox(template.NewRemoteSource(revisionOpts, name), provider)
+		return createBox(template.NewRemoteSource(revisionOpts, name), provider, opts.configRef)
 
 	} else {
 		cmd.HelpFunc()(cmd, args)
@@ -67,7 +67,7 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func createBox(src template.TemplateSource, provider model.BoxProvider) error {
+func createBox(src template.TemplateSource, provider model.BoxProvider, configRef *config.ConfigRef) error {
 	createClient := func(opts *boxClientOpts) error {
 		if boxInfo, err := opts.client.Create(opts.template); err != nil {
 			return err
@@ -77,5 +77,5 @@ func createBox(src template.TemplateSource, provider model.BoxProvider) error {
 		}
 		return nil
 	}
-	return runBoxClient(src, provider, createClient)
+	return runBoxClient(src, provider, configRef, createClient)
 }

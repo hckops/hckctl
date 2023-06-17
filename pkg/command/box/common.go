@@ -20,7 +20,7 @@ type boxClientOpts struct {
 	loader   *common.Loader
 }
 
-func runBoxClient(src template.TemplateSource, provider model.BoxProvider, invokeClient func(*boxClientOpts) error) error {
+func runBoxClient(src template.TemplateSource, provider model.BoxProvider, configRef *config.ConfigRef, invokeClient func(*boxClientOpts) error) error {
 
 	boxTemplate, err := src.ReadBox()
 	if err != nil {
@@ -34,7 +34,11 @@ func runBoxClient(src template.TemplateSource, provider model.BoxProvider, invok
 
 	log.Info().Msgf("loading template: provider=%s name=%s\n%s", provider, boxTemplate.Name, boxTemplate.Pretty())
 
-	boxClient, err := box.NewBoxClient(provider)
+	boxOpts, err := newBoxOpts(provider, configRef)
+	if err != nil {
+		return err
+	}
+	boxClient, err := box.NewBoxClient(boxOpts)
 	if err != nil {
 		log.Warn().Err(err).Msgf("error creating client: provider=%v", provider)
 		return fmt.Errorf("create %v client error", provider)
@@ -83,9 +87,8 @@ func runRemoteBoxClient(configRef *config.ConfigRef, boxName string, invokeClien
 		return errors.New("invalid template")
 	}
 
-	// TODO attempt all providers: model.BoxProviders()
-	for _, provider := range []model.BoxProvider{model.Docker} {
-		boxClient, err := newDefaultBoxClient(provider)
+	for _, provider := range model.BoxProviders() {
+		boxClient, err := newDefaultBoxClient(provider, configRef)
 		if err != nil {
 			return err
 		}
@@ -99,11 +102,30 @@ func runRemoteBoxClient(configRef *config.ConfigRef, boxName string, invokeClien
 	return nil
 }
 
-func newDefaultBoxClient(provider model.BoxProvider) (box.BoxClient, error) {
-	boxClient, err := box.NewBoxClient(provider)
+func newBoxOpts(provider model.BoxProvider, configRef *config.ConfigRef) (*model.BoxOpts, error) {
+	kubeClientConfig, err := configRef.Config.Provider.Kube.ToKubeClientConfig()
 	if err != nil {
-		log.Warn().Err(err).Msgf("error creating client: provider=%v", provider)
-		return nil, fmt.Errorf("create %v client error", provider)
+		log.Warn().Err(err).Msgf("error kube config: kubeConfig=%v", configRef.Config.Provider.Kube)
+		return nil, errors.Wrap(err, "invalid kube config")
+	}
+
+	cloudClientConfig := configRef.Config.Provider.Cloud.ToCloudClientConfig()
+	boxOpts := model.NewBoxOpts(provider, kubeClientConfig, cloudClientConfig)
+
+	return boxOpts, nil
+}
+
+func newDefaultBoxClient(provider model.BoxProvider, configRef *config.ConfigRef) (box.BoxClient, error) {
+
+	opts, err := newBoxOpts(provider, configRef)
+	if err != nil {
+		return nil, err
+	}
+
+	boxClient, err := box.NewBoxClient(opts)
+	if err != nil {
+		log.Warn().Err(err).Msgf("error creating client: provider=%v", opts.Provider)
+		return nil, fmt.Errorf("create %v client error", opts.Provider)
 	}
 
 	boxClient.Events().Subscribe(func(e event.Event) {

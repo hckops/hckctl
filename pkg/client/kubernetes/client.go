@@ -1,13 +1,15 @@
 package kubernetes
 
 import (
+	"context"
+	"path/filepath"
+	"strings"
+
 	"github.com/pkg/errors"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
-	"path/filepath"
-	"strings"
 )
 
 //import (
@@ -27,46 +29,50 @@ import (
 //	"k8s.io/client-go/util/homedir"
 //)
 
-func NewKubeClient() (*KubeClient, error) {
-	return &KubeClient{}, nil
-}
+func NewOutOfClusterKubeClient(configPath string) (*KubeClient, error) {
 
-func NewOutOfClusterClient(configPath string) (*rest.Config, *kubernetes.Clientset, error) {
-
-	var kubeconfig string
+	var kubeConfig string
 	if strings.TrimSpace(configPath) == "" {
-		kubeconfig = filepath.Join(homedir.HomeDir(), ".kube", "config")
+		kubeConfig = filepath.Join(homedir.HomeDir(), ".kube", "config")
 	} else {
 		// absolute path
-		kubeconfig = configPath
+		kubeConfig = configPath
 	}
 
-	restConfig, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	restConfig, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "error restConfig")
+		return nil, errors.Wrap(err, "error restConfig")
 	}
 
 	clientSet, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "error clientSet")
+		return nil, errors.Wrap(err, "error clientSet")
 	}
 
-	return restConfig, clientSet, nil
+	return &KubeClient{
+		ctx:            context.Background(),
+		kubeRestConfig: restConfig,
+		kubeClientSet:  clientSet,
+	}, nil
 }
 
-func NewInClusterClient() (*rest.Config, *kubernetes.Clientset, error) {
+func NewInClusterKubeClient() (*KubeClient, error) {
 
 	restConfig, err := rest.InClusterConfig()
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "error restConfig")
+		return nil, errors.Wrap(err, "error restConfig")
 	}
 
 	clientSet, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "error clientSet")
+		return nil, errors.Wrap(err, "error clientSet")
 	}
 
-	return restConfig, clientSet, nil
+	return &KubeClient{
+		ctx:            context.Background(),
+		kubeRestConfig: restConfig,
+		kubeClientSet:  clientSet,
+	}, nil
 }
 
 func (client *KubeClient) Close() error {

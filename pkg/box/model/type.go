@@ -4,6 +4,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/hckops/hckctl/pkg/client/cloud"
+	"github.com/hckops/hckctl/pkg/client/kubernetes"
 	"github.com/hckops/hckctl/pkg/event"
 )
 
@@ -17,7 +19,8 @@ const (
 )
 
 func BoxProviders() []BoxProvider {
-	return []BoxProvider{Docker, Kubernetes, ArgoCd, Cloud}
+	// only supported: Kubernetes, ArgoCd, Cloud
+	return []BoxProvider{Docker}
 }
 
 var providerValue = []string{"docker", "kube", "argo-cd", "cloud"}
@@ -31,21 +34,28 @@ type BoxInfo struct {
 	Name string
 }
 
-// TODO change resource to flag in command i.e s/m/l and move ResourceOptions here
-
-//Memory: "512Mi",
-//Cpu:    "500m",
-
 type BoxOpts struct {
-	Streams  *BoxStreams
-	EventBus *event.EventBus
+	Provider     BoxProvider
+	KubeConfig   *kubernetes.KubeClientConfig
+	CloudConfig  *cloud.CloudClientConfig
+	InternalOpts *BoxInternalOpts
 }
 
-func NewBoxOpts() *BoxOpts {
+func NewBoxOpts(provider BoxProvider, kubeConfig *kubernetes.KubeClientConfig, cloudConfig *cloud.CloudClientConfig) *BoxOpts {
 	return &BoxOpts{
-		Streams:  newDefaultStreams(true),
-		EventBus: event.NewEventBus(),
+		Provider:    provider,
+		KubeConfig:  kubeConfig,
+		CloudConfig: cloudConfig,
+		InternalOpts: &BoxInternalOpts{
+			Streams:  newDefaultStreams(true),
+			EventBus: event.NewEventBus(),
+		},
 	}
+}
+
+type BoxInternalOpts struct {
+	Streams  *BoxStreams
+	EventBus *event.EventBus
 }
 
 type BoxStreams struct {

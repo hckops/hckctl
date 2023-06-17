@@ -22,23 +22,25 @@ import (
 //	"github.com/hckops/hckctl/pkg/command/common"
 //)
 
-func newKubeBox(opts *model.BoxOpts) (*KubeBox, error) {
-	opts.EventBus.Publish(newClientInitKubeEvent())
+func newKubeBox(internalOpts *model.BoxInternalOpts, kubeConfig *kubernetes.KubeClientConfig) (*KubeBox, error) {
+	internalOpts.EventBus.Publish(newClientInitKubeEvent())
 
-	kubeClient, err := kubernetes.NewKubeClient()
+	kubeClient, err := kubernetes.NewOutOfClusterKubeClient(kubeConfig.ConfigPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "error kube box")
 	}
 
 	return &KubeBox{
-		client: kubeClient,
-		opts:   opts,
+		client:       kubeClient,
+		clientConfig: kubeConfig,
+		streams:      internalOpts.Streams,
+		eventBus:     internalOpts.EventBus,
 	}, nil
 }
 
 func (box *KubeBox) close() error {
-	box.opts.EventBus.Publish(newClientCloseKubeEvent())
-	box.opts.EventBus.Close()
+	box.eventBus.Publish(newClientCloseKubeEvent())
+	box.eventBus.Close()
 	return box.client.Close()
 }
 

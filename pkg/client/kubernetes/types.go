@@ -9,12 +9,17 @@ import (
 
 type KubeClient struct {
 	ctx            context.Context
-	KubeRestConfig *rest.Config
-	KubeClientSet  *kubernetes.Clientset
+	kubeRestConfig *rest.Config
+	kubeClientSet  *kubernetes.Clientset
 }
 
-type ResourceOptions struct {
-	Namespace string
-	Memory    string
-	Cpu       string
+type KubeClientConfig struct {
+	ConfigPath string
+	Namespace  string
+	Resource   *KubeResource
+}
+
+type KubeResource struct {
+	Memory string
+	Cpu    string
 }

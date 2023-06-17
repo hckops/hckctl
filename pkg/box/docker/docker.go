@@ -14,8 +14,8 @@ import (
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-func newDockerBox(opts *model.BoxOpts) (*DockerBox, error) {
-	opts.EventBus.Publish(newClientInitDockerEvent())
+func newDockerBox(internalOpts *model.BoxInternalOpts) (*DockerBox, error) {
+	internalOpts.EventBus.Publish(newClientInitDockerEvent())
 
 	dockerClient, err := docker.NewDockerClient()
 	if err != nil {
@@ -23,14 +23,15 @@ func newDockerBox(opts *model.BoxOpts) (*DockerBox, error) {
 	}
 
 	return &DockerBox{
-		client: dockerClient,
-		opts:   opts,
+		client:   dockerClient,
+		streams:  internalOpts.Streams,
+		eventBus: internalOpts.EventBus,
 	}, nil
 }
 
 func (box *DockerBox) close() error {
-	box.opts.EventBus.Publish(newClientCloseDockerEvent())
-	box.opts.EventBus.Close()
+	box.eventBus.Publish(newClientCloseDockerEvent())
+	box.eventBus.Close()
 	return box.client.Close()
 }
 
@@ -40,10 +41,10 @@ func (box *DockerBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 	imagePullOpts := &docker.ImagePullOpts{
 		ImageName: imageName,
 		OnImagePullCallback: func() {
-			box.opts.EventBus.Publish(newImagePullDockerLoaderEvent(imageName))
+			box.eventBus.Publish(newImagePullDockerLoaderEvent(imageName))
 		},
 	}
-	box.opts.EventBus.Publish(newImagePullDockerEvent(imageName))
+	box.eventBus.Publish(newImagePullDockerEvent(imageName))
 	if err := box.client.ImagePull(imagePullOpts); err != nil {
 		return nil, err
 	}
@@ -51,10 +52,10 @@ func (box *DockerBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 	// cleanup old nightly images
 	imageRemoveOpts := &docker.ImageRemoveOpts{
 		OnImageRemoveCallback: func(imageId string) {
-			box.opts.EventBus.Publish(newImageRemoveDockerEvent(imageId))
+			box.eventBus.Publish(newImageRemoveDockerEvent(imageId))
 		},
 		OnImageRemoveErrorCallback: func(imageId string, err error) {
-			box.opts.EventBus.Publish(newImageRemoveErrorDockerEvent(imageId, err))
+			box.eventBus.Publish(newImageRemoveErrorDockerEvent(imageId, err))
 		},
 	}
 	if err := box.client.ImageRemoveDangling(imageRemoveOpts); err != nil {
@@ -67,7 +68,7 @@ func (box *DockerBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 	var networkPorts []model.BoxPort
 	for _, networkPort := range template.NetworkPorts() {
 		if strings.HasPrefix(networkPort.Alias, model.BoxPrefixVirtualPort) {
-			box.opts.EventBus.Publish(newContainerCreateSkipVirtualPortDockerEvent(containerName, networkPort))
+			box.eventBus.Publish(newContainerCreateSkipVirtualPortDockerEvent(containerName, networkPort))
 		} else {
 			networkPorts = append(networkPorts, networkPort)
 		}
@@ -82,8 +83,8 @@ func (box *DockerBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 	}
 
 	onPortBindCallback := func(port model.BoxPort) {
-		box.opts.EventBus.Publish(newContainerCreatePortBindDockerEvent(containerName, port))
-		box.opts.EventBus.Publish(newContainerCreatePortBindDockerConsoleEvent(containerName, port))
+		box.eventBus.Publish(newContainerCreatePortBindDockerEvent(containerName, port))
+		box.eventBus.Publish(newContainerCreatePortBindDockerConsoleEvent(containerName, port))
 	}
 	hostConfig, err := buildHostConfig(networkPorts, onPortBindCallback)
 	if err != nil {
@@ -95,7 +96,7 @@ func (box *DockerBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	box.opts.EventBus.Publish(newNetworkUpsertDockerEvent(networkName, networkId))
+	box.eventBus.Publish(newNetworkUpsertDockerEvent(networkName, networkId))
 
 	containerOpts := &docker.ContainerCreateOpts{
 		ContainerName:    containerName,
@@ -108,7 +109,7 @@ func (box *DockerBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	box.opts.EventBus.Publish(newContainerCreateDockerEvent(template.Name, containerName, containerId))
+	box.eventBus.Publish(newContainerCreateDockerEvent(template.Name, containerName, containerId))
 
 	return &model.BoxInfo{Id: containerId, Name: containerName}, nil
 }
@@ -196,7 +197,7 @@ func (box *DockerBox) openBox(template *model.BoxV1) error {
 	}
 	if template.Shell == model.BoxShellNone {
 		// stop loader
-		box.opts.EventBus.Publish(newContainerAttachDockerLoaderEvent())
+		box.eventBus.Publish(newContainerAttachDockerLoaderEvent())
 		return box.logsBox(info.Id)
 	}
 
@@ -204,32 +205,32 @@ func (box *DockerBox) openBox(template *model.BoxV1) error {
 }
 
 func (box *DockerBox) attachBox(info *model.BoxInfo, command string, removeOnExit bool) error {
-	box.opts.EventBus.Publish(newContainerAttachDockerEvent(info.Id, info.Name, command))
+	box.eventBus.Publish(newContainerAttachDockerEvent(info.Id, info.Name, command))
 
 	containerOpts := &docker.ContainerAttachOpts{
 		ContainerId: info.Id,
 		Shell:       command,
-		InStream:    box.opts.Streams.In,
-		OutStream:   box.opts.Streams.Out,
-		ErrStream:   box.opts.Streams.Err,
-		IsTty:       box.opts.Streams.IsTty,
+		InStream:    box.streams.In,
+		OutStream:   box.streams.Out,
+		ErrStream:   box.streams.Err,
+		IsTty:       box.streams.IsTty,
 		OnContainerAttachCallback: func() {
 			if removeOnExit {
 				// stop loader
-				box.opts.EventBus.Publish(newContainerAttachDockerLoaderEvent())
+				box.eventBus.Publish(newContainerAttachDockerLoaderEvent())
 			}
 		},
 		OnStreamCloseCallback: func() {
-			box.opts.EventBus.Publish(newContainerExecExitDockerEvent(info.Id))
+			box.eventBus.Publish(newContainerExecExitDockerEvent(info.Id))
 
 			if removeOnExit {
 				if err := box.client.ContainerRemove(info.Id); err != nil {
-					box.opts.EventBus.Publish(newContainerExecErrorDockerEvent(info.Id, errors.Wrap(err, "error container exec remove")))
+					box.eventBus.Publish(newContainerExecErrorDockerEvent(info.Id, errors.Wrap(err, "error container exec remove")))
 				}
 			}
 		},
 		OnStreamErrorCallback: func(err error) {
-			box.opts.EventBus.Publish(newContainerExecErrorDockerEvent(info.Id, err))
+			box.eventBus.Publish(newContainerExecErrorDockerEvent(info.Id, err))
 		},
 	}
 
@@ -240,13 +241,13 @@ func (box *DockerBox) logsBox(containerId string) error {
 
 	opts := &docker.ContainerLogsOpts{
 		ContainerId: containerId,
-		OutStream:   box.opts.Streams.Out,
-		ErrStream:   box.opts.Streams.Err,
+		OutStream:   box.streams.Out,
+		ErrStream:   box.streams.Err,
 		OnStreamCloseCallback: func() {
-			box.opts.EventBus.Publish(newContainerExecExitDockerEvent(containerId))
+			box.eventBus.Publish(newContainerExecExitDockerEvent(containerId))
 		},
 		OnStreamErrorCallback: func(err error) {
-			box.opts.EventBus.Publish(newContainerExecErrorDockerEvent(containerId, err))
+			box.eventBus.Publish(newContainerExecErrorDockerEvent(containerId, err))
 		},
 	}
 	return box.client.ContainerLogs(opts)
@@ -261,7 +262,7 @@ func (box *DockerBox) listBoxes() ([]model.BoxInfo, error) {
 	var result []model.BoxInfo
 	for index, c := range containers {
 		result = append(result, model.BoxInfo{Id: c.ContainerId, Name: c.ContainerName})
-		box.opts.EventBus.Publish(newContainerListDockerEvent(index, c.ContainerName, c.ContainerId))
+		box.eventBus.Publish(newContainerListDockerEvent(index, c.ContainerName, c.ContainerId))
 	}
 
 	return result, nil
@@ -281,7 +282,7 @@ func (box *DockerBox) findBox(name string) (*model.BoxInfo, error) {
 }
 
 func (box *DockerBox) deleteBoxById(id string) error {
-	box.opts.EventBus.Publish(newContainerRemoveDockerEvent(id))
+	box.eventBus.Publish(newContainerRemoveDockerEvent(id))
 	return box.client.ContainerRemove(id)
 }
 

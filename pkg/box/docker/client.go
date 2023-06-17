@@ -9,16 +9,17 @@ import (
 )
 
 type DockerBox struct {
-	client *docker.DockerClient
-	opts   *model.BoxOpts
+	client   *docker.DockerClient
+	streams  *model.BoxStreams
+	eventBus *event.EventBus
 }
 
-func NewDockerBox(opts *model.BoxOpts) (*DockerBox, error) {
-	return newDockerBox(opts)
+func NewDockerBox(internalOpts *model.BoxInternalOpts) (*DockerBox, error) {
+	return newDockerBox(internalOpts)
 }
 
 func (box *DockerBox) Events() *event.EventBus {
-	return box.opts.EventBus
+	return box.eventBus
 }
 
 func (box *DockerBox) Create(template *model.BoxV1) (*model.BoxInfo, error) {

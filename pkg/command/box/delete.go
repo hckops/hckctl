@@ -14,7 +14,7 @@ import (
 
 type boxDeleteCmdOptions struct {
 	configRef *config.ConfigRef
-	all       bool
+	all       bool // TODO refactor --providers="docker,kube" or --providers="all"
 }
 
 func NewBoxDeleteCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -41,9 +41,8 @@ func NewBoxDeleteCmd(configRef *config.ConfigRef) *cobra.Command {
 func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	if len(args) == 0 && opts.all {
-		// TODO model.BoxProviders()
-		for _, provider := range []model.BoxProvider{model.Docker} {
-			if err := deleteByProvider(provider); err != nil {
+		for _, provider := range model.BoxProviders() {
+			if err := deleteByProvider(provider, opts.configRef); err != nil {
 				return err
 			}
 		}
@@ -65,10 +64,10 @@ func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func deleteByProvider(provider model.BoxProvider) error {
+func deleteByProvider(provider model.BoxProvider, configRef *config.ConfigRef) error {
 	log.Debug().Msgf("delete all boxes: provider=%v", provider)
 
-	boxClient, err := newDefaultBoxClient(provider)
+	boxClient, err := newDefaultBoxClient(provider, configRef)
 	if err != nil {
 		return err
 	}

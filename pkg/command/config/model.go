@@ -5,6 +5,8 @@ import (
 	"strconv"
 
 	"github.com/hckops/hckctl/pkg/box/model"
+	"github.com/hckops/hckctl/pkg/client/cloud"
+	"github.com/hckops/hckctl/pkg/client/kubernetes"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/logger"
 	"github.com/hckops/hckctl/pkg/template/schema"
@@ -22,6 +24,7 @@ type ConfigV1 struct {
 	Log      LogConfig      `yaml:"log"`
 	Template TemplateConfig `yaml:"template"`
 	Box      BoxConfig      `yaml:"box"`
+	Provider ProviderConfig `yaml:"provider"`
 }
 
 type LogConfig struct {
@@ -35,15 +38,30 @@ type TemplateConfig struct {
 }
 
 type BoxConfig struct {
-	Provider string      `yaml:"provider"`
-	Kube     KubeConfig  `yaml:"kube"`
-	Cloud    CloudConfig `yaml:"cloud"`
+	Provider string `yaml:"provider"`
+}
+
+type ProviderConfig struct {
+	Kube  KubeConfig  `yaml:"kube"`
+	Cloud CloudConfig `yaml:"cloud"`
 }
 
 type KubeConfig struct {
 	Namespace    string `yaml:"namespace"`
 	ConfigPath   string `yaml:"configPath"`
 	ResourceSize string `yaml:"resourceSize"`
+}
+
+func (c *KubeConfig) ToKubeClientConfig() (*kubernetes.KubeClientConfig, error) {
+	if size, err := existResourceSize(c.ResourceSize); err != nil {
+		return nil, err
+	} else {
+		return &kubernetes.KubeClientConfig{
+			ConfigPath: c.ConfigPath,
+			Namespace:  c.Namespace,
+			Resource:   size.toKubeResource(),
+		}, nil
+	}
 }
 
 type CloudConfig struct {
@@ -53,8 +71,16 @@ type CloudConfig struct {
 	Token    string `yaml:"token"`
 }
 
-func (c *CloudConfig) Address() string {
+func (c *CloudConfig) address() string {
 	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
+}
+
+func (c *CloudConfig) ToCloudClientConfig() *cloud.CloudClientConfig {
+	return &cloud.CloudClientConfig{
+		Address:  c.address(),
+		Username: c.Username,
+		Token:    c.Token,
+	}
 }
 
 func newConfig(logFile, cacheDir string) *ConfigV1 {
@@ -70,10 +96,12 @@ func newConfig(logFile, cacheDir string) *ConfigV1 {
 		},
 		Box: BoxConfig{
 			Provider: model.Docker.String(),
+		},
+		Provider: ProviderConfig{
 			Kube: KubeConfig{
 				Namespace:    common.ProjectName,
 				ConfigPath:   "",
-				ResourceSize: "s",
+				ResourceSize: small.String(),
 			},
 			Cloud: CloudConfig{
 				Host:     "0.0.0.0",

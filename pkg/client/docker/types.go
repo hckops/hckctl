@@ -31,11 +31,6 @@ type ContainerCreateOpts struct {
 	NetworkingConfig *network.NetworkingConfig
 }
 
-type ContainerExecOpts struct {
-	ContainerId string
-	Shell       string
-}
-
 type ContainerAttachOpts struct {
 	ContainerId               string
 	Shell                     string

@@ -21,13 +21,12 @@ type BoxClient interface {
 	DeleteAll() ([]model.BoxInfo, error)
 }
 
-func NewBoxClient(provider model.BoxProvider) (BoxClient, error) {
-	opts := model.NewBoxOpts()
-	switch provider {
+func NewBoxClient(opts *model.BoxOpts) (BoxClient, error) {
+	switch opts.Provider {
 	case model.Docker:
-		return docker.NewDockerBox(opts)
+		return docker.NewDockerBox(opts.InternalOpts)
 	case model.Kubernetes:
-		return kubernetes.NewKubeBox(opts)
+		return kubernetes.NewKubeBox(opts.InternalOpts, opts.KubeConfig)
 	case model.ArgoCd:
 		// TODO
 		return nil, nil

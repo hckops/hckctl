@@ -31,17 +31,16 @@ func NewBoxListCmd(configRef *config.ConfigRef) *cobra.Command {
 }
 
 func (opts *boxListCmdOptions) run(cmd *cobra.Command, args []string) error {
-	// TODO model.BoxProviders()
-	for _, provider := range []model.BoxProvider{model.Docker} {
-		if err := listByProvider(provider); err != nil {
+	for _, provider := range model.BoxProviders() {
+		if err := listByProvider(provider, opts.configRef); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func listByProvider(provider model.BoxProvider) error {
-	boxClient, err := newDefaultBoxClient(provider)
+func listByProvider(provider model.BoxProvider, configRef *config.ConfigRef) error {
+	boxClient, err := newDefaultBoxClient(provider, configRef)
 	if err != nil {
 		return err
 	}
