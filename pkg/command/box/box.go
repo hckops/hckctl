@@ -2,7 +2,6 @@ package box
 
 import (
 	"github.com/MakeNowJust/heredoc"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
@@ -65,7 +64,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 		RunE: opts.run,
 	}
 
-	// --provider
+	// --provider (enum)
 	opts.providerFlag = addBoxProviderFlag(command)
 	// --revision or --local
 	opts.sourceFlag = flag.AddTemplateSourceFlag(command)

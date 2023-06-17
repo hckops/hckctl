@@ -55,7 +55,7 @@ func ProviderValues(providerIds map[ProviderFlag][]string) []string {
 	return values
 }
 
-// ExistProvider verify if the given string is valid provider
+// ExistProvider verify if the given string is a valid provider
 func ExistProvider(providerIds map[ProviderFlag][]string, value string) (ProviderFlag, error) {
 	for providerId, providerValues := range providerIds {
 		for _, providerValue := range providerValues {

@@ -2,7 +2,6 @@ package command
 
 import (
 	"fmt"
-	"github.com/hckops/hckctl/pkg/command/common/flag"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -11,6 +10,7 @@ import (
 
 	boxCmd "github.com/hckops/hckctl/pkg/command/box"
 	commonCmd "github.com/hckops/hckctl/pkg/command/common"
+	"github.com/hckops/hckctl/pkg/command/common/flag"
 	configCmd "github.com/hckops/hckctl/pkg/command/config"
 	labCmd "github.com/hckops/hckctl/pkg/command/lab"
 	templateCmd "github.com/hckops/hckctl/pkg/command/template"

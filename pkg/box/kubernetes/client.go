@@ -1,10 +1,10 @@
 package kubernetes
 
 import (
-	"github.com/hckops/hckctl/pkg/client/kubernetes"
 	"github.com/pkg/errors"
 
 	"github.com/hckops/hckctl/pkg/box/model"
+	"github.com/hckops/hckctl/pkg/client/kubernetes"
 	"github.com/hckops/hckctl/pkg/event"
 )
 

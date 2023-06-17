@@ -31,7 +31,7 @@ func NewBoxCreateCmd(configRef *config.ConfigRef) *cobra.Command {
 		RunE:  opts.run,
 	}
 
-	// --provider
+	// --provider (enum)
 	opts.providerFlag = addBoxProviderFlag(command)
 	// --revision or --local
 	opts.sourceFlag = flag.AddTemplateSourceFlag(command)

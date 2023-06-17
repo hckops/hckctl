@@ -2,11 +2,11 @@ package box
 
 import (
 	"fmt"
-	"github.com/hckops/hckctl/pkg/command/common/flag"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
+	"github.com/hckops/hckctl/pkg/command/common/flag"
 	"github.com/hckops/hckctl/pkg/command/config"
 )
 

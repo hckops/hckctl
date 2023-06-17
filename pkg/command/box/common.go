@@ -2,7 +2,6 @@ package box
 
 import (
 	"fmt"
-	"github.com/hckops/hckctl/pkg/command/common/flag"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -10,6 +9,7 @@ import (
 	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/command/common"
+	"github.com/hckops/hckctl/pkg/command/common/flag"
 	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/event"
 	"github.com/hckops/hckctl/pkg/template"
@@ -71,7 +71,7 @@ func runBoxClient(src template.TemplateSource, provider model.BoxProvider, confi
 	return nil
 }
 
-func runRemoteBoxClient(configRef *config.ConfigRef, boxName string, invokeClient func(box.BoxClient, *model.BoxV1) error) error {
+func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeClient func(box.BoxClient, *model.BoxV1) error) error {
 
 	// best effort approach to resolve remote box template by name with default revision
 	// WARNING this might return unexpected results if the container was created with a different revision
@@ -95,7 +95,7 @@ func runRemoteBoxClient(configRef *config.ConfigRef, boxName string, invokeClien
 		boxClient, err := newDefaultBoxClient(providerFlag, configRef)
 		if err != nil {
 			log.Warn().Err(err).Msgf("ignoring error default client: providerFlag=%v", providerFlag)
-			// skip to next provider
+			// skip to the next provider
 			break
 		}
 

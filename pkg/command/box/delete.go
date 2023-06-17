@@ -2,13 +2,13 @@ package box
 
 import (
 	"fmt"
-	"github.com/hckops/hckctl/pkg/command/common/flag"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
 	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/box/model"
+	"github.com/hckops/hckctl/pkg/command/common/flag"
 	"github.com/hckops/hckctl/pkg/command/config"
 )
 
@@ -60,7 +60,7 @@ func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 			fmt.Println(boxName)
 			return nil
 		}
-		return runRemoteBoxClient(opts.configRef, boxName, deleteClient)
+		return attemptRunBoxClients(opts.configRef, boxName, deleteClient)
 
 	} else {
 		cmd.HelpFunc()(cmd, args)

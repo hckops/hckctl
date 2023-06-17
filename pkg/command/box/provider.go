@@ -12,7 +12,7 @@ import (
 	"github.com/hckops/hckctl/pkg/command/common/flag"
 )
 
-// whitelist of allowed box providers
+// whitelist of supported box providers
 func boxProviders() []flag.ProviderFlag {
 	return []flag.ProviderFlag{
 		flag.DockerProviderFlag,
