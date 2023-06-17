@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/adrg/xdg"
+	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
@@ -113,7 +114,13 @@ func getTemplateSourceDir() string {
 func LoadConfig() (*ConfigV1, error) {
 	var configV1 *ConfigV1
 	// "exact" makes sure to fail if fields are invalid
-	if err := viper.UnmarshalExact(&configV1); err != nil {
+	if err := viper.UnmarshalExact(&configV1, viper.DecodeHook(
+		mapstructure.ComposeDecodeHookFunc(
+			// TODO custom enumFlag to bind iota/string configs and flags https://github.com/spf13/viper/issues/443
+			// default
+			mapstructure.StringToTimeDurationHookFunc(),
+			mapstructure.StringToSliceHookFunc(","),
+		))); err != nil {
 		return nil, errors.Wrap(err, "error decoding config")
 	}
 	return configV1, nil

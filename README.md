@@ -55,7 +55,7 @@ vncviewer localhost:5900
 
 ### Lab
 
-> Unleash the power of Kubernetes with GitOps to kick-off whole infrastructures, for both red and blue teams
+> Unleash the power of Kubernetes with GitOps to simulate whole infrastructures, for both red and blue teams
 
 Easily start your remote pwnbox htb-kali connected to the [Hack The Box](https://www.hackthebox.com) VPN to sharpen your skills
 ```bash
@@ -115,8 +115,6 @@ just
 ```
 
 TODO
-* verify:
-    - ISSUE provider flag override
 * general
     - autocomplete commands and values e.g. `box exec <list of boxes>` with `ValidArgsFunction`
     - improve command validation e.g. docker `Args: cli.ExactArgs(1)`
@@ -127,7 +125,7 @@ TODO
     - update directories to exclude in `resolvePath` e.g. charts
 * box
     - docker: COPY shared volume `XDG_DATA_HOME`
-    - docker: support powershell `/usr/bin/pwsh` (no tty) see `docker run --rm -it mcr.microsoft.com/powershell`
+    - docker: support powershell `/usr/bin/pwsh` (attach with no tty and raw terminal) see `docker run --rm -it mcr.microsoft.com/powershell`
     - docker: create container with `Labels=["com.hckops.revision"=<REVISION>"]` to resolve template by name
     - docker: add support for remote docker daemon with `DOCKER_HOST`
     - docker: add podman provider

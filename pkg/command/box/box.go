@@ -5,14 +5,16 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
+	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/template"
 )
 
 type boxCmdOptions struct {
-	configRef  *config.ConfigRef
-	sourceFlag *common.SourceFlag
+	configRef         *config.ConfigRef
+	sourceFlag        *common.SourceFlag
+	providerValueFlag *providerFlag
 }
 
 func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -62,8 +64,8 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 	}
 
 	// --provider
-	addBoxProviderFlag(command)
-	// --revision or --localtemplate
+	opts.providerValueFlag = addBoxProviderFlag(command)
+	// --revision or --local
 	opts.sourceFlag = common.AddTemplateSourceFlag(command)
 
 	command.AddCommand(NewBoxCreateCmd(configRef))
@@ -76,11 +78,16 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 
 func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 
+	provider, err := validateProvider(opts.configRef.Config.Box.Provider, opts.providerValueFlag)
+	if err != nil {
+		return err
+	}
+
 	if len(args) == 1 && opts.sourceFlag.Local {
 		path := args[0]
 		log.Debug().Msgf("open box from local template: path=%s", path)
 
-		return openBox(template.NewLocalSource(path), opts.configRef)
+		return openBox(template.NewLocalSource(path), provider)
 
 	} else if len(args) == 1 {
 		name := args[0]
@@ -92,7 +99,7 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 		}
 		log.Debug().Msgf("open box from remote template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
-		return openBox(template.NewRemoteSource(revisionOpts, name), opts.configRef)
+		return openBox(template.NewRemoteSource(revisionOpts, name), provider)
 
 	} else {
 		cmd.HelpFunc()(cmd, args)
@@ -100,9 +107,7 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func openBox(src template.TemplateSource, configRef *config.ConfigRef) error {
-	provider := configRef.Config.Box.Provider
-
+func openBox(src template.TemplateSource, provider model.BoxProvider) error {
 	openClient := func(opts *boxClientOpts) error {
 		return opts.client.Open(opts.template)
 	}

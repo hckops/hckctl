@@ -28,7 +28,7 @@ func NewBoxClient(provider model.BoxProvider) (BoxClient, error) {
 		return docker.NewDockerBox(opts)
 	case model.Kubernetes:
 		return kubernetes.NewKubeBox(opts)
-	case model.Argo:
+	case model.ArgoCd:
 		// TODO
 		return nil, nil
 	case model.Cloud:

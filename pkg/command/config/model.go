@@ -35,9 +35,9 @@ type TemplateConfig struct {
 }
 
 type BoxConfig struct {
-	Provider model.BoxProvider `yaml:"provider"` // TODO refactor to iota and type map[][] + String
-	Kube     KubeConfig        `yaml:"kube"`
-	Cloud    CloudConfig       `yaml:"cloud"`
+	Provider string      `yaml:"provider"`
+	Kube     KubeConfig  `yaml:"kube"`
+	Cloud    CloudConfig `yaml:"cloud"`
 }
 
 type KubeConfig struct {
@@ -74,7 +74,7 @@ func newConfig(logFile, cacheDir string) *ConfigV1 {
 			CacheDir: cacheDir,
 		},
 		Box: BoxConfig{
-			Provider: model.Docker,
+			Provider: model.Docker.String(),
 			Kube: KubeConfig{
 				Namespace:  common.ProjectName,
 				ConfigPath: "",

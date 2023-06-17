@@ -2,12 +2,9 @@ package box
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/box/model"
@@ -16,15 +13,6 @@ import (
 	"github.com/hckops/hckctl/pkg/event"
 	"github.com/hckops/hckctl/pkg/template"
 )
-
-func addBoxProviderFlag(command *cobra.Command) {
-	const (
-		providerFlagName = "provider"
-	)
-	command.Flags().StringP(providerFlagName, common.NoneFlagShortHand, string(model.Docker),
-		fmt.Sprintf("switch box provider, one of %s", strings.Join(model.BoxProviderValues(), "|")))
-	viper.BindPFlag(fmt.Sprintf("box.%s", providerFlagName), command.Flags().Lookup(providerFlagName))
-}
 
 type boxClientOpts struct {
 	client   box.BoxClient

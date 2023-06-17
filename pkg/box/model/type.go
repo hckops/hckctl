@@ -7,29 +7,25 @@ import (
 	"github.com/hckops/hckctl/pkg/event"
 )
 
-// TODO refactor to iota and type map[][] + String
-type BoxProvider string
+type BoxProvider uint
 
 const (
-	Docker     BoxProvider = "docker"
-	Kubernetes BoxProvider = "kube"
-	Argo       BoxProvider = "argo"
-	Cloud      BoxProvider = "cloud"
+	Docker BoxProvider = iota
+	Kubernetes
+	ArgoCd
+	Cloud
 )
 
 func BoxProviders() []BoxProvider {
-	return []BoxProvider{Docker, Kubernetes, Argo, Cloud}
+	return []BoxProvider{Docker, Kubernetes, ArgoCd, Cloud}
 }
 
-func BoxProviderValues() []string {
-	var values []string
-	for _, provider := range BoxProviders() {
-		values = append(values, string(provider))
-	}
-	return values
+var providerValue = []string{"docker", "kube", "argo-cd", "cloud"}
+
+func (p BoxProvider) String() string {
+	return providerValue[p]
 }
 
-// TODO add provider
 type BoxInfo struct {
 	Id   string
 	Name string
