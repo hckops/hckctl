@@ -57,7 +57,7 @@ vncviewer localhost:5900
 
 > Unleash the power of Kubernetes with GitOps to simulate whole infrastructures, for both red and blue teams
 
-Easily start your remote pwnbox htb-kali connected to the [Hack The Box](https://www.hackthebox.com) VPN to sharpen your skills
+Easily start your remote htb-kali pwnbox connected to the [Hack The Box](https://www.hackthebox.com) VPN to sharpen your skills
 ```bash
 # TODO create kube secret
 # TODO htb-kali
@@ -66,12 +66,27 @@ Easily start your remote pwnbox htb-kali connected to the [Hack The Box](https:/
 hckctl lab htb-kali --provider argo
 ```
 
+TODO
+```bash
+kube-goat
+```
+
 ### Flow
 
 > WIP
 
 ```bash
 hckctl flow atomic-red-team T1485
+hckctl flow scan 0.0.0.0
+hckctl flow prowler
+hckctl flow fuzz 0.0.0.0:8080/path
+hckctl flow exploit/sql 0.0.0.0
+hckctl flow tool/metasploit auxiliary/scanner/ssh/ssh_version
+hckctl flow c2 ping
+hckctl flow gen/pdf
+hckctl flow campaign/phishing @example.com
+hckctl flow api/virustotal/upload
+hckctl flow scrape www.example.com
 ```
 
 ### Template

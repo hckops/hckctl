@@ -31,6 +31,11 @@ type BoxInfo struct {
 	Name string
 }
 
+// TODO change resource to flag in command i.e s/m/l and move ResourceOptions here
+
+//Memory: "512Mi",
+//Cpu:    "500m",
+
 type BoxOpts struct {
 	Streams  *BoxStreams
 	EventBus *event.EventBus

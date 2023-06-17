@@ -41,9 +41,9 @@ type BoxConfig struct {
 }
 
 type KubeConfig struct {
-	Namespace  string        `yaml:"namespace"`
-	ConfigPath string        `yaml:"configPath"`
-	Resources  KubeResources `yaml:"resources"`
+	Namespace    string `yaml:"namespace"`
+	ConfigPath   string `yaml:"configPath"`
+	ResourceSize string `yaml:"resourceSize"`
 }
 
 type CloudConfig struct {
@@ -55,11 +55,6 @@ type CloudConfig struct {
 
 func (c *CloudConfig) Address() string {
 	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
-}
-
-type KubeResources struct {
-	Memory string `yaml:"memory"`
-	Cpu    string `yaml:"cpu"`
 }
 
 func newConfig(logFile, cacheDir string) *ConfigV1 {
@@ -76,12 +71,9 @@ func newConfig(logFile, cacheDir string) *ConfigV1 {
 		Box: BoxConfig{
 			Provider: model.Docker.String(),
 			Kube: KubeConfig{
-				Namespace:  common.ProjectName,
-				ConfigPath: "",
-				Resources: KubeResources{
-					Memory: "512Mi",
-					Cpu:    "500m",
-				},
+				Namespace:    common.ProjectName,
+				ConfigPath:   "",
+				ResourceSize: "s",
 			},
 			Cloud: CloudConfig{
 				Host:     "0.0.0.0",

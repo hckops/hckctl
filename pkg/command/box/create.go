@@ -43,9 +43,7 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 	provider, err := validateProvider(opts.configRef.Config.Box.Provider, opts.providerValueFlag)
 	if err != nil {
 		return err
-	}
-
-	if len(args) == 1 && opts.sourceFlag.Local {
+	} else if len(args) == 1 && opts.sourceFlag.Local {
 		path := args[0]
 		log.Debug().Msgf("create box from local template: path=%s", path)
 
