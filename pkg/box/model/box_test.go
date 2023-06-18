@@ -9,13 +9,13 @@ import (
 
 var testBox = &BoxV1{
 	Kind: "box/v1",
-	Name: "my-test",
-	Tags: []string{"my-test"},
+	Name: "my-name",
+	Tags: []string{"my-tag"},
 	Image: struct {
 		Repository string
 		Version    string
 	}{
-		Repository: "hckops/my-test",
+		Repository: "hckops/my-image",
 	},
 	Shell: "/bin/bash",
 	Network: struct{ Ports []string }{Ports: []string{
@@ -26,7 +26,7 @@ var testBox = &BoxV1{
 
 func TestGenerateName(t *testing.T) {
 	boxId := testBox.GenerateName()
-	assert.True(t, strings.HasPrefix(boxId, "box-my-test-"))
+	assert.True(t, strings.HasPrefix(boxId, "box-my-name-"))
 	assert.Equal(t, 17, len(boxId))
 }
 
@@ -48,7 +48,7 @@ func TestToBoxTemplateNameInvalid(t *testing.T) {
 }
 
 func TestImageName(t *testing.T) {
-	assert.Equal(t, "hckops/my-test:latest", testBox.ImageName())
+	assert.Equal(t, "hckops/my-image:latest", testBox.ImageName())
 }
 
 func TestImageVersion(t *testing.T) {
@@ -74,12 +74,12 @@ func TestNetworkPorts(t *testing.T) {
 func TestPretty(t *testing.T) {
 	json := `{
   "Kind": "box/v1",
-  "Name": "my-test",
+  "Name": "my-name",
   "Tags": [
-    "my-test"
+    "my-tag"
   ],
   "Image": {
-    "Repository": "hckops/my-test",
+    "Repository": "hckops/my-image",
     "Version": ""
   },
   "Shell": "/bin/bash",

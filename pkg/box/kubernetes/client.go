@@ -29,7 +29,7 @@ func (box *KubeBox) Events() *event.EventBus {
 
 func (box *KubeBox) Create(template *model.BoxV1) (*model.BoxInfo, error) {
 	defer box.close()
-	return nil, errors.New("not implemented")
+	return box.createBox(template)
 }
 
 func (box *KubeBox) Exec(name string, command string) error {

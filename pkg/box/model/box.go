@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/dchest/uniuri"
@@ -38,6 +39,13 @@ type BoxPort struct {
 
 func (box *BoxV1) GenerateName() string {
 	return fmt.Sprintf("%s%s-%s", BoxPrefixName, box.Name, strings.ToLower(uniuri.NewLen(5)))
+}
+
+// matches anything other than a letter, digit or underscore, equivalent to "[^a-zA-Z0-9_]"
+var anyNonWordCharacterRegex = regexp.MustCompile(`\W+`)
+
+func (box *BoxV1) TestImageRepositoryKebabCase() string {
+	return anyNonWordCharacterRegex.ReplaceAllString(box.Image.Repository, "-")
 }
 
 // ToBoxTemplateName returns the strictly validated template name, or the original trimmed name

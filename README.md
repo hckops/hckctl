@@ -131,6 +131,7 @@ just
 
 TODO
 * general
+    - highlight attacker and victim boxes to create specific scenario
     - autocomplete commands and values e.g. `box exec <list of boxes>` with `ValidArgsFunction`
     - improve command validation e.g. docker `Args: cli.ExactArgs(1)`
     - add go reference badge
