@@ -47,8 +47,8 @@ type ProviderConfig struct {
 }
 
 type KubeConfig struct {
-	Namespace    string `yaml:"namespace"`
 	ConfigPath   string `yaml:"configPath"`
+	Namespace    string `yaml:"namespace"`
 	ResourceSize string `yaml:"resourceSize"`
 }
 

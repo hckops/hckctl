@@ -1,6 +1,8 @@
 package flag
 
 import (
+	"sort"
+
 	"github.com/pkg/errors"
 	"github.com/thediveo/enumflag/v2"
 )
@@ -52,6 +54,7 @@ func ProviderValues(providerIds map[ProviderFlag][]string) []string {
 			values = append(values, provider)
 		}
 	}
+	sort.Strings(values)
 	return values
 }
 
