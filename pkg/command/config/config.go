@@ -13,8 +13,15 @@ import (
 
 // TODO add command to "set" a field with dot notation
 // TODO add confirmation prompt before reset
+type configCmdOptions struct {
+	configRef *ConfigRef
+}
 
 func NewConfigCmd(configRef *ConfigRef) *cobra.Command {
+
+	opts := &configCmdOptions{
+		configRef: configRef,
+	}
 
 	command := &cobra.Command{
 		Use:   "config",
@@ -30,26 +37,37 @@ func NewConfigCmd(configRef *ConfigRef) *cobra.Command {
 			# config value override precedence (add "env" prefix to use dot notation): flag > env > config
 			env HCK_CONFIG_LOG.LEVEL=error hckctl config --log-level debug
 		`),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if value, err := util.EncodeYaml(configRef.Config); err != nil {
-				return errors.Wrap(err, "error encoding config")
-			} else {
-				fmt.Println(fmt.Sprintf("# %s", viper.ConfigFileUsed()))
-				fmt.Print(value)
-			}
-			return nil
-		},
+		RunE: opts.run,
 	}
 
 	resetCommand := &cobra.Command{
 		Use:   "reset",
-		Short: "restore default configurations",
+		Short: "Restore default configurations",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return InitConfig(true)
+			if len(args) == 0 {
+				return InitConfig(true)
+			} else {
+				cmd.HelpFunc()(cmd, args)
+			}
+			return nil
 		},
 	}
 
 	command.AddCommand(resetCommand)
 
 	return command
+}
+
+func (opts *configCmdOptions) run(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		if value, err := util.EncodeYaml(opts.configRef.Config); err != nil {
+			return errors.Wrap(err, "error encoding config")
+		} else {
+			fmt.Println(fmt.Sprintf("# %s", viper.ConfigFileUsed()))
+			fmt.Print(value)
+		}
+	} else {
+		cmd.HelpFunc()(cmd, args)
+	}
+	return nil
 }

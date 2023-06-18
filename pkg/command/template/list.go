@@ -50,12 +50,20 @@ func NewTemplateListCmd(configRef *config.ConfigRef) *cobra.Command {
 }
 
 func (opts *templateListCmdOptions) run(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		return templateList(opts.configRef.Config.Template.CacheDir, opts.revision)
+	} else {
+		cmd.HelpFunc()(cmd, args)
+	}
+	return nil
+}
 
+func templateList(sourceDir string, revision string) error {
 	revisionOpts := &RevisionOpts{
-		SourceCacheDir: opts.configRef.Config.Template.CacheDir,
+		SourceCacheDir: sourceDir,
 		SourceUrl:      common.TemplateSourceUrl,
 		SourceRevision: common.TemplateSourceRevision,
-		Revision:       opts.revision,
+		Revision:       revision,
 	}
 	// name is overridden with custom wildcard
 	if validations, err := NewRemoteSource(revisionOpts, "").ReadTemplates(); err != nil {
@@ -69,7 +77,7 @@ func (opts *templateListCmdOptions) run(cmd *cobra.Command, args []string) error
 				total = total + 1
 				// remove prefix and suffix
 				prettyPath := strings.NewReplacer(
-					fmt.Sprintf("%s/", opts.configRef.Config.Template.CacheDir), "",
+					fmt.Sprintf("%s/", sourceDir), "",
 					".yml", "",
 					".yaml", "",
 				).Replace(validation.Path)

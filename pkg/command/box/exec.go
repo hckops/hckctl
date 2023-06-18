@@ -38,7 +38,6 @@ func (opts *boxExecCmdOptions) run(cmd *cobra.Command, args []string) error {
 			return client.Exec(boxName, template.Shell)
 		}
 		return attemptRunBoxClients(opts.configRef, boxName, execClient)
-
 	} else {
 		cmd.HelpFunc()(cmd, args)
 	}

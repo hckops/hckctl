@@ -38,7 +38,7 @@ func NewTemplateValidateCmd() *cobra.Command {
 
 func (opts *templateValidateCmdOptions) run(cmd *cobra.Command, args []string) error {
 	if len(args) == 1 {
-		return validateTemplate(args[0])
+		return templateValidate(args[0])
 	} else {
 		cmd.HelpFunc()(cmd, args)
 	}
@@ -46,7 +46,7 @@ func (opts *templateValidateCmdOptions) run(cmd *cobra.Command, args []string) e
 }
 
 // TODO color output
-func validateTemplate(path string) error {
+func templateValidate(path string) error {
 	src := NewLocalSource(path)
 
 	// attempt single file validation

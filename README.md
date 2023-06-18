@@ -139,7 +139,6 @@ TODO
     - add offline mode source revision
     - update directories to exclude in `resolvePath` e.g. charts
 * box
-    - review `runRemoteBoxClient` logic attempting multiple providers
     - docker: COPY shared volume `XDG_DATA_HOME`
     - docker: support powershell `/usr/bin/pwsh` (attach with no tty and raw terminal) see `docker run --rm -it mcr.microsoft.com/powershell`
     - docker: create container with `Labels=["com.hckops.revision"=<REVISION>"]` to resolve template by name

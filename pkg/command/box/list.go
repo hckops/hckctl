@@ -31,11 +31,15 @@ func NewBoxListCmd(configRef *config.ConfigRef) *cobra.Command {
 }
 
 func (opts *boxListCmdOptions) run(cmd *cobra.Command, args []string) error {
-	// silently fails attempting all the providers
-	for _, providerFlag := range boxProviders() {
-		if err := listByProvider(providerFlag, opts.configRef); err != nil {
-			log.Warn().Err(err).Msgf("ignoring error list boxes: providerFlag=%v", providerFlag)
+	if len(args) == 0 {
+		// silently fail attempting all the providers
+		for _, providerFlag := range boxProviders() {
+			if err := listByProvider(providerFlag, opts.configRef); err != nil {
+				log.Warn().Err(err).Msgf("ignoring error list boxes: providerFlag=%v", providerFlag)
+			}
 		}
+	} else {
+		cmd.HelpFunc()(cmd, args)
 	}
 	return nil
 }
@@ -48,12 +52,13 @@ func listByProvider(providerFlag flag.ProviderFlag, configRef *config.ConfigRef)
 		return err
 	}
 
-	fmt.Println(fmt.Sprintf("# %v", boxClient.Provider()))
 	boxes, err := boxClient.List()
 	if err != nil {
 		log.Warn().Err(err).Msgf("error listing boxes: provider=%v", boxClient.Provider())
 		return fmt.Errorf("%v list error", boxClient.Provider())
 	}
+
+	fmt.Println(fmt.Sprintf("# %v", boxClient.Provider()))
 	for _, b := range boxes {
 		fmt.Println(b.Name)
 	}

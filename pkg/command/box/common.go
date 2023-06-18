@@ -88,7 +88,7 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 		return errors.New("invalid template")
 	}
 
-	// silently fails attempting all the providers
+	// silently fail attempting all the providers
 	for _, providerFlag := range boxProviders() {
 		log.Debug().Msgf("attempt box template: providerFlag=%v", providerFlag)
 
@@ -106,7 +106,7 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 			return nil
 		}
 	}
-	// it means that nothing happened and all the providers failed
+	// nothing happened and all the providers failed
 	return errors.New("not found")
 }
 

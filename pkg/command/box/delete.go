@@ -41,7 +41,7 @@ func NewBoxDeleteCmd(configRef *config.ConfigRef) *cobra.Command {
 func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	if len(args) == 0 && opts.all {
-		// silently fails attempting all the providers
+		// silently fail attempting all the providers
 		for _, providerFlag := range boxProviders() {
 			if err := deleteByProvider(providerFlag, opts.configRef); err != nil {
 				log.Warn().Err(err).Msgf("ignoring error delete boxes: providerFlag=%v", providerFlag)
