@@ -54,7 +54,7 @@ vncviewer localhost:5900
 [open|xdg-open] http://localhost:6080
 ```
 
-Attack your vulnerable [dvwa](https://github.com/hckops/megalopolis/blob/main/boxes/vulnerable/dvwa.yml) box or create your own
+Attack your vulnerable [`dvwa`](https://github.com/hckops/megalopolis/blob/main/boxes/vulnerable/dvwa.yml) box or create your own
 ```bash
 # TODO
 hckctl box create dvwa
@@ -70,7 +70,7 @@ hckctl box down dvwa # <<<
 [open|xdg-open] http://localhost:8080
 ```
 
-*There is no difference between attacker or vulnerable boxes, if you can containerize it you can either run it locally or remotely*
+*There is no difference between attacker or vulnerable boxes. If you can containerize it you can run it*
 
 ### Task
 
@@ -173,9 +173,9 @@ TODO
     - update directories to exclude in `resolvePath` e.g. charts
 * box
     - PR to official doc to run
-          * owasp/dvwa
-          * https://github.com/vulhub/vulhub
-          * https://houdini.secsi.io
+        * owasp/dvwa
+        * https://github.com/vulhub/vulhub
+        * https://houdini.secsi.io
     - create/remove vs start/stop vs up/down ?!
     - docker: COPY shared volume `XDG_DATA_HOME`
     - docker: support powershell `/usr/bin/pwsh` (attach with no tty and raw terminal) see `docker run --rm -it mcr.microsoft.com/powershell`
