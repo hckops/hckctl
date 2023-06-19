@@ -70,7 +70,7 @@ hckctl box down dvwa # <<<
 [open|xdg-open] http://localhost:8080
 ```
 
-*There is no difference between attacker or vulnerable boxes. If you can containerize it you can run it*
+*There is no difference between attacker or vulnerable boxes, if you can containerize it you can run it*
 
 ### Task
 

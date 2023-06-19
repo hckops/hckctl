@@ -11,12 +11,12 @@ func TestValidBoxV1(t *testing.T) {
 	data :=
 		`{
 			"kind": "box/v1",
-			"name": "my-test",
+			"name": "my-name",
 			"tags": [
-				"my-test"
+				"my-tag"
 			],
 			"image": {
-				"repository": "hckops/my-test",
+				"repository": "hckops/my-image",
 				"version": ""
 			},
 			"network": {

@@ -46,6 +46,7 @@ func (size resourceSize) toKubeResource() *kubernetes.KubeResource {
 
 func existResourceSize(str string) (resourceSize, error) {
 	for size, value := range resourceSizes {
+		// case insensitive
 		if strings.ToUpper(str) == value {
 			return size, nil
 		}

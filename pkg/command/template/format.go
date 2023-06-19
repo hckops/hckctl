@@ -1,6 +1,8 @@
 package template
 
 import (
+	"sort"
+
 	"github.com/thediveo/enumflag/v2"
 )
 
@@ -27,5 +29,6 @@ func formatValues() []string {
 			values = append(values, format)
 		}
 	}
+	sort.Strings(values)
 	return values
 }

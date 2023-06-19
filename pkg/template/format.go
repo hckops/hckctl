@@ -11,7 +11,7 @@ import (
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-// get rid of comments and print optional empty fields
+// formats, strips out comments, quotes, etc. and prints optional empty fields
 func convertFromYamlToYaml(kind schema.SchemaKind, value string) (string, error) {
 	switch kind {
 	case schema.KindBoxV1:
