@@ -37,7 +37,8 @@ hckctl box alpine
 # deploys a box to your kubernetes cluster
 hckctl box alpine --provider kube
 
-# (mac|linux) tty credentials: alpine|changeme
+# TODO add env credentials: alpine|changeme
+# (mac|linux) tty
 [open|xdg-open] http://localhost:7681
 ```
 
@@ -53,6 +54,36 @@ vncviewer localhost:5900
 [open|xdg-open] http://localhost:6080
 ```
 
+Attack your vulnerable [dvwa](https://github.com/hckops/megalopolis/blob/main/boxes/vulnerable/dvwa.yml) box or create your own
+```bash
+# TODO
+hckctl box create dvwa
+hckctl box start dvwa
+hckctl box up dvwa # <<<
+
+# TODO
+hckctl box remove/delete dvwa
+hckctl box stop dvwa
+hckctl box down dvwa # <<<
+
+# (mac|linux) web
+[open|xdg-open] http://localhost:8080
+```
+
+*There is no difference between attacker or vulnerable boxes, if you can containerize it you can either run it locally or remotely*
+
+### Task
+
+> TODO
+
+```bash
+# https://github.com/RustScan/RustScan/wiki/Installation-Guide#docker-whale
+hckctl task rustscan ???
+
+# TODO envs + args
+```
+
+<!--
 ### Lab
 
 > Unleash the power of Kubernetes with GitOps to simulate whole infrastructures, for both red and blue teams
@@ -88,6 +119,7 @@ hckctl flow campaign/phishing @example.com
 hckctl flow api/virustotal/upload
 hckctl flow scrape www.example.com
 ```
+-->
 
 ### Template
 
@@ -140,6 +172,11 @@ TODO
     - add offline mode source revision
     - update directories to exclude in `resolvePath` e.g. charts
 * box
+    - PR to official doc to run
+          * owasp/dvwa
+          * https://github.com/vulhub/vulhub
+          * https://houdini.secsi.io
+    - create/remove vs start/stop vs up/down ?!
     - docker: COPY shared volume `XDG_DATA_HOME`
     - docker: support powershell `/usr/bin/pwsh` (attach with no tty and raw terminal) see `docker run --rm -it mcr.microsoft.com/powershell`
     - docker: create container with `Labels=["com.hckops.revision"=<REVISION>"]` to resolve template by name
