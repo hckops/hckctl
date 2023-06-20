@@ -345,8 +345,9 @@ github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcU
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
 github.com/subosito/gotenv v1.4.2 h1:X1TuBLAMDFbaTAChgCBLu3DU3UPyELpnF2jjJ2cz/S8=
 github.com/subosito/gotenv v1.4.2/go.mod h1:ayKnFf/c6rvx/2iiLrJUk1e6plDbT3edrFNGqEflhK0=
-github.com/thediveo/enumflag/v2 v2.0.3 h1:9Y2S6xowtVWIh7Fz+JKWFdYwb9cM1iWbSbjtUFD5z60=
-github.com/thediveo/enumflag/v2 v2.0.3/go.mod h1:obz2iwglQIA2Yn00qTpVnQk8hg0WOh7f7U0ZgMsmo9Q=
+github.com/thediveo/enumflag/v2 v2.0.4 h1:CPez2ZDJMkJ0iPiueJ6/vwsFeFy+w5kIJNFwxKPSUGo=
+github.com/thediveo/enumflag/v2 v2.0.4/go.mod h1:K5VGebAdhHGZyVprL7WEnEJ3CA16YzWhDH2ERwddA0I=
+github.com/thediveo/success v1.0.1 h1:NVwUOwKUwaN8szjkJ+vsiM2L3sNBFscldoDJ2g2tAPg=
 github.com/xanzy/ssh-agent v0.3.3 h1:+/15pJfg/RsTxqYcX6fHqOXZwwMP+2VyYWJeWM2qQFM=
 github.com/xanzy/ssh-agent v0.3.3/go.mod h1:6dzNDKs0J9rVPHPhaGCukekBHKqfl+L3KghI1Bc68Uw=
 github.com/xlab/treeprint v1.1.0 h1:G/1DjNkPpfZCFt9CSh6b5/nY4VimlbHF3Rh4obvtzDk=
