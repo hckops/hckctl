@@ -1,33 +1,51 @@
 package kubernetes
 
-import (
-	"context"
-	"path/filepath"
-	"strings"
-
-	"github.com/pkg/errors"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
-)
-
 //import (
+//	"bytes"
+//	"context"
 //	"fmt"
+//	"net/http"
+//	"path/filepath"
+//	"strings"
+//
+//	"k8s.io/apimachinery/pkg/labels"
+//	"k8s.io/client-go/tools/portforward"
+//	"k8s.io/client-go/tools/remotecommand"
+//	"k8s.io/client-go/transport/spdy"
+//	"k8s.io/kubectl/pkg/cmd/exec"
+//	"github.com/pkg/errors"
 //	appsv1 "k8s.io/api/apps/v1"
 //	corev1 "k8s.io/api/core/v1"
 //	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 //	"k8s.io/apimachinery/pkg/watch"
 //	applyv1 "k8s.io/client-go/applyconfigurations/core/v1"
-//	"path/filepath"
-//	"strings"
-//
-//	"github.com/pkg/errors"
 //	"k8s.io/client-go/kubernetes"
 //	"k8s.io/client-go/rest"
 //	"k8s.io/client-go/tools/clientcmd"
 //	"k8s.io/client-go/util/homedir"
+//
+//	"github.com/hckops/hckctl/internal/schema" // TODO remove
+//	"github.com/hckops/hckctl/pkg/util"
 //)
+
+import (
+	"context"
+	"fmt"
+	"path/filepath"
+	"strings"
+
+	"github.com/pkg/errors"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/watch"
+	applyv1 "k8s.io/client-go/applyconfigurations/core/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
+)
 
 func NewOutOfClusterKubeClient(configPath string) (*KubeClient, error) {
 
@@ -79,58 +97,201 @@ func (client *KubeClient) Close() error {
 	return errors.New("not implemented")
 }
 
-//func (client *KubeClient) ApplyTemplate(deploymentSpec *appsv1.Deployment, serviceSpec *corev1.Service) error {
-//	coreClient := box.KubeClientSet.CoreV1()
-//	appClient := box.KubeClientSet.AppsV1()
+func (client *KubeClient) NamespaceApply(name string) error {
+	coreClient := client.kubeClientSet.CoreV1()
+
+	// https://github.com/kubernetes/client-go/issues/1036
+	_, err := coreClient.Namespaces().Apply(client.ctx, applyv1.Namespace(name), metav1.ApplyOptions{FieldManager: "application/apply-patch"})
+	if err != nil {
+		return errors.Wrapf(err, "error namespace apply: name=%s", name)
+	}
+	return nil
+}
+
+func (client *KubeClient) DeploymentCreate(opts *DeploymentCreateOpts) error {
+	appClient := client.kubeClientSet.AppsV1()
+
+	deployment, err := appClient.Deployments(opts.Namespace).Create(client.ctx, opts.Spec, metav1.CreateOptions{})
+	if err != nil {
+		return errors.Wrapf(err, "error deployment create: name=%s", opts.Spec.Name)
+	}
+
+	// blocks until the deployment is available, then stop watching
+	watcher, err := appClient.Deployments(opts.Namespace).Watch(client.ctx, metav1.SingleObject(deployment.ObjectMeta))
+	if err != nil {
+		return errors.Wrapf(err, "error deployment watch: name=%s", deployment.Name)
+	}
+	for event := range watcher.ResultChan() {
+		switch event.Type {
+		case watch.Modified:
+			deploymentEvent := event.Object.(*appsv1.Deployment)
+
+			for _, condition := range deploymentEvent.Status.Conditions {
+				opts.OnStatusEventCallback(fmt.Sprintf("watch deployment event: type=%v condition=%v", event.Type, condition.Message))
+
+				if condition.Type == appsv1.DeploymentAvailable &&
+					condition.Status == corev1.ConditionTrue {
+					watcher.Stop()
+				}
+			}
+		default:
+			return errors.Wrapf(err, "error deployment event: type=%v", event.Type)
+		}
+	}
+	return nil
+}
+
+func (client *KubeClient) ServiceCreate(opts *ServiceCreateOpts) error {
+	coreClient := client.kubeClientSet.CoreV1()
+
+	_, err := coreClient.Services(opts.Namespace).Create(client.ctx, opts.Spec, metav1.CreateOptions{})
+	if err != nil {
+		return errors.Wrapf(err, "error service create: name=%s", opts.Spec.Name)
+	}
+	return nil
+}
+
+func (client *KubeClient) PodName(deployment *appsv1.Deployment) (string, error) {
+	coreClient := client.kubeClientSet.CoreV1()
+
+	labelSet := labels.Set(deployment.Spec.Selector.MatchLabels)
+	listOptions := metav1.ListOptions{LabelSelector: labelSet.AsSelector().String()}
+
+	pods, err := coreClient.Pods(deployment.Namespace).List(client.ctx, listOptions)
+	if err != nil {
+		return "", errors.Wrapf(err, "error pod list: labels=%v", labelSet)
+	}
+
+	if len(pods.Items) != 1 {
+		return "", errors.Wrapf(err, "found %d pods, expected only 1 pod for deployment: labels=%v", len(pods.Items), labelSet)
+	}
+
+	pod := pods.Items[0]
+
+	// pod.Name + generated unique name
+	return pod.ObjectMeta.Name, nil
+}
+
+//func (client *KubeClient) RemoveSpec(opts *ApplyTemplateOpts) error {
+//	coreClient := client.kubeClientSet.CoreV1()
+//	appClient := client.kubeClientSet.AppsV1()
 //
-//	// apply namespace, see https://github.com/kubernetes/client-go/issues/1036
-//	namespace, err := coreClient.Namespaces().Apply(box.ctx, applyv1.Namespace(box.ResourceOptions.Namespace), metav1.ApplyOptions{FieldManager: "application/apply-patch"})
-//	if err != nil {
-//		return errors.Wrapf(err, "error kube apply namespace: %s", box.ResourceOptions.Namespace)
+//	if err := appClient.Deployments(opts.NamespaceName).Delete(client.ctx, opts.DeploymentSpec.Name, metav1.DeleteOptions{}); err != nil {
+//		box.OnCloseErrorCallback(err, fmt.Sprintf("error kube delete deployment: %s", opts.DeploymentSpec.Name))
 //	}
-//	box.OnSetupCallback(fmt.Sprintf("namespace %s successfully applied", namespace.Name))
+//	box.OnCloseCallback(fmt.Sprintf("deployment %s successfully deleted", opts.DeploymentSpec.Name))
 //
-//	// create deployment
-//	deployment, err := appClient.Deployments(namespace.Name).Create(box.ctx, deploymentSpec, metav1.CreateOptions{})
-//	if err != nil {
-//		return errors.Wrapf(err, "error kube create deployment: %s", deployment.Name)
-//	}
-//	box.OnSetupCallback(fmt.Sprintf("deployment %s successfully created", deployment.Name))
-//
-//	// create service: can't create a service without ports
-//	var service *corev1.Service
-//	if box.Template.HasPorts() {
-//		service, err = coreClient.Services(namespace.Name).Create(box.ctx, serviceSpec, metav1.CreateOptions{})
-//		if err != nil {
-//			return errors.Wrapf(err, "error kube create service: %s", service.Name)
+//	// TODO no ports
+//	if opts.ServiceSpec != nil {
+//		if err := coreClient.Services(opts.NamespaceName).Delete(client.ctx, opts.ServiceSpec.Name, metav1.DeleteOptions{}); err != nil {
+//			box.OnCloseErrorCallback(err, fmt.Sprintf("error kube delete service: %s", opts.ServiceSpec.Name))
 //		}
-//		box.OnSetupCallback(fmt.Sprintf("service %s successfully created", service.Name))
-//	} else {
-//		box.OnSetupCallback(fmt.Sprint("service not created"))
+//		box.OnCloseCallback(fmt.Sprintf("service %s successfully deleted", opts.ServiceSpec.Name))
 //	}
 //
-//	// blocks until the deployment is available, then stop watching
-//	watcher, err := appClient.Deployments(namespace.Name).Watch(box.ctx, metav1.SingleObject(deployment.ObjectMeta))
+//	// TODO return errors
+//	return nil
+//}
+//
+//func (client *KubeClient) PortForward(podName, namespace string) {
+//	coreClient := client.kubeClientSet.CoreV1()
+//
+//	if !box.Template.HasPorts() {
+//		// exit, no service/port available to bind
+//		return
+//	}
+//
+//	var portBindings []string
+//	for _, port := range box.Template.NetworkPorts() {
+//		localPort, _ := util.FindOpenPort(port.Local)
+//
+//		box.OnTunnelCallback(schema.PortV1{
+//			Alias:  port.Alias,
+//			Local:  localPort,
+//			Remote: port.Remote,
+//		})
+//
+//		portBindings = append(portBindings, fmt.Sprintf("%s:%s", localPort, port.Remote))
+//	}
+//
+//	restRequest := coreClient.RESTClient().
+//		Post().
+//		Resource("pods").
+//		Namespace(namespace).
+//		Name(podName).
+//		SubResource("portforward")
+//
+//	transport, upgrader, err := spdy.RoundTripperFor(client.kubeRestConfig)
 //	if err != nil {
-//		return errors.Wrapf(err, "error kube watch deployment: %s", deployment.Name)
+//		box.OnTunnelErrorCallback(err, "error kube round tripper")
 //	}
-//	for event := range watcher.ResultChan() {
-//		switch event.Type {
-//		case watch.Modified:
-//			deploymentEvent := event.Object.(*appsv1.Deployment)
+//	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, http.MethodPost, restRequest.URL())
 //
-//			for _, condition := range deploymentEvent.Status.Conditions {
-//				box.OnSetupCallback(fmt.Sprintf("watch kube event: type=%v, condition=%v", event.Type, condition.Message))
+//	stopChannel := client.ctx.Done()
+//	readyChannel := make(chan struct{}, 1)
+//	out := new(bytes.Buffer)
+//	errOut := new(bytes.Buffer)
 //
-//				if condition.Type == appsv1.DeploymentAvailable &&
-//					condition.Status == corev1.ConditionTrue {
-//					watcher.Stop()
-//				}
-//			}
+//	forwarder, err := portforward.New(dialer, portBindings, stopChannel, readyChannel, out, errOut)
+//	if err != nil {
+//		box.OnTunnelErrorCallback(err, "error kube new portforward")
+//	}
 //
-//		default:
-//			return errors.Wrapf(err, "error kube event type: %s", event.Type)
+//	// wait until interrupted
+//	go func() {
+//		if err := forwarder.ForwardPorts(); err != nil {
+//			box.OnTunnelErrorCallback(err, "error kube forwarding")
 //		}
+//	}()
+//	for range readyChannel {
+//	}
+//
+//	if len(errOut.String()) != 0 {
+//		box.OnTunnelErrorCallback(err, fmt.Sprintf("error kube new portforward: %s", errOut.String()))
+//	}
+//}
+//
+//func (client *KubeClient) Exec(pod *corev1.Pod, streams *model.BoxStreams) error {
+//	coreClient := client.kubeClientSet.CoreV1()
+//
+//	streamOptions := buildStreamOptions(streams)
+//	tty := streamOptions.SetupTTY()
+//
+//	var sizeQueue remotecommand.TerminalSizeQueue
+//	if tty.Raw {
+//		sizeQueue = tty.MonitorSize(tty.GetSize())
+//		streamOptions.ErrOut = nil
+//	}
+//
+//	// TODO add to template or default
+//	shell := "/bin/bash"
+//
+//	// exec remote shell
+//	execUrl := coreClient.RESTClient().
+//		Post().
+//		Namespace(pod.Namespace).
+//		Resource("pods").
+//		Name(pod.Name).
+//		SubResource("exec").
+//		VersionedParams(&corev1.PodExecOptions{
+//			Container: box.Template.SafeName(), // pod.Spec.Containers[0].Name
+//			Command:   []string{shell},
+//			Stdin:     true,
+//			Stdout:    true,
+//			Stderr:    true,
+//			TTY:       tty.Raw,
+//		}, scheme.ParameterCodec).
+//		URL()
+//
+//	executor := exec.DefaultRemoteExecutor{}
+//
+//	box.OnExecCallback()
+//
+//	fn := func() error {
+//		return executor.Execute(http.MethodPost, execUrl, client.kubeRestConfig, streamOptions.In, streamOptions.Out, streamOptions.ErrOut, tty.Raw, sizeQueue)
+//	}
+//	if err := tty.Safe(fn); err != nil {
+//		return errors.Wrap(err, "terminal session closed")
 //	}
 //	return nil
 //}

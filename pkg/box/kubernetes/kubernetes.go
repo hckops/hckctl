@@ -40,13 +40,55 @@ func (box *KubeBox) close() error {
 }
 
 func (box *KubeBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
+	namespace := box.clientConfig.Namespace
 
 	// boxName
 	containerName := template.GenerateName()
-	//deployment, service, err :=
-	buildSpec(containerName, box.clientConfig.Namespace, template, box.clientConfig.Resource)
+	deployment, service, err := buildSpec(containerName, namespace, template, box.clientConfig.Resource)
+	if err != nil {
+		return nil, err
+	}
 
-	return nil, nil
+	// TODO LOADER start ??? local.loader.Refresh(fmt.Sprintf("creating %s/%s", local.box.ResourceOptions.Namespace, containerName))
+	// TODO LOADER stop ??? local.loader.Halt(err, "error kube: apply template")
+	if box.client.NamespaceApply(namespace) != nil {
+		return nil, err
+	}
+	// TODO DEBUG box.OnSetupCallback(fmt.Sprintf("namespace %s successfully applied", namespace.Name))
+
+	if template.HasPorts() {
+		serviceOpts := &kubernetes.ServiceCreateOpts{
+			Namespace: namespace,
+			Spec:      service,
+		}
+		if box.client.ServiceCreate(serviceOpts) != nil {
+			return nil, err
+		}
+		// TODO DEBUG box.OnSetupCallback(fmt.Sprintf("service %s successfully created", service.Name))
+	} else {
+		// TODO DEBUG box.OnSetupCallback(fmt.Sprint("service not created"))
+	}
+
+	deploymentOpts := &kubernetes.DeploymentCreateOpts{
+		Namespace: namespace,
+		Spec:      deployment,
+		OnStatusEventCallback: func(event string) {
+			// TODO DEBUG box.OnSetupCallback(fmt.Sprintf("watch kube event: type=%v, condition=%v", event.Type, condition.Message))
+		},
+	}
+	if box.client.DeploymentCreate(deploymentOpts) != nil {
+		return nil, err
+	}
+	// TODO DEBUG box.OnSetupCallback(fmt.Sprintf("deployment %s successfully created", deployment.Name))
+
+	// boxId
+	podId, err := box.client.PodName(deployment)
+	if err != nil {
+		return nil, err
+	}
+	// TODO debug local.log.Debug().Msgf("found matching pod %s", pod.Name)
+
+	return &model.BoxInfo{Id: podId, Name: containerName}, nil
 }
 
 func buildSpec(containerName string, namespace string, template *model.BoxV1, resourceOptions *kubernetes.KubeResource) (*appsv1.Deployment, *corev1.Service, error) {
