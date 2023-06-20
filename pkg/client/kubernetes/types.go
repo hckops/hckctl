@@ -30,3 +30,9 @@ type DeploymentCreateOpts struct {
 	Spec                  *appsv1.Deployment
 	OnStatusEventCallback func(event string)
 }
+
+type DeploymentInfo struct {
+	Namespace      string
+	DeploymentName string
+	PodId          string // TODO only podId or podName or both fields ???
+}

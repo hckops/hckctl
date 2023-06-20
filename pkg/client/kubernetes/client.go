@@ -1,36 +1,10 @@
 package kubernetes
 
-//import (
-//	"bytes"
-//	"context"
-//	"fmt"
-//	"net/http"
-//	"path/filepath"
-//	"strings"
-//
-//	"k8s.io/apimachinery/pkg/labels"
-//	"k8s.io/client-go/tools/portforward"
-//	"k8s.io/client-go/tools/remotecommand"
-//	"k8s.io/client-go/transport/spdy"
-//	"k8s.io/kubectl/pkg/cmd/exec"
-//	"github.com/pkg/errors"
-//	appsv1 "k8s.io/api/apps/v1"
-//	corev1 "k8s.io/api/core/v1"
-//	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-//	"k8s.io/apimachinery/pkg/watch"
-//	applyv1 "k8s.io/client-go/applyconfigurations/core/v1"
-//	"k8s.io/client-go/kubernetes"
-//	"k8s.io/client-go/rest"
-//	"k8s.io/client-go/tools/clientcmd"
-//	"k8s.io/client-go/util/homedir"
-//
-//	"github.com/hckops/hckctl/internal/schema" // TODO remove
-//	"github.com/hckops/hckctl/pkg/util"
-//)
-
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"net/http"
 	"path/filepath"
 	"strings"
 
@@ -44,6 +18,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/portforward"
+	"k8s.io/client-go/transport/spdy"
 	"k8s.io/client-go/util/homedir"
 )
 
@@ -152,12 +128,6 @@ func (client *KubeClient) DeploymentCreate(opts *DeploymentCreateOpts) error {
 	return nil
 }
 
-type DeploymentInfo struct {
-	Namespace      string
-	DeploymentName string
-	PodId          string
-}
-
 func (client *KubeClient) DeploymentList(namespace string) ([]DeploymentInfo, error) {
 	appClient := client.kubeClientSet.AppsV1()
 
@@ -169,7 +139,7 @@ func (client *KubeClient) DeploymentList(namespace string) ([]DeploymentInfo, er
 	for _, deployment := range deployments.Items {
 
 		if podId, err := client.PodName(&deployment); err != nil {
-			// TODO verify error sidecar container
+			// TODO verify if error sidecar container
 			return nil, err
 		} else {
 			info := DeploymentInfo{
@@ -233,64 +203,64 @@ func (client *KubeClient) PodName(deployment *appsv1.Deployment) (string, error)
 	return pod.ObjectMeta.Name, nil
 }
 
-//func (client *KubeClient) PortForward(podName, namespace string) {
-//	coreClient := client.kubeClientSet.CoreV1()
-//
-//	if !box.Template.HasPorts() {
-//		// exit, no service/port available to bind
-//		return
-//	}
-//
-//	var portBindings []string
-//	for _, port := range box.Template.NetworkPorts() {
-//		localPort, _ := util.FindOpenPort(port.Local)
-//
-//		box.OnTunnelCallback(schema.PortV1{
-//			Alias:  port.Alias,
-//			Local:  localPort,
-//			Remote: port.Remote,
-//		})
-//
-//		portBindings = append(portBindings, fmt.Sprintf("%s:%s", localPort, port.Remote))
-//	}
-//
-//	restRequest := coreClient.RESTClient().
-//		Post().
-//		Resource("pods").
-//		Namespace(namespace).
-//		Name(podName).
-//		SubResource("portforward")
-//
-//	transport, upgrader, err := spdy.RoundTripperFor(client.kubeRestConfig)
-//	if err != nil {
-//		box.OnTunnelErrorCallback(err, "error kube round tripper")
-//	}
-//	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, http.MethodPost, restRequest.URL())
-//
-//	stopChannel := client.ctx.Done()
-//	readyChannel := make(chan struct{}, 1)
-//	out := new(bytes.Buffer)
-//	errOut := new(bytes.Buffer)
-//
-//	forwarder, err := portforward.New(dialer, portBindings, stopChannel, readyChannel, out, errOut)
-//	if err != nil {
-//		box.OnTunnelErrorCallback(err, "error kube new portforward")
-//	}
-//
-//	// wait until interrupted
-//	go func() {
-//		if err := forwarder.ForwardPorts(); err != nil {
-//			box.OnTunnelErrorCallback(err, "error kube forwarding")
-//		}
-//	}()
-//	for range readyChannel {
-//	}
-//
-//	if len(errOut.String()) != 0 {
-//		box.OnTunnelErrorCallback(err, fmt.Sprintf("error kube new portforward: %s", errOut.String()))
-//	}
-//}
-//
+type PortForwardOpts struct {
+	Namespace             string
+	PodName               string
+	Ports                 []string
+	OnTunnelErrorCallback func(error)
+}
+
+func (client *KubeClient) PortForward(opts *PortForwardOpts) error {
+	coreClient := client.kubeClientSet.CoreV1()
+
+	restRequest := coreClient.RESTClient().
+		Post().
+		Resource("pods").
+		Namespace(opts.Namespace).
+		Name(opts.PodName).
+		SubResource("portforward")
+
+	transport, upgrader, err := spdy.RoundTripperFor(client.kubeRestConfig)
+	if err != nil {
+		return errors.Wrap(err, "error kube round tripper")
+	}
+	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, http.MethodPost, restRequest.URL())
+
+	stopChannel := client.ctx.Done()
+	readyChannel := make(chan struct{}, 1)
+	// TODO alternative to callback
+	//failedChannel := make(chan error, 1)
+	out := new(bytes.Buffer)
+	errOut := new(bytes.Buffer)
+
+	forwarder, err := portforward.New(dialer, opts.Ports, stopChannel, readyChannel, out, errOut)
+	if err != nil {
+		return errors.Wrap(err, "error kube new portforward")
+	}
+
+	// wait until interrupted
+	go func() {
+		if err := forwarder.ForwardPorts(); err != nil {
+			// TODO alternative to callback: verify what if callback is more stable i.e. ignore errors
+			// failedChannel <- err
+			opts.OnTunnelErrorCallback(err)
+		}
+	}()
+	for range readyChannel {
+	}
+	// TODO alternative to callback (replace line above)
+	//select {
+	//case err = <-failedChannel:
+	//	return errors.Wrap(err, "error kube forwarding")
+	//case <-readyChannel:
+	//}
+
+	if len(errOut.String()) != 0 {
+		return errors.Wrapf(err, "error kube portforward: %s", errOut.String())
+	}
+	return nil
+}
+
 //func (client *KubeClient) Exec(pod *corev1.Pod, streams *model.BoxStreams) error {
 //	coreClient := client.kubeClientSet.CoreV1()
 //

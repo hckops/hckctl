@@ -231,6 +231,73 @@ func buildService(objectMeta metav1.ObjectMeta, template *model.BoxV1) (*corev1.
 	}, nil
 }
 
+func (box *KubeBox) openBox(template *model.BoxV1) error {
+
+	info, err := box.createBox(template)
+	if err != nil {
+		return err
+	}
+	if err := box.portForward(template, info.Name); err != nil {
+		return err
+	}
+
+	// TODO model.BoxShellNone
+	// TODO exec
+
+	return nil
+}
+
+// TODO deploymentName or podId
+func (box *KubeBox) portForward(template *model.BoxV1, name string) error {
+
+	if !template.HasPorts() {
+		// exit, no service/port available to bind
+		return nil
+	}
+	ports, err := toPortBindings(template.NetworkPorts(), func(port model.BoxPort) {
+		// TODO OnTunnelCallback
+	})
+	if err != nil {
+		return err
+	}
+
+	opts := &kubernetes.PortForwardOpts{
+		Namespace: box.clientConfig.Namespace,
+		PodName:   name,
+		Ports:     ports,
+		OnTunnelErrorCallback: func(err error) {
+			// TODO event
+		},
+	}
+	if err := box.client.PortForward(opts); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func toPortBindings(ports []model.BoxPort, onPortBindCallback func(port model.BoxPort)) ([]string, error) {
+
+	var portBindings []string
+	for _, port := range ports {
+
+		localPort, err := util.FindOpenPort(port.Local)
+		if err != nil {
+			return nil, errors.Wrap(err, "error kube local port: portForward")
+		}
+
+		// actual bound port
+		onPortBindCallback(model.BoxPort{
+			Alias:  port.Alias,
+			Local:  localPort,
+			Remote: port.Remote,
+		})
+
+		portBindings = append(portBindings, fmt.Sprintf("%s:%s", localPort, port.Remote))
+	}
+	return portBindings, nil
+}
+
 func (box *KubeBox) listBoxes() ([]model.BoxInfo, error) {
 
 	deployments, err := box.client.DeploymentList(box.clientConfig.Namespace)

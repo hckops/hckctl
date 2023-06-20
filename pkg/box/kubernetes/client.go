@@ -39,7 +39,7 @@ func (box *KubeBox) Exec(name string, command string) error {
 
 func (box *KubeBox) Open(template *model.BoxV1) error {
 	defer box.client.Close()
-	return errors.New("not implemented")
+	return box.openBox(template)
 }
 
 func (box *KubeBox) List() ([]model.BoxInfo, error) {
