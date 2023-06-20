@@ -303,6 +303,8 @@ func (box *DockerBox) deleteBoxes() ([]model.BoxInfo, error) {
 	for _, boxInfo := range boxes {
 		if err := box.deleteBoxById(boxInfo.Id); err == nil {
 			deleted = append(deleted, boxInfo)
+		} else {
+			// TODO box.eventBus.Publish: silently ignore error
 		}
 	}
 	return deleted, nil

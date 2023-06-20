@@ -108,18 +108,27 @@ func (client *KubeClient) NamespaceApply(name string) error {
 	return nil
 }
 
+func (client *KubeClient) NamespaceDelete(name string) error {
+	coreClient := client.kubeClientSet.CoreV1()
+
+	if err := coreClient.Namespaces().Delete(client.ctx, name, metav1.DeleteOptions{}); err != nil {
+		return errors.Wrapf(err, "error namespace delete: name=%s", name)
+	}
+	return nil
+}
+
 func (client *KubeClient) DeploymentCreate(opts *DeploymentCreateOpts) error {
 	appClient := client.kubeClientSet.AppsV1()
 
 	deployment, err := appClient.Deployments(opts.Namespace).Create(client.ctx, opts.Spec, metav1.CreateOptions{})
 	if err != nil {
-		return errors.Wrapf(err, "error deployment create: name=%s", opts.Spec.Name)
+		return errors.Wrapf(err, "error deployment create: namespace=%s name=%s", opts.Namespace, opts.Spec.Name)
 	}
 
 	// blocks until the deployment is available, then stop watching
 	watcher, err := appClient.Deployments(opts.Namespace).Watch(client.ctx, metav1.SingleObject(deployment.ObjectMeta))
 	if err != nil {
-		return errors.Wrapf(err, "error deployment watch: name=%s", deployment.Name)
+		return errors.Wrapf(err, "error deployment watch: namespace=%s name=%s", opts.Namespace, deployment.Name)
 	}
 	for event := range watcher.ResultChan() {
 		switch event.Type {
@@ -127,7 +136,9 @@ func (client *KubeClient) DeploymentCreate(opts *DeploymentCreateOpts) error {
 			deploymentEvent := event.Object.(*appsv1.Deployment)
 
 			for _, condition := range deploymentEvent.Status.Conditions {
-				opts.OnStatusEventCallback(fmt.Sprintf("watch deployment event: type=%v condition=%v", event.Type, condition.Message))
+				// TODO fields only?
+				opts.OnStatusEventCallback(fmt.Sprintf("watch deployment event: namespace=%s name=%s type=%v condition=%v",
+					opts.Namespace, deployment.Name, event.Type, condition.Message))
 
 				if condition.Type == appsv1.DeploymentAvailable &&
 					condition.Status == corev1.ConditionTrue {
@@ -141,12 +152,62 @@ func (client *KubeClient) DeploymentCreate(opts *DeploymentCreateOpts) error {
 	return nil
 }
 
-func (client *KubeClient) ServiceCreate(opts *ServiceCreateOpts) error {
+type DeploymentInfo struct {
+	Namespace      string
+	DeploymentName string
+	PodId          string
+}
+
+func (client *KubeClient) DeploymentList(namespace string) ([]DeploymentInfo, error) {
+	appClient := client.kubeClientSet.AppsV1()
+
+	deployments, err := appClient.Deployments(namespace).List(client.ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "error deployment list: namespace=%s", namespace)
+	}
+	var result []DeploymentInfo
+	for _, deployment := range deployments.Items {
+
+		if podId, err := client.PodName(&deployment); err != nil {
+			// TODO verify error sidecar container
+			return nil, err
+		} else {
+			info := DeploymentInfo{
+				Namespace:      namespace,
+				DeploymentName: deployment.Name,
+				PodId:          podId,
+			}
+			result = append(result, info)
+		}
+	}
+	return result, nil
+}
+
+func (client *KubeClient) DeploymentDelete(namespace string, name string) error {
+	appClient := client.kubeClientSet.AppsV1()
+
+	err := appClient.Deployments(namespace).Delete(client.ctx, name, metav1.DeleteOptions{})
+	if err != nil {
+		return errors.Wrapf(err, "error deployment delete: namespace=%s name=%s", namespace, name)
+	}
+	return nil
+}
+
+func (client *KubeClient) ServiceCreate(namespace string, spec *corev1.Service) error {
 	coreClient := client.kubeClientSet.CoreV1()
 
-	_, err := coreClient.Services(opts.Namespace).Create(client.ctx, opts.Spec, metav1.CreateOptions{})
+	_, err := coreClient.Services(namespace).Create(client.ctx, spec, metav1.CreateOptions{})
 	if err != nil {
-		return errors.Wrapf(err, "error service create: name=%s", opts.Spec.Name)
+		return errors.Wrapf(err, "error service create: namespace=%s name=%s", namespace, spec.Name)
+	}
+	return nil
+}
+
+func (client *KubeClient) ServiceDelete(namespace string, name string) error {
+	coreClient := client.kubeClientSet.CoreV1()
+
+	if err := coreClient.Services(namespace).Delete(client.ctx, name, metav1.DeleteOptions{}); err != nil {
+		return errors.Wrapf(err, "error service delete: namespace=%s name=%s", namespace, name)
 	}
 	return nil
 }
@@ -159,40 +220,19 @@ func (client *KubeClient) PodName(deployment *appsv1.Deployment) (string, error)
 
 	pods, err := coreClient.Pods(deployment.Namespace).List(client.ctx, listOptions)
 	if err != nil {
-		return "", errors.Wrapf(err, "error pod list: labels=%v", labelSet)
+		return "", errors.Wrapf(err, "error pod list: namespace=%s labels=%v", deployment.Namespace, labelSet)
 	}
-
+	// TODO verify with sidecar container ??? select by podName == deploymentName
 	if len(pods.Items) != 1 {
-		return "", errors.Wrapf(err, "found %d pods, expected only 1 pod for deployment: labels=%v", len(pods.Items), labelSet)
+		return "", errors.Wrapf(err, "found %d pods, expected only 1 pod for deployment: namespace=%s labels=%v", len(pods.Items), deployment.Namespace, labelSet)
 	}
 
 	pod := pods.Items[0]
 
-	// pod.Name + generated unique name
+	// podId = pod.Name + unique generated name
 	return pod.ObjectMeta.Name, nil
 }
 
-//func (client *KubeClient) RemoveSpec(opts *ApplyTemplateOpts) error {
-//	coreClient := client.kubeClientSet.CoreV1()
-//	appClient := client.kubeClientSet.AppsV1()
-//
-//	if err := appClient.Deployments(opts.NamespaceName).Delete(client.ctx, opts.DeploymentSpec.Name, metav1.DeleteOptions{}); err != nil {
-//		box.OnCloseErrorCallback(err, fmt.Sprintf("error kube delete deployment: %s", opts.DeploymentSpec.Name))
-//	}
-//	box.OnCloseCallback(fmt.Sprintf("deployment %s successfully deleted", opts.DeploymentSpec.Name))
-//
-//	// TODO no ports
-//	if opts.ServiceSpec != nil {
-//		if err := coreClient.Services(opts.NamespaceName).Delete(client.ctx, opts.ServiceSpec.Name, metav1.DeleteOptions{}); err != nil {
-//			box.OnCloseErrorCallback(err, fmt.Sprintf("error kube delete service: %s", opts.ServiceSpec.Name))
-//		}
-//		box.OnCloseCallback(fmt.Sprintf("service %s successfully deleted", opts.ServiceSpec.Name))
-//	}
-//
-//	// TODO return errors
-//	return nil
-//}
-//
 //func (client *KubeClient) PortForward(podName, namespace string) {
 //	coreClient := client.kubeClientSet.CoreV1()
 //

@@ -17,7 +17,7 @@ type BoxClient interface {
 	Open(template *model.BoxV1) error
 	List() ([]model.BoxInfo, error)
 	Copy(name string, from string, to string) error
-	Tunnel(name string) error
+	Tunnel(name string) error // TODO exec --tunnel (docker do nothing)
 	Delete(name string) error
 	DeleteAll() ([]model.BoxInfo, error)
 }

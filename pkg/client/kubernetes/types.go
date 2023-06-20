@@ -4,7 +4,6 @@ import (
 	"context"
 
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -30,9 +29,4 @@ type DeploymentCreateOpts struct {
 	Namespace             string
 	Spec                  *appsv1.Deployment
 	OnStatusEventCallback func(event string)
-}
-
-type ServiceCreateOpts struct {
-	Namespace string
-	Spec      *corev1.Service
 }

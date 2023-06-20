@@ -44,7 +44,7 @@ func (box *KubeBox) Open(template *model.BoxV1) error {
 
 func (box *KubeBox) List() ([]model.BoxInfo, error) {
 	defer box.client.Close()
-	return nil, errors.New("not implemented")
+	return box.listBoxes()
 }
 
 func (box *KubeBox) Copy(string, string, string) error {
@@ -59,10 +59,10 @@ func (box *KubeBox) Tunnel(string) error {
 
 func (box *KubeBox) Delete(name string) error {
 	defer box.client.Close()
-	return errors.New("not implemented")
+	return box.deleteBox(name)
 }
 
 func (box *KubeBox) DeleteAll() ([]model.BoxInfo, error) {
 	defer box.client.Close()
-	return nil, errors.New("not implemented")
+	return box.deleteBoxes()
 }

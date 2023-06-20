@@ -57,11 +57,7 @@ func (box *KubeBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 	// TODO DEBUG box.OnSetupCallback(fmt.Sprintf("namespace %s successfully applied", namespace.Name))
 
 	if template.HasPorts() {
-		serviceOpts := &kubernetes.ServiceCreateOpts{
-			Namespace: namespace,
-			Spec:      service,
-		}
-		if box.client.ServiceCreate(serviceOpts) != nil {
+		if box.client.ServiceCreate(namespace, service) != nil {
 			return nil, err
 		}
 		// TODO DEBUG box.OnSetupCallback(fmt.Sprintf("service %s successfully created", service.Name))
@@ -233,4 +229,52 @@ func buildService(objectMeta metav1.ObjectMeta, template *model.BoxV1) (*corev1.
 			Ports:    servicePorts,
 		},
 	}, nil
+}
+
+func (box *KubeBox) listBoxes() ([]model.BoxInfo, error) {
+
+	deployments, err := box.client.DeploymentList(box.clientConfig.Namespace)
+	if err != nil {
+		return nil, err
+	}
+	var result []model.BoxInfo
+	for _, d := range deployments {
+		result = append(result, model.BoxInfo{Id: d.PodId, Name: d.DeploymentName})
+		// TODO box.eventBus.Publish(newContainerListDockerEvent(index, c.ContainerName, c.ContainerId))
+	}
+
+	return result, nil
+}
+
+func (box *KubeBox) deleteBox(name string) error {
+	// TODO box.eventBus.Publish(newContainerRemoveDockerEvent(id))
+	namespace := box.clientConfig.Namespace
+
+	if err := box.client.DeploymentDelete(namespace, name); err != nil {
+		return err
+	}
+	if err := box.client.ServiceDelete(namespace, name); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (box *KubeBox) deleteBoxes() ([]model.BoxInfo, error) {
+	boxes, err := box.listBoxes()
+	if err != nil {
+		return nil, err
+	}
+	var deleted []model.BoxInfo
+	for _, boxInfo := range boxes {
+		if err := box.deleteBox(boxInfo.Name); err == nil {
+			deleted = append(deleted, boxInfo)
+		} else {
+			// TODO same for docker
+			// TODO box.eventBus.Publish: silently ignore error
+		}
+	}
+	if err := box.client.NamespaceDelete(box.clientConfig.Namespace); err != nil {
+		// TODO box.eventBus.Publish: silently ignore error
+	}
+	return deleted, nil
 }
