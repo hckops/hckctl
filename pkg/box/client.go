@@ -28,9 +28,6 @@ func NewBoxClient(opts *model.BoxOpts) (BoxClient, error) {
 		return docker.NewDockerBox(opts.InternalOpts)
 	case model.Kubernetes:
 		return kubernetes.NewKubeBox(opts.InternalOpts, opts.KubeConfig)
-	case model.ArgoCd:
-		// TODO
-		return nil, nil
 	case model.Cloud:
 		// TODO
 		return nil, nil

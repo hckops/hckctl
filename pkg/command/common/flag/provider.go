@@ -13,7 +13,6 @@ const (
 	UnknownProviderFlag ProviderFlag = iota
 	DockerProviderFlag
 	KubeProviderFlag
-	ArgoProviderFlag
 	CloudProviderFlag
 )
 
@@ -24,7 +23,6 @@ const (
 var allProviderIds = map[ProviderFlag][]string{
 	DockerProviderFlag: {"docker"},
 	KubeProviderFlag:   {"kube", "k8s", "kubernetes"},
-	ArgoProviderFlag:   {"argo"},
 	CloudProviderFlag:  {"cloud"},
 }
 

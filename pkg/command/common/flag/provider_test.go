@@ -8,10 +8,9 @@ import (
 )
 
 func TestProviderFlag(t *testing.T) {
-	assert.Equal(t, 4, len(allProviderIds))
+	assert.Equal(t, 3, len(allProviderIds))
 	assert.Equal(t, []string{"docker"}, allProviderIds[DockerProviderFlag])
 	assert.Equal(t, []string{"kube", "k8s", "kubernetes"}, allProviderIds[KubeProviderFlag])
-	assert.Equal(t, []string{"argo"}, allProviderIds[ArgoProviderFlag])
 	assert.Equal(t, []string{"cloud"}, allProviderIds[CloudProviderFlag])
 }
 
@@ -19,7 +18,6 @@ func TestProviderString(t *testing.T) {
 	assert.Equal(t, "unknown", UnknownProviderFlag.String())
 	assert.Equal(t, "docker", DockerProviderFlag.String())
 	assert.Equal(t, "kube", KubeProviderFlag.String())
-	assert.Equal(t, "argo", ArgoProviderFlag.String())
 	assert.Equal(t, "cloud", CloudProviderFlag.String())
 }
 
@@ -34,13 +32,13 @@ func TestProviderIds(t *testing.T) {
 
 func TestProviderValues(t *testing.T) {
 	providerValues := ProviderValues(allProviderIds)
-	expected := []string{"argo", "cloud", "docker", "k8s", "kube", "kubernetes"}
+	expected := []string{"cloud", "docker", "k8s", "kube", "kubernetes"}
 
-	assert.Equal(t, 6, len(providerValues))
+	assert.Equal(t, 5, len(providerValues))
 	assert.Equal(t, expected, providerValues)
 
 	// the return value of SearchStrings is the index to insert x if x is not present
-	assert.Equal(t, 6, sort.SearchStrings(providerValues, "unknown"))
+	assert.Equal(t, 5, sort.SearchStrings(providerValues, "unknown"))
 }
 
 func TestExistProvider(t *testing.T) {

@@ -144,10 +144,11 @@ Edit the config to override the defaults
 ```bash
 hckctl config
 ```
-
+<!--
 If you are looking for a quick way to start with ArgoCD consider [kube-template](https://github.com/hckops/kube-template).
 Just follow the readme, you'll be able to create and deploy a cluster on DigitalOcean using GitHub actions with literally a `git push`.
 Once ready, update the `box.kube.configpath` config to use `clusters/do-template-kubeconfig.yaml`, that's all!
+-->
 
 ## Development
 

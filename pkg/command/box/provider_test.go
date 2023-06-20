@@ -27,9 +27,6 @@ func TestToBoxProvider(t *testing.T) {
 	_, err = toBoxProvider(flag.UnknownProviderFlag)
 	assert.EqualError(t, err, "invalid provider")
 
-	_, err = toBoxProvider(flag.ArgoProviderFlag)
-	assert.EqualError(t, err, "invalid provider")
-
 	_, err = toBoxProvider(flag.CloudProviderFlag)
 	assert.EqualError(t, err, "invalid provider")
 }

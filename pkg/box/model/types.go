@@ -14,11 +14,10 @@ type BoxProvider uint
 const (
 	Docker BoxProvider = iota
 	Kubernetes
-	ArgoCd
 	Cloud
 )
 
-var providerValue = []string{"docker", "kube", "argo-cd", "cloud"}
+var providerValue = []string{"docker", "kube", "cloud"}
 
 func (p BoxProvider) String() string {
 	return providerValue[p]
