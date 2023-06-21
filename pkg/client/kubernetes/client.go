@@ -70,6 +70,7 @@ func NewInClusterKubeClient() (*KubeClient, error) {
 }
 
 func (client *KubeClient) Close() error {
+	// TODO
 	return errors.New("not implemented")
 }
 
@@ -131,6 +132,7 @@ func (client *KubeClient) DeploymentCreate(opts *DeploymentCreateOpts) error {
 func (client *KubeClient) DeploymentList(namespace string) ([]DeploymentInfo, error) {
 	appClient := client.kubeClientSet.AppsV1()
 
+	// TODO filter list: "box-" prefix and status running ?
 	deployments, err := appClient.Deployments(namespace).List(client.ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "error deployment list: namespace=%s", namespace)
@@ -145,7 +147,7 @@ func (client *KubeClient) DeploymentList(namespace string) ([]DeploymentInfo, er
 			info := DeploymentInfo{
 				Namespace:      namespace,
 				DeploymentName: deployment.Name,
-				PodId:          podId,
+				PodName:        podId,
 			}
 			result = append(result, info)
 		}
@@ -199,18 +201,11 @@ func (client *KubeClient) PodName(deployment *appsv1.Deployment) (string, error)
 
 	pod := pods.Items[0]
 
-	// podId = pod.Name + unique generated name
+	// pod.Name + unique generated name
 	return pod.ObjectMeta.Name, nil
 }
 
-type PortForwardOpts struct {
-	Namespace             string
-	PodName               string
-	Ports                 []string
-	OnTunnelErrorCallback func(error)
-}
-
-func (client *KubeClient) PortForward(opts *PortForwardOpts) error {
+func (client *KubeClient) PodPortForward(opts *PodPortForwardOpts) error {
 	coreClient := client.kubeClientSet.CoreV1()
 
 	restRequest := coreClient.RESTClient().
@@ -228,7 +223,7 @@ func (client *KubeClient) PortForward(opts *PortForwardOpts) error {
 
 	stopChannel := client.ctx.Done()
 	readyChannel := make(chan struct{}, 1)
-	// TODO alternative to callback
+	// TODO alternative to callback (uncomment)
 	//failedChannel := make(chan error, 1)
 	out := new(bytes.Buffer)
 	errOut := new(bytes.Buffer)
@@ -241,7 +236,7 @@ func (client *KubeClient) PortForward(opts *PortForwardOpts) error {
 	// wait until interrupted
 	go func() {
 		if err := forwarder.ForwardPorts(); err != nil {
-			// TODO alternative to callback: verify what if callback is more stable i.e. ignore errors
+			// TODO alternative to callback: verify if callback is more stable i.e. ignore errors (replace line below)
 			// failedChannel <- err
 			opts.OnTunnelErrorCallback(err)
 		}

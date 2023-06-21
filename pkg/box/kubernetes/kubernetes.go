@@ -49,42 +49,41 @@ func (box *KubeBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 		return nil, err
 	}
 
-	// TODO LOADER start ??? local.loader.Refresh(fmt.Sprintf("creating %s/%s", local.box.ResourceOptions.Namespace, containerName))
-	// TODO LOADER stop ??? local.loader.Halt(err, "error kube: apply template")
-	if box.client.NamespaceApply(namespace) != nil {
+	if err := box.client.NamespaceApply(namespace); err != nil {
 		return nil, err
 	}
-	// TODO DEBUG box.OnSetupCallback(fmt.Sprintf("namespace %s successfully applied", namespace.Name))
+	box.eventBus.Publish(newNamespaceApplyKubeEvent(namespace))
 
 	if template.HasPorts() {
-		if box.client.ServiceCreate(namespace, service) != nil {
+		if err := box.client.ServiceCreate(namespace, service); err != nil {
 			return nil, err
 		}
-		// TODO DEBUG box.OnSetupCallback(fmt.Sprintf("service %s successfully created", service.Name))
+		box.eventBus.Publish(newServiceCreateKubeEvent(namespace, service.Name))
 	} else {
-		// TODO DEBUG box.OnSetupCallback(fmt.Sprint("service not created"))
+		box.eventBus.Publish(newServiceCreateSkippedKubeEvent(namespace, service.Name))
 	}
 
+	box.eventBus.Publish(newResourcesCreateLoaderKubeEvent(namespace, containerName))
 	deploymentOpts := &kubernetes.DeploymentCreateOpts{
 		Namespace: namespace,
 		Spec:      deployment,
 		OnStatusEventCallback: func(event string) {
-			// TODO DEBUG box.OnSetupCallback(fmt.Sprintf("watch kube event: type=%v, condition=%v", event.Type, condition.Message))
+			box.eventBus.Publish(newDeploymentCreateStatusKubeEvent(event))
 		},
 	}
-	if box.client.DeploymentCreate(deploymentOpts) != nil {
+	if err := box.client.DeploymentCreate(deploymentOpts); err != nil {
 		return nil, err
 	}
-	// TODO DEBUG box.OnSetupCallback(fmt.Sprintf("deployment %s successfully created", deployment.Name))
+	box.eventBus.Publish(newDeploymentCreateKubeEvent(namespace, deployment.Name))
 
 	// boxId
-	podId, err := box.client.PodName(deployment)
+	podName, err := box.client.PodName(deployment)
 	if err != nil {
 		return nil, err
 	}
-	// TODO debug local.log.Debug().Msgf("found matching pod %s", pod.Name)
+	box.eventBus.Publish(newPodNameKubeEvent(namespace, podName))
 
-	return &model.BoxInfo{Id: podId, Name: containerName}, nil
+	return &model.BoxInfo{Id: podName, Name: containerName}, nil
 }
 
 func buildSpec(containerName string, namespace string, template *model.BoxV1, resourceOptions *kubernetes.KubeResource) (*appsv1.Deployment, *corev1.Service, error) {
@@ -237,7 +236,7 @@ func (box *KubeBox) openBox(template *model.BoxV1) error {
 	if err != nil {
 		return err
 	}
-	if err := box.portForward(template, info.Name); err != nil {
+	if err := box.podPortForward(template, info.Id); err != nil {
 		return err
 	}
 
@@ -247,29 +246,32 @@ func (box *KubeBox) openBox(template *model.BoxV1) error {
 	return nil
 }
 
-// TODO deploymentName or podId
-func (box *KubeBox) portForward(template *model.BoxV1, name string) error {
+// TODO it should wait ?!
+func (box *KubeBox) podPortForward(template *model.BoxV1, name string) error {
+	namespace := box.clientConfig.Namespace
 
 	if !template.HasPorts() {
+		box.eventBus.Publish(newPodPortForwardSkippedKubeEvent(namespace, name))
 		// exit, no service/port available to bind
 		return nil
 	}
 	ports, err := toPortBindings(template.NetworkPorts(), func(port model.BoxPort) {
-		// TODO OnTunnelCallback
+		box.eventBus.Publish(newPodPortForwardBindingKubeEvent(namespace, name, port))
+		box.eventBus.Publish(newPodPortForwardBindingConsoleKubeEvent(namespace, name, port))
 	})
 	if err != nil {
 		return err
 	}
 
-	opts := &kubernetes.PortForwardOpts{
-		Namespace: box.clientConfig.Namespace,
+	opts := &kubernetes.PodPortForwardOpts{
+		Namespace: namespace,
 		PodName:   name,
 		Ports:     ports,
 		OnTunnelErrorCallback: func(err error) {
-			// TODO event
+			box.eventBus.Publish(newPodPortForwardErrorKubeEvent(namespace, name, err))
 		},
 	}
-	if err := box.client.PortForward(opts); err != nil {
+	if err := box.client.PodPortForward(opts); err != nil {
 		return err
 	}
 
@@ -299,34 +301,40 @@ func toPortBindings(ports []model.BoxPort, onPortBindCallback func(port model.Bo
 }
 
 func (box *KubeBox) listBoxes() ([]model.BoxInfo, error) {
+	namespace := box.clientConfig.Namespace
 
-	deployments, err := box.client.DeploymentList(box.clientConfig.Namespace)
+	deployments, err := box.client.DeploymentList(namespace)
 	if err != nil {
 		return nil, err
 	}
 	var result []model.BoxInfo
-	for _, d := range deployments {
-		result = append(result, model.BoxInfo{Id: d.PodId, Name: d.DeploymentName})
-		// TODO box.eventBus.Publish(newContainerListDockerEvent(index, c.ContainerName, c.ContainerId))
+	for index, d := range deployments {
+		result = append(result, model.BoxInfo{Id: d.PodName, Name: d.DeploymentName})
+		box.eventBus.Publish(newDeploymentListKubeEvent(index, namespace, d.DeploymentName, d.PodName))
 	}
 
 	return result, nil
 }
 
 func (box *KubeBox) deleteBox(name string) error {
-	// TODO box.eventBus.Publish(newContainerRemoveDockerEvent(id))
 	namespace := box.clientConfig.Namespace
 
 	if err := box.client.DeploymentDelete(namespace, name); err != nil {
 		return err
 	}
+	box.eventBus.Publish(newDeploymentDeleteKubeEvent(namespace, name))
+
 	if err := box.client.ServiceDelete(namespace, name); err != nil {
 		return err
 	}
+	box.eventBus.Publish(newServiceDeleteKubeEvent(namespace, name))
+
 	return nil
 }
 
 func (box *KubeBox) deleteBoxes() ([]model.BoxInfo, error) {
+	namespace := box.clientConfig.Namespace
+
 	boxes, err := box.listBoxes()
 	if err != nil {
 		return nil, err
@@ -336,12 +344,16 @@ func (box *KubeBox) deleteBoxes() ([]model.BoxInfo, error) {
 		if err := box.deleteBox(boxInfo.Name); err == nil {
 			deleted = append(deleted, boxInfo)
 		} else {
-			// TODO same for docker
-			// TODO box.eventBus.Publish: silently ignore error
+			// silently ignore
+			box.eventBus.Publish(newResourcesDeleteSkippedKubeEvent(namespace, boxInfo.Name))
 		}
 	}
-	if err := box.client.NamespaceDelete(box.clientConfig.Namespace); err != nil {
-		// TODO box.eventBus.Publish: silently ignore error
+	if err := box.client.NamespaceDelete(namespace); err != nil {
+		// silently ignore
+		box.eventBus.Publish(newNamespaceDeleteSkippedKubeEvent(namespace))
+	} else {
+		box.eventBus.Publish(newNamespaceDeleteKubeEvent(namespace))
 	}
+
 	return deleted, nil
 }

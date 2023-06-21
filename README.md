@@ -173,6 +173,7 @@ TODO
     - add offline mode source revision
     - update directories to exclude in `resolvePath` e.g. charts
 * box
+    - mount `/dev/tun` for vpn
     - PR to official doc to run
         * owasp/dvwa
         * https://github.com/vulhub/vulhub

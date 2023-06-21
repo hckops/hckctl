@@ -34,5 +34,12 @@ type DeploymentCreateOpts struct {
 type DeploymentInfo struct {
 	Namespace      string
 	DeploymentName string
-	PodId          string // TODO only podId or podName or both fields ???
+	PodName        string // unique generated name
+}
+
+type PodPortForwardOpts struct {
+	Namespace             string
+	PodName               string
+	Ports                 []string // format "LOCAL:REMOTE"
+	OnTunnelErrorCallback func(error)
 }

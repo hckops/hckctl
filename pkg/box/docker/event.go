@@ -13,7 +13,7 @@ type dockerEvent struct {
 }
 
 func (e *dockerEvent) Source() string {
-	return "docker"
+	return model.Docker.String()
 }
 
 func (e *dockerEvent) Kind() event.EventKind {
@@ -56,15 +56,15 @@ func newContainerCreateSkipVirtualPortDockerEvent(containerName string, port mod
 	return &dockerEvent{kind: event.LogDebug, value: fmt.Sprintf("container create skipping virtual port: containerName=%s portAlias=%s", containerName, port.Alias)}
 }
 
-func newContainerCreatePortBindDockerConsoleEvent(containerName string, port model.BoxPort) *dockerEvent {
-	return &dockerEvent{kind: event.PrintConsole, value: fmt.Sprintf(
-		"[%s][%s]   \texpose (remote) %s -> (local) %s",
-		containerName, port.Alias, port.Remote, port.Local)}
-}
-
 func newContainerCreatePortBindDockerEvent(containerName string, port model.BoxPort) *dockerEvent {
 	return &dockerEvent{kind: event.LogDebug, value: fmt.Sprintf(
 		"container create port bind: containerName=%s portAlias=%s portRemote=%s portLocal=%s",
+		containerName, port.Alias, port.Remote, port.Local)}
+}
+
+func newContainerCreatePortBindDockerConsoleEvent(containerName string, port model.BoxPort) *dockerEvent {
+	return &dockerEvent{kind: event.PrintConsole, value: fmt.Sprintf(
+		"[%s][%s]   \texpose (remote) %s -> (local) %s",
 		containerName, port.Alias, port.Remote, port.Local)}
 }
 
@@ -94,4 +94,8 @@ func newContainerListDockerEvent(index int, containerName string, containerId st
 
 func newContainerRemoveDockerEvent(containerId string) *dockerEvent {
 	return &dockerEvent{kind: event.LogDebug, value: fmt.Sprintf("container remove: containerId=%s", containerId)}
+}
+
+func newContainerRemoveSkippedDockerEvent(containerId string) *dockerEvent {
+	return &dockerEvent{kind: event.LogWarning, value: fmt.Sprintf("container remove skipped: containerId=%s", containerId)}
 }

@@ -21,6 +21,7 @@ type boxClientOpts struct {
 	loader   *common.Loader
 }
 
+// open and create
 func runBoxClient(src template.TemplateSource, provider model.BoxProvider, configRef *config.ConfigRef, invokeClient func(*boxClientOpts) error) error {
 
 	boxTemplate, err := src.ReadBox()
@@ -71,6 +72,7 @@ func runBoxClient(src template.TemplateSource, provider model.BoxProvider, confi
 	return nil
 }
 
+// exec and delete
 func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeClient func(box.BoxClient, *model.BoxV1) error) error {
 
 	// best effort approach to resolve remote box template by name with default revision

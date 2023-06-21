@@ -304,7 +304,8 @@ func (box *DockerBox) deleteBoxes() ([]model.BoxInfo, error) {
 		if err := box.deleteBoxById(boxInfo.Id); err == nil {
 			deleted = append(deleted, boxInfo)
 		} else {
-			// TODO box.eventBus.Publish: silently ignore error
+			// silently ignore
+			box.eventBus.Publish(newContainerRemoveSkippedDockerEvent(boxInfo.Id))
 		}
 	}
 	return deleted, nil
