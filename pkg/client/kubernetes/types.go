@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"context"
+	"io"
 
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/client-go/kubernetes"
@@ -34,12 +35,29 @@ type DeploymentCreateOpts struct {
 type DeploymentInfo struct {
 	Namespace      string
 	DeploymentName string
-	PodName        string // unique generated name
+	PodInfo        *PodInfo
+}
+
+type PodInfo struct {
+	Id   string
+	Name string
 }
 
 type PodPortForwardOpts struct {
 	Namespace             string
-	PodName               string
+	PodId                 string
 	Ports                 []string // format "LOCAL:REMOTE"
 	OnTunnelErrorCallback func(error)
+}
+
+type PodExecOpts struct {
+	Namespace      string
+	PodName        string
+	PodId          string
+	Shell          string
+	InStream       io.ReadCloser
+	OutStream      io.Writer
+	ErrStream      io.Writer
+	IsTty          bool
+	OnExecCallback func()
 }

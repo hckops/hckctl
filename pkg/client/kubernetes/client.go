@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/tools/remotecommand"
+	"k8s.io/kubectl/pkg/cmd/exec"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -21,6 +24,7 @@ import (
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
 	"k8s.io/client-go/util/homedir"
+	"k8s.io/kubectl/pkg/scheme"
 )
 
 func NewOutOfClusterKubeClient(configPath string) (*KubeClient, error) {
@@ -113,7 +117,6 @@ func (client *KubeClient) DeploymentCreate(opts *DeploymentCreateOpts) error {
 			deploymentEvent := event.Object.(*appsv1.Deployment)
 
 			for _, condition := range deploymentEvent.Status.Conditions {
-				// TODO fields only?
 				opts.OnStatusEventCallback(fmt.Sprintf("watch deployment event: namespace=%s name=%s type=%v condition=%v",
 					opts.Namespace, deployment.Name, event.Type, condition.Message))
 
@@ -140,16 +143,16 @@ func (client *KubeClient) DeploymentList(namespace string) ([]DeploymentInfo, er
 	var result []DeploymentInfo
 	for _, deployment := range deployments.Items {
 
-		if podId, err := client.PodName(&deployment); err != nil {
+		if podInfo, err := client.GetPodInfo(&deployment); err != nil {
 			// TODO verify if error sidecar container
 			return nil, err
 		} else {
-			info := DeploymentInfo{
+			deploymentInfo := DeploymentInfo{
 				Namespace:      namespace,
 				DeploymentName: deployment.Name,
-				PodName:        podId,
+				PodInfo:        podInfo,
 			}
-			result = append(result, info)
+			result = append(result, deploymentInfo)
 		}
 	}
 	return result, nil
@@ -184,7 +187,7 @@ func (client *KubeClient) ServiceDelete(namespace string, name string) error {
 	return nil
 }
 
-func (client *KubeClient) PodName(deployment *appsv1.Deployment) (string, error) {
+func (client *KubeClient) GetPodInfo(deployment *appsv1.Deployment) (*PodInfo, error) {
 	coreClient := client.kubeClientSet.CoreV1()
 
 	labelSet := labels.Set(deployment.Spec.Selector.MatchLabels)
@@ -192,17 +195,19 @@ func (client *KubeClient) PodName(deployment *appsv1.Deployment) (string, error)
 
 	pods, err := coreClient.Pods(deployment.Namespace).List(client.ctx, listOptions)
 	if err != nil {
-		return "", errors.Wrapf(err, "error pod list: namespace=%s labels=%v", deployment.Namespace, labelSet)
+		return nil, errors.Wrapf(err, "error pod list: namespace=%s labels=%v", deployment.Namespace, labelSet)
 	}
 	// TODO verify with sidecar container ??? select by podName == deploymentName
 	if len(pods.Items) != 1 {
-		return "", errors.Wrapf(err, "found %d pods, expected only 1 pod for deployment: namespace=%s labels=%v", len(pods.Items), deployment.Namespace, labelSet)
+		return nil, errors.Wrapf(err, "found %d pods, expected only 1 pod for deployment: namespace=%s labels=%v", len(pods.Items), deployment.Namespace, labelSet)
 	}
 
 	pod := pods.Items[0]
-
-	// pod.Name + unique generated name
-	return pod.ObjectMeta.Name, nil
+	info := &PodInfo{
+		Id:   pod.ObjectMeta.Name, // pod.Name + unique generated name
+		Name: pod.Name,
+	}
+	return info, nil
 }
 
 func (client *KubeClient) PodPortForward(opts *PodPortForwardOpts) error {
@@ -212,7 +217,7 @@ func (client *KubeClient) PodPortForward(opts *PodPortForwardOpts) error {
 		Post().
 		Resource("pods").
 		Namespace(opts.Namespace).
-		Name(opts.PodName).
+		Name(opts.PodId).
 		SubResource("portforward")
 
 	transport, upgrader, err := spdy.RoundTripperFor(client.kubeRestConfig)
@@ -256,47 +261,52 @@ func (client *KubeClient) PodPortForward(opts *PodPortForwardOpts) error {
 	return nil
 }
 
-//func (client *KubeClient) Exec(pod *corev1.Pod, streams *model.BoxStreams) error {
-//	coreClient := client.kubeClientSet.CoreV1()
-//
-//	streamOptions := buildStreamOptions(streams)
-//	tty := streamOptions.SetupTTY()
-//
-//	var sizeQueue remotecommand.TerminalSizeQueue
-//	if tty.Raw {
-//		sizeQueue = tty.MonitorSize(tty.GetSize())
-//		streamOptions.ErrOut = nil
-//	}
-//
-//	// TODO add to template or default
-//	shell := "/bin/bash"
-//
-//	// exec remote shell
-//	execUrl := coreClient.RESTClient().
-//		Post().
-//		Namespace(pod.Namespace).
-//		Resource("pods").
-//		Name(pod.Name).
-//		SubResource("exec").
-//		VersionedParams(&corev1.PodExecOptions{
-//			Container: box.Template.SafeName(), // pod.Spec.Containers[0].Name
-//			Command:   []string{shell},
-//			Stdin:     true,
-//			Stdout:    true,
-//			Stderr:    true,
-//			TTY:       tty.Raw,
-//		}, scheme.ParameterCodec).
-//		URL()
-//
-//	executor := exec.DefaultRemoteExecutor{}
-//
-//	box.OnExecCallback()
-//
-//	fn := func() error {
-//		return executor.Execute(http.MethodPost, execUrl, client.kubeRestConfig, streamOptions.In, streamOptions.Out, streamOptions.ErrOut, tty.Raw, sizeQueue)
-//	}
-//	if err := tty.Safe(fn); err != nil {
-//		return errors.Wrap(err, "terminal session closed")
-//	}
-//	return nil
-//}
+func (client *KubeClient) PodExec(opts *PodExecOpts) error {
+	coreClient := client.kubeClientSet.CoreV1()
+
+	streamOptions := exec.StreamOptions{
+		Stdin: true,
+		TTY:   opts.IsTty,
+		IOStreams: genericclioptions.IOStreams{
+			In:     opts.InStream,
+			Out:    opts.OutStream,
+			ErrOut: opts.ErrStream,
+		},
+	}
+	tty := streamOptions.SetupTTY()
+
+	var sizeQueue remotecommand.TerminalSizeQueue
+	if tty.Raw {
+		sizeQueue = tty.MonitorSize(tty.GetSize())
+		streamOptions.ErrOut = nil
+	}
+
+	// exec remote shell
+	execUrl := coreClient.RESTClient().
+		Post().
+		Namespace(opts.Namespace).
+		Resource("pods").
+		Name(opts.PodId).
+		SubResource("exec").
+		VersionedParams(&corev1.PodExecOptions{
+			Container: opts.PodName,
+			Command:   []string{opts.Shell},
+			Stdin:     true,
+			Stdout:    true,
+			Stderr:    true,
+			TTY:       tty.Raw,
+		}, scheme.ParameterCodec).
+		URL()
+
+	executor := exec.DefaultRemoteExecutor{}
+
+	opts.OnExecCallback()
+
+	fn := func() error {
+		return executor.Execute(http.MethodPost, execUrl, client.kubeRestConfig, streamOptions.In, streamOptions.Out, streamOptions.ErrOut, tty.Raw, sizeQueue)
+	}
+	if err := tty.Safe(fn); err != nil {
+		return errors.Wrap(err, "terminal session closed")
+	}
+	return nil
+}

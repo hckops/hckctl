@@ -63,7 +63,7 @@ func (box *KubeBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 		box.eventBus.Publish(newServiceCreateSkippedKubeEvent(namespace, service.Name))
 	}
 
-	box.eventBus.Publish(newResourcesCreateLoaderKubeEvent(namespace, containerName))
+	box.eventBus.Publish(newResourcesCreateKubeLoaderEvent(namespace, containerName))
 	deploymentOpts := &kubernetes.DeploymentCreateOpts{
 		Namespace: namespace,
 		Spec:      deployment,
@@ -76,14 +76,13 @@ func (box *KubeBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 	}
 	box.eventBus.Publish(newDeploymentCreateKubeEvent(namespace, deployment.Name))
 
-	// boxId
-	podName, err := box.client.PodName(deployment)
+	podInfo, err := box.client.GetPodInfo(deployment)
 	if err != nil {
 		return nil, err
 	}
-	box.eventBus.Publish(newPodNameKubeEvent(namespace, podName))
+	box.eventBus.Publish(newPodNameKubeEvent(namespace, podInfo.Name, podInfo.Id))
 
-	return &model.BoxInfo{Id: podName, Name: containerName}, nil
+	return &model.BoxInfo{Id: podInfo.Id, Name: containerName}, nil
 }
 
 func buildSpec(containerName string, namespace string, template *model.BoxV1, resourceOptions *kubernetes.KubeResource) (*appsv1.Deployment, *corev1.Service, error) {
@@ -236,28 +235,43 @@ func (box *KubeBox) openBox(template *model.BoxV1) error {
 	if err != nil {
 		return err
 	}
-	if err := box.podPortForward(template, info.Id); err != nil {
+	if err := box.podPortForward(template, info); err != nil {
 		return err
 	}
 
 	// TODO model.BoxShellNone
-	// TODO exec
 
-	return nil
+	opts := &kubernetes.PodExecOpts{
+		Namespace: box.clientConfig.Namespace,
+		PodName:   util.ToKebabCase(template.Image.Repository), // pod.Spec.Containers[0].Name
+		PodId:     info.Id,
+		Shell:     template.Shell,
+		InStream:  box.streams.In,
+		OutStream: box.streams.Out,
+		ErrStream: box.streams.Err,
+		IsTty:     box.streams.IsTty,
+		OnExecCallback: func() {
+			// TODO removeOnExit
+			// stop loader
+			box.eventBus.Publish(newPodExecKubeLoaderEvent())
+		},
+	}
+
+	return box.client.PodExec(opts)
 }
 
 // TODO it should wait ?!
-func (box *KubeBox) podPortForward(template *model.BoxV1, name string) error {
+func (box *KubeBox) podPortForward(template *model.BoxV1, boxInfo *model.BoxInfo) error {
 	namespace := box.clientConfig.Namespace
 
 	if !template.HasPorts() {
-		box.eventBus.Publish(newPodPortForwardSkippedKubeEvent(namespace, name))
+		box.eventBus.Publish(newPodPortForwardSkippedKubeEvent(namespace, boxInfo.Id))
 		// exit, no service/port available to bind
 		return nil
 	}
 	ports, err := toPortBindings(template.NetworkPorts(), func(port model.BoxPort) {
-		box.eventBus.Publish(newPodPortForwardBindingKubeEvent(namespace, name, port))
-		box.eventBus.Publish(newPodPortForwardBindingConsoleKubeEvent(namespace, name, port))
+		box.eventBus.Publish(newPodPortForwardBindingKubeEvent(namespace, boxInfo.Id, port))
+		box.eventBus.Publish(newPodPortForwardBindingKubeConsoleEvent(namespace, boxInfo.Name, port))
 	})
 	if err != nil {
 		return err
@@ -265,10 +279,10 @@ func (box *KubeBox) podPortForward(template *model.BoxV1, name string) error {
 
 	opts := &kubernetes.PodPortForwardOpts{
 		Namespace: namespace,
-		PodName:   name,
+		PodId:     boxInfo.Id,
 		Ports:     ports,
 		OnTunnelErrorCallback: func(err error) {
-			box.eventBus.Publish(newPodPortForwardErrorKubeEvent(namespace, name, err))
+			box.eventBus.Publish(newPodPortForwardErrorKubeEvent(namespace, boxInfo.Id, err))
 		},
 	}
 	if err := box.client.PodPortForward(opts); err != nil {
@@ -309,8 +323,8 @@ func (box *KubeBox) listBoxes() ([]model.BoxInfo, error) {
 	}
 	var result []model.BoxInfo
 	for index, d := range deployments {
-		result = append(result, model.BoxInfo{Id: d.PodName, Name: d.DeploymentName})
-		box.eventBus.Publish(newDeploymentListKubeEvent(index, namespace, d.DeploymentName, d.PodName))
+		result = append(result, model.BoxInfo{Id: d.PodInfo.Id, Name: d.DeploymentName})
+		box.eventBus.Publish(newDeploymentListKubeEvent(index, namespace, d.DeploymentName, d.PodInfo.Id))
 	}
 
 	return result, nil
