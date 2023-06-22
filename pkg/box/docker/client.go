@@ -31,9 +31,9 @@ func (box *DockerBox) Create(template *model.BoxV1) (*model.BoxInfo, error) {
 	return box.createBox(template)
 }
 
-func (box *DockerBox) Exec(name string, command string) error {
+func (box *DockerBox) Exec(template *model.BoxV1, name string) error {
 	defer box.close()
-	return box.execBox(name, command)
+	return box.execBox(name, template.Shell)
 }
 
 func (box *DockerBox) Open(template *model.BoxV1) error {

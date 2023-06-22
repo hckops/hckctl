@@ -12,7 +12,7 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/pkg/errors"
 
-	"github.com/hckops/hckctl/pkg/util"
+	"github.com/hckops/hckctl/pkg/client/common"
 )
 
 func NewDockerClient() (*DockerClient, error) {
@@ -97,14 +97,6 @@ func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, 
 	return newContainer.ID, nil
 }
 
-func defaultShell(command string) string {
-	if shellCmd := strings.TrimSpace(command); shellCmd != "" {
-		return shellCmd
-	} else {
-		return "/bin/bash"
-	}
-}
-
 func (client *DockerClient) ContainerAttach(opts *ContainerAttachOpts) error {
 
 	execCreateResponse, err := client.docker.ContainerExecCreate(client.ctx, opts.ContainerId, types.ExecConfig{
@@ -113,7 +105,7 @@ func (client *DockerClient) ContainerAttach(opts *ContainerAttachOpts) error {
 		AttachStderr: true,
 		Detach:       false,
 		Tty:          opts.IsTty,
-		Cmd:          []string{defaultShell(opts.Shell)},
+		Cmd:          []string{common.DefaultShell(opts.Shell)},
 	})
 	if err != nil {
 		return errors.Wrap(err, "error container exec create")
@@ -128,7 +120,7 @@ func (client *DockerClient) ContainerAttach(opts *ContainerAttachOpts) error {
 	defer execAttachResponse.Close()
 
 	// fixes echoes and handle SIGTERM interrupt properly
-	terminal, err := util.NewRawTerminal(opts.InStream)
+	terminal, err := common.NewRawTerminal(opts.InStream)
 	if err != nil {
 		return errors.Wrap(err, "error container exec terminal")
 	}

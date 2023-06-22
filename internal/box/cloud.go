@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/hckops/hckctl/internal/common"
 	"github.com/hckops/hckctl/internal/schema"
+	common3 "github.com/hckops/hckctl/pkg/client/common"
 	common2 "github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/util"
 	"io"
@@ -169,7 +170,7 @@ func (remote *RemoteSshBox) exec(boxId string) {
 		remote.loader.Halt(err, "error streams")
 	}
 
-	if rawTerminal, err := util.NewRawTerminal(os.Stdin); err == nil {
+	if rawTerminal, err := common3.NewRawTerminal(os.Stdin); err == nil {
 		defer rawTerminal.Restore()
 	} else {
 		remote.log.Warn().Err(err).Msg("error terminal")

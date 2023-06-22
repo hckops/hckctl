@@ -15,14 +15,17 @@ type BoxClient interface {
 	Provider() model.BoxProvider
 	Events() *event.EventBus
 	Create(template *model.BoxV1) (*model.BoxInfo, error)
-	Exec(name string, command string) error
-	Open(template *model.BoxV1) error // TODO exec --tunnel (docker do nothing)
+	Exec(template *model.BoxV1, name string) error // TODO exec --tunnel (docker do nothing)
+	Open(template *model.BoxV1) error              // TODO open --tunnel (docker do nothing)
 	List() ([]model.BoxInfo, error)
 	Copy(name string, from string, to string) error
-	Tunnel(name string) error // TODO exec --tunnel (docker do nothing)
+	Tunnel(name string) error
 	Delete(name string) error
 	DeleteAll() ([]model.BoxInfo, error)
 }
+
+// TODO https://stackoverflow.com/questions/30261032/how-to-implement-an-abstract-class-in-go
+// TODO https://golangbyexample.com/go-abstract-class
 
 func NewBoxClient(opts *model.BoxOpts) (BoxClient, error) {
 	switch opts.Provider {

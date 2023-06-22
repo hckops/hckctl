@@ -143,7 +143,12 @@ func newDefaultBoxClient(providerFlag flag.ProviderFlag, configRef *config.Confi
 	}
 
 	boxClient.Events().Subscribe(func(e event.Event) {
-		log.Debug().Msgf("[%v][%s] %s", e.Source(), e.Kind(), e.String())
+		switch e.Kind() {
+		case event.PrintConsole:
+			fmt.Println(e.String())
+		default:
+			log.Debug().Msgf("[%v][%s] %s", e.Source(), e.Kind(), e.String())
+		}
 	})
 	return boxClient, nil
 }

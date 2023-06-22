@@ -178,36 +178,49 @@ func buildNetworkingConfig(networkName, networkId string) *network.NetworkingCon
 	return &network.NetworkingConfig{EndpointsConfig: map[string]*network.EndpointSettings{networkName: {NetworkID: networkId}}}
 }
 
+// TODO common
 func (box *DockerBox) execBox(name string, command string) error {
-
-	info, err := box.findBox(name)
-	if err != nil {
+	if info, err := box.findBox(name); err != nil {
 		return err
+	} else {
+		return box.attachBox(info, command, false)
 	}
-	if command == model.BoxShellNone {
-		return box.logsBox(info.Id)
-	}
-
-	return box.attachBox(info, command, false)
 }
 
+// TODO common
 func (box *DockerBox) openBox(template *model.BoxV1) error {
-
-	info, err := box.createBox(template)
-	if err != nil {
+	if info, err := box.createBox(template); err != nil {
 		return err
+	} else {
+		return box.attachBox(info, template.Shell, true)
 	}
-	if template.Shell == model.BoxShellNone {
-		// stop loader
-		box.eventBus.Publish(newContainerAttachDockerLoaderEvent())
-		return box.logsBox(info.Id)
-	}
-
-	return box.attachBox(info, template.Shell, true)
 }
 
+// TODO common
+func (box *DockerBox) findBox(name string) (*model.BoxInfo, error) {
+	boxes, err := box.listBoxes()
+	if err != nil {
+		return nil, err
+	}
+	for _, boxInfo := range boxes {
+		if boxInfo.Name == name {
+			return &boxInfo, nil
+		}
+	}
+	return nil, errors.New("box not found")
+}
+
+// TODO print open ports?
 func (box *DockerBox) attachBox(info *model.BoxInfo, command string, removeOnExit bool) error {
 	box.eventBus.Publish(newContainerAttachDockerEvent(info.Id, info.Name, command))
+
+	if command == model.BoxShellNone {
+		if removeOnExit {
+			// stop loader
+			box.eventBus.Publish(newContainerAttachDockerLoaderEvent())
+		}
+		return box.logsBox(info.Id)
+	}
 
 	containerOpts := &docker.ContainerAttachOpts{
 		ContainerId: info.Id,
@@ -240,7 +253,6 @@ func (box *DockerBox) attachBox(info *model.BoxInfo, command string, removeOnExi
 }
 
 func (box *DockerBox) logsBox(containerId string) error {
-
 	opts := &docker.ContainerLogsOpts{
 		ContainerId: containerId,
 		OutStream:   box.streams.Out,
@@ -256,7 +268,6 @@ func (box *DockerBox) logsBox(containerId string) error {
 }
 
 func (box *DockerBox) listBoxes() ([]model.BoxInfo, error) {
-
 	// TODO list by labels (add during creation)
 	containers, err := box.client.ContainerList(model.BoxPrefixName)
 	if err != nil {
@@ -267,21 +278,7 @@ func (box *DockerBox) listBoxes() ([]model.BoxInfo, error) {
 		result = append(result, model.BoxInfo{Id: c.ContainerId, Name: c.ContainerName})
 		box.eventBus.Publish(newContainerListDockerEvent(index, c.ContainerName, c.ContainerId))
 	}
-
 	return result, nil
-}
-
-func (box *DockerBox) findBox(name string) (*model.BoxInfo, error) {
-	boxes, err := box.listBoxes()
-	if err != nil {
-		return nil, err
-	}
-	for _, boxInfo := range boxes {
-		if boxInfo.Name == name {
-			return &boxInfo, nil
-		}
-	}
-	return nil, errors.New("box not found")
 }
 
 func (box *DockerBox) deleteBoxById(id string) error {
@@ -290,11 +287,11 @@ func (box *DockerBox) deleteBoxById(id string) error {
 }
 
 func (box *DockerBox) deleteBoxByName(name string) error {
-	info, err := box.findBox(name)
-	if err != nil {
+	if info, err := box.findBox(name); err != nil {
 		return err
+	} else {
+		return box.deleteBoxById(info.Id)
 	}
-	return box.deleteBoxById(info.Id)
 }
 
 func (box *DockerBox) deleteBoxes() ([]model.BoxInfo, error) {

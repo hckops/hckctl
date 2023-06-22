@@ -32,9 +32,9 @@ func (box *KubeBox) Create(template *model.BoxV1) (*model.BoxInfo, error) {
 	return box.createBox(template)
 }
 
-func (box *KubeBox) Exec(name string, command string) error {
+func (box *KubeBox) Exec(template *model.BoxV1, name string) error {
 	defer box.client.Close()
-	return errors.New("not implemented")
+	return box.execBox(template, name)
 }
 
 func (box *KubeBox) Open(template *model.BoxV1) error {

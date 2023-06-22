@@ -174,6 +174,8 @@ TODO
     - update directories to exclude in `resolvePath` e.g. charts
 * box
     - mount `/dev/tun` for vpn
+    - docker: add env var
+    - kube: add env var
     - PR to official doc to run
         * owasp/dvwa
         * https://github.com/vulhub/vulhub
@@ -198,5 +200,7 @@ TODO
 * release
     - add brew https://goreleaser.com/customization/homebrew
     - test windows
-* plugins
-    - man
+* plugins/bundles
+    - man (plugin)
+    - kube-inject (plugin) mount sidecar pod at runtime with debugging tools
+    - pro (bundle) e.g. flow

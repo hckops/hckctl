@@ -44,8 +44,8 @@ func newNamespaceDeleteSkippedKubeEvent(namespace string) *kubeEvent {
 	return &kubeEvent{kind: event.LogWarning, value: fmt.Sprintf("namespace delete skipped: namespace=%s", namespace)}
 }
 
-func newResourcesCreateKubeLoaderEvent(namespace string, name string) *kubeEvent {
-	return &kubeEvent{kind: event.LoaderUpdate, value: fmt.Sprintf("creating %s/%s", namespace, name)}
+func newResourcesDeployKubeLoaderEvent(namespace string, name string) *kubeEvent {
+	return &kubeEvent{kind: event.LoaderUpdate, value: fmt.Sprintf("deploying %s/%s", namespace, name)}
 }
 
 func newResourcesDeleteSkippedKubeEvent(namespace string, name string) *kubeEvent {
@@ -98,6 +98,10 @@ func newPodPortForwardBindingKubeConsoleEvent(namespace string, podName string, 
 
 func newPodPortForwardErrorKubeEvent(namespace string, podId string, err error) *kubeEvent {
 	return &kubeEvent{kind: event.LogWarning, value: fmt.Sprintf("pod port-forward error: namespace=%s podId=%s error=%v", namespace, podId, err)}
+}
+
+func newPodExecKubeEvent(templateName string, namespace string, podId string, command string) *kubeEvent {
+	return &kubeEvent{kind: event.LogDebug, value: fmt.Sprintf("pod attach: templateName=%s namespace=%s podId=%s command=%s", templateName, namespace, podId, command)}
 }
 
 func newPodExecKubeLoaderEvent() *kubeEvent {

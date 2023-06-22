@@ -35,7 +35,7 @@ func (opts *boxExecCmdOptions) run(cmd *cobra.Command, args []string) error {
 		log.Debug().Msgf("exec box: boxName=%s", boxName)
 
 		execClient := func(client box.BoxClient, template *model.BoxV1) error {
-			return client.Exec(boxName, template.Shell)
+			return client.Exec(template, boxName)
 		}
 		return attemptRunBoxClients(opts.configRef, boxName, execClient)
 	} else {

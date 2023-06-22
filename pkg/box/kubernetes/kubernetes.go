@@ -65,7 +65,7 @@ func (box *KubeBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 		box.eventBus.Publish(newServiceCreateSkippedKubeEvent(namespace, service.Name))
 	}
 
-	box.eventBus.Publish(newResourcesCreateKubeLoaderEvent(namespace, containerName))
+	box.eventBus.Publish(newResourcesDeployKubeLoaderEvent(namespace, template.Name))
 	deploymentOpts := &kubernetes.DeploymentCreateOpts{
 		Namespace: namespace,
 		Spec:      deployment,
@@ -231,12 +231,41 @@ func buildService(objectMeta metav1.ObjectMeta, template *model.BoxV1) (*corev1.
 	}, nil
 }
 
-func (box *KubeBox) openBox(template *model.BoxV1) error {
-
-	info, err := box.createBox(template)
-	if err != nil {
+// TODO common
+func (box *KubeBox) execBox(template *model.BoxV1, name string) error {
+	if info, err := box.findBox(name); err != nil {
 		return err
+	} else {
+		return box.attachBox(template, info, false)
 	}
+}
+
+// TODO common
+func (box *KubeBox) openBox(template *model.BoxV1) error {
+	if info, err := box.createBox(template); err != nil {
+		return err
+	} else {
+		return box.attachBox(template, info, true)
+	}
+}
+
+// TODO common
+func (box *KubeBox) findBox(name string) (*model.BoxInfo, error) {
+	boxes, err := box.listBoxes()
+	if err != nil {
+		return nil, err
+	}
+	for _, boxInfo := range boxes {
+		if boxInfo.Name == name {
+			return &boxInfo, nil
+		}
+	}
+	return nil, errors.New("box not found")
+}
+
+func (box *KubeBox) attachBox(template *model.BoxV1, info *model.BoxInfo, removeOnExit bool) error {
+	box.eventBus.Publish(newPodExecKubeEvent(template.Name, box.clientConfig.Namespace, info.Id, template.Shell))
+
 	if err := box.podPortForward(template, info); err != nil {
 		return err
 	}
@@ -253,9 +282,10 @@ func (box *KubeBox) openBox(template *model.BoxV1) error {
 		ErrStream: box.streams.Err,
 		IsTty:     box.streams.IsTty,
 		OnExecCallback: func() {
-			// TODO removeOnExit
-			// stop loader
-			box.eventBus.Publish(newPodExecKubeLoaderEvent())
+			if removeOnExit {
+				// stop loader
+				box.eventBus.Publish(newPodExecKubeLoaderEvent())
+			}
 		},
 	}
 

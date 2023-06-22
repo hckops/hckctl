@@ -25,6 +25,8 @@ import (
 	"k8s.io/client-go/transport/spdy"
 	"k8s.io/client-go/util/homedir"
 	"k8s.io/kubectl/pkg/scheme"
+
+	"github.com/hckops/hckctl/pkg/client/common"
 )
 
 func NewOutOfClusterKubeClient(configPath string) (*KubeClient, error) {
@@ -291,7 +293,7 @@ func (client *KubeClient) PodExec(opts *PodExecOpts) error {
 		SubResource("exec").
 		VersionedParams(&corev1.PodExecOptions{
 			Container: opts.PodName,
-			Command:   []string{opts.Shell},
+			Command:   []string{common.DefaultShell(opts.Shell)},
 			Stdin:     true,
 			Stdout:    true,
 			Stderr:    true,
