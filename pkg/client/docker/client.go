@@ -76,6 +76,9 @@ func (client *DockerClient) ImageRemoveDangling(opts *ImageRemoveOpts) error {
 
 func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, error) {
 
+	// TODO labels
+	// TODO env var
+
 	newContainer, err := client.docker.ContainerCreate(
 		client.ctx,
 		opts.ContainerConfig,

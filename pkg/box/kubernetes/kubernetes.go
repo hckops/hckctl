@@ -42,6 +42,8 @@ func (box *KubeBox) close() error {
 func (box *KubeBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 	namespace := box.clientConfig.Namespace
 
+	// TODO add env var container override
+
 	// boxName
 	containerName := template.GenerateName()
 	deployment, service, err := buildSpec(containerName, namespace, template, box.clientConfig.Resource)

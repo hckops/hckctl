@@ -125,6 +125,8 @@ func buildContainerConfig(imageName string, containerName string, ports []model.
 		exposedPorts[p] = struct{}{}
 	}
 
+	// TODO add label revision: use correct revision when resolving template by name
+	// TODO add label owner/managed-by: use to list instead of prefix
 	return &container.Config{
 		Hostname:     containerName,
 		Image:        imageName,
@@ -135,7 +137,7 @@ func buildContainerConfig(imageName string, containerName string, ports []model.
 		StdinOnce:    true,
 		Tty:          true,
 		ExposedPorts: exposedPorts,
-		//Labels:       map[string]string{"com.hckops.revision": "main-or-empty"}, // TODO use correct revision when resolving template by name
+		//Labels:       map[string]string{"com.hckops.revision": "main-or-empty"},
 	}, nil
 }
 
@@ -255,6 +257,7 @@ func (box *DockerBox) logsBox(containerId string) error {
 
 func (box *DockerBox) listBoxes() ([]model.BoxInfo, error) {
 
+	// TODO list by labels (add during creation)
 	containers, err := box.client.ContainerList(model.BoxPrefixName)
 	if err != nil {
 		return nil, err

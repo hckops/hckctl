@@ -36,8 +36,8 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 			# prints a remote template (supports multiple formats)
 			hckctl template alpine
 			hckctl template base/parrot
-			hckctl template boxes/vulnerable/dvwa
-			hckctl template labs/ctf/htb-alpine.yaml
+			hckctl template boxes/base/arch
+			hckctl template boxes/vulnerable/dvwa.yml
 
 			# prints a specific version (branch|tag|sha) of the template
 			hckctl template alpine --revision main

@@ -12,7 +12,6 @@ import (
 	commonCmd "github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/command/common/flag"
 	configCmd "github.com/hckops/hckctl/pkg/command/config"
-	labCmd "github.com/hckops/hckctl/pkg/command/lab"
 	templateCmd "github.com/hckops/hckctl/pkg/command/template"
 	"github.com/hckops/hckctl/pkg/logger"
 )
@@ -71,7 +70,7 @@ func NewRootCmd() *cobra.Command {
 
 	rootCmd.AddCommand(boxCmd.NewBoxCmd(configRef))
 	rootCmd.AddCommand(configCmd.NewConfigCmd(configRef))
-	rootCmd.AddCommand(labCmd.NewLabCmd(configRef))
+	// TODO rootCmd.AddCommand(labCmd.NewLabCmd(configRef))
 	rootCmd.AddCommand(templateCmd.NewTemplateCmd(configRef))
 	rootCmd.AddCommand(NewVersionCmd())
 	return rootCmd

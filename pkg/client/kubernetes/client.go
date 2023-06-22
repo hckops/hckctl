@@ -135,6 +135,7 @@ func (client *KubeClient) DeploymentCreate(opts *DeploymentCreateOpts) error {
 func (client *KubeClient) DeploymentList(namespace string) ([]DeploymentInfo, error) {
 	appClient := client.kubeClientSet.AppsV1()
 
+	// TODO list by labels
 	// TODO filter list: "box-" prefix and status running ?
 	deployments, err := appClient.Deployments(namespace).List(client.ctx, metav1.ListOptions{})
 	if err != nil {

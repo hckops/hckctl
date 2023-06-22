@@ -2,9 +2,10 @@ package lab
 
 import (
 	"fmt"
-	"github.com/hckops/hckctl/pkg/command/config"
 
 	"github.com/spf13/cobra"
+
+	"github.com/hckops/hckctl/pkg/command/config"
 )
 
 // TODO command create, list, describe, delete

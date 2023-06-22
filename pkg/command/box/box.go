@@ -40,8 +40,6 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 			  The main purpose of a Box is to provide a ready-to-go and always up-to-date
 			  hacking environment with an uniformed experience, abstracting the actual providers
 			  e.g. Docker, Kubernetes, etc.
-
-			  Boxes are a simple building block, for more advanced scenarios prefer Labs.
 		`),
 		Example: heredoc.Doc(`
 
