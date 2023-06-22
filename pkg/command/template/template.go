@@ -36,8 +36,8 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 			# prints a remote template (supports multiple formats)
 			hckctl template alpine
 			hckctl template base/parrot
-			hckctl template boxes/base/arch
-			hckctl template boxes/vulnerable/dvwa.yml
+			hckctl template box/base/arch
+			hckctl template box/vulnerable/dvwa.yml
 
 			# prints a specific version (branch|tag|sha) of the template
 			hckctl template alpine --revision main
@@ -46,7 +46,7 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 			hckctl template alpine --format json
 
 			# validates and prints a local template
-			hckctl template ../megalopolis/boxes/base/alpine.yml --local
+			hckctl template ../megalopolis/box/base/alpine.yml --local
 		`),
 		RunE: opts.run,
 	}

@@ -29,7 +29,7 @@ Designed to transparently run locally, remotely or integrated in pipelines and t
 
 ### Box
 
-Create an [`alpine`](https://github.com/hckops/megalopolis/blob/main/boxes/base/alpine.yml) box to see how it works
+Create an [`alpine`](https://github.com/hckops/megalopolis/blob/main/box/base/alpine.yml) box to see how it works
 ```bash
 # spawns a docker box locally on a shared network
 hckctl box alpine
@@ -42,7 +42,7 @@ hckctl box alpine --provider kube
 [open|xdg-open] http://localhost:7681
 ```
 
-Spin-up a [`parrot`](https://github.com/hckops/megalopolis/blob/main/boxes/base/parrot.yml) box and access all port-forwarded ports locally to start hacking
+Spin-up a [`parrot`](https://github.com/hckops/megalopolis/blob/main/box/base/parrot.yml) box and access all port-forwarded ports locally to start hacking
 ```bash
 # credentials: parrot|changeme
 hckctl box parrot
@@ -54,7 +54,7 @@ vncviewer localhost:5900
 [open|xdg-open] http://localhost:6080
 ```
 
-Attack your vulnerable [`dvwa`](https://github.com/hckops/megalopolis/blob/main/boxes/vulnerable/dvwa.yml) box or create your own
+Attack your vulnerable [`dvwa`](https://github.com/hckops/megalopolis/blob/main/box/vulnerable/dvwa.yml) box or create your own
 ```bash
 # TODO
 hckctl box create dvwa

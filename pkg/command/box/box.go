@@ -31,7 +31,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 			Attach and tunnel a box
 
 			  Create and attach to an ephemeral Box, tunnelling locally all the open ports.
-			  All public templates are versioned under the /boxes/ sub-path on GitHub
+			  All public templates are versioned under the /box/ sub-path on GitHub
 			  at https://github.com/hckops/megalopolis
 
 			  Independently from the provider and the template used, it will spawn a shell
@@ -43,7 +43,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 		`),
 		Example: heredoc.Doc(`
 
-			# creates and attaches to a "boxes/base/parrot" docker container,
+			# creates and attaches to a "box/base/parrot" docker container,
 			# spawns a /bin/bash shell and tunnels the following ports:
 			# (vnc)			vncviewer localhost:5900
 			# (novnc)		http://localhost:6080
@@ -57,7 +57,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 			hckctl box vulnerable/dvwa --revision main
 
 			# opens a box defined locally
-			hckctl box ../megalopolis/boxes/base/alpine.yml --local
+			hckctl box ../megalopolis/box/base/alpine.yml --local
 		`),
 		RunE: opts.run,
 	}

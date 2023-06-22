@@ -24,7 +24,7 @@ func NewTemplateValidateCmd() *cobra.Command {
 		Example: heredoc.Doc(`
 
 			# validates a local template
-			hckctl template validate ../megalopolis/boxes/official/alpine.yml
+			hckctl template validate ../megalopolis/box/official/alpine.yml
 
 			# validates all templates in the given path (supports wildcards)
 			hckctl template validate "../megalopolis/**/*.{yml,yaml}"
