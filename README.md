@@ -166,42 +166,66 @@ just
 
 TODO
 * general
+    - update readme
+        * `arch` instead of `alpine`
+        * remove comments
+        * update setup
     - highlight attacker and victim boxes to create specific scenario
-    - autocomplete commands and values e.g. `box exec <list of boxes>` with `ValidArgsFunction`
-    - improve command validation e.g. docker `Args: cli.ExactArgs(1)`
     - add go reference badge
     - public `kali-core` image
-* template
-    - add offline mode source revision
-    - update directories to exclude in `resolvePath` e.g. charts
-* box
-    - mount `/dev/tun` for vpn
-    - docker: add env var
-    - kube: add env var
     - PR to official doc to run
         * owasp/dvwa
         * https://github.com/vulhub/vulhub
         * https://houdini.secsi.io
-    - create/remove vs start/stop vs up/down ?!
+* cli
+    - autocomplete commands and values e.g. `box exec <list of boxes>` with `ValidArgsFunction`
+    - improve command validation e.g. docker `Args: cli.ExactArgs(1)`
+    - filter/list box (list and delete) and template (list and validate) columns by provider + sorting
+    - config add set command
+    - add confirmation before
+        * reset config
+        * delete all
+* template
+    - add offline mode source revision
+    - update directories to exclude in `resolvePath` e.g. charts
+* box
+    - review command: `create/remove` vs `start/stop` vs `up/down` ?!
+    - refactor `box --provider=cloud`
+    - refactor common `BoxClient` methods (abstract)
+    - mount `/dev/tun` for vpn
+    - implement tunnel ??? kube portforward should wait
+    - implement copy ???
+    - kube: add env var
+    - kube: add distroless support
+    - kube: verify if close is needed or `return nil`
+    - kube: deployment list by labels or prefix
+    - kube: deployment list only running
+    - kube: verify `GetPodInfo` sidecar pod count
+    - kube: verify `PodPortForward` callback vs channel
+    - kube: update resources sizes
+    - docker: `ContainerCreate` add env var
+    - docker: `ContainerCreate` add labels
+    - docker: create container with `Labels=["com.hckops.revision"=<REVISION>"]` to resolve template by name
+    - docker: `listBoxes` by labels vs prefix
+    - docker: `attachBox` print ports?
     - docker: COPY shared volume `XDG_DATA_HOME`
     - docker: support powershell `/usr/bin/pwsh` (attach with no tty and raw terminal) see `docker run --rm -it mcr.microsoft.com/powershell`
-    - docker: create container with `Labels=["com.hckops.revision"=<REVISION>"]` to resolve template by name
     - docker: add support for remote docker daemon with `DOCKER_HOST`
-    - docker: add podman provider
     - docker: delete should remove all containers (running and stopped) i.e. delete + prune
-    - kube: update resources sizes
+    - add podman provider
     - add context timeout
     - cloud ssh key auth only + remove InsecureIgnoreHostKey
-* config
-    - add set command
-    - add confirmation before reset
+* task
+    - TODO ???
 * version
     - print server/cloud
     - print if new version available
     - auto update
 * release
     - add brew https://goreleaser.com/customization/homebrew
-    - test windows
+    - test linux
+    - test mac and mac1
+    - test window vm
 * plugins/bundles
     - man (plugin)
     - kube-inject (plugin) mount sidecar pod at runtime with debugging tools

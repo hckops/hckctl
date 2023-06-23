@@ -76,7 +76,7 @@ func runBoxClient(src template.TemplateSource, provider model.BoxProvider, confi
 func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeClient func(box.BoxClient, *model.BoxV1) error) error {
 
 	// best effort approach to resolve remote box template by name with default revision
-	// WARNING this might return unexpected results if the container was created with a different revision
+	// WARNING this might return unexpected results if the box was created with a different revision
 	revisionOpts := &template.RevisionOpts{
 		SourceCacheDir: configRef.Config.Template.CacheDir,
 		SourceUrl:      common.TemplateSourceUrl,

@@ -56,7 +56,7 @@ type BoxStreams struct {
 	In    io.ReadCloser
 	Out   io.Writer
 	Err   io.Writer
-	IsTty bool // tty false for tunnel only
+	IsTty bool // tty is false only for ssh tunnel
 }
 
 func newDefaultStreams(tty bool) *BoxStreams {

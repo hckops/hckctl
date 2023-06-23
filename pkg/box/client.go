@@ -9,8 +9,6 @@ import (
 	"github.com/hckops/hckctl/pkg/event"
 )
 
-// TODO move util.terminal in client package
-
 type BoxClient interface {
 	Provider() model.BoxProvider
 	Events() *event.EventBus

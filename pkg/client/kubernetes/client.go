@@ -4,9 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/client-go/tools/remotecommand"
-	"k8s.io/kubectl/pkg/cmd/exec"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -17,13 +14,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 	applyv1 "k8s.io/client-go/applyconfigurations/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/portforward"
+	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/client-go/transport/spdy"
 	"k8s.io/client-go/util/homedir"
+	"k8s.io/kubectl/pkg/cmd/exec"
 	"k8s.io/kubectl/pkg/scheme"
 
 	"github.com/hckops/hckctl/pkg/client/common"
@@ -207,7 +207,7 @@ func (client *KubeClient) GetPodInfo(deployment *appsv1.Deployment) (*PodInfo, e
 
 	pod := pods.Items[0]
 	info := &PodInfo{
-		Id:   pod.ObjectMeta.Name, // pod.Name + unique generated name
+		Id:   pod.ObjectMeta.Name, // pod.Name + unique generated suffix
 		Name: pod.Name,
 	}
 	return info, nil

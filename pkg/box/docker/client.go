@@ -53,7 +53,7 @@ func (box *DockerBox) Copy(string, string, string) error {
 
 func (box *DockerBox) Tunnel(string) error {
 	defer box.close()
-	return errors.New("not supported")
+	return errors.New("not implemented")
 }
 
 func (box *DockerBox) Delete(name string) error {

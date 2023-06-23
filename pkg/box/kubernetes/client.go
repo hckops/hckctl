@@ -54,7 +54,7 @@ func (box *KubeBox) Copy(string, string, string) error {
 
 func (box *KubeBox) Tunnel(string) error {
 	defer box.client.Close()
-	return errors.New("not supported")
+	return errors.New("not implemented")
 }
 
 func (box *KubeBox) Delete(name string) error {
