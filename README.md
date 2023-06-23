@@ -170,6 +170,12 @@ TODO
         * `arch` instead of `alpine`
         * remove comments
         * update setup
+        * descriptions/screenshot/gif
+    - delete old branches (video)
+    - update internal cli diagram
+    - convert this TODOs left in GitHub issues
+    - add GitHub org labels: feature/bug/question
+    - review/delete GitHub project
     - highlight attacker and victim boxes to create specific scenario
     - add go reference badge
     - public `kali-core` image
