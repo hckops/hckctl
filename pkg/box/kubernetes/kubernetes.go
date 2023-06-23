@@ -12,8 +12,9 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/hckops/hckctl/pkg/box/model"
+	"github.com/hckops/hckctl/pkg/client/common"
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
-	"github.com/hckops/hckctl/pkg/command/common"
+	commonCmd "github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
@@ -89,7 +90,7 @@ func (box *KubeBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 
 func buildSpec(containerName string, namespace string, template *model.BoxV1, resourceOptions *kubernetes.KubeResource) (*appsv1.Deployment, *corev1.Service, error) {
 
-	customLabels := buildLabels(containerName, util.ToKebabCase(template.Image.Repository), template.ImageVersion())
+	customLabels := buildLabels(containerName, common.ToKebabCase(template.Image.Repository), template.ImageVersion())
 	objectMeta := metav1.ObjectMeta{
 		Name:      containerName,
 		Namespace: namespace,
@@ -117,7 +118,7 @@ func buildLabels(name, instance, version string) Labels {
 		"app.kubernetes.io/name":       name,
 		"app.kubernetes.io/instance":   instance,
 		"app.kubernetes.io/version":    version,
-		"app.kubernetes.io/managed-by": common.ProjectName,
+		"app.kubernetes.io/managed-by": commonCmd.ProjectName,
 	}
 }
 
@@ -153,7 +154,7 @@ func buildPod(objectMeta metav1.ObjectMeta, template *model.BoxV1, memory string
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{
-					Name:            util.ToKebabCase(template.Image.Repository),
+					Name:            common.ToKebabCase(template.Image.Repository),
 					Image:           template.ImageName(),
 					ImagePullPolicy: corev1.PullIfNotPresent,
 					TTY:             true,
@@ -274,7 +275,7 @@ func (box *KubeBox) attachBox(template *model.BoxV1, info *model.BoxInfo, remove
 
 	opts := &kubernetes.PodExecOpts{
 		Namespace: box.clientConfig.Namespace,
-		PodName:   util.ToKebabCase(template.Image.Repository), // pod.Spec.Containers[0].Name
+		PodName:   common.ToKebabCase(template.Image.Repository), // pod.Spec.Containers[0].Name
 		PodId:     info.Id,
 		Shell:     template.Shell,
 		InStream:  box.streams.In,
