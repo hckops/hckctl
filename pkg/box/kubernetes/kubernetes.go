@@ -289,6 +289,10 @@ func (box *KubeBox) attachBox(template *model.BoxV1, info *model.BoxInfo, remove
 		},
 	}
 
+	if removeOnExit {
+		defer box.deleteBox(info.Name)
+	}
+
 	return box.client.PodExec(opts)
 }
 
@@ -365,15 +369,15 @@ func (box *KubeBox) listBoxes() ([]model.BoxInfo, error) {
 func (box *KubeBox) deleteBox(name string) error {
 	namespace := box.clientConfig.Namespace
 
+	box.eventBus.Publish(newDeploymentDeleteKubeEvent(namespace, name))
 	if err := box.client.DeploymentDelete(namespace, name); err != nil {
 		return err
 	}
-	box.eventBus.Publish(newDeploymentDeleteKubeEvent(namespace, name))
 
+	box.eventBus.Publish(newServiceDeleteKubeEvent(namespace, name))
 	if err := box.client.ServiceDelete(namespace, name); err != nil {
 		return err
 	}
-	box.eventBus.Publish(newServiceDeleteKubeEvent(namespace, name))
 
 	return nil
 }

@@ -29,6 +29,8 @@ Designed to transparently run locally, remotely or integrated in pipelines and t
 
 ### Box
 
+> TODO arch
+
 Create an [`alpine`](https://github.com/hckops/megalopolis/blob/main/box/base/alpine.yml) box to see how it works
 ```bash
 # spawns a docker box locally on a shared network
