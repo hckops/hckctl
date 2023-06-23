@@ -1,11 +1,11 @@
 package config
 
 import (
+	"github.com/hckops/hckctl/pkg/client/ssh"
 	"net"
 	"strconv"
 
 	"github.com/hckops/hckctl/pkg/box/model"
-	"github.com/hckops/hckctl/pkg/client/cloud"
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/logger"
@@ -75,8 +75,8 @@ func (c *CloudConfig) address() string {
 	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
 }
 
-func (c *CloudConfig) ToCloudClientConfig() *cloud.CloudClientConfig {
-	return &cloud.CloudClientConfig{
+func (c *CloudConfig) ToSshClientConfig() *ssh.SshClientConfig {
+	return &ssh.SshClientConfig{
 		Address:  c.address(),
 		Username: c.Username,
 		Token:    c.Token,

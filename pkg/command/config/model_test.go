@@ -1,11 +1,11 @@
 package config
 
 import (
+	"github.com/hckops/hckctl/pkg/client/ssh"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/hckops/hckctl/pkg/client/cloud"
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
 )
 
@@ -65,17 +65,17 @@ func TestToKubeClientConfig(t *testing.T) {
 	assert.Equal(t, expected, result)
 }
 
-func TestToCloudClientConfig(t *testing.T) {
+func TestToSshClientConfig(t *testing.T) {
 	cloudConfig := &CloudConfig{
 		Host:     "0.0.0.0",
 		Port:     2222,
 		Username: "myUsername",
 		Token:    "myToken",
 	}
-	expected := &cloud.CloudClientConfig{
+	expected := &ssh.SshClientConfig{
 		Address:  "0.0.0.0:2222",
 		Username: "myUsername",
 		Token:    "myToken",
 	}
-	assert.Equal(t, expected, cloudConfig.ToCloudClientConfig())
+	assert.Equal(t, expected, cloudConfig.ToSshClientConfig())
 }

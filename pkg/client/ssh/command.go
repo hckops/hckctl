@@ -1,8 +1,10 @@
-package cloud
+package ssh
 
 import (
 	"fmt"
 )
+
+// TODO remote protocol base64 json ???
 
 const (
 	CommandRequestType   string = "hck-v1"

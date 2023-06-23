@@ -33,7 +33,7 @@ func NewBoxClient(opts *model.BoxOpts) (BoxClient, error) {
 	case model.Kubernetes:
 		return kubernetes.NewKubeBox(opts.InternalOpts, opts.KubeConfig)
 	case model.Cloud:
-		return cloud.NewCloudBox(opts.InternalOpts, opts.CloudConfig)
+		return cloud.NewCloudBox(opts.InternalOpts, opts.SshConfig)
 	default:
 		return nil, errors.New("invalid provider")
 	}

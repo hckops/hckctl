@@ -4,19 +4,19 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/hckops/hckctl/pkg/box/model"
-	"github.com/hckops/hckctl/pkg/client/cloud"
+	"github.com/hckops/hckctl/pkg/client/ssh"
 	"github.com/hckops/hckctl/pkg/event"
 )
 
 type CloudBox struct {
-	client       *cloud.CloudClient
-	clientConfig *cloud.CloudClientConfig
+	client       *ssh.SshClient
+	clientConfig *ssh.SshClientConfig
 	streams      *model.BoxStreams
 	eventBus     *event.EventBus
 }
 
-func NewCloudBox(internalOpts *model.BoxInternalOpts, cloudConfig *cloud.CloudClientConfig) (*CloudBox, error) {
-	return newCloudBox(internalOpts, cloudConfig)
+func NewCloudBox(internalOpts *model.BoxInternalOpts, sshConfig *ssh.SshClientConfig) (*CloudBox, error) {
+	return newCloudBox(internalOpts, sshConfig)
 }
 
 func (box *CloudBox) Provider() model.BoxProvider {

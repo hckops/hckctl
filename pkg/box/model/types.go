@@ -1,10 +1,10 @@
 package model
 
 import (
+	"github.com/hckops/hckctl/pkg/client/ssh"
 	"io"
 	"os"
 
-	"github.com/hckops/hckctl/pkg/client/cloud"
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
 	"github.com/hckops/hckctl/pkg/event"
 )
@@ -31,15 +31,15 @@ type BoxInfo struct {
 type BoxOpts struct {
 	Provider     BoxProvider
 	KubeConfig   *kubernetes.KubeClientConfig
-	CloudConfig  *cloud.CloudClientConfig
+	SshConfig    *ssh.SshClientConfig
 	InternalOpts *BoxInternalOpts
 }
 
-func NewBoxOpts(provider BoxProvider, kubeConfig *kubernetes.KubeClientConfig, cloudConfig *cloud.CloudClientConfig) *BoxOpts {
+func NewBoxOpts(provider BoxProvider, kubeConfig *kubernetes.KubeClientConfig, sshConfig *ssh.SshClientConfig) *BoxOpts {
 	return &BoxOpts{
-		Provider:    provider,
-		KubeConfig:  kubeConfig,
-		CloudConfig: cloudConfig,
+		Provider:   provider,
+		KubeConfig: kubeConfig,
+		SshConfig:  sshConfig,
 		InternalOpts: &BoxInternalOpts{
 			Streams:  newDefaultStreams(true),
 			EventBus: event.NewEventBus(),
