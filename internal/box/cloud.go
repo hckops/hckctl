@@ -3,8 +3,8 @@ package box
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/hckops/hckctl/internal/common"
 	"github.com/hckops/hckctl/internal/schema"
+	"github.com/hckops/hckctl/pkg/client/cloud"
 	common3 "github.com/hckops/hckctl/pkg/client/common"
 	common2 "github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/util"
@@ -76,22 +76,22 @@ func (remote *RemoteSshBox) Open() {
 
 func (remote *RemoteSshBox) create() string {
 
-	boxId := remote.sendRequest(common.NewCommandCreateBox(remote.template.Name, remote.revision))
+	boxId := remote.sendRequest(cloud.NewCommandCreateBox(remote.template.Name, remote.revision))
 	remote.log.Info().Msgf("create cloud box: %s", boxId)
 	return boxId
 }
 
 func (remote *RemoteSshBox) delete(boxId string) {
 
-	_ = remote.sendRequest(common.NewCommandDeleteBox(remote.template.Name, remote.revision, boxId))
+	_ = remote.sendRequest(cloud.NewCommandDeleteBox(remote.template.Name, remote.revision, boxId))
 	remote.log.Info().Msgf("delete cloud box: %s", boxId)
 }
 
 func (remote *RemoteSshBox) sendRequest(payload string) string {
 	remote.log.Debug().Msgf("send request [%s]", payload)
 
-	_, response, err := remote.client.SendRequest(common.CommandRequestType, true, []byte(payload))
-	if err != nil || string(response) == common.CommandResponseError {
+	_, response, err := remote.client.SendRequest(cloud.CommandRequestType, true, []byte(payload))
+	if err != nil || string(response) == cloud.CommandResponseError {
 		remote.loader.Halt(err, "error cloud: send request")
 	}
 
@@ -178,7 +178,7 @@ func (remote *RemoteSshBox) exec(boxId string) {
 
 	remote.loader.Stop()
 
-	payload := common.NewCommandExecBox(remote.template.Name, remote.revision, boxId)
+	payload := cloud.NewCommandExecBox(remote.template.Name, remote.revision, boxId)
 	if err := session.Run(payload); err != nil && err != io.EOF {
 		remote.loader.Halt(err, "error cloud box exec")
 	}

@@ -1,6 +1,7 @@
 package box
 
 import (
+	"github.com/hckops/hckctl/pkg/box/cloud"
 	"github.com/pkg/errors"
 
 	"github.com/hckops/hckctl/pkg/box/docker"
@@ -32,8 +33,7 @@ func NewBoxClient(opts *model.BoxOpts) (BoxClient, error) {
 	case model.Kubernetes:
 		return kubernetes.NewKubeBox(opts.InternalOpts, opts.KubeConfig)
 	case model.Cloud:
-		// TODO
-		return nil, nil
+		return cloud.NewCloudBox(opts.InternalOpts, opts.CloudConfig)
 	default:
 		return nil, errors.New("invalid provider")
 	}

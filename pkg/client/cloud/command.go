@@ -1,6 +1,8 @@
-package common
+package cloud
 
-import "fmt"
+import (
+	"fmt"
+)
 
 const (
 	CommandRequestType   string = "hck-v1"
