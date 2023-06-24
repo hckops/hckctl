@@ -36,3 +36,10 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notification
+        uses: hckops/actions/discord-action@v0.10.5
+        with:
+          action: create-message
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          message: "> Repository:  **${{ github.repository }}**\\n> Version:\\t\\t ${{ github.ref }}\\n> Status:\\t\\t  **NEW release**"
