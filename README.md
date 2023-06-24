@@ -172,6 +172,7 @@ TODO
         * update setup
         * descriptions/screenshot/gif
     - delete old branches (video)
+    - disclaimer of responsibility
     - update internal cli diagram
     - convert this TODOs left in GitHub issues
     - add GitHub org labels: feature/bug/question
@@ -195,7 +196,7 @@ TODO
     - add offline mode source revision
     - update directories to exclude in `resolvePath` e.g. charts
 * box
-    - review command: `create/remove` vs `start/stop` vs `up/down` ?!
+    - review command: `create/remove` vs `start/stop` vs `up/down` and `exec/connect` ?!
     - refactor `box --provider=cloud`
     - refactor common `BoxClient` methods (abstract)
     - mount `/dev/tun` for vpn
