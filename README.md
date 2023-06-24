@@ -218,6 +218,7 @@ TODO
     - docker: support powershell `/usr/bin/pwsh` (attach with no tty and raw terminal) see `docker run --rm -it mcr.microsoft.com/powershell`
     - docker: add support for remote docker daemon with `DOCKER_HOST`
     - docker: delete should remove all containers (running and stopped) i.e. delete + prune
+    - cloud: refactor command/protocol
     - add podman provider
     - add context timeout
     - cloud ssh key auth only + remove InsecureIgnoreHostKey
@@ -226,7 +227,6 @@ TODO
 * version
     - print server/cloud
     - print if new version available
-    - auto update
 * release
     - add brew https://goreleaser.com/customization/homebrew
     - test linux

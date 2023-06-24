@@ -1,4 +1,4 @@
-package ssh
+package cloud
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 
 // TODO remote protocol base64 json ???
 
+// TODO refactor schema KindProtocol "protocol/v1"
 const (
 	CommandRequestType   string = "hck-v1"
 	CommandResponseError string = "error"

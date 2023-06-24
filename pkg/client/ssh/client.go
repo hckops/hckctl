@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
+
 	gossh "golang.org/x/crypto/ssh"
 )
 
@@ -34,4 +35,12 @@ func sshClientConfig(config *SshClientConfig) *gossh.ClientConfig {
 
 func (client *SshClient) Close() error {
 	return client.ssh.Close()
+}
+
+func (client *SshClient) SendRequest(protocol string, payload string) (string, error) {
+	_, response, err := client.ssh.SendRequest(protocol, true, []byte(payload))
+	if err != nil {
+		return "", errors.Wrapf(err, "error send request")
+	}
+	return string(response), nil
 }
