@@ -1,9 +1,9 @@
-package command
+package v1
 
 type PingBody struct{}
 
-func (b PingBody) cmdName() commandName {
-	return commandPing
+func (b PingBody) name() requestName {
+	return requestPing
 }
 
 func NewPingRequest() *Request[PingBody] {

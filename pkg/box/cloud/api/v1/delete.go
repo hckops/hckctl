@@ -1,11 +1,11 @@
-package command
+package v1
 
 type BoxDeleteBody struct {
 	Name string `json:"name"`
 }
 
-func (b BoxDeleteBody) cmdName() commandName {
-	return commandBoxDelete
+func (b BoxDeleteBody) name() requestName {
+	return requestBoxDelete
 }
 
 func NewBoxDeleteRequest(name string) *Request[BoxDeleteBody] {

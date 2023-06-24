@@ -1,6 +1,7 @@
 package cloud
 
 import (
+	"github.com/hckops/hckctl/pkg/box/cloud/api/v1"
 	"github.com/hckops/hckctl/pkg/client/ssh"
 	"github.com/pkg/errors"
 
@@ -27,4 +28,11 @@ func (box *CloudBox) close() error {
 	box.eventBus.Publish(newClientCloseCloudEvent())
 	box.eventBus.Close()
 	return box.client.Close()
+}
+
+func (box *CloudBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
+
+	v1.NewBoxCreateRequest(template.Name)
+
+	return nil, nil
 }

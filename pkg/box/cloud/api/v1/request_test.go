@@ -1,4 +1,4 @@
-package command
+package v1
 
 import (
 	"testing"
@@ -8,28 +8,28 @@ import (
 
 func TestPingRequest(t *testing.T) {
 	request := NewPingRequest()
-	value := `{"kind":"command/v1","name":"hck-ping","body":{}}`
+	value := `{"kind":"api/v1","name":"hck-ping","body":{}}`
 
 	testRequest[PingBody](t, request, value)
 }
 
 func TestBoxCreateRequest(t *testing.T) {
-	request := NewBoxCreateRequest("alpine", "main")
-	value := `{"kind":"command/v1","name":"hck-box-create","body":{"name":"alpine","revision":"main"}}`
+	request := NewBoxCreateRequest("alpine")
+	value := `{"kind":"api/v1","name":"hck-box-create","body":{"templateName":"alpine"}}`
 
 	testRequest[BoxCreateBody](t, request, value)
 }
 
 func TestBoxDeleteRequest(t *testing.T) {
-	request := NewBoxDeleteRequest("alpine")
-	value := `{"kind":"command/v1","name":"hck-box-delete","body":{"name":"alpine"}}`
+	request := NewBoxDeleteRequest("box-alpine-12345")
+	value := `{"kind":"api/v1","name":"hck-box-delete","body":{"name":"box-alpine-12345"}}`
 
 	testRequest[BoxDeleteBody](t, request, value)
 }
 
 func TestBoxListRequest(t *testing.T) {
 	request := NewBoxListRequest()
-	value := `{"kind":"command/v1","name":"hck-box-list","body":{}}`
+	value := `{"kind":"api/v1","name":"hck-box-list","body":{}}`
 
 	testRequest[BoxListBody](t, request, value)
 }

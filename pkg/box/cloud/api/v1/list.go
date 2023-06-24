@@ -1,9 +1,9 @@
-package command
+package v1
 
 type BoxListBody struct{}
 
-func (b BoxListBody) cmdName() commandName {
-	return commandBoxList
+func (b BoxListBody) name() requestName {
+	return requestBoxList
 }
 
 func NewBoxListRequest() *Request[BoxListBody] {

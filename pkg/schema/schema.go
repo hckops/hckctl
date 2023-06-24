@@ -16,7 +16,7 @@ type SchemaKind int
 
 const (
 	KindConfigV1 SchemaKind = iota
-	KindCommandV1
+	KindApiV1
 	KindBoxV1
 	KindLabV1
 	KindTaskV1
@@ -24,12 +24,12 @@ const (
 )
 
 var kinds = map[SchemaKind]string{
-	KindConfigV1:  "config/v1",
-	KindCommandV1: "command/v1",
-	KindBoxV1:     "box/v1",
-	KindLabV1:     "lab/v1",
-	KindTaskV1:    "task/v1",
-	KindFlowV1:    "flow/v1",
+	KindConfigV1: "config/v1",
+	KindApiV1:    "api/v1",
+	KindBoxV1:    "box/v1",
+	KindLabV1:    "lab/v1",
+	KindTaskV1:   "task/v1",
+	KindFlowV1:   "flow/v1",
 }
 
 func (s SchemaKind) String() string {
