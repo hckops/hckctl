@@ -11,9 +11,9 @@ builds:
     ldflags:
       # remove symbol table and debug information
       - -s -w
-      - -X github.com/hckops/hckctl/pkg/command.version={{ .Version }}
-      - -X github.com/hckops/hckctl/pkg/command.commit={{ .ShortCommit }}
-      - -X github.com/hckops/hckctl/pkg/command.timestamp={{ .Date }}
+      - -X github.com/hckops/hckctl/pkg/command/version.release={{ .Version }}
+      - -X github.com/hckops/hckctl/pkg/command/version.commit={{ .ShortCommit }}
+      - -X github.com/hckops/hckctl/pkg/command/version.timestamp={{ .Date }}
     goos:
       - darwin
       - linux

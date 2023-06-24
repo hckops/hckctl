@@ -21,6 +21,8 @@ test:
 
 build output $VERSION_COMMIT="$(git rev-parse HEAD)" $VERSION_TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)": install format vet test
   rm -frv {{output}}
-  {{GO_BUILD_ENV}} go build \
-    -ldflags="-X github.com/hckops/hckctl/pkg/command.commit={{VERSION_COMMIT}} -X github.com/hckops/hckctl/pkg/command.timestamp={{VERSION_TIMESTAMP}}" \
+  {{GO_BUILD_ENV}} go build -ldflags="\
+    -X github.com/hckops/hckctl/pkg/command/version.release=0.0.0 \
+    -X github.com/hckops/hckctl/pkg/command/version.commit={{VERSION_COMMIT}} \
+    -X github.com/hckops/hckctl/pkg/command/version.timestamp={{VERSION_TIMESTAMP}}" \
     -o {{output}}/{{BIN_NAME}} cmd/main.go
