@@ -7,7 +7,7 @@ import (
 
 	box "github.com/hckops/hckctl/pkg/box/model"
 	lab "github.com/hckops/hckctl/pkg/lab/model"
-	"github.com/hckops/hckctl/pkg/template/schema"
+	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/util"
 )
 

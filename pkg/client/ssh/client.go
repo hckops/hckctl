@@ -2,7 +2,6 @@ package ssh
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net"
 	"os"
@@ -51,24 +50,6 @@ func (client *SshClient) SendRequest(protocol string, payload string) (string, e
 	return string(response), nil
 }
 
-type TunnelOpts struct {
-	LocalPort             string
-	RemoteHost            string
-	RemotePort            string
-	OnTunnelErrorCallback func(error)
-}
-
-func (t *TunnelOpts) Network() string {
-	return "tcp"
-}
-
-func (t *TunnelOpts) LocalAddress() string {
-	return fmt.Sprintf("0.0.0.0:%s", t.LocalPort)
-}
-func (t *TunnelOpts) RemoteAddress() string {
-	return fmt.Sprintf("%s:%s", t.RemoteHost, t.RemotePort)
-}
-
 // Tunnel starts a local server and forwards traffic to a remote connection
 func (client *SshClient) Tunnel(opts *TunnelOpts) {
 
@@ -104,12 +85,6 @@ func (client *SshClient) Tunnel(opts *TunnelOpts) {
 			go copyStream(remoteConnection, localConnection, "local->remote")
 		}()
 	}
-}
-
-type ExecOpts struct {
-	Command               string
-	OnStreamStartCallback func()
-	OnStreamErrorCallback func(error)
 }
 
 func (client *SshClient) Exec(opts *ExecOpts) error {

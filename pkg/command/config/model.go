@@ -1,15 +1,15 @@
 package config
 
 import (
-	"github.com/hckops/hckctl/pkg/client/ssh"
 	"net"
 	"strconv"
 
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
+	"github.com/hckops/hckctl/pkg/client/ssh"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/logger"
-	"github.com/hckops/hckctl/pkg/template/schema"
+	"github.com/hckops/hckctl/pkg/schema"
 )
 
 // ConfigRef is a wrapper used to avoid global variables.

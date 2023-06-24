@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/hckops/hckctl/pkg/box/model"
-	"github.com/hckops/hckctl/pkg/template/schema"
+	"github.com/hckops/hckctl/pkg/schema"
 )
 
 var exampleYaml = heredoc.Doc(`
