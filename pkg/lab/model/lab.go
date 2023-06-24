@@ -1,5 +1,7 @@
 package model
 
+// TODO out-of-scope for initial release
+
 type LabV1 struct {
 	Kind  string
 	Name  string

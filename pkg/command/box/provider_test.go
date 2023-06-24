@@ -10,9 +10,10 @@ import (
 )
 
 func TestBoxProviders(t *testing.T) {
-	assert.Equal(t, 2, len(boxProviders()))
+	assert.Equal(t, 3, len(boxProviders()))
 	assert.Equal(t, "docker", boxProviders()[0].String())
 	assert.Equal(t, "kube", boxProviders()[1].String())
+	assert.Equal(t, "cloud", boxProviders()[2].String())
 }
 
 func TestToBoxProvider(t *testing.T) {
@@ -24,18 +25,20 @@ func TestToBoxProvider(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, model.Kubernetes, kube)
 
-	_, err = toBoxProvider(flag.UnknownProviderFlag)
-	assert.EqualError(t, err, "invalid provider")
+	cloud, err := toBoxProvider(flag.CloudProviderFlag)
+	assert.NoError(t, err)
+	assert.Equal(t, model.Cloud, cloud)
 
-	_, err = toBoxProvider(flag.CloudProviderFlag)
+	_, err = toBoxProvider(flag.UnknownProviderFlag)
 	assert.EqualError(t, err, "invalid provider")
 }
 
 func TestBoxProviderIds(t *testing.T) {
-	assert.Equal(t, 2, len(boxProviderIds()))
+	assert.Equal(t, 3, len(boxProviderIds()))
 
 	assert.Equal(t, []string{"docker"}, boxProviderIds()[flag.DockerProviderFlag])
 	assert.Equal(t, []string{"kube", "k8s", "kubernetes"}, boxProviderIds()[flag.KubeProviderFlag])
+	assert.Equal(t, []string{"cloud"}, boxProviderIds()[flag.CloudProviderFlag])
 }
 
 func TestValidateBoxProviderConfig(t *testing.T) {

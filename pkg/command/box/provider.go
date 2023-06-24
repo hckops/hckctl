@@ -17,6 +17,7 @@ func boxProviders() []flag.ProviderFlag {
 	return []flag.ProviderFlag{
 		flag.DockerProviderFlag,
 		flag.KubeProviderFlag,
+		flag.CloudProviderFlag,
 	}
 }
 
@@ -26,6 +27,8 @@ func toBoxProvider(p flag.ProviderFlag) (model.BoxProvider, error) {
 		return model.Docker, nil
 	case flag.KubeProviderFlag:
 		return model.Kubernetes, nil
+	case flag.CloudProviderFlag:
+		return model.Cloud, nil
 	default:
 		return model.Docker, errors.New("invalid provider")
 	}

@@ -1,11 +1,11 @@
 package model
 
 import (
-	"github.com/hckops/hckctl/pkg/client/ssh"
 	"io"
 	"os"
 
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
+	"github.com/hckops/hckctl/pkg/client/ssh"
 	"github.com/hckops/hckctl/pkg/event"
 )
 

@@ -1,6 +1,7 @@
 package box
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/rs/zerolog/log"
@@ -52,6 +53,12 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	} else if len(args) == 1 {
 		name := args[0]
+
+		if provider == model.Cloud && opts.sourceFlag.Revision != common.TemplateSourceRevision {
+			log.Warn().Msgf("revision flag not supported by cloud provider: revision=%s", opts.sourceFlag.Revision)
+			return errors.New("invalid revision")
+		}
+
 		revisionOpts := &template.RevisionOpts{
 			SourceCacheDir: opts.configRef.Config.Template.CacheDir,
 			SourceUrl:      common.TemplateSourceUrl,

@@ -1,9 +1,9 @@
 package box
 
 import (
-	"github.com/hckops/hckctl/pkg/box/cloud"
 	"github.com/pkg/errors"
 
+	"github.com/hckops/hckctl/pkg/box/cloud"
 	"github.com/hckops/hckctl/pkg/box/docker"
 	"github.com/hckops/hckctl/pkg/box/kubernetes"
 	"github.com/hckops/hckctl/pkg/box/model"
@@ -14,8 +14,11 @@ type BoxClient interface {
 	Provider() model.BoxProvider
 	Events() *event.EventBus
 	Create(template *model.BoxV1) (*model.BoxInfo, error)
-	Exec(template *model.BoxV1, name string) error // TODO exec --tunnel (docker do nothing)
-	Open(template *model.BoxV1) error              // TODO open --tunnel (docker do nothing)
+	// TODO exec --tunnel (docker does nothing)
+	// TODO rename exec to connect
+	Exec(template *model.BoxV1, name string) error
+	// TODO open --tunnel (docker does nothing)
+	Open(template *model.BoxV1) error
 	List() ([]model.BoxInfo, error)
 	Copy(name string, from string, to string) error
 	Tunnel(name string) error
