@@ -1,13 +1,25 @@
 package v1
 
-type BoxDeleteBody struct {
-	Name string `json:"name"`
+type BoxDeleteRequestBody struct {
+	Names []string `json:"names"`
 }
 
-func (b BoxDeleteBody) name() requestName {
-	return requestBoxDelete
+func (b BoxDeleteRequestBody) method() methodName {
+	return methodBoxDelete
 }
 
-func NewBoxDeleteRequest(name string) *Request[BoxDeleteBody] {
-	return newRequest[BoxDeleteBody](BoxDeleteBody{name})
+type BoxDeleteResponseBody struct {
+	Names []string `json:"names"`
+}
+
+func (b BoxDeleteResponseBody) method() methodName {
+	return methodBoxDelete
+}
+
+func NewBoxDeleteRequest(origin string, names []string) *Message[BoxDeleteRequestBody] {
+	return newMessage[BoxDeleteRequestBody](origin, BoxDeleteRequestBody{names})
+}
+
+func NewBoxDeleteResponse(origin string, names []string) *Message[BoxDeleteResponseBody] {
+	return newMessage[BoxDeleteResponseBody](origin, BoxDeleteResponseBody{names})
 }

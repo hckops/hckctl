@@ -35,21 +35,18 @@ type BoxOpts struct {
 	InternalOpts *BoxInternalOpts
 }
 
-func NewBoxOpts(provider BoxProvider, kubeConfig *kubernetes.KubeClientConfig, sshConfig *ssh.SshClientConfig) *BoxOpts {
-	return &BoxOpts{
-		Provider:   provider,
-		KubeConfig: kubeConfig,
-		SshConfig:  sshConfig,
-		InternalOpts: &BoxInternalOpts{
-			Streams:  newDefaultStreams(true),
-			EventBus: event.NewEventBus(),
-		},
-	}
+type BoxInternalOpts struct {
+	ClientVersion string
+	Streams       *BoxStreams
+	EventBus      *event.EventBus
 }
 
-type BoxInternalOpts struct {
-	Streams  *BoxStreams
-	EventBus *event.EventBus
+func NewBoxInternalOpts(clientVersion string) *BoxInternalOpts {
+	return &BoxInternalOpts{
+		ClientVersion: clientVersion,
+		Streams:       newDefaultStreams(true),
+		EventBus:      event.NewEventBus(),
+	}
 }
 
 type BoxStreams struct {

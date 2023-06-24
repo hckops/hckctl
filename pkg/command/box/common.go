@@ -11,6 +11,7 @@ import (
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/command/common/flag"
 	"github.com/hckops/hckctl/pkg/command/config"
+	"github.com/hckops/hckctl/pkg/command/version"
 	"github.com/hckops/hckctl/pkg/event"
 	"github.com/hckops/hckctl/pkg/template"
 )
@@ -121,8 +122,13 @@ func newBoxOpts(provider model.BoxProvider, configRef *config.ConfigRef) (*model
 	}
 
 	sshClientConfig := configRef.Config.Provider.Cloud.ToSshClientConfig()
-	boxOpts := model.NewBoxOpts(provider, kubeClientConfig, sshClientConfig)
-
+	internalOpts := model.NewBoxInternalOpts(version.ClientVersion())
+	boxOpts := &model.BoxOpts{
+		Provider:     provider,
+		KubeConfig:   kubeClientConfig,
+		SshConfig:    sshClientConfig,
+		InternalOpts: internalOpts,
+	}
 	return boxOpts, nil
 }
 

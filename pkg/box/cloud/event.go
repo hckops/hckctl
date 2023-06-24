@@ -1,6 +1,8 @@
 package cloud
 
 import (
+	"fmt"
+
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/event"
 )
@@ -28,4 +30,8 @@ func newClientInitCloudEvent() *cloudEvent {
 
 func newClientCloseCloudEvent() *cloudEvent {
 	return &cloudEvent{kind: event.LogDebug, value: "close cloud client"}
+}
+
+func newApiCreateCloudLoaderEvent(address string, templateName string) *cloudEvent {
+	return &cloudEvent{kind: event.LoaderUpdate, value: fmt.Sprintf("loading %s/%s", address, templateName)}
 }

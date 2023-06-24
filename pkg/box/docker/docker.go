@@ -62,6 +62,8 @@ func (box *DockerBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 		return nil, err
 	}
 
+	// TODO add env var container override
+
 	// boxName
 	containerName := template.GenerateName()
 	// skip not supported virtual-* ports

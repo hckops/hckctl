@@ -1,16 +1,25 @@
 package v1
 
-type BoxCreateBody struct {
+type BoxCreateRequestBody struct {
 	TemplateName string `json:"templateName"`
 }
 
-func (b BoxCreateBody) name() requestName {
-	return requestBoxCreate
+func (b BoxCreateRequestBody) method() methodName {
+	return methodBoxCreate
 }
 
-func NewBoxCreateRequest(templateName string) *Request[BoxCreateBody] {
-	body := BoxCreateBody{
-		TemplateName: templateName,
-	}
-	return newRequest[BoxCreateBody](body)
+type BoxCreateResponseBody struct {
+	Name string `json:"name"`
+}
+
+func (b BoxCreateResponseBody) method() methodName {
+	return methodBoxCreate
+}
+
+func NewBoxCreateRequest(origin string, templateName string) *Message[BoxCreateRequestBody] {
+	return newMessage[BoxCreateRequestBody](origin, BoxCreateRequestBody{templateName})
+}
+
+func NewBoxCreateResponse(origin string, name string) *Message[BoxCreateResponseBody] {
+	return newMessage[BoxCreateResponseBody](origin, BoxCreateResponseBody{name})
 }
