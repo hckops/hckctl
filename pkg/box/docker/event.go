@@ -69,7 +69,7 @@ func newContainerCreatePortBindDockerConsoleEvent(containerName string, port mod
 }
 
 func newContainerCreateDockerEvent(templateName string, containerName string, containerId string) *dockerEvent {
-	return &dockerEvent{kind: event.LogDebug, value: fmt.Sprintf("container create: templateName-%s containerName=%s containerId=%s", templateName, containerName, containerId)}
+	return &dockerEvent{kind: event.LogDebug, value: fmt.Sprintf("container create: templateName=%s containerName=%s containerId=%s", templateName, containerName, containerId)}
 }
 
 func newContainerAttachDockerEvent(containerName string, containerId string, command string) *dockerEvent {

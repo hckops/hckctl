@@ -30,7 +30,7 @@ func (box *CloudBox) Events() *event.EventBus {
 
 func (box *CloudBox) Create(template *model.BoxV1) (*model.BoxInfo, error) {
 	defer box.close()
-	return nil, errors.New("not implemented")
+	return box.createBox(template)
 }
 
 func (box *CloudBox) Exec(template *model.BoxV1, name string) error {
@@ -60,10 +60,11 @@ func (box *CloudBox) Tunnel(string) error {
 
 func (box *CloudBox) Delete(name string) error {
 	defer box.close()
-	return errors.New("not implemented")
+	_, err := box.deleteBoxes([]string{name})
+	return err
 }
 
 func (box *CloudBox) DeleteAll() ([]model.BoxInfo, error) {
 	defer box.close()
-	return nil, errors.New("not implemented")
+	return box.deleteBoxes([]string{})
 }

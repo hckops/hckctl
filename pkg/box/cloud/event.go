@@ -35,3 +35,7 @@ func newClientCloseCloudEvent() *cloudEvent {
 func newApiCreateCloudLoaderEvent(address string, templateName string) *cloudEvent {
 	return &cloudEvent{kind: event.LoaderUpdate, value: fmt.Sprintf("loading %s/%s", address, templateName)}
 }
+
+func newApiCreateCloudEvent(templateName string, boxName string) *cloudEvent {
+	return &cloudEvent{kind: event.LogDebug, value: fmt.Sprintf("api create: templateName=%s boxName=%s", templateName, boxName)}
+}

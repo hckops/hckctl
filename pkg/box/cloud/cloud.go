@@ -39,9 +39,43 @@ func (box *CloudBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "error cloud create request")
 	}
-	_, err = box.client.SendRequest(request.Protocol(), payload)
+	value, err := box.client.SendRequest(request.Protocol(), payload)
+	if err != nil {
+		return nil, errors.Wrap(err, "error cloud create")
+	}
 
-	// TODO box.eventBus.Publish(newContainerCreateDockerEvent(template.Name, containerName, containerId))
+	response, err := v1.Decode[v1.BoxCreateResponseBody](value)
+	if err != nil {
+		return nil, errors.Wrap(err, "error cloud create response")
+	}
+	boxName := response.Body.Name
+	box.eventBus.Publish(newApiCreateCloudEvent(template.Name, boxName))
 
-	return nil, nil
+	return &model.BoxInfo{Id: boxName, Name: boxName}, nil
+}
+
+// empty "names" means all
+func (box *CloudBox) deleteBoxes(names []string) ([]model.BoxInfo, error) {
+	// TODO box.eventBus.Publish
+
+	request := v1.NewBoxDeleteRequest(box.clientVersion, names)
+	payload, err := request.Encode()
+	if err != nil {
+		return nil, errors.Wrap(err, "error cloud delete request")
+	}
+	value, err := box.client.SendRequest(request.Protocol(), payload)
+	if err != nil {
+		return nil, errors.Wrap(err, "error cloud delete")
+	}
+
+	response, err := v1.Decode[v1.BoxDeleteResponseBody](value)
+	if err != nil {
+		return nil, errors.Wrap(err, "error cloud delete response")
+	}
+	var result []model.BoxInfo
+	for _, name := range response.Body.Names {
+		result = append(result, model.BoxInfo{Id: name, Name: name})
+	}
+
+	return result, nil
 }
