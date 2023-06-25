@@ -35,7 +35,7 @@ func (box *CloudBox) Create(template *model.BoxV1) (*model.BoxInfo, error) {
 
 func (box *CloudBox) Exec(template *model.BoxV1, name string) error {
 	defer box.close()
-	return errors.New("not implemented")
+	return box.execBox(template, name)
 }
 
 func (box *CloudBox) Tunnel(string) error {

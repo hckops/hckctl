@@ -54,9 +54,17 @@ func (box *CloudBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 	return &model.BoxInfo{Id: boxName, Name: boxName}, nil
 }
 
-func (box *CloudBox) attachBox(template *model.BoxV1, name string) error {
+func (box *CloudBox) execBox(template *model.BoxV1, name string) error {
+	// TODO box.eventBus.Publish
+
+	request := v1.NewBoxExecRequest(box.clientVersion, name)
+	payload, err := request.Encode()
+	if err != nil {
+		return errors.Wrap(err, "error cloud exec request")
+	}
+
 	opts := &ssh.ExecOpts{
-		Payload: template.Shell, // TODO BoxExecRequestBody
+		Payload: payload, // TODO BoxExecRequestBody
 		OnStreamStartCallback: func() {
 			// TODO
 		},

@@ -14,6 +14,15 @@ const (
 
 var testBoxes = []string{"box-alpine-123", "box-alpine-456"}
 
+func TestMethods(t *testing.T) {
+	assert.Equal(t, 5, len(methods))
+	assert.Equal(t, "hck-ping", methodPing.String())
+	assert.Equal(t, "hck-box-create", methodBoxCreate.String())
+	assert.Equal(t, "hck-box-exec", methodBoxExec.String())
+	assert.Equal(t, "hck-box-delete", methodBoxDelete.String())
+	assert.Equal(t, "hck-box-list", methodBoxList.String())
+}
+
 func TestPingRequest(t *testing.T) {
 	message := NewPingMessage(clientOrigin)
 	value := `{"kind":"api/v1","origin":"hckctl-0.0.0-os","method":"hck-ping","body":{"value":"ping"}}`
@@ -40,6 +49,13 @@ func TestBoxCreateResponse(t *testing.T) {
 	value := `{"kind":"api/v1","origin":"hckadm-0.0.0-info","method":"hck-box-create","body":{"name":"box-alpine-123"}}`
 
 	testMessage[BoxCreateResponseBody](t, message, value)
+}
+
+func TestBoxExecRequest(t *testing.T) {
+	message := NewBoxExecRequest(clientOrigin, "alpine")
+	value := `{"kind":"api/v1","origin":"hckctl-0.0.0-os","method":"hck-box-exec","body":{"name":"alpine"}}`
+
+	testMessage[BoxExecRequestBody](t, message, value)
 }
 
 func TestBoxDeleteRequest(t *testing.T) {
