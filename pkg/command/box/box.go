@@ -6,16 +6,17 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/hckops/hckctl/pkg/box/model"
+	boxFlag "github.com/hckops/hckctl/pkg/command/box/flag"
 	"github.com/hckops/hckctl/pkg/command/common"
-	"github.com/hckops/hckctl/pkg/command/common/flag"
+	commonFlag "github.com/hckops/hckctl/pkg/command/common/flag"
 	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/template"
 )
 
 type boxCmdOptions struct {
 	configRef    *config.ConfigRef
-	sourceFlag   *flag.SourceFlag
-	providerFlag *flag.ProviderFlag
+	sourceFlag   *commonFlag.SourceFlag
+	providerFlag *commonFlag.ProviderFlag
 }
 
 func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -26,16 +27,16 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "box [name]",
-		Short: "Attach and tunnel a box",
+		Short: "Access and tunnel a box",
 		Long: heredoc.Doc(`
-			Attach and tunnel a box
+			Access and tunnel a box
 
-			  Create and attach to an ephemeral Box, tunnelling locally all the open ports.
+			  Create and access an ephemeral Box, tunnelling locally all the open ports.
 			  All public templates are versioned under the /box/ sub-path on GitHub
 			  at https://github.com/hckops/megalopolis
 
 			  Independently from the provider and the template used, it will spawn a shell
-			  that when closed will automatically remove and cleanup the running instance.
+			  that when closed will automatically delete and cleanup all the resources.
 
 			  The main purpose of a Box is to provide a ready-to-go and always up-to-date
 			  hacking environment with an uniformed experience, abstracting the actual providers
@@ -43,7 +44,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 		`),
 		Example: heredoc.Doc(`
 
-			# creates and attaches to a "box/base/parrot" docker container,
+			# creates and accesses a "box/base/parrot" docker container,
 			# spawns a /bin/bash shell and tunnels the following ports:
 			# (vnc)			vncviewer localhost:5900
 			# (novnc)		http://localhost:6080
@@ -62,14 +63,16 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 		RunE: opts.run,
 	}
 
-	// --provider (enum)
-	opts.providerFlag = addBoxProviderFlag(command)
-	// --revision or --local
-	opts.sourceFlag = flag.AddTemplateSourceFlag(command)
+	// TODO --tunnel-only or --no-tunnel
 
+	// --provider (enum)
+	opts.providerFlag = boxFlag.AddBoxProviderFlag(command)
+	// --revision or --local
+	opts.sourceFlag = commonFlag.AddTemplateSourceFlag(command)
+
+	command.AddCommand(NewBoxConnectCmd(configRef))
 	command.AddCommand(NewBoxCreateCmd(configRef))
 	command.AddCommand(NewBoxDeleteCmd(configRef))
-	command.AddCommand(NewBoxExecCmd(configRef))
 	command.AddCommand(NewBoxListCmd(configRef))
 
 	return command
@@ -77,7 +80,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 
 func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 
-	provider, err := validateBoxProvider(opts.configRef.Config.Box.Provider, opts.providerFlag)
+	provider, err := boxFlag.ValidateBoxProvider(opts.configRef.Config.Box.Provider, opts.providerFlag)
 	if err != nil {
 		return err
 	} else if len(args) == 1 && opts.sourceFlag.Local {

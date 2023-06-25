@@ -37,14 +37,14 @@ func (box *KubeBox) Exec(template *model.BoxV1, name string) error {
 	return box.execBox(template, name)
 }
 
+func (box *KubeBox) Tunnel(string) error {
+	defer box.client.Close()
+	return errors.New("not implemented")
+}
+
 func (box *KubeBox) Open(template *model.BoxV1) error {
 	defer box.client.Close()
 	return box.openBox(template)
-}
-
-func (box *KubeBox) List() ([]model.BoxInfo, error) {
-	defer box.client.Close()
-	return box.listBoxes()
 }
 
 func (box *KubeBox) Copy(string, string, string) error {
@@ -52,9 +52,9 @@ func (box *KubeBox) Copy(string, string, string) error {
 	return errors.New("not implemented")
 }
 
-func (box *KubeBox) Tunnel(string) error {
+func (box *KubeBox) List() ([]model.BoxInfo, error) {
 	defer box.client.Close()
-	return errors.New("not implemented")
+	return box.listBoxes()
 }
 
 func (box *KubeBox) Delete(name string) error {

@@ -8,16 +8,17 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/hckops/hckctl/pkg/box/model"
+	boxFlag "github.com/hckops/hckctl/pkg/command/box/flag"
 	"github.com/hckops/hckctl/pkg/command/common"
-	"github.com/hckops/hckctl/pkg/command/common/flag"
+	commonFlag "github.com/hckops/hckctl/pkg/command/common/flag"
 	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/template"
 )
 
 type boxCreateCmdOptions struct {
 	configRef    *config.ConfigRef
-	sourceFlag   *flag.SourceFlag
-	providerFlag *flag.ProviderFlag
+	sourceFlag   *commonFlag.SourceFlag
+	providerFlag *commonFlag.ProviderFlag
 }
 
 func NewBoxCreateCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -28,21 +29,21 @@ func NewBoxCreateCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "create [name]",
-		Short: "Create a detached box",
+		Short: "Create a detached long running box",
 		RunE:  opts.run,
 	}
 
 	// --provider (enum)
-	opts.providerFlag = addBoxProviderFlag(command)
+	opts.providerFlag = boxFlag.AddBoxProviderFlag(command)
 	// --revision or --local
-	opts.sourceFlag = flag.AddTemplateSourceFlag(command)
+	opts.sourceFlag = commonFlag.AddTemplateSourceFlag(command)
 
 	return command
 }
 
 func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 
-	provider, err := validateBoxProvider(opts.configRef.Config.Box.Provider, opts.providerFlag)
+	provider, err := boxFlag.ValidateBoxProvider(opts.configRef.Config.Box.Provider, opts.providerFlag)
 	if err != nil {
 		return err
 	} else if len(args) == 1 && opts.sourceFlag.Local {

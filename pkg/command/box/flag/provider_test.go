@@ -1,4 +1,4 @@
-package box
+package flag
 
 import (
 	"testing"
@@ -10,26 +10,26 @@ import (
 )
 
 func TestBoxProviders(t *testing.T) {
-	assert.Equal(t, 3, len(boxProviders()))
-	assert.Equal(t, "docker", boxProviders()[0].String())
-	assert.Equal(t, "kube", boxProviders()[1].String())
-	assert.Equal(t, "cloud", boxProviders()[2].String())
+	assert.Equal(t, 3, len(BoxProviders()))
+	assert.Equal(t, "docker", BoxProviders()[0].String())
+	assert.Equal(t, "kube", BoxProviders()[1].String())
+	assert.Equal(t, "cloud", BoxProviders()[2].String())
 }
 
 func TestToBoxProvider(t *testing.T) {
-	docker, err := toBoxProvider(flag.DockerProviderFlag)
+	docker, err := ToBoxProvider(flag.DockerProviderFlag)
 	assert.NoError(t, err)
 	assert.Equal(t, model.Docker, docker)
 
-	kube, err := toBoxProvider(flag.KubeProviderFlag)
+	kube, err := ToBoxProvider(flag.KubeProviderFlag)
 	assert.NoError(t, err)
 	assert.Equal(t, model.Kubernetes, kube)
 
-	cloud, err := toBoxProvider(flag.CloudProviderFlag)
+	cloud, err := ToBoxProvider(flag.CloudProviderFlag)
 	assert.NoError(t, err)
 	assert.Equal(t, model.Cloud, cloud)
 
-	_, err = toBoxProvider(flag.UnknownProviderFlag)
+	_, err = ToBoxProvider(flag.UnknownProviderFlag)
 	assert.EqualError(t, err, "invalid provider")
 }
 
@@ -44,7 +44,7 @@ func TestBoxProviderIds(t *testing.T) {
 func TestValidateBoxProviderConfig(t *testing.T) {
 	var boxProviderFlag flag.ProviderFlag
 	boxProviderFlag = flag.UnknownProviderFlag
-	boxProvider, err := validateBoxProvider("docker", &boxProviderFlag)
+	boxProvider, err := ValidateBoxProvider("docker", &boxProviderFlag)
 
 	assert.NoError(t, err)
 	assert.Equal(t, "docker", boxProvider.String())
@@ -53,7 +53,7 @@ func TestValidateBoxProviderConfig(t *testing.T) {
 func TestValidateBoxProviderFlag(t *testing.T) {
 	var boxProviderFlag flag.ProviderFlag
 	boxProviderFlag = flag.KubeProviderFlag
-	boxProvider, err := validateBoxProvider("docker", &boxProviderFlag)
+	boxProvider, err := ValidateBoxProvider("docker", &boxProviderFlag)
 
 	assert.NoError(t, err)
 	assert.Equal(t, "kube", boxProvider.String())

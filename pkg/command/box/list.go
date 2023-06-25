@@ -6,7 +6,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/hckops/hckctl/pkg/command/common/flag"
+	boxFlag "github.com/hckops/hckctl/pkg/command/box/flag"
+	commonFlag "github.com/hckops/hckctl/pkg/command/common/flag"
 	"github.com/hckops/hckctl/pkg/command/config"
 )
 
@@ -23,7 +24,7 @@ func NewBoxListCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "list",
-		Short: "List running boxes",
+		Short: "List all running boxes",
 		RunE:  opts.run,
 	}
 
@@ -33,7 +34,7 @@ func NewBoxListCmd(configRef *config.ConfigRef) *cobra.Command {
 func (opts *boxListCmdOptions) run(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		// silently fail attempting all the providers
-		for _, providerFlag := range boxProviders() {
+		for _, providerFlag := range boxFlag.BoxProviders() {
 			if err := listByProvider(providerFlag, opts.configRef); err != nil {
 				log.Warn().Err(err).Msgf("ignoring error list boxes: providerFlag=%v", providerFlag)
 			}
@@ -44,7 +45,7 @@ func (opts *boxListCmdOptions) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func listByProvider(providerFlag flag.ProviderFlag, configRef *config.ConfigRef) error {
+func listByProvider(providerFlag commonFlag.ProviderFlag, configRef *config.ConfigRef) error {
 	log.Debug().Msgf("list boxes: providerFlag=%v", providerFlag)
 
 	boxClient, err := newDefaultBoxClient(providerFlag, configRef)

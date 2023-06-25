@@ -70,6 +70,7 @@ func (box *CloudBox) attachBox(template *model.BoxV1, name string) error {
 // empty "names" means all
 func (box *CloudBox) deleteBoxes(names []string) ([]model.BoxInfo, error) {
 	// TODO box.eventBus.Publish
+	// TODO delete namespace if empty
 
 	request := v1.NewBoxDeleteRequest(box.clientVersion, names)
 	payload, err := request.Encode()

@@ -36,14 +36,14 @@ func (box *DockerBox) Exec(template *model.BoxV1, name string) error {
 	return box.execBox(name, template.Shell)
 }
 
+func (box *DockerBox) Tunnel(string) error {
+	defer box.close()
+	return errors.New("not supported")
+}
+
 func (box *DockerBox) Open(template *model.BoxV1) error {
 	defer box.close()
 	return box.openBox(template)
-}
-
-func (box *DockerBox) List() ([]model.BoxInfo, error) {
-	defer box.close()
-	return box.listBoxes()
 }
 
 func (box *DockerBox) Copy(string, string, string) error {
@@ -51,9 +51,9 @@ func (box *DockerBox) Copy(string, string, string) error {
 	return errors.New("not implemented")
 }
 
-func (box *DockerBox) Tunnel(string) error {
+func (box *DockerBox) List() ([]model.BoxInfo, error) {
 	defer box.close()
-	return errors.New("not implemented")
+	return box.listBoxes()
 }
 
 func (box *DockerBox) Delete(name string) error {

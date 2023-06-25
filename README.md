@@ -171,6 +171,8 @@ TODO
         * remove comments
         * update setup
         * descriptions/screenshot/gif
+    - add *guide*: all commands explained
+    - add *example*: different uses cases e.g htb, etc
     - delete old branches (video)
     - disclaimer of responsibility
     - update internal cli diagram
@@ -196,8 +198,11 @@ TODO
     - add offline mode source revision
     - update directories to exclude in `resolvePath` e.g. charts
 * box
-    - review command: `create/remove` vs `start/stop` vs `up/down` and `exec/connect` ?!
+    - review command: `create/remove` vs `start/stop` vs `up/down`
+    - review command: `exec/connect`
+    - review command: `copy` vs `upload/download`
     - review tty resize
+    - uniform `opts` vs `options` suffix name convention
     - refactor common `BoxClient` methods (abstract)
     - mount `/dev/tun` for vpn
     - implement tunnel ??? kube portforward should wait
@@ -237,3 +242,16 @@ TODO
     - man (plugin)
     - kube-inject (plugin) mount sidecar pod at runtime with debugging tools
     - pro (bundle) e.g. flow
+
+
+# exec + tunnel
+hckctl box box-alpine-12345
+hckctl box connect box-alpine-12345
+
+# exec
+hckctl box box-alpine-12345 --no-tunnel
+hckctl box connect box-alpine-12345 --no-tunnel
+
+# tunnel
+hckctl box box-alpine-12345 --tunnel-only
+hckctl box connect box-alpine-12345 --tunnel-only

@@ -9,30 +9,32 @@ import (
 	"github.com/hckops/hckctl/pkg/command/config"
 )
 
-type boxExecCmdOptions struct {
+type boxConnectCmdOptions struct {
 	configRef *config.ConfigRef
 }
 
-func NewBoxExecCmd(configRef *config.ConfigRef) *cobra.Command {
+func NewBoxConnectCmd(configRef *config.ConfigRef) *cobra.Command {
 
-	opts := &boxExecCmdOptions{
+	opts := &boxConnectCmdOptions{
 		configRef: configRef,
 	}
 
 	command := &cobra.Command{
-		Use:   "exec [name]",
-		Short: "Access a box",
+		Use:   "connect [name]",
+		Short: "Access and tunnel a running box",
 		RunE:  opts.run,
 	}
+
+	// TODO --tunnel-only or --no-tunnel
 
 	return command
 }
 
-func (opts *boxExecCmdOptions) run(cmd *cobra.Command, args []string) error {
+func (opts *boxConnectCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	if len(args) == 1 {
 		boxName := args[0]
-		log.Debug().Msgf("exec box: boxName=%s", boxName)
+		log.Debug().Msgf("connect box: boxName=%s", boxName)
 
 		execClient := func(client box.BoxClient, template *model.BoxV1) error {
 			return client.Exec(template, boxName)

@@ -38,14 +38,14 @@ func (box *CloudBox) Exec(template *model.BoxV1, name string) error {
 	return errors.New("not implemented")
 }
 
-func (box *CloudBox) Open(template *model.BoxV1) error {
+func (box *CloudBox) Tunnel(string) error {
 	defer box.close()
 	return errors.New("not implemented")
 }
 
-func (box *CloudBox) List() ([]model.BoxInfo, error) {
+func (box *CloudBox) Open(template *model.BoxV1) error {
 	defer box.close()
-	return box.listBoxes()
+	return errors.New("not implemented")
 }
 
 func (box *CloudBox) Copy(string, string, string) error {
@@ -53,9 +53,9 @@ func (box *CloudBox) Copy(string, string, string) error {
 	return errors.New("not implemented")
 }
 
-func (box *CloudBox) Tunnel(string) error {
+func (box *CloudBox) List() ([]model.BoxInfo, error) {
 	defer box.close()
-	return errors.New("not implemented")
+	return box.listBoxes()
 }
 
 func (box *CloudBox) Delete(name string) error {

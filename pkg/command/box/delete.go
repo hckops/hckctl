@@ -8,7 +8,8 @@ import (
 
 	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/box/model"
-	"github.com/hckops/hckctl/pkg/command/common/flag"
+	boxFlag "github.com/hckops/hckctl/pkg/command/box/flag"
+	commonFlag "github.com/hckops/hckctl/pkg/command/common/flag"
 	"github.com/hckops/hckctl/pkg/command/config"
 )
 
@@ -33,7 +34,7 @@ func NewBoxDeleteCmd(configRef *config.ConfigRef) *cobra.Command {
 		allFlagName  = "all"
 		allFlagUsage = "delete all boxes"
 	)
-	command.Flags().BoolVarP(&opts.all, allFlagName, flag.NoneFlagShortHand, false, allFlagUsage)
+	command.Flags().BoolVarP(&opts.all, allFlagName, commonFlag.NoneFlagShortHand, false, allFlagUsage)
 
 	return command
 }
@@ -42,7 +43,7 @@ func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	if len(args) == 0 && opts.all {
 		// silently fail attempting all the providers
-		for _, providerFlag := range boxProviders() {
+		for _, providerFlag := range boxFlag.BoxProviders() {
 			if err := deleteByProvider(providerFlag, opts.configRef); err != nil {
 				log.Warn().Err(err).Msgf("ignoring error delete boxes: providerFlag=%v", providerFlag)
 			}
@@ -69,7 +70,7 @@ func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func deleteByProvider(providerFlag flag.ProviderFlag, configRef *config.ConfigRef) error {
+func deleteByProvider(providerFlag commonFlag.ProviderFlag, configRef *config.ConfigRef) error {
 	log.Debug().Msgf("delete boxes: providerFlag=%v", providerFlag)
 
 	boxClient, err := newDefaultBoxClient(providerFlag, configRef)

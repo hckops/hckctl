@@ -8,8 +8,9 @@ import (
 
 	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/box/model"
+	boxFlag "github.com/hckops/hckctl/pkg/command/box/flag"
 	"github.com/hckops/hckctl/pkg/command/common"
-	"github.com/hckops/hckctl/pkg/command/common/flag"
+	commonFlag "github.com/hckops/hckctl/pkg/command/common/flag"
 	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/command/version"
 	"github.com/hckops/hckctl/pkg/event"
@@ -92,7 +93,7 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 	}
 
 	// silently fail attempting all the providers
-	for _, providerFlag := range boxProviders() {
+	for _, providerFlag := range boxFlag.BoxProviders() {
 		log.Debug().Msgf("attempt box template: providerFlag=%v", providerFlag)
 
 		boxClient, err := newDefaultBoxClient(providerFlag, configRef)
@@ -132,9 +133,9 @@ func newBoxOpts(provider model.BoxProvider, configRef *config.ConfigRef) (*model
 	return boxOpts, nil
 }
 
-func newDefaultBoxClient(providerFlag flag.ProviderFlag, configRef *config.ConfigRef) (box.BoxClient, error) {
+func newDefaultBoxClient(providerFlag commonFlag.ProviderFlag, configRef *config.ConfigRef) (box.BoxClient, error) {
 
-	provider, err := toBoxProvider(providerFlag)
+	provider, err := boxFlag.ToBoxProvider(providerFlag)
 	if err != nil {
 		return nil, err
 	}

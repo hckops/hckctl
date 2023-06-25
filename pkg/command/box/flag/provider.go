@@ -1,4 +1,4 @@
-package box
+package flag
 
 import (
 	"errors"
@@ -13,7 +13,7 @@ import (
 )
 
 // whitelist of supported box providers
-func boxProviders() []flag.ProviderFlag {
+func BoxProviders() []flag.ProviderFlag {
 	return []flag.ProviderFlag{
 		flag.DockerProviderFlag,
 		flag.KubeProviderFlag,
@@ -21,7 +21,7 @@ func boxProviders() []flag.ProviderFlag {
 	}
 }
 
-func toBoxProvider(p flag.ProviderFlag) (model.BoxProvider, error) {
+func ToBoxProvider(p flag.ProviderFlag) (model.BoxProvider, error) {
 	switch p {
 	case flag.DockerProviderFlag:
 		return model.Docker, nil
@@ -35,23 +35,23 @@ func toBoxProvider(p flag.ProviderFlag) (model.BoxProvider, error) {
 }
 
 func boxProviderIds() map[flag.ProviderFlag][]string {
-	return flag.ProviderIds(boxProviders())
+	return flag.ProviderIds(BoxProviders())
 }
 
-func validateBoxProvider(configValue string, providerId *flag.ProviderFlag) (model.BoxProvider, error) {
+func ValidateBoxProvider(configValue string, providerId *flag.ProviderFlag) (model.BoxProvider, error) {
 	if configProvider, err := flag.ExistProvider(boxProviderIds(), configValue); err != nil {
 		// must return a valid iota
 		return model.Docker, errors.New("invalid config provider")
 	} else if providerId.String() == flag.UnknownProvider {
 		// default config
-		return toBoxProvider(configProvider)
+		return ToBoxProvider(configProvider)
 	} else {
 		// flag config
-		return toBoxProvider(*providerId)
+		return ToBoxProvider(*providerId)
 	}
 }
 
-func addBoxProviderFlag(command *cobra.Command) *flag.ProviderFlag {
+func AddBoxProviderFlag(command *cobra.Command) *flag.ProviderFlag {
 	const (
 		flagName = "provider"
 	)

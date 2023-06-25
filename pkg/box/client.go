@@ -14,14 +14,11 @@ type BoxClient interface {
 	Provider() model.BoxProvider
 	Events() *event.EventBus
 	Create(template *model.BoxV1) (*model.BoxInfo, error)
-	// TODO exec --tunnel (docker does nothing)
-	// TODO rename exec to connect
 	Exec(template *model.BoxV1, name string) error
-	// TODO open --tunnel (docker does nothing)
-	Open(template *model.BoxV1) error
-	List() ([]model.BoxInfo, error)
-	Copy(name string, from string, to string) error
 	Tunnel(name string) error
+	Open(template *model.BoxV1) error
+	Copy(name string, from string, to string) error
+	List() ([]model.BoxInfo, error)
 	Delete(name string) error
 	DeleteAll() ([]model.BoxInfo, error)
 }
