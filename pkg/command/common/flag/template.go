@@ -9,10 +9,6 @@ import (
 	"github.com/hckops/hckctl/pkg/command/common"
 )
 
-const (
-	NoneFlagShortHand = ""
-)
-
 type SourceFlag struct {
 	Revision string
 	Local    bool

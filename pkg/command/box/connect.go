@@ -6,11 +6,13 @@ import (
 
 	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/box/model"
+	boxFlag "github.com/hckops/hckctl/pkg/command/box/flag"
 	"github.com/hckops/hckctl/pkg/command/config"
 )
 
 type boxConnectCmdOptions struct {
-	configRef *config.ConfigRef
+	configRef  *config.ConfigRef
+	tunnelFlag *boxFlag.TunnelFlag
 }
 
 func NewBoxConnectCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -25,7 +27,8 @@ func NewBoxConnectCmd(configRef *config.ConfigRef) *cobra.Command {
 		RunE:  opts.run,
 	}
 
-	// TODO --tunnel-only or --no-tunnel
+	// --tunnel-only or --no-tunnel
+	opts.tunnelFlag = boxFlag.AddTunnelFlag(command)
 
 	return command
 }

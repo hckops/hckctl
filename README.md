@@ -228,6 +228,7 @@ TODO
     - add context timeout
     - cloud: ssh key auth only + remove InsecureIgnoreHostKey
     - cloud: remove body from empty request `omitempty to remove "body":{}`
+    - remove lab ??? are envs + copy enough?
 * task
     - TODO ???
 * version
@@ -242,16 +243,3 @@ TODO
     - man (plugin)
     - kube-inject (plugin) mount sidecar pod at runtime with debugging tools
     - pro (bundle) e.g. flow
-
-
-# exec + tunnel
-hckctl box box-alpine-12345
-hckctl box connect box-alpine-12345
-
-# exec
-hckctl box box-alpine-12345 --no-tunnel
-hckctl box connect box-alpine-12345 --no-tunnel
-
-# tunnel
-hckctl box box-alpine-12345 --tunnel-only
-hckctl box connect box-alpine-12345 --tunnel-only

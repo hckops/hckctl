@@ -17,6 +17,7 @@ type boxCmdOptions struct {
 	configRef    *config.ConfigRef
 	sourceFlag   *commonFlag.SourceFlag
 	providerFlag *commonFlag.ProviderFlag
+	tunnelFlag   *boxFlag.TunnelFlag
 }
 
 func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -63,12 +64,12 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 		RunE: opts.run,
 	}
 
-	// TODO --tunnel-only or --no-tunnel
-
-	// --provider (enum)
-	opts.providerFlag = boxFlag.AddBoxProviderFlag(command)
 	// --revision or --local
 	opts.sourceFlag = commonFlag.AddTemplateSourceFlag(command)
+	// --provider (enum)
+	opts.providerFlag = boxFlag.AddBoxProviderFlag(command)
+	// --tunnel-only or --no-tunnel
+	opts.tunnelFlag = boxFlag.AddTunnelFlag(command)
 
 	command.AddCommand(NewBoxConnectCmd(configRef))
 	command.AddCommand(NewBoxCreateCmd(configRef))
