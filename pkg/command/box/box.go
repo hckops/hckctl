@@ -45,15 +45,21 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 		`),
 		Example: heredoc.Doc(`
 
-			# creates and accesses a "box/base/parrot" docker container,
+			# creates and accesses a temporary "box/base/parrot" docker container,
 			# spawns a /bin/bash shell and tunnels the following ports:
 			# (vnc)			vncviewer localhost:5900
 			# (novnc)		http://localhost:6080
 			# (tty)			http://localhost:7681
 			hckctl box parrot
 
-			# opens a box deployed on kubernetes (docker|kube|argo|cloud)
+			# opens a box deployed on kubernetes (docker|kube|cloud)
 			hckctl box kali --provider kube
+
+			# opens a box port-forwarding all ports, without spawning a shell
+			hckctl box arch --tunnel-only
+
+			# opens a box spawning a shell, without port-forwarding the ports
+			hckctl box alpine --no-tunnel
 
 			# opens a box using a specific version (branch|tag|sha)
 			hckctl box vulnerable/dvwa --revision main

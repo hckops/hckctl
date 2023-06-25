@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/dchest/uniuri"
@@ -110,6 +111,14 @@ func (box *BoxV1) NetworkPorts() []BoxPort {
 	}
 
 	return ports
+}
+
+func PortFormatPadding(ports []BoxPort) int {
+	var max float64
+	for _, port := range ports {
+		max = math.Max(max, float64(len(port.Alias)))
+	}
+	return int(max)
 }
 
 func (box *BoxV1) Pretty() string {

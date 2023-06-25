@@ -63,6 +63,7 @@ func (box *DockerBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 	}
 
 	// TODO add env var container override
+	// TODO print envs
 
 	// boxName
 	containerName := template.GenerateName()
@@ -84,9 +85,10 @@ func (box *DockerBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 		return nil, err
 	}
 
+	padding := model.PortFormatPadding(networkPorts)
 	onPortBindCallback := func(port model.BoxPort) {
 		box.eventBus.Publish(newContainerCreatePortBindDockerEvent(containerName, port))
-		box.eventBus.Publish(newContainerCreatePortBindDockerConsoleEvent(containerName, port))
+		box.eventBus.Publish(newContainerCreatePortBindDockerConsoleEvent(containerName, port, padding))
 	}
 	hostConfig, err := buildHostConfig(networkPorts, onPortBindCallback)
 	if err != nil {

@@ -14,7 +14,7 @@ type TunnelFlag struct {
 func addTunnelOnlyFlag(command *cobra.Command, value *bool) string {
 	const (
 		flagName  = "tunnel-only"
-		flagUsage = "TODO"
+		flagUsage = "port-forward all ports without spawning a shell"
 	)
 	command.Flags().BoolVarP(value, flagName, commonFlag.NoneFlagShortHand, false, flagUsage)
 	return flagName
@@ -23,7 +23,7 @@ func addTunnelOnlyFlag(command *cobra.Command, value *bool) string {
 func addNoTunnelFlag(command *cobra.Command, value *bool) string {
 	const (
 		flagName  = "no-tunnel"
-		flagUsage = "TODO"
+		flagUsage = "spawn a shell without port-forwarding the ports"
 	)
 	command.Flags().BoolVarP(value, flagName, commonFlag.NoneFlagShortHand, false, flagUsage)
 	return flagName

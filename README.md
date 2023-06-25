@@ -229,6 +229,7 @@ TODO
     - cloud: ssh key auth only + remove InsecureIgnoreHostKey
     - cloud: remove body from empty request `omitempty to remove "body":{}`
     - remove lab ??? are envs + copy enough?
+    - list string padding https://gosamples.dev/string-padding/
 * task
     - TODO ???
 * version

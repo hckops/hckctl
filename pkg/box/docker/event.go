@@ -62,10 +62,10 @@ func newContainerCreatePortBindDockerEvent(containerName string, port model.BoxP
 		containerName, port.Alias, port.Remote, port.Local)}
 }
 
-func newContainerCreatePortBindDockerConsoleEvent(containerName string, port model.BoxPort) *dockerEvent {
+func newContainerCreatePortBindDockerConsoleEvent(containerName string, port model.BoxPort, padding int) *dockerEvent {
 	return &dockerEvent{kind: event.PrintConsole, value: fmt.Sprintf(
-		"[%s][%s]   \texpose (remote) %s -> (local) %s",
-		containerName, port.Alias, port.Remote, port.Local)}
+		"[%s][%-*s] tunnel (remote) %s -> (local) %s",
+		containerName, padding, port.Alias, port.Remote, port.Local)}
 }
 
 func newContainerCreateDockerEvent(templateName string, containerName string, containerId string) *dockerEvent {

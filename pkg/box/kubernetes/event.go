@@ -90,10 +90,10 @@ func newPodPortForwardBindingKubeEvent(namespace, podId string, port model.BoxPo
 		namespace, podId, port.Alias, port.Remote, port.Local)}
 }
 
-func newPodPortForwardBindingKubeConsoleEvent(namespace string, podName string, port model.BoxPort) *kubeEvent {
+func newPodPortForwardBindingKubeConsoleEvent(namespace string, podName string, port model.BoxPort, padding int) *kubeEvent {
 	return &kubeEvent{kind: event.PrintConsole, value: fmt.Sprintf(
-		"[%s/%s][%s]   \texpose (remote) %s -> (local) %s",
-		namespace, podName, port.Alias, port.Remote, port.Local)}
+		"[%s/%s][%-*s] tunnel (remote) %s -> (local) %s",
+		namespace, podName, padding, port.Alias, port.Remote, port.Local)}
 }
 
 func newPodPortForwardErrorKubeEvent(namespace string, podId string, err error) *kubeEvent {

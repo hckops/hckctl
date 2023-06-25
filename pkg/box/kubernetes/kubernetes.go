@@ -306,9 +306,10 @@ func (box *KubeBox) podPortForward(template *model.BoxV1, boxInfo *model.BoxInfo
 		// exit, no service/port available to bind
 		return nil
 	}
+	padding := model.PortFormatPadding(template.NetworkPorts())
 	ports, err := toPortBindings(template.NetworkPorts(), func(port model.BoxPort) {
 		box.eventBus.Publish(newPodPortForwardBindingKubeEvent(namespace, boxInfo.Id, port))
-		box.eventBus.Publish(newPodPortForwardBindingKubeConsoleEvent(namespace, boxInfo.Name, port))
+		box.eventBus.Publish(newPodPortForwardBindingKubeConsoleEvent(namespace, boxInfo.Name, port, padding))
 	})
 	if err != nil {
 		return err
