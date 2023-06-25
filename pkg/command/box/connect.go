@@ -1,7 +1,6 @@
 package box
 
 import (
-	commonFlag "github.com/hckops/hckctl/pkg/command/common/flag"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -9,6 +8,7 @@ import (
 	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/box/model"
 	boxFlag "github.com/hckops/hckctl/pkg/command/box/flag"
+	commonFlag "github.com/hckops/hckctl/pkg/command/common/flag"
 	"github.com/hckops/hckctl/pkg/command/config"
 )
 

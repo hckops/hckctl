@@ -14,7 +14,7 @@ type DockerBox struct {
 	eventBus *event.EventBus
 }
 
-func NewDockerBox(internalOpts *model.BoxInternalOpts) (*DockerBox, error) {
+func NewDockerBox(internalOpts *model.BoxInternalOptions) (*DockerBox, error) {
 	return newDockerBox(internalOpts)
 }
 

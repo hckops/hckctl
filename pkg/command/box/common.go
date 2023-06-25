@@ -17,14 +17,14 @@ import (
 	"github.com/hckops/hckctl/pkg/template"
 )
 
-type boxClientOpts struct {
+type boxClientOptions struct {
 	client   box.BoxClient
 	template *model.BoxV1
 	loader   *common.Loader
 }
 
 // open and create
-func runBoxClient(src template.TemplateSource, provider model.BoxProvider, configRef *config.ConfigRef, invokeClient func(*boxClientOpts) error) error {
+func runBoxClient(src template.TemplateSource, provider model.BoxProvider, configRef *config.ConfigRef, invokeClient func(*boxClientOptions) error) error {
 
 	boxTemplate, err := src.ReadBox()
 	if err != nil {
@@ -62,7 +62,7 @@ func runBoxClient(src template.TemplateSource, provider model.BoxProvider, confi
 		}
 	})
 
-	opts := &boxClientOpts{
+	opts := &boxClientOptions{
 		client:   boxClient,
 		template: boxTemplate,
 		loader:   loader,
@@ -114,7 +114,7 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 	return errors.New("not found")
 }
 
-func newBoxOpts(provider model.BoxProvider, configRef *config.ConfigRef) (*model.BoxOpts, error) {
+func newBoxOpts(provider model.BoxProvider, configRef *config.ConfigRef) (*model.BoxOptions, error) {
 
 	kubeClientConfig, err := configRef.Config.Provider.Kube.ToKubeClientConfig()
 	if err != nil {
@@ -124,7 +124,7 @@ func newBoxOpts(provider model.BoxProvider, configRef *config.ConfigRef) (*model
 
 	sshClientConfig := configRef.Config.Provider.Cloud.ToSshClientConfig()
 	internalOpts := model.NewBoxInternalOpts(version.ClientVersion())
-	boxOpts := &model.BoxOpts{
+	boxOpts := &model.BoxOptions{
 		Provider:     provider,
 		KubeConfig:   kubeClientConfig,
 		SshConfig:    sshClientConfig,

@@ -28,21 +28,21 @@ type BoxInfo struct {
 	Name string
 }
 
-type BoxOpts struct {
+type BoxOptions struct {
 	Provider     BoxProvider
 	KubeConfig   *kubernetes.KubeClientConfig
 	SshConfig    *ssh.SshClientConfig
-	InternalOpts *BoxInternalOpts
+	InternalOpts *BoxInternalOptions
 }
 
-type BoxInternalOpts struct {
+type BoxInternalOptions struct {
 	ClientVersion string
 	Streams       *BoxStreams
 	EventBus      *event.EventBus
 }
 
-func NewBoxInternalOpts(clientVersion string) *BoxInternalOpts {
-	return &BoxInternalOpts{
+func NewBoxInternalOpts(clientVersion string) *BoxInternalOptions {
+	return &BoxInternalOptions{
 		ClientVersion: clientVersion,
 		Streams:       newDefaultStreams(true),
 		EventBus:      event.NewEventBus(),

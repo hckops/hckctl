@@ -12,7 +12,7 @@ import (
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-func newDockerBox(internalOpts *model.BoxInternalOpts) (*DockerBox, error) {
+func newDockerBox(internalOpts *model.BoxInternalOptions) (*DockerBox, error) {
 	internalOpts.EventBus.Publish(newClientInitDockerEvent())
 
 	dockerClient, err := docker.NewDockerClient()

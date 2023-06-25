@@ -205,7 +205,6 @@ TODO
     - review command: `exec/connect`
     - review command: `copy` vs `upload/download`
     - review tty resize
-    - uniform `opts` vs `options` suffix name convention
     - refactor common `BoxClient` methods (abstract)
     - mount `/dev/tun` for vpn
     - implement tunnel ??? kube portforward should wait

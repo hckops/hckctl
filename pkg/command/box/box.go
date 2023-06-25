@@ -133,7 +133,7 @@ func (opts *boxCmdOptions) validateFlags(provider model.BoxProvider) error {
 }
 
 func openBox(src template.TemplateSource, provider model.BoxProvider, configRef *config.ConfigRef) error {
-	openClient := func(opts *boxClientOpts) error {
+	openClient := func(opts *boxClientOptions) error {
 		return opts.client.Open(opts.template)
 	}
 	return runBoxClient(src, provider, configRef, openClient)

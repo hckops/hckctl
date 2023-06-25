@@ -16,8 +16,8 @@ type CloudBox struct {
 	eventBus      *event.EventBus
 }
 
-func NewCloudBox(internalOpts *model.BoxInternalOpts, sshConfig *ssh.SshClientConfig) (*CloudBox, error) {
-	return newCloudBox(internalOpts, sshConfig)
+func NewCloudBox(internalOpts *model.BoxInternalOptions, clientConfig *ssh.SshClientConfig) (*CloudBox, error) {
+	return newCloudBox(internalOpts, clientConfig)
 }
 
 func (box *CloudBox) Provider() model.BoxProvider {

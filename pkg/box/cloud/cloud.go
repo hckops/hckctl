@@ -8,17 +8,17 @@ import (
 	"github.com/hckops/hckctl/pkg/client/ssh"
 )
 
-func newCloudBox(internalOpts *model.BoxInternalOpts, sshConfig *ssh.SshClientConfig) (*CloudBox, error) {
+func newCloudBox(internalOpts *model.BoxInternalOptions, clientConfig *ssh.SshClientConfig) (*CloudBox, error) {
 	internalOpts.EventBus.Publish(newClientInitCloudEvent())
 
-	sshClient, err := ssh.NewSshClient(sshConfig)
+	sshClient, err := ssh.NewSshClient(clientConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "error cloud box")
 	}
 
 	return &CloudBox{
 		clientVersion: internalOpts.ClientVersion,
-		clientConfig:  sshConfig,
+		clientConfig:  clientConfig,
 		client:        sshClient,
 		streams:       internalOpts.Streams,
 		eventBus:      internalOpts.EventBus,
