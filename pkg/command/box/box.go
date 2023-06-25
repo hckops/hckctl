@@ -2,6 +2,7 @@ package box
 
 import (
 	"github.com/MakeNowJust/heredoc"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
@@ -90,26 +91,43 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 	provider, err := boxFlag.ValidateBoxProvider(opts.configRef.Config.Box.Provider, opts.providerFlag)
 	if err != nil {
 		return err
-	} else if len(args) == 1 && opts.sourceFlag.Local {
-		path := args[0]
-		log.Debug().Msgf("open box from local template: path=%s", path)
-
-		return openBox(template.NewLocalSource(path), provider, opts.configRef)
-
 	} else if len(args) == 1 {
-		name := args[0]
-		revisionOpts := &template.RevisionOpts{
-			SourceCacheDir: opts.configRef.Config.Template.CacheDir,
-			SourceUrl:      common.TemplateSourceUrl,
-			SourceRevision: common.TemplateSourceRevision,
-			Revision:       opts.sourceFlag.Revision,
-		}
-		log.Debug().Msgf("open box from remote template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
-		return openBox(template.NewRemoteSource(revisionOpts, name), provider, opts.configRef)
+		if err := opts.validateFlags(provider); err != nil {
+			log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
+			return errors.New(commonFlag.ErrorFlagNotSupported)
+
+		} else if opts.sourceFlag.Local {
+			path := args[0]
+			log.Debug().Msgf("open box from local template: path=%s", path)
+
+			return openBox(template.NewLocalSource(path), provider, opts.configRef)
+
+		} else {
+			name := args[0]
+			revisionOpts := &template.RevisionOpts{
+				SourceCacheDir: opts.configRef.Config.Template.CacheDir,
+				SourceUrl:      common.TemplateSourceUrl,
+				SourceRevision: common.TemplateSourceRevision,
+				Revision:       opts.sourceFlag.Revision,
+			}
+			log.Debug().Msgf("open box from remote template: name=%s revision=%s", name, opts.sourceFlag.Revision)
+
+			return openBox(template.NewRemoteSource(revisionOpts, name), provider, opts.configRef)
+		}
 
 	} else {
 		cmd.HelpFunc()(cmd, args)
+	}
+	return nil
+}
+
+func (opts *boxCmdOptions) validateFlags(provider model.BoxProvider) error {
+	if err := boxFlag.ValidateSourceFlag(provider, opts.sourceFlag); err != nil {
+		return err
+	}
+	if err := boxFlag.ValidateTunnelFlag(provider, opts.tunnelFlag); err != nil {
+		return err
 	}
 	return nil
 }

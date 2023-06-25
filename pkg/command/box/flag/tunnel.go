@@ -6,6 +6,11 @@ import (
 	commonFlag "github.com/hckops/hckctl/pkg/command/common/flag"
 )
 
+const (
+	tunnelOnlyFlagName = "tunnel-only"
+	noTunnelFlagName   = "no-tunnel"
+)
+
 type TunnelFlag struct {
 	TunnelOnly bool
 	NoTunnel   bool
@@ -13,26 +18,24 @@ type TunnelFlag struct {
 
 func addTunnelOnlyFlag(command *cobra.Command, value *bool) string {
 	const (
-		flagName  = "tunnel-only"
 		flagUsage = "port-forward all ports without spawning a shell"
 	)
-	command.Flags().BoolVarP(value, flagName, commonFlag.NoneFlagShortHand, false, flagUsage)
-	return flagName
+	command.Flags().BoolVarP(value, tunnelOnlyFlagName, commonFlag.NoneFlagShortHand, false, flagUsage)
+	return tunnelOnlyFlagName
 }
 
 func addNoTunnelFlag(command *cobra.Command, value *bool) string {
 	const (
-		flagName  = "no-tunnel"
 		flagUsage = "spawn a shell without port-forwarding the ports"
 	)
-	command.Flags().BoolVarP(value, flagName, commonFlag.NoneFlagShortHand, false, flagUsage)
-	return flagName
+	command.Flags().BoolVarP(value, noTunnelFlagName, commonFlag.NoneFlagShortHand, false, flagUsage)
+	return noTunnelFlagName
 }
 
 func AddTunnelFlag(command *cobra.Command) *TunnelFlag {
 	tunnelFlag := &TunnelFlag{}
-	tunnelOnlyFlagName := addTunnelOnlyFlag(command, &tunnelFlag.TunnelOnly)
-	noTunnelFlagName := addNoTunnelFlag(command, &tunnelFlag.NoTunnel)
-	command.MarkFlagsMutuallyExclusive(tunnelOnlyFlagName, noTunnelFlagName)
+	tunnelOnlyFlag := addTunnelOnlyFlag(command, &tunnelFlag.TunnelOnly)
+	noTunnelFlag := addNoTunnelFlag(command, &tunnelFlag.NoTunnel)
+	command.MarkFlagsMutuallyExclusive(tunnelOnlyFlag, noTunnelFlag)
 	return tunnelFlag
 }

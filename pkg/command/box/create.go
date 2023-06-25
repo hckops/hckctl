@@ -1,9 +1,9 @@
 package box
 
 import (
-	"errors"
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
@@ -46,30 +46,30 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 	provider, err := boxFlag.ValidateBoxProvider(opts.configRef.Config.Box.Provider, opts.providerFlag)
 	if err != nil {
 		return err
-	} else if len(args) == 1 && opts.sourceFlag.Local {
-		path := args[0]
-		log.Debug().Msgf("create box from local template: path=%s", path)
-
-		return createBox(template.NewLocalSource(path), provider, opts.configRef)
-
 	} else if len(args) == 1 {
-		name := args[0]
 
-		if provider == model.Cloud && opts.sourceFlag.Revision != common.TemplateSourceRevision {
-			log.Warn().Msgf("revision flag not supported by cloud provider: revision=%s", opts.sourceFlag.Revision)
-			return errors.New("invalid revision")
+		if err := boxFlag.ValidateSourceFlag(provider, opts.sourceFlag); err != nil {
+			log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
+			return errors.New(commonFlag.ErrorFlagNotSupported)
+
+		} else if opts.sourceFlag.Local {
+			path := args[0]
+			log.Debug().Msgf("create box from local template: path=%s", path)
+
+			return createBox(template.NewLocalSource(path), provider, opts.configRef)
+
+		} else if len(args) == 1 {
+			name := args[0]
+			revisionOpts := &template.RevisionOpts{
+				SourceCacheDir: opts.configRef.Config.Template.CacheDir,
+				SourceUrl:      common.TemplateSourceUrl,
+				SourceRevision: common.TemplateSourceRevision,
+				Revision:       opts.sourceFlag.Revision,
+			}
+			log.Debug().Msgf("create box from remote template: name=%s revision=%s", name, opts.sourceFlag.Revision)
+
+			return createBox(template.NewRemoteSource(revisionOpts, name), provider, opts.configRef)
 		}
-
-		revisionOpts := &template.RevisionOpts{
-			SourceCacheDir: opts.configRef.Config.Template.CacheDir,
-			SourceUrl:      common.TemplateSourceUrl,
-			SourceRevision: common.TemplateSourceRevision,
-			Revision:       opts.sourceFlag.Revision,
-		}
-		log.Debug().Msgf("create box from remote template: name=%s revision=%s", name, opts.sourceFlag.Revision)
-
-		return createBox(template.NewRemoteSource(revisionOpts, name), provider, opts.configRef)
-
 	} else {
 		cmd.HelpFunc()(cmd, args)
 	}

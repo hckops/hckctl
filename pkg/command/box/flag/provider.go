@@ -12,8 +12,8 @@ import (
 	commonFlag "github.com/hckops/hckctl/pkg/command/common/flag"
 )
 
-// whitelist of supported box providers
 func BoxProviders() []commonFlag.ProviderFlag {
+	// whitelist of supported box providers
 	return []commonFlag.ProviderFlag{
 		commonFlag.DockerProviderFlag,
 		commonFlag.KubeProviderFlag,

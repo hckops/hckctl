@@ -1,6 +1,8 @@
 package box
 
 import (
+	commonFlag "github.com/hckops/hckctl/pkg/command/common/flag"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
@@ -40,6 +42,12 @@ func (opts *boxConnectCmdOptions) run(cmd *cobra.Command, args []string) error {
 		log.Debug().Msgf("connect box: boxName=%s", boxName)
 
 		execClient := func(client box.BoxClient, template *model.BoxV1) error {
+
+			if err := boxFlag.ValidateTunnelFlag(client.Provider(), opts.tunnelFlag); err != nil {
+				log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
+				return errors.New(commonFlag.ErrorFlagNotSupported)
+			}
+
 			return client.Exec(template, boxName)
 		}
 		return attemptRunBoxClients(opts.configRef, boxName, execClient)

@@ -187,7 +187,10 @@ TODO
         * https://github.com/vulhub/vulhub
         * https://houdini.secsi.io
 * cli
-    - autocomplete commands and values e.g. `box exec <list of boxes>` with `ValidArgsFunction`
+    - autocomplete commands and values
+        * e.g. `box connect <list of boxes>` with `ValidArgsFunction`
+        * e.g. `box <list of box templates>` with `ValidArgsFunction`
+        * see fix autocomplete
     - improve command validation e.g. docker `Args: cli.ExactArgs(1)`
     - filter/list box (list and delete) and template (list and validate) columns by provider + sorting
     - config add set command

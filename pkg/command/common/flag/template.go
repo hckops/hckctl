@@ -9,6 +9,11 @@ import (
 	"github.com/hckops/hckctl/pkg/command/common"
 )
 
+const (
+	RevisionFlagName = "revision"
+	LocalFlagName    = "local"
+)
+
 type SourceFlag struct {
 	Revision string
 	Local    bool
@@ -16,31 +21,29 @@ type SourceFlag struct {
 
 func AddRevisionFlag(command *cobra.Command, revision *string) string {
 	const (
-		flagName      = "revision"
 		flagShortName = "r"
 		flagUsage     = "megalopolis version, one of branch|tag|sha"
 	)
 
-	command.Flags().StringVarP(revision, flagName, flagShortName, common.TemplateSourceRevision, flagUsage)
+	command.Flags().StringVarP(revision, RevisionFlagName, flagShortName, common.TemplateSourceRevision, flagUsage)
 	// overrides default template val
-	_ = viper.BindPFlag(fmt.Sprintf("template.%s", flagName), command.Flags().Lookup(flagName))
+	_ = viper.BindPFlag(fmt.Sprintf("template.%s", RevisionFlagName), command.Flags().Lookup(RevisionFlagName))
 
-	return flagName
+	return RevisionFlagName
 }
 
 func AddLocalFlag(command *cobra.Command, local *bool) string {
 	const (
-		flagName  = "local"
 		flagUsage = "use a local template"
 	)
-	command.Flags().BoolVarP(local, flagName, NoneFlagShortHand, false, flagUsage)
-	return flagName
+	command.Flags().BoolVarP(local, LocalFlagName, NoneFlagShortHand, false, flagUsage)
+	return LocalFlagName
 }
 
 func AddTemplateSourceFlag(command *cobra.Command) *SourceFlag {
 	sourceFlag := &SourceFlag{}
-	revisionFlagName := AddRevisionFlag(command, &sourceFlag.Revision)
-	localFlagName := AddLocalFlag(command, &sourceFlag.Local)
-	command.MarkFlagsMutuallyExclusive(revisionFlagName, localFlagName)
+	revisionFlag := AddRevisionFlag(command, &sourceFlag.Revision)
+	localFlag := AddLocalFlag(command, &sourceFlag.Local)
+	command.MarkFlagsMutuallyExclusive(revisionFlag, localFlag)
 	return sourceFlag
 }

@@ -1,5 +1,6 @@
 package flag
 
 const (
-	NoneFlagShortHand = ""
+	NoneFlagShortHand     = ""
+	ErrorFlagNotSupported = "flag not supported"
 )
