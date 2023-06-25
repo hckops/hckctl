@@ -54,6 +54,19 @@ func (box *CloudBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 	return &model.BoxInfo{Id: boxName, Name: boxName}, nil
 }
 
+func (box *CloudBox) attachBox(template *model.BoxV1, name string) error {
+	opts := &ssh.ExecOpts{
+		Payload: template.Shell, // TODO BoxExecRequestBody
+		OnStreamStartCallback: func() {
+			// TODO
+		},
+		OnStreamErrorCallback: func(err error) {
+			// TODO
+		},
+	}
+	return box.client.Exec(opts)
+}
+
 // empty "names" means all
 func (box *CloudBox) deleteBoxes(names []string) ([]model.BoxInfo, error) {
 	// TODO box.eventBus.Publish
@@ -72,10 +85,34 @@ func (box *CloudBox) deleteBoxes(names []string) ([]model.BoxInfo, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "error cloud delete response")
 	}
-	var result []model.BoxInfo
-	for _, name := range response.Body.Names {
-		result = append(result, model.BoxInfo{Id: name, Name: name})
+	return toBoxes(response.Body.Names), nil
+}
+
+func (box *CloudBox) listBoxes() ([]model.BoxInfo, error) {
+	// TODO box.eventBus.Publish
+
+	request := v1.NewBoxListRequest(box.clientVersion)
+	payload, err := request.Encode()
+	if err != nil {
+		return nil, errors.Wrap(err, "error cloud list request")
+	}
+	value, err := box.client.SendRequest(request.Protocol(), payload)
+	if err != nil {
+		return nil, errors.Wrap(err, "error cloud list")
 	}
 
-	return result, nil
+	response, err := v1.Decode[v1.BoxListResponseBody](value)
+	if err != nil {
+		return nil, errors.Wrap(err, "error cloud delete response")
+	}
+	return toBoxes(response.Body.Names), nil
+}
+
+func toBoxes(names []string) []model.BoxInfo {
+	var result []model.BoxInfo
+	for _, name := range names {
+		result = append(result, model.BoxInfo{Id: name, Name: name})
+		// TODO box.eventBus.Publish + index
+	}
+	return result
 }

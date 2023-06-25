@@ -45,7 +45,7 @@ func (box *CloudBox) Open(template *model.BoxV1) error {
 
 func (box *CloudBox) List() ([]model.BoxInfo, error) {
 	defer box.close()
-	return nil, errors.New("not implemented")
+	return box.listBoxes()
 }
 
 func (box *CloudBox) Copy(string, string, string) error {

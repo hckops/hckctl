@@ -197,7 +197,7 @@ TODO
     - update directories to exclude in `resolvePath` e.g. charts
 * box
     - review command: `create/remove` vs `start/stop` vs `up/down` and `exec/connect` ?!
-    - refactor `box --provider=cloud`
+    - review tty resize
     - refactor common `BoxClient` methods (abstract)
     - mount `/dev/tun` for vpn
     - implement tunnel ??? kube portforward should wait

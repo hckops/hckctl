@@ -43,9 +43,16 @@ func (client *SshClient) Close() error {
 }
 
 func (client *SshClient) SendRequest(protocol string, payload string) (string, error) {
-	_, response, err := client.ssh.SendRequest(protocol, true, []byte(payload))
-	if err != nil {
-		return "", errors.Wrapf(err, "error ssh send request")
+	// "wantReply" must be true to get a response
+	ok, response, err := client.ssh.SendRequest(protocol, true, []byte(payload))
+	if !ok {
+		if err != nil {
+			return "", errors.Wrapf(err, "error ssh send request")
+		} else if string(response) == ServerRequestError {
+			return "", errors.New("error ssh server request")
+		} else {
+			return "", errors.New("error ssh invalid request")
+		}
 	}
 	return string(response), nil
 }
@@ -107,7 +114,7 @@ func (client *SshClient) Exec(opts *ExecOpts) error {
 
 	opts.OnStreamStartCallback()
 
-	if err := session.Run(opts.Command); err != nil && err != io.EOF {
+	if err := session.Run(opts.Payload); err != nil && err != io.EOF {
 		return errors.Wrapf(err, "error ssh exec session")
 	}
 	return nil

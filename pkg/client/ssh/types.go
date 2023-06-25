@@ -7,6 +7,10 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 )
 
+const (
+	ServerRequestError = "request-error"
+)
+
 type SshClient struct {
 	ctx context.Context
 	ssh *gossh.Client
@@ -37,7 +41,7 @@ func (t *TunnelOpts) RemoteAddress() string {
 }
 
 type ExecOpts struct {
-	Command               string
+	Payload               string
 	OnStreamStartCallback func()
 	OnStreamErrorCallback func(error)
 }

@@ -44,7 +44,7 @@ func runBoxClient(src template.TemplateSource, provider model.BoxProvider, confi
 	boxClient, err := box.NewBoxClient(boxOpts)
 	if err != nil {
 		log.Warn().Err(err).Msgf("error creating client: provider=%v", provider)
-		return fmt.Errorf("%v client error", provider)
+		return fmt.Errorf("error %v client create", provider)
 	}
 
 	boxClient.Events().Subscribe(func(e event.Event) {
@@ -68,7 +68,7 @@ func runBoxClient(src template.TemplateSource, provider model.BoxProvider, confi
 	}
 	if err := invokeClient(opts); err != nil {
 		log.Warn().Err(err).Msgf("error invoking client: provider=%v", provider)
-		return fmt.Errorf("invoke %v client error", provider)
+		return fmt.Errorf("error %v client invoke", provider)
 	}
 	return nil
 }
