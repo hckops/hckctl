@@ -235,20 +235,20 @@ func buildService(objectMeta metav1.ObjectMeta, template *model.BoxV1) (*corev1.
 }
 
 // TODO common
-func (box *KubeBox) execBox(template *model.BoxV1, name string) error {
+func (box *KubeBox) connectBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
 	if info, err := box.findBox(name); err != nil {
 		return err
 	} else {
-		return box.attachBox(template, info, false)
+		return box.execBox(template, info, tunnelOpts, false)
 	}
 }
 
 // TODO common
-func (box *KubeBox) openBox(template *model.BoxV1) error {
+func (box *KubeBox) openBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions) error {
 	if info, err := box.createBox(template); err != nil {
 		return err
 	} else {
-		return box.attachBox(template, info, true)
+		return box.execBox(template, info, tunnelOpts, true)
 	}
 }
 
@@ -266,15 +266,24 @@ func (box *KubeBox) findBox(name string) (*model.BoxInfo, error) {
 	return nil, errors.New("box not found")
 }
 
-func (box *KubeBox) attachBox(template *model.BoxV1, info *model.BoxInfo, removeOnExit bool) error {
+func (box *KubeBox) execBox(template *model.BoxV1, info *model.BoxInfo, tunnelOpts *model.TunnelOptions, removeOnExit bool) error {
 	box.eventBus.Publish(newPodExecKubeEvent(template.Name, box.clientConfig.Namespace, info.Id, template.Shell))
 
-	if err := box.podPortForward(template, info); err != nil {
-		return err
+	if tunnelOpts.TunnelOnly {
+		// tunnel and exit
+		return box.podPortForward(template, info)
+	}
+
+	if !tunnelOpts.NoTunnel {
+		// tunnel and exec after
+		if err := box.podPortForward(template, info); err != nil {
+			return err
+		}
 	}
 
 	// TODO model.BoxShellNone
 
+	// exec
 	opts := &kubernetes.PodExecOpts{
 		Namespace: box.clientConfig.Namespace,
 		PodName:   common.ToKebabCase(template.Image.Repository), // pod.Spec.Containers[0].Name

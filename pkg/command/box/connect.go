@@ -1,7 +1,6 @@
 package box
 
 import (
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
@@ -43,9 +42,9 @@ func (opts *boxConnectCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 		execClient := func(client box.BoxClient, template *model.BoxV1) error {
 
+			// log only and ignore invalid tunnel flags to avoid false positive during provider attempts
 			if err := boxFlag.ValidateTunnelFlag(client.Provider(), opts.tunnelFlag); err != nil {
-				log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
-				return errors.New(commonFlag.ErrorFlagNotSupported)
+				log.Warn().Err(err).Msgf("ignore validation %s", commonFlag.ErrorFlagNotSupported)
 			}
 
 			return client.Connect(template, opts.tunnelFlag.ToTunnelOptions(), boxName)

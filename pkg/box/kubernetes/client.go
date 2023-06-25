@@ -34,14 +34,12 @@ func (box *KubeBox) Create(template *model.BoxV1) (*model.BoxInfo, error) {
 
 func (box *KubeBox) Connect(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
 	defer box.client.Close()
-	// TODO tunnelOpts
-	return box.execBox(template, name)
+	return box.connectBox(template, tunnelOpts, name)
 }
 
 func (box *KubeBox) Open(template *model.BoxV1, tunnelOpts *model.TunnelOptions) error {
 	defer box.client.Close()
-	// TODO tunnelOpts
-	return box.openBox(template)
+	return box.openBox(template, tunnelOpts)
 }
 
 func (box *KubeBox) Copy(string, string, string) error {
