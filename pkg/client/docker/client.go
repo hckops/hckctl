@@ -97,7 +97,7 @@ func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, 
 	return newContainer.ID, nil
 }
 
-func (client *DockerClient) ContainerAttach(opts *ContainerAttachOpts) error {
+func (client *DockerClient) ContainerExec(opts *ContainerExecOpts) error {
 
 	execCreateResponse, err := client.docker.ContainerExecCreate(client.ctx, opts.ContainerId, types.ExecConfig{
 		AttachStdin:  true,
@@ -134,7 +134,7 @@ func (client *DockerClient) ContainerAttach(opts *ContainerAttachOpts) error {
 
 	handleStreams(opts, &execAttachResponse, onStreamCloseCallback, opts.OnStreamErrorCallback)
 
-	opts.OnContainerAttachCallback()
+	opts.OnContainerExecCallback()
 
 	// waits for interrupt signals, alternative ContainerExecKill https://github.com/moby/moby/pull/41548
 	select {
@@ -146,7 +146,7 @@ func (client *DockerClient) ContainerAttach(opts *ContainerAttachOpts) error {
 }
 
 func handleStreams(
-	opts *ContainerAttachOpts,
+	opts *ContainerExecOpts,
 	execAttachResponse *types.HijackedResponse,
 	onStreamCloseCallback func(),
 	onStreamErrorCallback func(error),

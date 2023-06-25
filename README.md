@@ -238,7 +238,7 @@ TODO
     - docker: `ContainerCreate` add labels
     - docker: create container with `Labels=["com.hckops.revision"=<REVISION>"]` to resolve template by name
     - docker: `listBoxes` by labels vs prefix
-    - docker: `attachBox` print ports?
+    - docker: `execBox` print ports and envs: retrieve actual bound ports from container
     - docker: COPY shared volume `XDG_DATA_HOME`
     - docker: support powershell `/usr/bin/pwsh` (attach with no tty and raw terminal) see `docker run --rm -it mcr.microsoft.com/powershell`
     - docker: add support for remote docker daemon with `DOCKER_HOST`

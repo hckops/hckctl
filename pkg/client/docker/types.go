@@ -31,16 +31,16 @@ type ContainerCreateOpts struct {
 	NetworkingConfig *network.NetworkingConfig
 }
 
-type ContainerAttachOpts struct {
-	ContainerId               string
-	Shell                     string
-	InStream                  io.ReadCloser
-	OutStream                 io.Writer
-	ErrStream                 io.Writer
-	IsTty                     bool
-	OnContainerAttachCallback func()
-	OnStreamCloseCallback     func()
-	OnStreamErrorCallback     func(error)
+type ContainerExecOpts struct {
+	ContainerId             string
+	Shell                   string
+	InStream                io.ReadCloser
+	OutStream               io.Writer
+	ErrStream               io.Writer
+	IsTty                   bool
+	OnContainerExecCallback func()
+	OnStreamCloseCallback   func()
+	OnStreamErrorCallback   func(error)
 }
 
 type ContainerInfo struct {

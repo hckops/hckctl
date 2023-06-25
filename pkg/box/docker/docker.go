@@ -61,7 +61,7 @@ func (box *DockerBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 	}
 
 	// TODO add env var container override
-	// TODO print envs
+	// TODO print environment variables
 
 	// boxName
 	containerName := template.GenerateName()
@@ -173,11 +173,11 @@ func buildNetworkingConfig(networkName, networkId string) *network.NetworkingCon
 }
 
 // TODO common
-func (box *DockerBox) execBox(name string, command string) error {
+func (box *DockerBox) connectBox(template *model.BoxV1, name string) error {
 	if info, err := box.findBox(name); err != nil {
 		return err
 	} else {
-		return box.attachBox(info, command, false)
+		return box.execBox(template, info, false)
 	}
 }
 
@@ -186,7 +186,7 @@ func (box *DockerBox) openBox(template *model.BoxV1) error {
 	if info, err := box.createBox(template); err != nil {
 		return err
 	} else {
-		return box.attachBox(info, template.Shell, true)
+		return box.execBox(template, info, true)
 	}
 }
 
@@ -204,29 +204,32 @@ func (box *DockerBox) findBox(name string) (*model.BoxInfo, error) {
 	return nil, errors.New("box not found")
 }
 
-// TODO print open ports?
-func (box *DockerBox) attachBox(info *model.BoxInfo, command string, removeOnExit bool) error {
-	box.eventBus.Publish(newContainerAttachDockerEvent(info.Id, info.Name, command))
+func (box *DockerBox) execBox(template *model.BoxV1, info *model.BoxInfo, removeOnExit bool) error {
+	command := template.Shell
+	box.eventBus.Publish(newContainerExecDockerEvent(info.Id, info.Name, command))
+
+	// TODO is should print the actual bound ports, not the template
+	// box.publishBoxInfo(template, info)
 
 	if command == model.BoxShellNone {
 		if removeOnExit {
 			// stop loader
-			box.eventBus.Publish(newContainerAttachDockerLoaderEvent())
+			box.eventBus.Publish(newContainerExecDockerLoaderEvent())
 		}
 		return box.logsBox(info.Id)
 	}
 
-	containerOpts := &docker.ContainerAttachOpts{
+	containerOpts := &docker.ContainerExecOpts{
 		ContainerId: info.Id,
 		Shell:       command,
 		InStream:    box.streams.In,
 		OutStream:   box.streams.Out,
 		ErrStream:   box.streams.Err,
 		IsTty:       box.streams.IsTty,
-		OnContainerAttachCallback: func() {
+		OnContainerExecCallback: func() {
 			if removeOnExit {
 				// stop loader
-				box.eventBus.Publish(newContainerAttachDockerLoaderEvent())
+				box.eventBus.Publish(newContainerExecDockerLoaderEvent())
 			}
 		},
 		OnStreamCloseCallback: func() {
@@ -243,7 +246,18 @@ func (box *DockerBox) attachBox(info *model.BoxInfo, command string, removeOnExi
 		},
 	}
 
-	return box.client.ContainerAttach(containerOpts)
+	return box.client.ContainerExec(containerOpts)
+}
+
+func (box *DockerBox) publishBoxInfo(template *model.BoxV1, info *model.BoxInfo) {
+	// print open ports
+	networkPorts := template.NetworkPorts(false)
+	portPadding := model.PortFormatPadding(networkPorts)
+	for _, port := range networkPorts {
+		box.eventBus.Publish(newContainerCreatePortBindDockerEvent(info.Name, port))
+		box.eventBus.Publish(newContainerCreatePortBindDockerConsoleEvent(info.Name, port, portPadding))
+	}
+	// TODO print environment variables
 }
 
 func (box *DockerBox) logsBox(containerId string) error {
