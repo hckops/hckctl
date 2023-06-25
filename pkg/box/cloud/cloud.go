@@ -63,7 +63,7 @@ func (box *CloudBox) execBox(template *model.BoxV1, name string) error {
 		return errors.Wrap(err, "error cloud exec request")
 	}
 
-	opts := &ssh.ExecOpts{
+	opts := &ssh.SshExecOpts{
 		Payload: payload, // TODO BoxExecRequestBody
 		OnStreamStartCallback: func() {
 			// TODO

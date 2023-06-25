@@ -64,3 +64,8 @@ func newDefaultStreams(tty bool) *BoxStreams {
 		IsTty: tty,
 	}
 }
+
+type TunnelOptions struct {
+	TunnelOnly bool
+	NoTunnel   bool
+}

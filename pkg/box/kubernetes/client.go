@@ -32,18 +32,15 @@ func (box *KubeBox) Create(template *model.BoxV1) (*model.BoxInfo, error) {
 	return box.createBox(template)
 }
 
-func (box *KubeBox) Exec(template *model.BoxV1, name string) error {
+func (box *KubeBox) Connect(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
 	defer box.client.Close()
+	// TODO tunnelOpts
 	return box.execBox(template, name)
 }
 
-func (box *KubeBox) Tunnel(string) error {
+func (box *KubeBox) Open(template *model.BoxV1, tunnelOpts *model.TunnelOptions) error {
 	defer box.client.Close()
-	return errors.New("not implemented")
-}
-
-func (box *KubeBox) Open(template *model.BoxV1) error {
-	defer box.client.Close()
+	// TODO tunnelOpts
 	return box.openBox(template)
 }
 

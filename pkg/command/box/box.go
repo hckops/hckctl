@@ -101,7 +101,7 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 			path := args[0]
 			log.Debug().Msgf("open box from local template: path=%s", path)
 
-			return openBox(template.NewLocalSource(path), provider, opts.configRef)
+			return opts.openBox(template.NewLocalSource(path), provider)
 
 		} else {
 			name := args[0]
@@ -113,7 +113,7 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 			}
 			log.Debug().Msgf("open box from remote template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
-			return openBox(template.NewRemoteSource(revisionOpts, name), provider, opts.configRef)
+			return opts.openBox(template.NewRemoteSource(revisionOpts, name), provider)
 		}
 
 	} else {
@@ -132,9 +132,11 @@ func (opts *boxCmdOptions) validateFlags(provider model.BoxProvider) error {
 	return nil
 }
 
-func openBox(src template.TemplateSource, provider model.BoxProvider, configRef *config.ConfigRef) error {
-	openClient := func(opts *boxClientOptions) error {
-		return opts.client.Open(opts.template)
+func (opts *boxCmdOptions) openBox(src template.TemplateSource, provider model.BoxProvider) error {
+	tunnelOpts := opts.tunnelFlag.ToTunnelOptions()
+
+	openClient := func(clientOpts *boxClientOptions) error {
+		return clientOpts.client.Open(clientOpts.template, tunnelOpts)
 	}
-	return runBoxClient(src, provider, configRef, openClient)
+	return runBoxClient(src, provider, opts.configRef, openClient)
 }

@@ -58,7 +58,7 @@ func (client *SshClient) SendRequest(protocol string, payload string) (string, e
 }
 
 // Tunnel starts a local server and forwards traffic to a remote connection
-func (client *SshClient) Tunnel(opts *TunnelOpts) {
+func (client *SshClient) Tunnel(opts *SshTunnelOpts) {
 
 	listener, err := net.Listen(opts.Network(), opts.LocalAddress())
 	if err != nil {
@@ -94,7 +94,7 @@ func (client *SshClient) Tunnel(opts *TunnelOpts) {
 	}
 }
 
-func (client *SshClient) Exec(opts *ExecOpts) error {
+func (client *SshClient) Exec(opts *SshExecOpts) error {
 
 	session, err := client.ssh.NewSession()
 	if err != nil {

@@ -1,6 +1,7 @@
 package flag
 
 import (
+	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/spf13/cobra"
 
 	commonFlag "github.com/hckops/hckctl/pkg/command/common/flag"
@@ -14,6 +15,13 @@ const (
 type TunnelFlag struct {
 	TunnelOnly bool
 	NoTunnel   bool
+}
+
+func (f *TunnelFlag) ToTunnelOptions() *model.TunnelOptions {
+	return &model.TunnelOptions{
+		TunnelOnly: f.TunnelOnly,
+		NoTunnel:   f.NoTunnel,
+	}
 }
 
 func addTunnelOnlyFlag(command *cobra.Command, value *bool) string {

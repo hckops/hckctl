@@ -48,7 +48,7 @@ func (opts *boxConnectCmdOptions) run(cmd *cobra.Command, args []string) error {
 				return errors.New(commonFlag.ErrorFlagNotSupported)
 			}
 
-			return client.Exec(template, boxName)
+			return client.Connect(template, opts.tunnelFlag.ToTunnelOptions(), boxName)
 		}
 		return attemptRunBoxClients(opts.configRef, boxName, execClient)
 	} else {

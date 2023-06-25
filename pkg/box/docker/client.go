@@ -31,18 +31,15 @@ func (box *DockerBox) Create(template *model.BoxV1) (*model.BoxInfo, error) {
 	return box.createBox(template)
 }
 
-func (box *DockerBox) Exec(template *model.BoxV1, name string) error {
+func (box *DockerBox) Connect(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
 	defer box.close()
+	// TODO tunnelOpts
 	return box.execBox(name, template.Shell)
 }
 
-func (box *DockerBox) Tunnel(string) error {
+func (box *DockerBox) Open(template *model.BoxV1, tunnelOpts *model.TunnelOptions) error {
 	defer box.close()
-	return errors.New("not supported")
-}
-
-func (box *DockerBox) Open(template *model.BoxV1) error {
-	defer box.close()
+	// TODO tunnelOpts
 	return box.openBox(template)
 }
 

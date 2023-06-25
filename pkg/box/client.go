@@ -14,9 +14,8 @@ type BoxClient interface {
 	Provider() model.BoxProvider
 	Events() *event.EventBus
 	Create(template *model.BoxV1) (*model.BoxInfo, error)
-	Exec(template *model.BoxV1, name string) error
-	Tunnel(name string) error
-	Open(template *model.BoxV1) error
+	Connect(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error
+	Open(template *model.BoxV1, tunnelOpts *model.TunnelOptions) error
 	Copy(name string, from string, to string) error
 	List() ([]model.BoxInfo, error)
 	Delete(name string) error

@@ -22,25 +22,25 @@ type SshClientConfig struct {
 	Token    string
 }
 
-type TunnelOpts struct {
+type SshTunnelOpts struct {
 	LocalPort             string
 	RemoteHost            string
 	RemotePort            string
 	OnTunnelErrorCallback func(error)
 }
 
-func (t *TunnelOpts) Network() string {
+func (t *SshTunnelOpts) Network() string {
 	return "tcp"
 }
 
-func (t *TunnelOpts) LocalAddress() string {
+func (t *SshTunnelOpts) LocalAddress() string {
 	return fmt.Sprintf("0.0.0.0:%s", t.LocalPort)
 }
-func (t *TunnelOpts) RemoteAddress() string {
+func (t *SshTunnelOpts) RemoteAddress() string {
 	return fmt.Sprintf("%s:%s", t.RemoteHost, t.RemotePort)
 }
 
-type ExecOpts struct {
+type SshExecOpts struct {
 	Payload               string
 	OnStreamStartCallback func()
 	OnStreamErrorCallback func(error)

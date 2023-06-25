@@ -29,7 +29,7 @@ func NewBoxCreateCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "create [name]",
-		Short: "Create a detached long running box",
+		Short: "Create a long running detached box",
 		RunE:  opts.run,
 	}
 
@@ -58,7 +58,7 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 			return createBox(template.NewLocalSource(path), provider, opts.configRef)
 
-		} else if len(args) == 1 {
+		} else {
 			name := args[0]
 			revisionOpts := &template.RevisionOpts{
 				SourceCacheDir: opts.configRef.Config.Template.CacheDir,

@@ -165,6 +165,24 @@ just
 ```
 
 TODO
+* priority
+    - cmd open/connect tunnel
+    - kube tunnel
+    - cloud tunnel
+    - finish cloud e.g. loader/event
+    - server
+        * refactor and uniform cmd/internal/pkg/config/logger etc.
+        * update session/request
+        * refactor providers
+        * review charts
+    - delete internal
+    - implement env
+    - implement copy
+    - mount vpn docker/kube
+    - remove lab except for schema
+    - RELEASE
+    - brew
+    - add task
 * general
     - update readme
         * `arch` instead of `alpine`
@@ -176,7 +194,7 @@ TODO
     - delete old branches (video)
     - disclaimer of responsibility
     - update internal cli diagram
-    - convert this TODOs left in GitHub issues
+    - convert TODOs left in GitHub issues
     - add GitHub org labels: feature/bug/question
     - review/delete GitHub project
     - highlight attacker and victim boxes to create specific scenario
@@ -202,7 +220,6 @@ TODO
     - update directories to exclude in `resolvePath` e.g. charts
 * box
     - review command: `create/remove` vs `start/stop` vs `up/down`
-    - review command: `exec/connect`
     - review command: `copy` vs `upload/download`
     - review tty resize
     - refactor common `BoxClient` methods (abstract)
@@ -231,7 +248,7 @@ TODO
     - cloud: ssh key auth only + remove InsecureIgnoreHostKey
     - cloud: remove body from empty request `omitempty to remove "body":{}`
     - remove lab ??? are envs + copy enough?
-    - list string padding https://gosamples.dev/string-padding/
+    - list boxes in table with padding see `tabwriter` https://gosamples.dev/string-padding/
 * task
     - TODO ???
 * version
