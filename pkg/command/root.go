@@ -10,7 +10,6 @@ import (
 
 	boxCmd "github.com/hckops/hckctl/pkg/command/box"
 	commonCmd "github.com/hckops/hckctl/pkg/command/common"
-	"github.com/hckops/hckctl/pkg/command/common/flag"
 	configCmd "github.com/hckops/hckctl/pkg/command/config"
 	templateCmd "github.com/hckops/hckctl/pkg/command/template"
 	versionCmd "github.com/hckops/hckctl/pkg/command/version"
@@ -64,7 +63,7 @@ func NewRootCmd() *cobra.Command {
 	)
 	// --log-level
 	logLevelUsage := fmt.Sprintf("set the logging level, one of %s", strings.Join(logger.LevelValues(), "|"))
-	rootCmd.PersistentFlags().StringP(logLevelFlag, "l", flag.NoneFlagShortHand, logLevelUsage)
+	rootCmd.PersistentFlags().StringP(logLevelFlag, "l", logger.InfoLogLevel.String(), logLevelUsage)
 	viper.BindPFlag(logLevelConfigKey, rootCmd.PersistentFlags().Lookup(logLevelFlag))
 
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
