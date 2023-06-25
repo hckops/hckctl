@@ -144,7 +144,8 @@ func buildContainerPorts(ports []model.BoxPort) ([]corev1.ContainerPort, error) 
 
 func buildPod(objectMeta metav1.ObjectMeta, template *model.BoxV1, memory string, cpu string) (*corev1.Pod, error) {
 
-	containerPorts, err := buildContainerPorts(template.NetworkPorts())
+	networkPorts := template.NetworkPorts(false)
+	containerPorts, err := buildContainerPorts(networkPorts)
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +218,8 @@ func buildServicePorts(ports []model.BoxPort) ([]corev1.ServicePort, error) {
 
 func buildService(objectMeta metav1.ObjectMeta, template *model.BoxV1) (*corev1.Service, error) {
 
-	servicePorts, err := buildServicePorts(template.NetworkPorts())
+	networkPorts := template.NetworkPorts(false)
+	servicePorts, err := buildServicePorts(networkPorts)
 	if err != nil {
 		return nil, err
 	}
@@ -306,10 +308,12 @@ func (box *KubeBox) podPortForward(template *model.BoxV1, boxInfo *model.BoxInfo
 		// exit, no service/port available to bind
 		return nil
 	}
-	padding := model.PortFormatPadding(template.NetworkPorts())
-	ports, err := toPortBindings(template.NetworkPorts(), func(port model.BoxPort) {
+
+	networkPorts := template.NetworkPorts(false)
+	portPadding := model.PortFormatPadding(networkPorts)
+	ports, err := toPortBindings(networkPorts, func(port model.BoxPort) {
 		box.eventBus.Publish(newPodPortForwardBindingKubeEvent(namespace, boxInfo.Id, port))
-		box.eventBus.Publish(newPodPortForwardBindingKubeConsoleEvent(namespace, boxInfo.Name, port, padding))
+		box.eventBus.Publish(newPodPortForwardBindingKubeConsoleEvent(namespace, boxInfo.Name, port, portPadding))
 	})
 	if err != nil {
 		return err

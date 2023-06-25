@@ -52,10 +52,6 @@ func newNetworkUpsertDockerEvent(networkName string, networkId string) *dockerEv
 	return &dockerEvent{kind: event.LogDebug, value: fmt.Sprintf("network upsert: networkName=%s networkId=%s", networkName, networkId)}
 }
 
-func newContainerCreateSkipVirtualPortDockerEvent(containerName string, port model.BoxPort) *dockerEvent {
-	return &dockerEvent{kind: event.LogDebug, value: fmt.Sprintf("container create skipping virtual port: containerName=%s portAlias=%s", containerName, port.Alias)}
-}
-
 func newContainerCreatePortBindDockerEvent(containerName string, port model.BoxPort) *dockerEvent {
 	return &dockerEvent{kind: event.LogDebug, value: fmt.Sprintf(
 		"container create port bind: containerName=%s portAlias=%s portRemote=%s portLocal=%s",

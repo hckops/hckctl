@@ -12,8 +12,8 @@ import (
 
 const (
 	BoxPrefixName        = "box-"
-	BoxPrefixVirtualPort = "virtual-" // experimental cloud feature only
 	BoxShellNone         = "none"     // distroless
+	boxPrefixVirtualPort = "virtual-" // experimental cloud feature only
 )
 
 type BoxV1 struct {
@@ -83,7 +83,7 @@ func (box *BoxV1) HasPorts() bool {
 	return len(box.Network.Ports) > 0
 }
 
-func (box *BoxV1) NetworkPorts() []BoxPort {
+func (box *BoxV1) NetworkPorts(includeVirtual bool) []BoxPort {
 
 	ports := make([]BoxPort, 0)
 	for _, portString := range box.Network.Ports {
@@ -99,7 +99,7 @@ func (box *BoxV1) NetworkPorts() []BoxPort {
 			remote = values[2]
 		}
 
-		// ports are not validated
+		// ports are not validated i.e. valid number and range
 		port := BoxPort{
 			Alias:  values[0],
 			Local:  values[1],
@@ -107,7 +107,10 @@ func (box *BoxV1) NetworkPorts() []BoxPort {
 			Public: false,
 		}
 
-		ports = append(ports, port)
+		// by default ignore virtual-* ports
+		if !strings.HasPrefix(port.Alias, boxPrefixVirtualPort) || includeVirtual {
+			ports = append(ports, port)
+		}
 	}
 
 	return ports

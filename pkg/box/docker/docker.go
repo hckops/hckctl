@@ -1,8 +1,6 @@
 package docker
 
 import (
-	"strings"
-
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
@@ -67,15 +65,7 @@ func (box *DockerBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 
 	// boxName
 	containerName := template.GenerateName()
-	// skip not supported virtual-* ports
-	var networkPorts []model.BoxPort
-	for _, networkPort := range template.NetworkPorts() {
-		if strings.HasPrefix(networkPort.Alias, model.BoxPrefixVirtualPort) {
-			box.eventBus.Publish(newContainerCreateSkipVirtualPortDockerEvent(containerName, networkPort))
-		} else {
-			networkPorts = append(networkPorts, networkPort)
-		}
-	}
+	networkPorts := template.NetworkPorts(false)
 	containerConfig, err := buildContainerConfig(
 		template.ImageName(),
 		containerName,
@@ -85,10 +75,10 @@ func (box *DockerBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 		return nil, err
 	}
 
-	padding := model.PortFormatPadding(networkPorts)
+	portPadding := model.PortFormatPadding(networkPorts)
 	onPortBindCallback := func(port model.BoxPort) {
 		box.eventBus.Publish(newContainerCreatePortBindDockerEvent(containerName, port))
-		box.eventBus.Publish(newContainerCreatePortBindDockerConsoleEvent(containerName, port, padding))
+		box.eventBus.Publish(newContainerCreatePortBindDockerConsoleEvent(containerName, port, portPadding))
 	}
 	hostConfig, err := buildHostConfig(networkPorts, onPortBindCallback)
 	if err != nil {

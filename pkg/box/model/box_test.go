@@ -21,6 +21,7 @@ var testBox = &BoxV1{
 	Network: struct{ Ports []string }{Ports: []string{
 		"aaa:123",
 		"bbb:456:789",
+		"virtual-ccc:321",
 	}},
 }
 
@@ -68,7 +69,25 @@ func TestNetworkPorts(t *testing.T) {
 		{Alias: "aaa", Local: "123", Remote: "123", Public: false},
 		{Alias: "bbb", Local: "456", Remote: "789", Public: false},
 	}
-	assert.Equal(t, ports, testBox.NetworkPorts())
+	assert.Equal(t, ports, testBox.NetworkPorts(false))
+}
+
+func TestNetworkPortsIncludeVirtual(t *testing.T) {
+	ports := []BoxPort{
+		{Alias: "aaa", Local: "123", Remote: "123", Public: false},
+		{Alias: "bbb", Local: "456", Remote: "789", Public: false},
+		{Alias: "virtual-ccc", Local: "321", Remote: "321", Public: false},
+	}
+	assert.Equal(t, ports, testBox.NetworkPorts(true))
+}
+
+func TestPortFormatPadding(t *testing.T) {
+	ports := []BoxPort{
+		{Alias: "aaaa"},
+		{Alias: "bbbbbbbbbb"},
+		{Alias: "cccccc"},
+	}
+	assert.Equal(t, 10, PortFormatPadding(ports))
 }
 
 func TestPretty(t *testing.T) {
@@ -86,7 +105,8 @@ func TestPretty(t *testing.T) {
   "Network": {
     "Ports": [
       "aaa:123",
-      "bbb:456:789"
+      "bbb:456:789",
+      "virtual-ccc:321"
     ]
   }
 }`
