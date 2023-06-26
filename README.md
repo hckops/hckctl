@@ -160,6 +160,7 @@ go run cmd/main.go
 
 # build
 just
+./build/hckctl
 ```
 
 TODO
