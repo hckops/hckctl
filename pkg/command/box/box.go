@@ -56,10 +56,10 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 			# opens a box deployed on kubernetes (docker|kube|cloud)
 			hckctl box kali --provider kube
 
-			# opens a box port-forwarding all ports, without spawning a shell
+			# opens a box port-forwarding all ports, without spawning a shell (ignored by docker)
 			hckctl box arch --tunnel-only
 
-			# opens a box spawning a shell, without port-forwarding the ports
+			# opens a box spawning a shell, without port-forwarding the ports (ignored by docker)
 			hckctl box alpine --no-tunnel
 
 			# opens a box using a specific version (branch|tag|sha)
@@ -94,7 +94,6 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 	} else if len(args) == 1 {
 
 		if err := opts.validateFlags(provider); err != nil {
-			log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
 			return errors.New(commonFlag.ErrorFlagNotSupported)
 
 		} else if opts.sourceFlag.Local {
@@ -124,10 +123,12 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 func (opts *boxCmdOptions) validateFlags(provider model.BoxProvider) error {
 	if err := boxFlag.ValidateSourceFlag(provider, opts.sourceFlag); err != nil {
+		log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
 		return err
 	}
 	if err := boxFlag.ValidateTunnelFlag(provider, opts.tunnelFlag); err != nil {
-		return err
+		log.Warn().Err(err).Msgf("ignore validation %s", commonFlag.ErrorFlagNotSupported)
+		return nil
 	}
 	return nil
 }
