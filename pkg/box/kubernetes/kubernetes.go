@@ -270,13 +270,13 @@ func (box *KubeBox) execBox(template *model.BoxV1, info *model.BoxInfo, tunnelOp
 	box.eventBus.Publish(newPodExecKubeEvent(template.Name, box.clientConfig.Namespace, info.Id, template.Shell))
 
 	if tunnelOpts.TunnelOnly {
-		// tunnel and exit
-		return box.podPortForward(template, info)
+		// tunnel and exit, wait until killed
+		return box.podPortForward(template, info, true)
 	}
 
 	if !tunnelOpts.NoTunnel {
-		// tunnel and exec after
-		if err := box.podPortForward(template, info); err != nil {
+		// tunnel and exec after, do not block
+		if err := box.podPortForward(template, info, false); err != nil {
 			return err
 		}
 	}
@@ -308,8 +308,7 @@ func (box *KubeBox) execBox(template *model.BoxV1, info *model.BoxInfo, tunnelOp
 	return box.client.PodExec(opts)
 }
 
-// TODO it should wait ?!
-func (box *KubeBox) podPortForward(template *model.BoxV1, boxInfo *model.BoxInfo) error {
+func (box *KubeBox) podPortForward(template *model.BoxV1, boxInfo *model.BoxInfo, isWait bool) error {
 	namespace := box.clientConfig.Namespace
 
 	if !template.HasPorts() {
@@ -332,6 +331,7 @@ func (box *KubeBox) podPortForward(template *model.BoxV1, boxInfo *model.BoxInfo
 		Namespace: namespace,
 		PodId:     boxInfo.Id,
 		Ports:     ports,
+		IsWait:    isWait,
 		OnTunnelErrorCallback: func(err error) {
 			box.eventBus.Publish(newPodPortForwardErrorKubeEvent(namespace, boxInfo.Id, err))
 		},

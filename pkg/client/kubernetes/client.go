@@ -231,8 +231,6 @@ func (client *KubeClient) PodPortForward(opts *PodPortForwardOpts) error {
 
 	stopChannel := client.ctx.Done()
 	readyChannel := make(chan struct{}, 1)
-	// TODO alternative to callback (uncomment)
-	//failedChannel := make(chan error, 1)
 	out := new(bytes.Buffer)
 	errOut := new(bytes.Buffer)
 
@@ -241,25 +239,26 @@ func (client *KubeClient) PodPortForward(opts *PodPortForwardOpts) error {
 		return errors.Wrap(err, "error kube new portforward")
 	}
 
-	// wait until interrupted
 	go func() {
 		if err := forwarder.ForwardPorts(); err != nil {
-			// TODO alternative to callback: verify if callback is more stable i.e. ignore errors (replace line below)
-			// failedChannel <- err
 			opts.OnTunnelErrorCallback(err)
 		}
 	}()
-	for range readyChannel {
+
+	if opts.IsWait {
+		// wait until interrupted
+		select {
+		case <-stopChannel:
+			return errors.Wrap(err, "error kube stopped")
+		}
+	} else {
+		// continue as soon as ready
+		for range readyChannel {
+		}
 	}
-	// TODO alternative to callback (replace line above)
-	//select {
-	//case err = <-failedChannel:
-	//	return errors.Wrap(err, "error kube forwarding")
-	//case <-readyChannel:
-	//}
 
 	if len(errOut.String()) != 0 {
-		return errors.Wrapf(err, "error kube portforward: %s", errOut.String())
+		return errors.Wrapf(err, "error kube stream: %s", errOut.String())
 	}
 	return nil
 }

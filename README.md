@@ -166,8 +166,6 @@ just
 
 TODO
 * priority
-    - cmd open/connect tunnel
-    - kube tunnel
     - cloud tunnel
     - finish cloud e.g. loader/event
     - server
@@ -175,11 +173,11 @@ TODO
         * update session/request
         * refactor providers
         * review charts
-    - delete internal
     - implement env
     - implement copy
     - mount vpn docker/kube
     - remove lab except for schema
+    - delete internal folder
     - RELEASE
     - brew
     - add task
@@ -200,6 +198,7 @@ TODO
     - highlight attacker and victim boxes to create specific scenario
     - add go reference badge
     - public `kali-core` image
+    - add `VersionClient` interface to returns in json format docker/kube/cloud version
     - PR to official doc to run
         * owasp/dvwa
         * https://github.com/vulhub/vulhub
@@ -224,7 +223,6 @@ TODO
     - review tty resize
     - refactor common `BoxClient` methods (abstract)
     - mount `/dev/tun` for vpn
-    - implement tunnel ??? kube portforward should wait
     - implement copy ???
     - kube: add env var
     - kube: add distroless support
@@ -248,7 +246,8 @@ TODO
     - cloud: ssh key auth only + remove InsecureIgnoreHostKey
     - cloud: remove body from empty request `omitempty to remove "body":{}`
     - remove lab ??? are envs + copy enough?
-    - list boxes in table with padding see `tabwriter` https://gosamples.dev/string-padding/
+    - list boxes in table with padding see `tabwriter` https://gosamples.dev/string-padding
+    - template: rename `remote` to `git` and add `--remote` mutually exclusive flag to fetch via http
 * task
     - TODO ???
 * version
