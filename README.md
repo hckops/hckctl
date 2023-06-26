@@ -174,6 +174,7 @@ TODO
     - implement env
     - implement copy
     - mount vpn docker/kube
+    - offline ?
     - remove lab except for schema
     - delete internal folder
     - RELEASE
@@ -181,7 +182,6 @@ TODO
     - add task
 * general
     - update readme
-        * `arch` instead of `alpine`
         * remove comments
         * update setup
         * descriptions/screenshot/gif
@@ -196,7 +196,6 @@ TODO
     - highlight attacker and victim boxes to create specific scenario
     - add go reference badge
     - public `kali-core` image
-    - add `VersionClient` interface to returns in json format docker/kube/cloud version
     - PR to official doc to run
         * owasp/dvwa
         * https://github.com/vulhub/vulhub
@@ -249,8 +248,8 @@ TODO
 * task
     - TODO ???
 * version
-    - print server/cloud
     - print if new version available
+    - add `VersionClient` interface to returns in json format docker/kube/cloud version
 * release
     - add brew https://goreleaser.com/customization/homebrew
     - test linux

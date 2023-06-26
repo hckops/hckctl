@@ -208,7 +208,7 @@ func (box *DockerBox) execBox(template *model.BoxV1, info *model.BoxInfo, remove
 	command := template.Shell
 	box.eventBus.Publish(newContainerExecDockerEvent(info.Id, info.Name, command))
 
-	// TODO is should print the actual bound ports, not the template
+	// TODO it should print the actual bound ports, not the template
 	// box.publishBoxInfo(template, info)
 
 	if command == model.BoxShellNone {
