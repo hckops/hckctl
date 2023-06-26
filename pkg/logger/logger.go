@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -19,7 +20,18 @@ func SetTimestamp() {
 	}
 }
 
-func ParseLevel(value string) zerolog.Level {
+func SetLevel(value string) {
+	level := parseLevel(value)
+
+	if level == zerolog.NoLevel {
+		// default info
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	} else {
+		zerolog.SetGlobalLevel(level)
+	}
+}
+
+func parseLevel(value string) zerolog.Level {
 	switch value {
 	case DebugLogLevel.String():
 		return zerolog.DebugLevel
@@ -35,12 +47,23 @@ func ParseLevel(value string) zerolog.Level {
 	}
 }
 
-func SetLevel(level zerolog.Level) {
-	if level == zerolog.NoLevel {
-		// default info
-		zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	} else {
-		zerolog.SetGlobalLevel(level)
+func SetFormat(value string, out io.Writer) {
+	format := parseFormat(value)
+
+	// default is json
+	if format == TextLogFormat {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: out, TimeFormat: time.RFC3339})
+	}
+}
+
+func parseFormat(value string) LogFormat {
+	switch value {
+	case JsonLogFormat.String():
+		return JsonLogFormat
+	case TextLogFormat.String():
+		return TextLogFormat
+	default:
+		return JsonLogFormat
 	}
 }
 
@@ -68,8 +91,8 @@ func SetFileOutput(filePath string) (func() error, error) {
 		return nil, errors.Wrap(err, "error creating log file")
 	}
 
-	// text format instead of json
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: file, TimeFormat: time.RFC3339})
+	// default
+	SetFormat(TextLogFormat.String(), file)
 
 	return closeFileCallback(file), nil
 }
@@ -83,4 +106,12 @@ func closeFileCallback(file *os.File) func() error {
 		log.Warn().Msg("log file already closed")
 		return nil
 	}
+}
+
+func toValues[T comparable](kv map[T]string) []string {
+	var values []string
+	for _, v := range kv {
+		values = append(values, v)
+	}
+	return values
 }

@@ -21,9 +21,5 @@ func (l LogLevel) String() string {
 }
 
 func LevelValues() []string {
-	var values []string
-	for _, level := range levels {
-		values = append(values, level)
-	}
-	return values
+	return toValues[LogLevel](levels)
 }

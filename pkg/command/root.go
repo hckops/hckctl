@@ -32,13 +32,13 @@ func NewRootCmd() *cobra.Command {
 			cmd.SilenceErrors = true
 
 			if config, err := setupConfig(); err != nil {
-				return errors.Wrap(err, "unable to init config")
+				return errors.Wrap(err, "unable to setup config")
 			} else {
 				configRef.Config = config
 			}
 
 			if callback, err := setupLogger(configRef); err != nil {
-				return errors.Wrap(err, "unable to init logger")
+				return errors.Wrap(err, "unable to setup logger")
 			} else {
 				logCallback = callback
 			}
@@ -78,8 +78,7 @@ func NewRootCmd() *cobra.Command {
 
 // loads configs or initialize the default
 func setupConfig() (*configCmd.ConfigV1, error) {
-	err := configCmd.InitConfig(false)
-	if err != nil {
+	if err := configCmd.InitConfig(false); err != nil {
 		return nil, err
 	}
 	return configCmd.LoadConfig()
@@ -88,7 +87,7 @@ func setupConfig() (*configCmd.ConfigV1, error) {
 func setupLogger(configRef *configCmd.ConfigRef) (func() error, error) {
 	logConfig := configRef.Config.Log
 	logger.SetTimestamp()
-	logger.SetLevel(logger.ParseLevel(logConfig.Level))
+	logger.SetLevel(logConfig.Level)
 	logger.SetContext(commonCmd.CliName)
 	return logger.SetFileOutput(logConfig.FilePath)
 }
