@@ -63,13 +63,21 @@ func parseFormat(value string) LogFormat {
 	case TextLogFormat.String():
 		return TextLogFormat
 	default:
+		// silent fallback
 		return JsonLogFormat
 	}
 }
 
 func SetContext(source string) {
-	log.Logger = log.With().Caller().
+	log.Logger = log.With().
+		Caller().
+		Stack().
 		Str("source", source).
+		Logger()
+}
+
+func SetSession() {
+	log.Logger = log.With().
 		Str("session", generateSession()).
 		Logger()
 }
@@ -106,12 +114,4 @@ func closeFileCallback(file *os.File) func() error {
 		log.Warn().Msg("log file already closed")
 		return nil
 	}
-}
-
-func toValues[T comparable](kv map[T]string) []string {
-	var values []string
-	for _, v := range kv {
-		values = append(values, v)
-	}
-	return values
 }

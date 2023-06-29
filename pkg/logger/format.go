@@ -1,5 +1,9 @@
 package logger
 
+import (
+	"github.com/hckops/hckctl/pkg/util"
+)
+
 type LogFormat uint8
 
 const (
@@ -17,5 +21,5 @@ func (l LogFormat) String() string {
 }
 
 func FormatValues() []string {
-	return toValues[LogFormat](formats)
+	return util.IotaToValues[LogFormat](formats)
 }

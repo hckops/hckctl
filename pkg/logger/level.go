@@ -1,5 +1,9 @@
 package logger
 
+import (
+	"github.com/hckops/hckctl/pkg/util"
+)
+
 type LogLevel uint8
 
 const (
@@ -21,5 +25,5 @@ func (l LogLevel) String() string {
 }
 
 func LevelValues() []string {
-	return toValues[LogLevel](levels)
+	return util.IotaToValues[LogLevel](levels)
 }
