@@ -104,7 +104,7 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 		} else {
 			name := args[0]
-			revisionOpts := &template.RevisionOpts{
+			revisionOpts := &template.RevisionOptions{
 				SourceCacheDir: opts.configRef.Config.Template.CacheDir,
 				SourceUrl:      common.TemplateSourceUrl,
 				SourceRevision: common.TemplateSourceRevision,

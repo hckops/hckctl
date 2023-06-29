@@ -59,7 +59,7 @@ func (opts *templateListCmdOptions) run(cmd *cobra.Command, args []string) error
 }
 
 func templateList(sourceDir string, revision string) error {
-	revisionOpts := &RevisionOpts{
+	revisionOpts := &RevisionOptions{
 		SourceCacheDir: sourceDir,
 		SourceUrl:      common.TemplateSourceUrl,
 		SourceRevision: common.TemplateSourceRevision,

@@ -79,7 +79,7 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	} else if len(args) == 1 {
 		name := args[0]
-		revisionOpts := &RevisionOpts{
+		revisionOpts := &RevisionOptions{
 			SourceCacheDir: opts.configRef.Config.Template.CacheDir,
 			SourceUrl:      common.TemplateSourceUrl,
 			SourceRevision: common.TemplateSourceRevision,

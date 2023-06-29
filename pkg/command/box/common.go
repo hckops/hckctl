@@ -79,7 +79,7 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 
 	// best effort approach to resolve remote box template by name with default revision
 	// WARNING this might return unexpected results if the box was created with a different revision
-	revisionOpts := &template.RevisionOpts{
+	revisionOpts := &template.RevisionOptions{
 		SourceCacheDir: configRef.Config.Template.CacheDir,
 		SourceUrl:      common.TemplateSourceUrl,
 		SourceRevision: common.TemplateSourceRevision,
