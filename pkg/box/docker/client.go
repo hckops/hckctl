@@ -9,9 +9,10 @@ import (
 )
 
 type DockerBox struct {
-	client   *docker.DockerClient
-	streams  *model.BoxStreams
-	eventBus *event.EventBus
+	client       *docker.DockerClient
+	clientConfig *docker.DockerClientConfig
+	streams      *model.BoxStreams
+	eventBus     *event.EventBus
 }
 
 func NewDockerBox(internalOpts *model.BoxInternalOptions) (*DockerBox, error) {

@@ -8,7 +8,6 @@ import (
 
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/docker"
-	commonCmd "github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
@@ -85,7 +84,7 @@ func (box *DockerBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 		return nil, err
 	}
 
-	networkName := commonCmd.ProjectName
+	networkName := box.clientConfig.NetworkName
 	networkId, err := box.client.NetworkUpsert(networkName)
 	if err != nil {
 		return nil, err

@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/hckops/hckctl/pkg/box/model"
+	"github.com/hckops/hckctl/pkg/client/docker"
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
 	"github.com/hckops/hckctl/pkg/client/ssh"
 	"github.com/hckops/hckctl/pkg/command/common"
@@ -24,7 +25,7 @@ type ConfigV1 struct {
 	Log      LogConfig      `yaml:"log"`
 	Template TemplateConfig `yaml:"template"`
 	Box      BoxConfig      `yaml:"box"`
-	Provider ProviderConfig `yaml:"provider"`
+	Provider ProviderConfig `yaml:"providers"`
 }
 
 type LogConfig struct {
@@ -42,8 +43,19 @@ type BoxConfig struct {
 }
 
 type ProviderConfig struct {
-	Kube  KubeConfig  `yaml:"kube"`
-	Cloud CloudConfig `yaml:"cloud"`
+	Docker DockerConfig `yaml:"docker"`
+	Kube   KubeConfig   `yaml:"kube"`
+	Cloud  CloudConfig  `yaml:"cloud"`
+}
+
+type DockerConfig struct {
+	NetworkName string `yaml:"networkName"`
+}
+
+func (c *DockerConfig) ToDockerClientConfig() *docker.DockerClientConfig {
+	return &docker.DockerClientConfig{
+		NetworkName: c.NetworkName,
+	}
 }
 
 type KubeConfig struct {
@@ -98,6 +110,9 @@ func newConfig(logFile, cacheDir string) *ConfigV1 {
 			Provider: model.Docker.String(),
 		},
 		Provider: ProviderConfig{
+			Docker: DockerConfig{
+				NetworkName: common.ProjectName,
+			},
 			Kube: KubeConfig{
 				Namespace:    common.ProjectName,
 				ConfigPath:   "",

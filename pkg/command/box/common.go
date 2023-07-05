@@ -122,10 +122,12 @@ func newBoxOpts(provider model.BoxProvider, configRef *config.ConfigRef) (*model
 		return nil, errors.Wrap(err, "invalid kube config")
 	}
 
+	dockerClientConfig := configRef.Config.Provider.Docker.ToDockerClientConfig()
 	sshClientConfig := configRef.Config.Provider.Cloud.ToSshClientConfig()
 	internalOpts := model.NewBoxInternalOpts(version.ClientVersion())
 	boxOpts := &model.BoxOptions{
 		Provider:     provider,
+		DockerConfig: dockerClientConfig,
 		KubeConfig:   kubeClientConfig,
 		SshConfig:    sshClientConfig,
 		InternalOpts: internalOpts,

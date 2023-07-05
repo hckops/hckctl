@@ -14,6 +14,10 @@ type DockerClient struct {
 	docker *client.Client
 }
 
+type DockerClientConfig struct {
+	NetworkName string
+}
+
 type ImagePullOpts struct {
 	ImageName           string
 	OnImagePullCallback func()

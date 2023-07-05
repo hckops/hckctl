@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/hckops/hckctl/pkg/client/docker"
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
 	"github.com/hckops/hckctl/pkg/client/ssh"
 )
@@ -27,6 +28,9 @@ func TestNewConfig(t *testing.T) {
 			Provider: "docker",
 		},
 		Provider: ProviderConfig{
+			Docker: DockerConfig{
+				NetworkName: "hckops",
+			},
 			Kube: KubeConfig{
 				Namespace:    "hckops",
 				ConfigPath:   "",
@@ -43,6 +47,16 @@ func TestNewConfig(t *testing.T) {
 
 	result := newConfig(logFile, cacheDir)
 	assert.Equal(t, expected, result)
+}
+
+func TestToDockerClientConfig(t *testing.T) {
+	dockerConfig := &DockerConfig{
+		NetworkName: "myNetwork",
+	}
+	expected := &docker.DockerClientConfig{
+		NetworkName: "myNetwork",
+	}
+	assert.Equal(t, expected, dockerConfig.ToDockerClientConfig())
 }
 
 func TestToKubeClientConfig(t *testing.T) {

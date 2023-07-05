@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/hckops/hckctl/pkg/client/docker"
 	"io"
 	"os"
 
@@ -30,6 +31,7 @@ type BoxInfo struct {
 
 type BoxOptions struct {
 	Provider     BoxProvider
+	DockerConfig *docker.DockerClientConfig
 	KubeConfig   *kubernetes.KubeClientConfig
 	SshConfig    *ssh.SshClientConfig
 	InternalOpts *BoxInternalOptions
