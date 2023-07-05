@@ -10,6 +10,10 @@ import (
 // TODO allow offline refresh if the repository already exists
 // TODO add lock to support concurrent requests
 
+// TODO rename revision to source
+// TODO rename remote to git
+// TODO add remote http
+
 type RevisionOptions struct {
 	SourceCacheDir string
 	SourceUrl      string
