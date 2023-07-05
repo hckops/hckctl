@@ -229,6 +229,7 @@ TODO
     - kube: verify `GetPodInfo` sidecar pod count
     - kube: verify `PodPortForward` callback vs channel
     - kube: update resources sizes
+    - docker: restart exited container (switch off pc)
     - docker: `ContainerCreate` add env var
     - docker: `ContainerCreate` add labels
     - docker: create container with `Labels=["com.hckops.revision"=<REVISION>"]` to resolve template by name
