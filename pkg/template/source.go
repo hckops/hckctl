@@ -7,9 +7,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// TODO allow offline refresh if the repository already exists
+// TODO AllowOffline refresh if the repository already exists
 // TODO add lock to support concurrent requests
-// TODO rename remote to git
 // TODO add remote http
 
 type SourceOptions struct {
@@ -17,7 +16,6 @@ type SourceOptions struct {
 	SourceUrl      string
 	SourceRevision string // default branch
 	Revision       string
-	AllowOffline   bool
 }
 
 func refreshSource(opts *SourceOptions) error {

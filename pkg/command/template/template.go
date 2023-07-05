@@ -33,13 +33,13 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 		Short: "Validate and print templates",
 		Example: heredoc.Doc(`
 
-			# prints a remote template (supports multiple formats)
+			# prints a git template (supports multiple formats)
 			hckctl template alpine
 			hckctl template base/parrot
 			hckctl template box/base/arch
 			hckctl template box/vulnerable/dvwa.yml
 
-			# prints a specific version (branch|tag|sha) of the template
+			# prints a specific git version (branch|tag|sha) of the template
 			hckctl template alpine --revision main
 
 			# prints a template in json format (default yaml)
@@ -85,9 +85,9 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 			SourceRevision: common.TemplateSourceRevision,
 			Revision:       opts.sourceFlag.Revision,
 		}
-		log.Debug().Msgf("print remote template: name=%s revision=%s", name, opts.sourceFlag.Revision)
+		log.Debug().Msgf("print git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
-		return printTemplate(NewRemoteSource(sourceOpts, name), format)
+		return printTemplate(NewGitSource(sourceOpts, name), format)
 
 	} else {
 		cmd.HelpFunc()(cmd, args)

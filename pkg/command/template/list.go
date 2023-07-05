@@ -66,7 +66,7 @@ func templateList(sourceDir string, revision string) error {
 		Revision:       revision,
 	}
 	// name is overridden with custom wildcard
-	if validations, err := NewRemoteSource(sourceOpts, "").ReadTemplates(); err != nil {
+	if validations, err := NewGitSource(sourceOpts, "").ReadTemplates(); err != nil {
 		log.Warn().Err(err).Msg("error listing templates")
 		return errors.New("error")
 

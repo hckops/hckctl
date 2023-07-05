@@ -72,26 +72,26 @@ func (src *LocalSource) ReadLab() (*lab.LabV1, error) {
 	return readLabTemplate(src.path)
 }
 
-type RemoteSource struct {
+type GitSource struct {
 	opts *SourceOptions
 	name string
 }
 
-func NewRemoteSource(opts *SourceOptions, name string) *RemoteSource {
-	return &RemoteSource{opts, name}
+func NewGitSource(opts *SourceOptions, name string) *GitSource {
+	return &GitSource{opts, name}
 }
 
-func (src *RemoteSource) ReadTemplate() (*TemplateValue, error) {
-	return readRemoteTemplate(src.opts, src.name)
+func (src *GitSource) ReadTemplate() (*TemplateValue, error) {
+	return readGitTemplate(src.opts, src.name)
 }
 
-func (src *RemoteSource) ReadTemplates() ([]*TemplateValidated, error) {
+func (src *GitSource) ReadTemplates() ([]*TemplateValidated, error) {
 	wildcard := fmt.Sprintf("%s/**/*.{yml,yaml}", src.opts.SourceCacheDir)
-	return readRemoteTemplates(src.opts, wildcard)
+	return readGitTemplates(src.opts, wildcard)
 }
-func (src *RemoteSource) ReadBox() (*box.BoxV1, error) {
-	return readRemoteBoxTemplate(src.opts, src.name)
+func (src *GitSource) ReadBox() (*box.BoxV1, error) {
+	return readGitBoxTemplate(src.opts, src.name)
 }
-func (src *RemoteSource) ReadLab() (*lab.LabV1, error) {
-	return readRemoteLabTemplate(src.opts, src.name)
+func (src *GitSource) ReadLab() (*lab.LabV1, error) {
+	return readGitLabTemplate(src.opts, src.name)
 }

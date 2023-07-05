@@ -110,9 +110,9 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 				SourceRevision: common.TemplateSourceRevision,
 				Revision:       opts.sourceFlag.Revision,
 			}
-			log.Debug().Msgf("open box from remote template: name=%s revision=%s", name, opts.sourceFlag.Revision)
+			log.Debug().Msgf("open box from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
-			return opts.openBox(template.NewRemoteSource(sourceOpts, name), provider)
+			return opts.openBox(template.NewGitSource(sourceOpts, name), provider)
 		}
 
 	} else {

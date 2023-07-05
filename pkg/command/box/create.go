@@ -66,9 +66,9 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 				SourceRevision: common.TemplateSourceRevision,
 				Revision:       opts.sourceFlag.Revision,
 			}
-			log.Debug().Msgf("create box from remote template: name=%s revision=%s", name, opts.sourceFlag.Revision)
+			log.Debug().Msgf("create box from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
-			return createBox(template.NewRemoteSource(sourceOpts, name), provider, opts.configRef)
+			return createBox(template.NewGitSource(sourceOpts, name), provider, opts.configRef)
 		}
 	} else {
 		cmd.HelpFunc()(cmd, args)

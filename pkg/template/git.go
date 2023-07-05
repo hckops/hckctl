@@ -13,7 +13,7 @@ import (
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-func readRemoteTemplate(opts *SourceOptions, name string) (*TemplateValue, error) {
+func readGitTemplate(opts *SourceOptions, name string) (*TemplateValue, error) {
 	if path, err := resolvePathWithRevision(opts, name); err != nil {
 		return nil, err
 	} else {
@@ -75,14 +75,14 @@ func resolvePath(sourceCacheDir, name string) (string, error) {
 	return "", errors.New("path not found")
 }
 
-func readRemoteTemplates(opts *SourceOptions, wildcard string) ([]*TemplateValidated, error) {
+func readGitTemplates(opts *SourceOptions, wildcard string) ([]*TemplateValidated, error) {
 	if err := refreshSource(opts); err != nil {
 		return nil, errors.Wrap(err, "invalid template revision")
 	}
 	return readTemplates(wildcard)
 }
 
-func readRemoteBoxTemplate(opts *SourceOptions, name string) (*box.BoxV1, error) {
+func readGitBoxTemplate(opts *SourceOptions, name string) (*box.BoxV1, error) {
 	if path, err := resolvePathWithRevision(opts, name); err != nil {
 		return nil, err
 	} else {
@@ -90,7 +90,7 @@ func readRemoteBoxTemplate(opts *SourceOptions, name string) (*box.BoxV1, error)
 	}
 }
 
-func readRemoteLabTemplate(opts *SourceOptions, name string) (*lab.LabV1, error) {
+func readGitLabTemplate(opts *SourceOptions, name string) (*lab.LabV1, error) {
 	if path, err := resolvePathWithRevision(opts, name); err != nil {
 		return nil, err
 	} else {
