@@ -14,7 +14,6 @@ import (
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/common"
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
-	commonCmd "github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
@@ -118,7 +117,7 @@ func buildLabels(name, instance, version string) Labels {
 		"app.kubernetes.io/name":       name,
 		"app.kubernetes.io/instance":   instance,
 		"app.kubernetes.io/version":    version,
-		"app.kubernetes.io/managed-by": commonCmd.ProjectName,
+		"app.kubernetes.io/managed-by": "hckops", // TODO common?
 	}
 }
 
