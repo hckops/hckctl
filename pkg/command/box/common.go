@@ -79,14 +79,14 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 
 	// best effort approach to resolve remote box template by name with default revision
 	// WARNING this might return unexpected results if the box was created with a different revision
-	revisionOpts := &template.RevisionOptions{
+	sourceOpts := &template.SourceOptions{
 		SourceCacheDir: configRef.Config.Template.CacheDir,
 		SourceUrl:      common.TemplateSourceUrl,
 		SourceRevision: common.TemplateSourceRevision,
 		Revision:       common.TemplateSourceRevision, // TODO create container with Labels="com.hckops.revision=<REVISION>" to resolve exact template
 	}
 	templateName := model.ToBoxTemplateName(boxName)
-	boxTemplate, err := template.NewRemoteSource(revisionOpts, templateName).ReadBox()
+	boxTemplate, err := template.NewRemoteSource(sourceOpts, templateName).ReadBox()
 	if err != nil {
 		log.Warn().Err(err).Msgf("error reading box template: templateName=%v", templateName)
 		return errors.New("invalid template")

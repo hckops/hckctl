@@ -73,11 +73,11 @@ func (src *LocalSource) ReadLab() (*lab.LabV1, error) {
 }
 
 type RemoteSource struct {
-	opts *RevisionOptions
+	opts *SourceOptions
 	name string
 }
 
-func NewRemoteSource(opts *RevisionOptions, name string) *RemoteSource {
+func NewRemoteSource(opts *SourceOptions, name string) *RemoteSource {
 	return &RemoteSource{opts, name}
 }
 

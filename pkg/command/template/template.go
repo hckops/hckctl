@@ -79,7 +79,7 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	} else if len(args) == 1 {
 		name := args[0]
-		revisionOpts := &RevisionOptions{
+		sourceOpts := &SourceOptions{
 			SourceCacheDir: opts.configRef.Config.Template.CacheDir,
 			SourceUrl:      common.TemplateSourceUrl,
 			SourceRevision: common.TemplateSourceRevision,
@@ -87,7 +87,7 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 		}
 		log.Debug().Msgf("print remote template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
-		return printTemplate(NewRemoteSource(revisionOpts, name), format)
+		return printTemplate(NewRemoteSource(sourceOpts, name), format)
 
 	} else {
 		cmd.HelpFunc()(cmd, args)

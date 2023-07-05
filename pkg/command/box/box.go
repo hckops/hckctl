@@ -104,7 +104,7 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 		} else {
 			name := args[0]
-			revisionOpts := &template.RevisionOptions{
+			sourceOpts := &template.SourceOptions{
 				SourceCacheDir: opts.configRef.Config.Template.CacheDir,
 				SourceUrl:      common.TemplateSourceUrl,
 				SourceRevision: common.TemplateSourceRevision,
@@ -112,7 +112,7 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 			}
 			log.Debug().Msgf("open box from remote template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
-			return opts.openBox(template.NewRemoteSource(revisionOpts, name), provider)
+			return opts.openBox(template.NewRemoteSource(sourceOpts, name), provider)
 		}
 
 	} else {

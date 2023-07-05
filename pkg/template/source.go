@@ -9,19 +9,18 @@ import (
 
 // TODO allow offline refresh if the repository already exists
 // TODO add lock to support concurrent requests
-
-// TODO rename revision to source
 // TODO rename remote to git
 // TODO add remote http
 
-type RevisionOptions struct {
+type SourceOptions struct {
 	SourceCacheDir string
 	SourceUrl      string
 	SourceRevision string // default branch
 	Revision       string
+	AllowOffline   bool
 }
 
-func refreshRevision(opts *RevisionOptions) error {
+func refreshSource(opts *SourceOptions) error {
 
 	// first time clone repo always with default revision
 	// assume that path doesn't exist, or it's empty

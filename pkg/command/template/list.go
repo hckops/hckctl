@@ -59,14 +59,14 @@ func (opts *templateListCmdOptions) run(cmd *cobra.Command, args []string) error
 }
 
 func templateList(sourceDir string, revision string) error {
-	revisionOpts := &RevisionOptions{
+	sourceOpts := &SourceOptions{
 		SourceCacheDir: sourceDir,
 		SourceUrl:      common.TemplateSourceUrl,
 		SourceRevision: common.TemplateSourceRevision,
 		Revision:       revision,
 	}
 	// name is overridden with custom wildcard
-	if validations, err := NewRemoteSource(revisionOpts, "").ReadTemplates(); err != nil {
+	if validations, err := NewRemoteSource(sourceOpts, "").ReadTemplates(); err != nil {
 		log.Warn().Err(err).Msg("error listing templates")
 		return errors.New("error")
 

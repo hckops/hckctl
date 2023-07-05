@@ -13,7 +13,7 @@ import (
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-func readRemoteTemplate(opts *RevisionOptions, name string) (*TemplateValue, error) {
+func readRemoteTemplate(opts *SourceOptions, name string) (*TemplateValue, error) {
 	if path, err := resolvePathWithRevision(opts, name); err != nil {
 		return nil, err
 	} else {
@@ -21,9 +21,9 @@ func readRemoteTemplate(opts *RevisionOptions, name string) (*TemplateValue, err
 	}
 }
 
-func resolvePathWithRevision(opts *RevisionOptions, name string) (string, error) {
-	if err := refreshRevision(opts); err != nil {
-		return "", errors.Wrap(err, "invalid template revision")
+func resolvePathWithRevision(opts *SourceOptions, name string) (string, error) {
+	if err := refreshSource(opts); err != nil {
+		return "", errors.Wrap(err, "invalid template source")
 	}
 
 	path, err := resolvePath(opts.SourceCacheDir, name)
@@ -75,14 +75,14 @@ func resolvePath(sourceCacheDir, name string) (string, error) {
 	return "", errors.New("path not found")
 }
 
-func readRemoteTemplates(opts *RevisionOptions, wildcard string) ([]*TemplateValidated, error) {
-	if err := refreshRevision(opts); err != nil {
+func readRemoteTemplates(opts *SourceOptions, wildcard string) ([]*TemplateValidated, error) {
+	if err := refreshSource(opts); err != nil {
 		return nil, errors.Wrap(err, "invalid template revision")
 	}
 	return readTemplates(wildcard)
 }
 
-func readRemoteBoxTemplate(opts *RevisionOptions, name string) (*box.BoxV1, error) {
+func readRemoteBoxTemplate(opts *SourceOptions, name string) (*box.BoxV1, error) {
 	if path, err := resolvePathWithRevision(opts, name); err != nil {
 		return nil, err
 	} else {
@@ -90,7 +90,7 @@ func readRemoteBoxTemplate(opts *RevisionOptions, name string) (*box.BoxV1, erro
 	}
 }
 
-func readRemoteLabTemplate(opts *RevisionOptions, name string) (*lab.LabV1, error) {
+func readRemoteLabTemplate(opts *SourceOptions, name string) (*lab.LabV1, error) {
 	if path, err := resolvePathWithRevision(opts, name); err != nil {
 		return nil, err
 	} else {
