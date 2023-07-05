@@ -109,6 +109,7 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 				SourceUrl:      common.TemplateSourceUrl,
 				SourceRevision: common.TemplateSourceRevision,
 				Revision:       opts.sourceFlag.Revision,
+				AllowOffline:   true,
 			}
 			log.Debug().Msgf("open box from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 

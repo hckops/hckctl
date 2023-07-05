@@ -7,15 +7,14 @@ import (
 	"github.com/pkg/errors"
 )
 
-// TODO AllowOffline refresh if the repository already exists
-// TODO add lock to support concurrent requests
-// TODO add remote http
+// TODO add lock/sync wrapper to support concurrent requests
 
 type SourceOptions struct {
 	SourceCacheDir string
 	SourceUrl      string
 	SourceRevision string // default branch
 	Revision       string
+	AllowOffline   bool
 }
 
 func refreshSource(opts *SourceOptions) error {
@@ -39,11 +38,11 @@ func refreshSource(opts *SourceOptions) error {
 		return errors.Wrap(err, "unable to access repository")
 	}
 
-	// fetch latest changes
+	// fetch latest changes, ignore error if is offline
 	// https://git-scm.com/book/en/v2/Git-Internals-The-Refspec
 	if err := repository.Fetch(&git.FetchOptions{
 		RefSpecs: []config.RefSpec{"+refs/*:refs/*"},
-	}); err != nil && err != git.NoErrAlreadyUpToDate {
+	}); err != nil && err != git.NoErrAlreadyUpToDate && !opts.AllowOffline {
 		return errors.Wrap(err, "unable to fetch repository")
 	}
 

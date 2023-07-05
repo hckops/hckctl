@@ -20,6 +20,7 @@ type templateCmdOptions struct {
 	configRef  *config.ConfigRef
 	formatFlag formatFlag
 	sourceFlag *flag.SourceFlag
+	offline    bool
 }
 
 func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -45,6 +46,9 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 			# prints a template in json format (default yaml)
 			hckctl template alpine --format json
 
+			# prints the latest available template cached
+			hckctl template alpine --offline
+
 			# validates and prints a local template
 			hckctl template ../megalopolis/box/base/alpine.yml --local
 		`),
@@ -61,6 +65,10 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	// --revision or --local
 	opts.sourceFlag = flag.AddTemplateSourceFlag(command)
+
+	// --offline or --local
+	flag.AddOfflineFlag(command, &opts.offline)
+	command.MarkFlagsMutuallyExclusive(flag.OfflineFlagName, flag.LocalFlagName)
 
 	command.AddCommand(NewTemplateListCmd(configRef))
 	command.AddCommand(NewTemplateValidateCmd())
@@ -84,8 +92,9 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 			SourceUrl:      common.TemplateSourceUrl,
 			SourceRevision: common.TemplateSourceRevision,
 			Revision:       opts.sourceFlag.Revision,
+			AllowOffline:   opts.offline,
 		}
-		log.Debug().Msgf("print git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
+		log.Debug().Msgf("print git template: name=%s revision=%s offline=%v", name, opts.sourceFlag.Revision, opts.offline)
 
 		return printTemplate(NewGitSource(sourceOpts, name), format)
 

@@ -43,6 +43,8 @@ func (t *TemplateValue) toValidated(path string, isValid bool) *TemplateValidate
 	return &TemplateValidated{t, path, isValid}
 }
 
+// TODO add RemoteSource http
+
 type TemplateSource interface {
 	ReadTemplate() (*TemplateValue, error)
 	ReadTemplates() ([]*TemplateValidated, error)

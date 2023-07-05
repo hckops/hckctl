@@ -40,6 +40,10 @@ func newImagePullDockerLoaderEvent(imageName string) *dockerEvent {
 	return &dockerEvent{kind: event.LoaderUpdate, value: fmt.Sprintf("pulling image %s", imageName)}
 }
 
+func newImagePullErrorDockerEvent(imageName string) *dockerEvent {
+	return &dockerEvent{kind: event.LogWarning, value: fmt.Sprintf("image pull error: imageName=%s", imageName)}
+}
+
 func newImageRemoveDockerEvent(imageId string) *dockerEvent {
 	return &dockerEvent{kind: event.LogDebug, value: fmt.Sprintf("image remove: imageId=%s", imageId)}
 }

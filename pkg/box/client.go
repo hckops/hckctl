@@ -28,7 +28,7 @@ type BoxClient interface {
 func NewBoxClient(opts *model.BoxOptions) (BoxClient, error) {
 	switch opts.Provider {
 	case model.Docker:
-		return docker.NewDockerBox(opts.InternalOpts)
+		return docker.NewDockerBox(opts.InternalOpts, opts.DockerConfig)
 	case model.Kubernetes:
 		return kubernetes.NewKubeBox(opts.InternalOpts, opts.KubeConfig)
 	case model.Cloud:

@@ -175,7 +175,6 @@ TODO
     - implement env
     - implement copy
     - mount vpn docker/kube
-    - offline ?
     - remove lab except for schema
     - delete internal folder
     - RELEASE
@@ -213,7 +212,7 @@ TODO
         * reset config
         * delete all
 * template
-    - add offline mode source revision
+    - add remote template
     - update directories to exclude in `resolvePath` e.g. charts
 * box
     - review command: `create/remove` vs `start/stop` vs `up/down`

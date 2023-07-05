@@ -11,7 +11,7 @@ import (
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-func newDockerBox(internalOpts *model.BoxInternalOptions) (*DockerBox, error) {
+func newDockerBox(internalOpts *model.BoxInternalOptions, clientConfig *docker.DockerClientConfig) (*DockerBox, error) {
 	internalOpts.EventBus.Publish(newClientInitDockerEvent())
 
 	dockerClient, err := docker.NewDockerClient()
@@ -19,10 +19,13 @@ func newDockerBox(internalOpts *model.BoxInternalOptions) (*DockerBox, error) {
 		return nil, errors.Wrap(err, "error docker box")
 	}
 
+	clientConfig.IgnoreImagePullError = internalOpts.AllowOffline
+
 	return &DockerBox{
-		client:   dockerClient,
-		streams:  internalOpts.Streams,
-		eventBus: internalOpts.EventBus,
+		client:       dockerClient,
+		clientConfig: clientConfig,
+		streams:      internalOpts.Streams,
+		eventBus:     internalOpts.EventBus,
 	}, nil
 }
 
@@ -43,7 +46,12 @@ func (box *DockerBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 	}
 	box.eventBus.Publish(newImagePullDockerEvent(imageName))
 	if err := box.client.ImagePull(imagePullOpts); err != nil {
-		return nil, err
+		// try to use existing images
+		if box.clientConfig.IgnoreImagePullError {
+			box.eventBus.Publish(newImagePullErrorDockerEvent(imageName))
+		} else {
+			return nil, err
+		}
 	}
 
 	// cleanup old nightly images

@@ -39,6 +39,7 @@ type BoxOptions struct {
 
 type BoxInternalOptions struct {
 	ClientVersion string
+	AllowOffline  bool
 	Streams       *BoxStreams
 	EventBus      *event.EventBus
 }
@@ -46,6 +47,7 @@ type BoxInternalOptions struct {
 func NewBoxInternalOpts(clientVersion string) *BoxInternalOptions {
 	return &BoxInternalOptions{
 		ClientVersion: clientVersion,
+		AllowOffline:  true, // always allow to start offline/obsolete images
 		Streams:       newDefaultStreams(true),
 		EventBus:      event.NewEventBus(),
 	}

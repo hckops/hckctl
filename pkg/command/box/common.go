@@ -57,6 +57,8 @@ func runBoxClient(src template.TemplateSource, provider model.BoxProvider, confi
 			loader.Refresh(e.String())
 		case event.LoaderStop:
 			loader.Stop()
+		case event.LogWarning:
+			log.Warn().Msgf("[%v] %s", e.Source(), e.String())
 		default:
 			log.Debug().Msgf("[%v][%s] %s", e.Source(), e.Kind(), e.String())
 		}
@@ -83,7 +85,8 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 		SourceCacheDir: configRef.Config.Template.CacheDir,
 		SourceUrl:      common.TemplateSourceUrl,
 		SourceRevision: common.TemplateSourceRevision,
-		Revision:       common.TemplateSourceRevision, // TODO create container with Labels="com.hckops.gitSource.revision=<REVISION>" to resolve exact template
+		Revision:       common.TemplateSourceRevision, // TODO create container with Labels="com.hckops.template.git.revision=<REVISION>" to resolve exact template
+		AllowOffline:   true,
 	}
 	templateName := model.ToBoxTemplateName(boxName)
 	boxTemplate, err := template.NewGitSource(sourceOpts, templateName).ReadBox()
@@ -155,6 +158,8 @@ func newDefaultBoxClient(providerFlag commonFlag.ProviderFlag, configRef *config
 		switch e.Kind() {
 		case event.PrintConsole:
 			fmt.Println(e.String())
+		case event.LogWarning:
+			log.Warn().Msgf("[%v] %s", e.Source(), e.String())
 		default:
 			log.Debug().Msgf("[%v][%s] %s", e.Source(), e.Kind(), e.String())
 		}

@@ -12,6 +12,7 @@ import (
 const (
 	RevisionFlagName = "revision"
 	LocalFlagName    = "local"
+	OfflineFlagName  = "offline"
 )
 
 type SourceFlag struct {
@@ -46,4 +47,12 @@ func AddTemplateSourceFlag(command *cobra.Command) *SourceFlag {
 	localFlag := AddLocalFlag(command, &sourceFlag.Local)
 	command.MarkFlagsMutuallyExclusive(revisionFlag, localFlag)
 	return sourceFlag
+}
+
+func AddOfflineFlag(command *cobra.Command, offline *bool) string {
+	const (
+		flagUsage = "ignore latest git templates"
+	)
+	command.Flags().BoolVarP(offline, OfflineFlagName, NoneFlagShortHand, false, flagUsage)
+	return OfflineFlagName
 }

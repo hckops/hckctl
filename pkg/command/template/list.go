@@ -18,6 +18,7 @@ import (
 type templateListCmdOptions struct {
 	configRef *config.ConfigRef
 	revision  string
+	offline   bool
 	kind      string // TODO filter comma separated list e.g. "box,lab"
 	order     string // TODO sort output
 	column    string // TODO output only specific fields
@@ -39,32 +40,40 @@ func NewTemplateListCmd(configRef *config.ConfigRef) *cobra.Command {
 
 			# list templates using a specific git version (branch|tag|sha)
 			hckctl template list --revision main
+
+			# list templates cached
+			hckctl template list --offline
 		`),
 		RunE: opts.run,
 	}
 
 	// --revision
 	flag.AddRevisionFlag(command, &opts.revision)
+	// --offline
+	flag.AddOfflineFlag(command, &opts.offline)
 
 	return command
 }
 
 func (opts *templateListCmdOptions) run(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
-		return templateList(opts.configRef.Config.Template.CacheDir, opts.revision)
+		return templateList(opts.configRef.Config.Template.CacheDir, opts.revision, opts.offline)
 	} else {
 		cmd.HelpFunc()(cmd, args)
 	}
 	return nil
 }
 
-func templateList(sourceDir string, revision string) error {
+func templateList(sourceDir string, revision string, offline bool) error {
 	sourceOpts := &SourceOptions{
 		SourceCacheDir: sourceDir,
 		SourceUrl:      common.TemplateSourceUrl,
 		SourceRevision: common.TemplateSourceRevision,
 		Revision:       revision,
+		AllowOffline:   offline,
 	}
+	log.Debug().Msgf("list git templates: revision=%s offline=%v", revision, offline)
+
 	// name is overridden with custom wildcard
 	if validations, err := NewGitSource(sourceOpts, "").ReadTemplates(); err != nil {
 		log.Warn().Err(err).Msg("error listing templates")

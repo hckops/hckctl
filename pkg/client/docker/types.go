@@ -15,7 +15,8 @@ type DockerClient struct {
 }
 
 type DockerClientConfig struct {
-	NetworkName string
+	NetworkName          string
+	IgnoreImagePullError bool
 }
 
 type ImagePullOpts struct {
