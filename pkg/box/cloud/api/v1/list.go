@@ -3,7 +3,7 @@ package v1
 type BoxListRequestBody struct{}
 
 func (b BoxListRequestBody) method() methodName {
-	return methodBoxList
+	return MethodBoxList
 }
 
 type BoxListResponseBody struct {
@@ -11,7 +11,7 @@ type BoxListResponseBody struct {
 }
 
 func (b BoxListResponseBody) method() methodName {
-	return methodBoxList
+	return MethodBoxList
 }
 
 func NewBoxListRequest(origin string) *Message[BoxListRequestBody] {

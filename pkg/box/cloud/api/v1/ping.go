@@ -10,7 +10,7 @@ type PingBody struct {
 }
 
 func (b PingBody) method() methodName {
-	return methodPing
+	return MethodPing
 }
 
 type PongBody struct {
@@ -18,7 +18,7 @@ type PongBody struct {
 }
 
 func (b PongBody) method() methodName {
-	return methodPing
+	return MethodPing
 }
 
 func NewPingMessage(origin string) *Message[PingBody] {

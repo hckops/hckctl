@@ -16,11 +16,11 @@ var testBoxes = []string{"box-alpine-123", "box-alpine-456"}
 
 func TestMethods(t *testing.T) {
 	assert.Equal(t, 5, len(methods))
-	assert.Equal(t, "hck-ping", methodPing.String())
-	assert.Equal(t, "hck-box-create", methodBoxCreate.String())
-	assert.Equal(t, "hck-box-exec", methodBoxExec.String())
-	assert.Equal(t, "hck-box-delete", methodBoxDelete.String())
-	assert.Equal(t, "hck-box-list", methodBoxList.String())
+	assert.Equal(t, "hck-ping", MethodPing.String())
+	assert.Equal(t, "hck-box-create", MethodBoxCreate.String())
+	assert.Equal(t, "hck-box-exec", MethodBoxExec.String())
+	assert.Equal(t, "hck-box-delete", MethodBoxDelete.String())
+	assert.Equal(t, "hck-box-list", MethodBoxList.String())
 }
 
 func TestPingRequest(t *testing.T) {

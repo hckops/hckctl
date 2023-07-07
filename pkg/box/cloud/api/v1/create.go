@@ -5,7 +5,7 @@ type BoxCreateRequestBody struct {
 }
 
 func (b BoxCreateRequestBody) method() methodName {
-	return methodBoxCreate
+	return MethodBoxCreate
 }
 
 type BoxCreateResponseBody struct {
@@ -13,7 +13,7 @@ type BoxCreateResponseBody struct {
 }
 
 func (b BoxCreateResponseBody) method() methodName {
-	return methodBoxCreate
+	return MethodBoxCreate
 }
 
 func NewBoxCreateRequest(origin string, templateName string) *Message[BoxCreateRequestBody] {

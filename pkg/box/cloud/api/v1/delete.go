@@ -5,7 +5,7 @@ type BoxDeleteRequestBody struct {
 }
 
 func (b BoxDeleteRequestBody) method() methodName {
-	return methodBoxDelete
+	return MethodBoxDelete
 }
 
 type BoxDeleteResponseBody struct {
@@ -13,7 +13,7 @@ type BoxDeleteResponseBody struct {
 }
 
 func (b BoxDeleteResponseBody) method() methodName {
-	return methodBoxDelete
+	return MethodBoxDelete
 }
 
 func NewBoxDeleteRequest(origin string, names []string) *Message[BoxDeleteRequestBody] {

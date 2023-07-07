@@ -5,7 +5,7 @@ type BoxExecRequestBody struct {
 }
 
 func (b BoxExecRequestBody) method() methodName {
-	return methodBoxExec
+	return MethodBoxExec
 }
 
 func NewBoxExecRequest(origin string, name string) *Message[BoxExecRequestBody] {
