@@ -17,8 +17,8 @@ import (
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-func newKubeBox(clientOpts *model.BoxClientOptions, clientConfig *kubernetes.KubeClientConfig) (*KubeBox, error) {
-	clientOpts.EventBus.Publish(newClientInitKubeEvent())
+func newKubeBox(commonOpts *model.BoxCommonOptions, clientConfig *kubernetes.KubeClientConfig) (*KubeBox, error) {
+	commonOpts.EventBus.Publish(newClientInitKubeEvent())
 
 	kubeClient, err := kubernetes.NewOutOfClusterKubeClient(clientConfig.ConfigPath)
 	if err != nil {
@@ -28,8 +28,8 @@ func newKubeBox(clientOpts *model.BoxClientOptions, clientConfig *kubernetes.Kub
 	return &KubeBox{
 		client:       kubeClient,
 		clientConfig: clientConfig,
-		streams:      clientOpts.Streams,
-		eventBus:     clientOpts.EventBus,
+		streams:      commonOpts.Streams,
+		eventBus:     commonOpts.EventBus,
 	}, nil
 }
 

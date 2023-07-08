@@ -17,21 +17,21 @@ type BoxInfo struct {
 
 type BoxOptions struct {
 	Provider     BoxProvider
-	ClientOpts   *BoxClientOptions
+	CommonOpts   *BoxCommonOptions
 	DockerConfig *docker.DockerClientConfig
 	KubeConfig   *kubernetes.KubeClientConfig
 	SshConfig    *ssh.SshClientConfig
 }
 
-type BoxClientOptions struct {
+type BoxCommonOptions struct {
 	Version      string // TODO only cloud
 	AllowOffline bool   // TODO only docker
 	Streams      *BoxStreams
 	EventBus     *event.EventBus
 }
 
-func NewBoxClientOpts(version string) *BoxClientOptions {
-	return &BoxClientOptions{
+func NewBoxCommonOpts(version string) *BoxCommonOptions {
+	return &BoxCommonOptions{
 		Version:      version,
 		AllowOffline: true, // always allow to start offline/obsolete images
 		Streams:      newDefaultStreams(true),

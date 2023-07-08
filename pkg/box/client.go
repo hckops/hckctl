@@ -28,11 +28,11 @@ type BoxClient interface {
 func NewBoxClient(opts *model.BoxOptions) (BoxClient, error) {
 	switch opts.Provider {
 	case model.Docker:
-		return docker.NewDockerBox(opts.ClientOpts, opts.DockerConfig)
+		return docker.NewDockerBox(opts.CommonOpts, opts.DockerConfig)
 	case model.Kubernetes:
-		return kubernetes.NewKubeBox(opts.ClientOpts, opts.KubeConfig)
+		return kubernetes.NewKubeBox(opts.CommonOpts, opts.KubeConfig)
 	case model.Cloud:
-		return cloud.NewCloudBox(opts.ClientOpts, opts.SshConfig)
+		return cloud.NewCloudBox(opts.CommonOpts, opts.SshConfig)
 	default:
 		return nil, errors.New("invalid provider")
 	}

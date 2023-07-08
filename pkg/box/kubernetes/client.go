@@ -15,8 +15,8 @@ type KubeBox struct {
 	eventBus     *event.EventBus
 }
 
-func NewKubeBox(clientOpts *model.BoxClientOptions, clientConfig *kubernetes.KubeClientConfig) (*KubeBox, error) {
-	return newKubeBox(clientOpts, clientConfig)
+func NewKubeBox(commonOpts *model.BoxCommonOptions, clientConfig *kubernetes.KubeClientConfig) (*KubeBox, error) {
+	return newKubeBox(commonOpts, clientConfig)
 }
 
 func (box *KubeBox) Provider() model.BoxProvider {
