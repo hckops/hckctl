@@ -1,5 +1,9 @@
 package v1
 
+import (
+	"fmt"
+)
+
 type methodName int
 
 const (
@@ -20,4 +24,13 @@ var methods = map[methodName]string{
 
 func (c methodName) String() string {
 	return methods[c]
+}
+
+func toMethodName(value string) (methodName, error) {
+	for methodName, methodValue := range methods {
+		if methodValue == value {
+			return methodName, nil
+		}
+	}
+	return -1, fmt.Errorf("method not found %s", value)
 }

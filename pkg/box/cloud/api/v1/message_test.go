@@ -23,6 +23,18 @@ func TestMethods(t *testing.T) {
 	assert.Equal(t, "hck-box-list", MethodBoxList.String())
 }
 
+func TestIsValidProtocol(t *testing.T) {
+	_, errInvalidProtocol := IsValidProtocol("invalid")
+	assert.EqualError(t, errInvalidProtocol, "invalid protocol")
+
+	_, errInvalidMethod := IsValidProtocol("api/v1/todo")
+	assert.EqualError(t, errInvalidMethod, "invalid method: method not found todo")
+
+	method, err := IsValidProtocol("api/v1/hck-ping")
+	assert.NoError(t, err)
+	assert.Equal(t, "hck-ping", method)
+}
+
 func TestPingRequest(t *testing.T) {
 	message := NewPingMessage(clientOrigin)
 	value := `{"kind":"api/v1","origin":"hckctl-0.0.0-os","method":"hck-ping","body":{"value":"ping"}}`

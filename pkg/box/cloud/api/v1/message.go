@@ -3,6 +3,7 @@ package v1
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -44,4 +45,20 @@ func newMessage[T body](origin string, body T) *Message[T] {
 		Method: body.method().String(),
 		Body:   body,
 	}
+}
+
+func IsValidProtocol(value string) (string, error) {
+	schemaPrefix := fmt.Sprintf("%s/", schema.KindApiV1.String())
+
+	if !strings.HasPrefix(value, schemaPrefix) {
+		return "", errors.New("invalid protocol")
+	}
+
+	methodValue := strings.ReplaceAll(value, schemaPrefix, "")
+	methodName, err := toMethodName(methodValue)
+	if err != nil {
+		return "", errors.Wrap(err, "invalid method")
+	}
+
+	return methodName.String(), nil
 }
