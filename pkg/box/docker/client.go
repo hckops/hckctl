@@ -15,8 +15,8 @@ type DockerBox struct {
 	eventBus     *event.EventBus
 }
 
-func NewDockerBox(internalOpts *model.BoxInternalOptions, clientConfig *docker.DockerClientConfig) (*DockerBox, error) {
-	return newDockerBox(internalOpts, clientConfig)
+func NewDockerBox(clientOpts *model.BoxClientOptions, clientConfig *docker.DockerClientConfig) (*DockerBox, error) {
+	return newDockerBox(clientOpts, clientConfig)
 }
 
 func (box *DockerBox) Provider() model.BoxProvider {

@@ -11,21 +11,21 @@ import (
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-func newDockerBox(internalOpts *model.BoxInternalOptions, clientConfig *docker.DockerClientConfig) (*DockerBox, error) {
-	internalOpts.EventBus.Publish(newClientInitDockerEvent())
+func newDockerBox(clientOpts *model.BoxClientOptions, clientConfig *docker.DockerClientConfig) (*DockerBox, error) {
+	clientOpts.EventBus.Publish(newClientInitDockerEvent())
 
 	dockerClient, err := docker.NewDockerClient()
 	if err != nil {
 		return nil, errors.Wrap(err, "error docker box")
 	}
 
-	clientConfig.IgnoreImagePullError = internalOpts.AllowOffline
+	clientConfig.IgnoreImagePullError = clientOpts.AllowOffline
 
 	return &DockerBox{
 		client:       dockerClient,
 		clientConfig: clientConfig,
-		streams:      internalOpts.Streams,
-		eventBus:     internalOpts.EventBus,
+		streams:      clientOpts.Streams,
+		eventBus:     clientOpts.EventBus,
 	}, nil
 }
 

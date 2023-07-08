@@ -1,28 +1,14 @@
 package model
 
 import (
-	"github.com/hckops/hckctl/pkg/client/docker"
 	"io"
 	"os"
 
+	"github.com/hckops/hckctl/pkg/client/docker"
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
 	"github.com/hckops/hckctl/pkg/client/ssh"
 	"github.com/hckops/hckctl/pkg/event"
 )
-
-type BoxProvider uint
-
-const (
-	Docker BoxProvider = iota
-	Kubernetes
-	Cloud
-)
-
-var providerValue = []string{"docker", "kube", "cloud"}
-
-func (p BoxProvider) String() string {
-	return providerValue[p]
-}
 
 type BoxInfo struct {
 	Id   string
@@ -31,25 +17,25 @@ type BoxInfo struct {
 
 type BoxOptions struct {
 	Provider     BoxProvider
+	ClientOpts   *BoxClientOptions
 	DockerConfig *docker.DockerClientConfig
 	KubeConfig   *kubernetes.KubeClientConfig
 	SshConfig    *ssh.SshClientConfig
-	InternalOpts *BoxInternalOptions
 }
 
-type BoxInternalOptions struct {
-	ClientVersion string
-	AllowOffline  bool
-	Streams       *BoxStreams
-	EventBus      *event.EventBus
+type BoxClientOptions struct {
+	Version      string // TODO only cloud
+	AllowOffline bool   // TODO only docker
+	Streams      *BoxStreams
+	EventBus     *event.EventBus
 }
 
-func NewBoxInternalOpts(clientVersion string) *BoxInternalOptions {
-	return &BoxInternalOptions{
-		ClientVersion: clientVersion,
-		AllowOffline:  true, // always allow to start offline/obsolete images
-		Streams:       newDefaultStreams(true),
-		EventBus:      event.NewEventBus(),
+func NewBoxClientOpts(version string) *BoxClientOptions {
+	return &BoxClientOptions{
+		Version:      version,
+		AllowOffline: true, // always allow to start offline/obsolete images
+		Streams:      newDefaultStreams(true),
+		EventBus:     event.NewEventBus(),
 	}
 }
 

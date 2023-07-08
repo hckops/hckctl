@@ -127,13 +127,13 @@ func newBoxOpts(provider model.BoxProvider, configRef *config.ConfigRef) (*model
 
 	dockerClientConfig := configRef.Config.Provider.Docker.ToDockerClientConfig()
 	sshClientConfig := configRef.Config.Provider.Cloud.ToSshClientConfig()
-	internalOpts := model.NewBoxInternalOpts(version.ClientVersion())
+	clientOpts := model.NewBoxClientOpts(version.ClientVersion())
 	boxOpts := &model.BoxOptions{
 		Provider:     provider,
+		ClientOpts:   clientOpts,
 		DockerConfig: dockerClientConfig,
 		KubeConfig:   kubeClientConfig,
 		SshConfig:    sshClientConfig,
-		InternalOpts: internalOpts,
 	}
 	return boxOpts, nil
 }
