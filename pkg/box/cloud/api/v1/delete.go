@@ -4,7 +4,7 @@ type BoxDeleteRequestBody struct {
 	Names []string `json:"names"`
 }
 
-func (b BoxDeleteRequestBody) method() methodName {
+func (b BoxDeleteRequestBody) method() MethodName {
 	return MethodBoxDelete
 }
 
@@ -12,7 +12,7 @@ type BoxDeleteResponseBody struct {
 	Names []string `json:"names"`
 }
 
-func (b BoxDeleteResponseBody) method() methodName {
+func (b BoxDeleteResponseBody) method() MethodName {
 	return MethodBoxDelete
 }
 

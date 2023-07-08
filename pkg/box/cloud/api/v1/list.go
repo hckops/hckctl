@@ -2,7 +2,7 @@ package v1
 
 type BoxListRequestBody struct{}
 
-func (b BoxListRequestBody) method() methodName {
+func (b BoxListRequestBody) method() MethodName {
 	return MethodBoxList
 }
 
@@ -10,7 +10,7 @@ type BoxListResponseBody struct {
 	Names []string `json:"names"`
 }
 
-func (b BoxListResponseBody) method() methodName {
+func (b BoxListResponseBody) method() MethodName {
 	return MethodBoxList
 }
 

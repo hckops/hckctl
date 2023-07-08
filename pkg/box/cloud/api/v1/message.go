@@ -19,7 +19,7 @@ type Message[T body] struct {
 }
 
 type body interface {
-	method() methodName
+	method() MethodName
 }
 
 func (req *Message[T]) Protocol() string {

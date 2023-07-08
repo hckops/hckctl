@@ -4,7 +4,7 @@ type BoxCreateRequestBody struct {
 	TemplateName string `json:"templateName"`
 }
 
-func (b BoxCreateRequestBody) method() methodName {
+func (b BoxCreateRequestBody) method() MethodName {
 	return MethodBoxCreate
 }
 
@@ -12,7 +12,7 @@ type BoxCreateResponseBody struct {
 	Name string `json:"name"`
 }
 
-func (b BoxCreateResponseBody) method() methodName {
+func (b BoxCreateResponseBody) method() MethodName {
 	return MethodBoxCreate
 }
 

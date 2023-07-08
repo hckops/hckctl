@@ -4,7 +4,7 @@ type BoxExecRequestBody struct {
 	Name string `json:"name"`
 }
 
-func (b BoxExecRequestBody) method() methodName {
+func (b BoxExecRequestBody) method() MethodName {
 	return MethodBoxExec
 }
 

@@ -9,7 +9,7 @@ type PingBody struct {
 	Value string `json:"value"`
 }
 
-func (b PingBody) method() methodName {
+func (b PingBody) method() MethodName {
 	return MethodPing
 }
 
@@ -17,7 +17,7 @@ type PongBody struct {
 	Value string `json:"value"`
 }
 
-func (b PongBody) method() methodName {
+func (b PongBody) method() MethodName {
 	return MethodPing
 }
 

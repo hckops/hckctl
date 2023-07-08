@@ -4,17 +4,17 @@ import (
 	"fmt"
 )
 
-type methodName int
+type MethodName int
 
 const (
-	MethodPing methodName = iota
+	MethodPing MethodName = iota
 	MethodBoxCreate
 	MethodBoxExec
 	MethodBoxDelete
 	MethodBoxList
 )
 
-var methods = map[methodName]string{
+var methods = map[MethodName]string{
 	MethodPing:      "hck-ping",
 	MethodBoxCreate: "hck-box-create",
 	MethodBoxExec:   "hck-box-exec",
@@ -22,11 +22,11 @@ var methods = map[methodName]string{
 	MethodBoxList:   "hck-box-list",
 }
 
-func (c methodName) String() string {
+func (c MethodName) String() string {
 	return methods[c]
 }
 
-func toMethodName(value string) (methodName, error) {
+func toMethodName(value string) (MethodName, error) {
 	for methodName, methodValue := range methods {
 		if methodValue == value {
 			return methodName, nil
