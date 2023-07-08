@@ -15,7 +15,7 @@ type BoxInfo struct {
 	Name string
 }
 
-type BoxOptions struct {
+type BoxClientOptions struct {
 	Provider     BoxProvider
 	CommonOpts   *BoxCommonOptions
 	DockerConfig *docker.DockerClientConfig

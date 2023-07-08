@@ -38,11 +38,11 @@ func runBoxClient(src template.TemplateSource, provider model.BoxProvider, confi
 
 	log.Info().Msgf("loading template: provider=%s name=%s\n%s", provider, boxTemplate.Name, boxTemplate.Pretty())
 
-	boxOpts, err := newBoxOpts(provider, configRef)
+	boxClientOpts, err := newBoxClientOpts(provider, configRef)
 	if err != nil {
 		return err
 	}
-	boxClient, err := box.NewBoxClient(boxOpts)
+	boxClient, err := box.NewBoxClient(boxClientOpts)
 	if err != nil {
 		log.Warn().Err(err).Msgf("error creating client: provider=%v", provider)
 		return fmt.Errorf("error %v client create", provider)
@@ -117,7 +117,7 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 	return errors.New("not found")
 }
 
-func newBoxOpts(provider model.BoxProvider, configRef *config.ConfigRef) (*model.BoxOptions, error) {
+func newBoxClientOpts(provider model.BoxProvider, configRef *config.ConfigRef) (*model.BoxClientOptions, error) {
 
 	kubeClientConfig, err := configRef.Config.Provider.Kube.ToKubeClientConfig()
 	if err != nil {
@@ -128,14 +128,14 @@ func newBoxOpts(provider model.BoxProvider, configRef *config.ConfigRef) (*model
 	commonOpts := model.NewBoxCommonOpts(version.ClientVersion())
 	dockerClientConfig := configRef.Config.Provider.Docker.ToDockerClientConfig()
 	sshClientConfig := configRef.Config.Provider.Cloud.ToSshClientConfig()
-	boxOpts := &model.BoxOptions{
+	boxClientOpts := &model.BoxClientOptions{
 		Provider:     provider,
 		CommonOpts:   commonOpts,
 		DockerConfig: dockerClientConfig,
 		KubeConfig:   kubeClientConfig,
 		SshConfig:    sshClientConfig,
 	}
-	return boxOpts, nil
+	return boxClientOpts, nil
 }
 
 func newDefaultBoxClient(providerFlag commonFlag.ProviderFlag, configRef *config.ConfigRef) (box.BoxClient, error) {
@@ -144,7 +144,7 @@ func newDefaultBoxClient(providerFlag commonFlag.ProviderFlag, configRef *config
 	if err != nil {
 		return nil, err
 	}
-	opts, err := newBoxOpts(provider, configRef)
+	opts, err := newBoxClientOpts(provider, configRef)
 	if err != nil {
 		return nil, err
 	}

@@ -25,7 +25,7 @@ type BoxClient interface {
 // TODO https://stackoverflow.com/questions/30261032/how-to-implement-an-abstract-class-in-go
 // TODO https://golangbyexample.com/go-abstract-class
 
-func NewBoxClient(opts *model.BoxOptions) (BoxClient, error) {
+func NewBoxClient(opts *model.BoxClientOptions) (BoxClient, error) {
 	switch opts.Provider {
 	case model.Docker:
 		return docker.NewDockerBox(opts.CommonOpts, opts.DockerConfig)
