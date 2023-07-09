@@ -11,7 +11,6 @@ import (
 type KubeBox struct {
 	client       *kubernetes.KubeClient
 	clientConfig *kubernetes.KubeClientConfig
-	streams      *model.BoxStreams
 	eventBus     *event.EventBus
 }
 

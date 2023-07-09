@@ -22,7 +22,6 @@ func newDockerBox(commonOpts *model.BoxCommonOptions, clientConfig *docker.Docke
 	return &DockerBox{
 		client:       dockerClient,
 		clientConfig: clientConfig,
-		streams:      commonOpts.Streams,
 		eventBus:     commonOpts.EventBus,
 	}, nil
 }
@@ -179,20 +178,20 @@ func buildNetworkingConfig(networkName, networkId string) *network.NetworkingCon
 }
 
 // TODO common
-func (box *DockerBox) connectBox(template *model.BoxV1, name string) error {
+func (box *DockerBox) connectBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
 	if info, err := box.findBox(name); err != nil {
 		return err
 	} else {
-		return box.execBox(template, info, false)
+		return box.execBox(template, info, tunnelOpts, false)
 	}
 }
 
 // TODO common
-func (box *DockerBox) openBox(template *model.BoxV1) error {
+func (box *DockerBox) openBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions) error {
 	if info, err := box.createBox(template); err != nil {
 		return err
 	} else {
-		return box.execBox(template, info, true)
+		return box.execBox(template, info, tunnelOpts, true)
 	}
 }
 
@@ -210,7 +209,7 @@ func (box *DockerBox) findBox(name string) (*model.BoxInfo, error) {
 	return nil, errors.New("box not found")
 }
 
-func (box *DockerBox) execBox(template *model.BoxV1, info *model.BoxInfo, removeOnExit bool) error {
+func (box *DockerBox) execBox(template *model.BoxV1, info *model.BoxInfo, tunnelOpts *model.TunnelOptions, removeOnExit bool) error {
 	command := template.Shell
 	box.eventBus.Publish(newContainerExecDockerEvent(info.Id, info.Name, command))
 
@@ -222,16 +221,16 @@ func (box *DockerBox) execBox(template *model.BoxV1, info *model.BoxInfo, remove
 			// stop loader
 			box.eventBus.Publish(newContainerExecDockerLoaderEvent())
 		}
-		return box.logsBox(info.Id)
+		return box.logsBox(info.Id, tunnelOpts)
 	}
 
 	containerOpts := &docker.ContainerExecOpts{
 		ContainerId: info.Id,
 		Shell:       command,
-		InStream:    box.streams.In,
-		OutStream:   box.streams.Out,
-		ErrStream:   box.streams.Err,
-		IsTty:       box.streams.IsTty,
+		InStream:    tunnelOpts.Streams.In,
+		OutStream:   tunnelOpts.Streams.Out,
+		ErrStream:   tunnelOpts.Streams.Err,
+		IsTty:       tunnelOpts.Streams.IsTty,
 		OnContainerExecCallback: func() {
 			if removeOnExit {
 				// stop loader
@@ -266,11 +265,11 @@ func (box *DockerBox) publishBoxInfo(template *model.BoxV1, info *model.BoxInfo)
 	// TODO print environment variables
 }
 
-func (box *DockerBox) logsBox(containerId string) error {
+func (box *DockerBox) logsBox(containerId string, tunnelOpts *model.TunnelOptions) error {
 	opts := &docker.ContainerLogsOpts{
 		ContainerId: containerId,
-		OutStream:   box.streams.Out,
-		ErrStream:   box.streams.Err,
+		OutStream:   tunnelOpts.Streams.Out,
+		ErrStream:   tunnelOpts.Streams.Err,
 		OnStreamCloseCallback: func() {
 			box.eventBus.Publish(newContainerExecExitDockerEvent(containerId))
 		},

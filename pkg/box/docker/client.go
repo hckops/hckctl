@@ -11,7 +11,6 @@ import (
 type DockerBox struct {
 	client       *docker.DockerClient
 	clientConfig *docker.DockerClientConfig
-	streams      *model.BoxStreams
 	eventBus     *event.EventBus
 }
 
@@ -32,14 +31,14 @@ func (box *DockerBox) Create(template *model.BoxV1) (*model.BoxInfo, error) {
 	return box.createBox(template)
 }
 
-func (box *DockerBox) Connect(template *model.BoxV1, _ *model.TunnelOptions, name string) error {
+func (box *DockerBox) Connect(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
 	defer box.close()
-	return box.connectBox(template, name)
+	return box.connectBox(template, tunnelOpts, name)
 }
 
-func (box *DockerBox) Open(template *model.BoxV1, _ *model.TunnelOptions) error {
+func (box *DockerBox) Open(template *model.BoxV1, tunnelOpts *model.TunnelOptions) error {
 	defer box.close()
-	return box.openBox(template)
+	return box.openBox(template, tunnelOpts)
 }
 
 func (box *DockerBox) Copy(string, string, string) error {

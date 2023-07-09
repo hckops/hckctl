@@ -19,7 +19,6 @@ func newCloudBox(commonOpts *model.BoxCommonOptions, clientConfig *ssh.SshClient
 	return &CloudBox{
 		clientConfig: clientConfig,
 		client:       sshClient,
-		streams:      commonOpts.Streams,
 		eventBus:     commonOpts.EventBus,
 	}, nil
 }

@@ -28,7 +28,6 @@ func newKubeBox(commonOpts *model.BoxCommonOptions, clientConfig *kubernetes.Kub
 	return &KubeBox{
 		client:       kubeClient,
 		clientConfig: clientConfig,
-		streams:      commonOpts.Streams,
 		eventBus:     commonOpts.EventBus,
 	}, nil
 }
@@ -288,10 +287,10 @@ func (box *KubeBox) execBox(template *model.BoxV1, info *model.BoxInfo, tunnelOp
 		PodName:   common.ToKebabCase(template.Image.Repository), // pod.Spec.Containers[0].Name
 		PodId:     info.Id,
 		Shell:     template.Shell,
-		InStream:  box.streams.In,
-		OutStream: box.streams.Out,
-		ErrStream: box.streams.Err,
-		IsTty:     box.streams.IsTty,
+		InStream:  tunnelOpts.Streams.In,
+		OutStream: tunnelOpts.Streams.Out,
+		ErrStream: tunnelOpts.Streams.Err,
+		IsTty:     tunnelOpts.Streams.IsTty,
 		OnExecCallback: func() {
 			if removeOnExit {
 				// stop loader

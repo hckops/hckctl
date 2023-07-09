@@ -11,7 +11,6 @@ import (
 type CloudBox struct {
 	clientConfig *ssh.SshClientConfig
 	client       *ssh.SshClient
-	streams      *model.BoxStreams
 	eventBus     *event.EventBus
 }
 

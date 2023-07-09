@@ -24,13 +24,11 @@ type BoxClientOptions struct {
 }
 
 type BoxCommonOptions struct {
-	Streams  *BoxStreams // TODO refactor TunnelOptions for connect/open
 	EventBus *event.EventBus
 }
 
 func NewBoxCommonOpts() *BoxCommonOptions {
 	return &BoxCommonOptions{
-		Streams:  newDefaultStreams(true),
 		EventBus: event.NewEventBus(),
 	}
 }
@@ -42,7 +40,7 @@ type BoxStreams struct {
 	IsTty bool // tty is false only for ssh tunnel
 }
 
-func newDefaultStreams(tty bool) *BoxStreams {
+func NewDefaultStreams(tty bool) *BoxStreams {
 	return &BoxStreams{
 		In:    os.Stdin,
 		Out:   os.Stdout,
@@ -52,6 +50,7 @@ func newDefaultStreams(tty bool) *BoxStreams {
 }
 
 type TunnelOptions struct {
+	Streams    *BoxStreams
 	TunnelOnly bool
 	NoTunnel   bool
 }

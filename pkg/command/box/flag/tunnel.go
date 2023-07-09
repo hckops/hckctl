@@ -1,9 +1,9 @@
 package flag
 
 import (
-	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/spf13/cobra"
 
+	"github.com/hckops/hckctl/pkg/box/model"
 	commonFlag "github.com/hckops/hckctl/pkg/command/common/flag"
 )
 
@@ -19,6 +19,7 @@ type TunnelFlag struct {
 
 func (f *TunnelFlag) ToTunnelOptions() *model.TunnelOptions {
 	return &model.TunnelOptions{
+		Streams:    model.NewDefaultStreams(true),
 		TunnelOnly: f.TunnelOnly,
 		NoTunnel:   f.NoTunnel,
 	}
