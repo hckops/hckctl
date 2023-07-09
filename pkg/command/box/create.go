@@ -79,7 +79,13 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 func createBox(src template.TemplateSource, provider model.BoxProvider, configRef *config.ConfigRef) error {
 	createClient := func(opts *boxClientOptions) error {
-		if boxInfo, err := opts.client.Create(opts.template); err != nil {
+
+		size, err := model.ExistResourceSize(configRef.Config.Box.Size)
+		if err != nil {
+			return err
+		}
+
+		if boxInfo, err := opts.client.Create(opts.template, size); err != nil {
 			return err
 		} else {
 			opts.loader.Stop()

@@ -29,7 +29,8 @@ func (box *CloudBox) close() error {
 	return box.client.Close()
 }
 
-func (box *CloudBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
+// TODO request size with limits
+func (box *CloudBox) createBox(template *model.BoxV1, size model.ResourceSize) (*model.BoxInfo, error) {
 	box.eventBus.Publish(newApiCreateCloudLoaderEvent(box.clientConfig.Address, template.Name))
 
 	request := v1.NewBoxCreateRequest(box.clientConfig.Version, template.Name)

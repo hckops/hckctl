@@ -38,14 +38,14 @@ func (box *KubeBox) close() error {
 	return box.client.Close()
 }
 
-func (box *KubeBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
+func (box *KubeBox) createBox(template *model.BoxV1, size model.ResourceSize) (*model.BoxInfo, error) {
 	namespace := box.clientConfig.Namespace
 
 	// TODO add env var container override
 
 	// boxName
 	containerName := template.GenerateName()
-	deployment, service, err := buildSpec(containerName, namespace, template, box.clientConfig.Resource)
+	deployment, service, err := buildSpec(containerName, namespace, template, size.ToKubeResource())
 	if err != nil {
 		return nil, err
 	}
@@ -242,8 +242,8 @@ func (box *KubeBox) connectBox(template *model.BoxV1, tunnelOpts *model.TunnelOp
 }
 
 // TODO common
-func (box *KubeBox) openBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions) error {
-	if info, err := box.createBox(template); err != nil {
+func (box *KubeBox) openBox(template *model.BoxV1, size model.ResourceSize, tunnelOpts *model.TunnelOptions) error {
+	if info, err := box.createBox(template, size); err != nil {
 		return err
 	} else {
 		return box.execBox(template, info, tunnelOpts, true)

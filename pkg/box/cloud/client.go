@@ -26,9 +26,9 @@ func (box *CloudBox) Events() *event.EventBus {
 	return box.eventBus
 }
 
-func (box *CloudBox) Create(template *model.BoxV1) (*model.BoxInfo, error) {
+func (box *CloudBox) Create(template *model.BoxV1, size model.ResourceSize) (*model.BoxInfo, error) {
 	defer box.close()
-	return box.createBox(template)
+	return box.createBox(template, size)
 }
 
 func (box *CloudBox) Connect(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
@@ -37,7 +37,7 @@ func (box *CloudBox) Connect(template *model.BoxV1, tunnelOpts *model.TunnelOpti
 	return box.execBox(template, name)
 }
 
-func (box *CloudBox) Open(template *model.BoxV1, tunnelOpts *model.TunnelOptions) error {
+func (box *CloudBox) Open(template *model.BoxV1, size model.ResourceSize, tunnelOpts *model.TunnelOptions) error {
 	defer box.close()
 	// TODO tunnelOpts
 	return errors.New("not implemented")

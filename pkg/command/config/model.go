@@ -7,7 +7,6 @@ import (
 	boxModel "github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/docker"
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
-	clientModel "github.com/hckops/hckctl/pkg/client/model"
 	"github.com/hckops/hckctl/pkg/client/ssh"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/logger"
@@ -26,7 +25,7 @@ type ConfigV1 struct {
 	Log      LogConfig      `yaml:"log"`
 	Template TemplateConfig `yaml:"template"`
 	Box      BoxConfig      `yaml:"box"`
-	Provider ProviderConfig `yaml:"providers"`
+	Provider ProviderConfig `yaml:"provider"`
 }
 
 type LogConfig struct {
@@ -39,8 +38,10 @@ type TemplateConfig struct {
 	CacheDir string `yaml:"cacheDir"`
 }
 
+// TODO add restart flag
 type BoxConfig struct {
 	Provider string `yaml:"provider"`
+	Size     string `yaml:"size"`
 }
 
 type ProviderConfig struct {
@@ -61,21 +62,15 @@ func (c *DockerConfig) ToDockerClientConfig() *docker.DockerClientConfig {
 }
 
 type KubeConfig struct {
-	ConfigPath   string `yaml:"configPath"`
-	Namespace    string `yaml:"namespace"`
-	ResourceSize string `yaml:"resourceSize"`
+	ConfigPath string `yaml:"configPath"`
+	Namespace  string `yaml:"namespace"`
 }
 
-func (c *KubeConfig) ToKubeClientConfig() (*kubernetes.KubeClientConfig, error) {
-	if size, err := clientModel.ExistResourceSize(c.ResourceSize); err != nil {
-		return nil, err
-	} else {
-		return &kubernetes.KubeClientConfig{
-			InCluster:  false,
-			ConfigPath: c.ConfigPath,
-			Namespace:  c.Namespace,
-			Resource:   size.ToKubeResource(),
-		}, nil
+func (c *KubeConfig) ToKubeClientConfig() *kubernetes.KubeClientConfig {
+	return &kubernetes.KubeClientConfig{
+		InCluster:  false,
+		ConfigPath: c.ConfigPath,
+		Namespace:  c.Namespace,
 	}
 }
 
@@ -112,15 +107,15 @@ func newConfig(logFile, cacheDir string) *ConfigV1 {
 		},
 		Box: BoxConfig{
 			Provider: boxModel.Docker.String(),
+			Size:     boxModel.Small.String(),
 		},
 		Provider: ProviderConfig{
 			Docker: DockerConfig{
 				NetworkName: common.ProjectName,
 			},
 			Kube: KubeConfig{
-				Namespace:    common.ProjectName,
-				ConfigPath:   "",
-				ResourceSize: clientModel.Small.String(),
+				Namespace:  common.ProjectName,
+				ConfigPath: "",
 			},
 			Cloud: CloudConfig{
 				Host:     "0.0.0.0",

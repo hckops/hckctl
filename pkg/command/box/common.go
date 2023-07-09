@@ -38,10 +38,7 @@ func runBoxClient(src template.TemplateSource, provider model.BoxProvider, confi
 
 	log.Info().Msgf("loading template: provider=%s name=%s\n%s", provider, boxTemplate.Name, boxTemplate.Pretty())
 
-	boxClientOpts, err := newBoxClientOpts(provider, configRef)
-	if err != nil {
-		return err
-	}
+	boxClientOpts := newBoxClientOpts(provider, configRef)
 	boxClient, err := box.NewBoxClient(boxClientOpts)
 	if err != nil {
 		log.Warn().Err(err).Msgf("error creating client: provider=%v", provider)
@@ -117,25 +114,15 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 	return errors.New("not found")
 }
 
-func newBoxClientOpts(provider model.BoxProvider, configRef *config.ConfigRef) (*model.BoxClientOptions, error) {
+func newBoxClientOpts(provider model.BoxProvider, configRef *config.ConfigRef) *model.BoxClientOptions {
 
-	kubeClientConfig, err := configRef.Config.Provider.Kube.ToKubeClientConfig()
-	if err != nil {
-		log.Warn().Err(err).Msgf("error kube config: kubeConfig=%v", configRef.Config.Provider.Kube)
-		return nil, errors.Wrap(err, "invalid kube config")
-	}
-
-	commonOpts := model.NewBoxCommonOpts()
-	dockerClientConfig := configRef.Config.Provider.Docker.ToDockerClientConfig()
-	sshClientConfig := configRef.Config.Provider.Cloud.ToSshClientConfig(version.ClientVersion())
-	boxClientOpts := &model.BoxClientOptions{
+	return &model.BoxClientOptions{
 		Provider:     provider,
-		CommonOpts:   commonOpts,
-		DockerConfig: dockerClientConfig,
-		KubeConfig:   kubeClientConfig,
-		SshConfig:    sshClientConfig,
+		CommonOpts:   model.NewBoxCommonOpts(),
+		DockerConfig: configRef.Config.Provider.Docker.ToDockerClientConfig(),
+		KubeConfig:   configRef.Config.Provider.Kube.ToKubeClientConfig(),
+		SshConfig:    configRef.Config.Provider.Cloud.ToSshClientConfig(version.ClientVersion()),
 	}
-	return boxClientOpts, nil
 }
 
 func newDefaultBoxClient(providerFlag commonFlag.ProviderFlag, configRef *config.ConfigRef) (box.BoxClient, error) {
@@ -144,10 +131,7 @@ func newDefaultBoxClient(providerFlag commonFlag.ProviderFlag, configRef *config
 	if err != nil {
 		return nil, err
 	}
-	opts, err := newBoxClientOpts(provider, configRef)
-	if err != nil {
-		return nil, err
-	}
+	opts := newBoxClientOpts(provider, configRef)
 	boxClient, err := box.NewBoxClient(opts)
 	if err != nil {
 		log.Warn().Err(err).Msgf("error creating client: provider=%v", opts.Provider)

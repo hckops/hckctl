@@ -32,7 +32,8 @@ func (box *DockerBox) close() error {
 	return box.client.Close()
 }
 
-func (box *DockerBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
+// TODO limit resources with size?
+func (box *DockerBox) createBox(template *model.BoxV1, size model.ResourceSize) (*model.BoxInfo, error) {
 
 	imageName := template.ImageName()
 	imagePullOpts := &docker.ImagePullOpts{
@@ -187,8 +188,8 @@ func (box *DockerBox) connectBox(template *model.BoxV1, tunnelOpts *model.Tunnel
 }
 
 // TODO common
-func (box *DockerBox) openBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions) error {
-	if info, err := box.createBox(template); err != nil {
+func (box *DockerBox) openBox(template *model.BoxV1, size model.ResourceSize, tunnelOpts *model.TunnelOptions) error {
+	if info, err := box.createBox(template, size); err != nil {
 		return err
 	} else {
 		return box.execBox(template, info, tunnelOpts, true)

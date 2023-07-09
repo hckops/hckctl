@@ -138,7 +138,13 @@ func (opts *boxCmdOptions) openBox(src template.TemplateSource, provider model.B
 	tunnelOpts := opts.tunnelFlag.ToTunnelOptions()
 
 	openClient := func(clientOpts *boxClientOptions) error {
-		return clientOpts.client.Open(clientOpts.template, tunnelOpts)
+
+		size, err := model.ExistResourceSize(opts.configRef.Config.Box.Size)
+		if err != nil {
+			return err
+		}
+
+		return clientOpts.client.Open(clientOpts.template, size, tunnelOpts)
 	}
 	return runBoxClient(src, provider, opts.configRef, openClient)
 }

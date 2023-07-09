@@ -26,15 +26,15 @@ func TestNewConfig(t *testing.T) {
 		},
 		Box: BoxConfig{
 			Provider: "docker",
+			Size:     "S",
 		},
 		Provider: ProviderConfig{
 			Docker: DockerConfig{
 				NetworkName: "hckops",
 			},
 			Kube: KubeConfig{
-				Namespace:    "hckops",
-				ConfigPath:   "",
-				ResourceSize: "S",
+				Namespace:  "hckops",
+				ConfigPath: "",
 			},
 			Cloud: CloudConfig{
 				Host:     "0.0.0.0",
@@ -62,23 +62,15 @@ func TestToDockerClientConfig(t *testing.T) {
 
 func TestToKubeClientConfig(t *testing.T) {
 	kubeConfig := &KubeConfig{
-		ConfigPath:   "/tmp/config.yml",
-		Namespace:    "namespace",
-		ResourceSize: "XL",
+		ConfigPath: "/tmp/config.yml",
+		Namespace:  "namespace",
 	}
 	expected := &kubernetes.KubeClientConfig{
 		InCluster:  false,
 		ConfigPath: "/tmp/config.yml",
 		Namespace:  "namespace",
-		Resource: &kubernetes.KubeResource{
-			Memory: "512Mi",
-			Cpu:    "500m",
-		},
 	}
-
-	result, err := kubeConfig.ToKubeClientConfig()
-	assert.NoError(t, err)
-	assert.Equal(t, expected, result)
+	assert.Equal(t, expected, kubeConfig.ToKubeClientConfig())
 }
 
 func TestToSshClientConfig(t *testing.T) {
