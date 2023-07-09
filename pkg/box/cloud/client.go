@@ -9,11 +9,10 @@ import (
 )
 
 type CloudBox struct {
-	clientVersion string
-	clientConfig  *ssh.SshClientConfig
-	client        *ssh.SshClient
-	streams       *model.BoxStreams
-	eventBus      *event.EventBus
+	clientConfig *ssh.SshClientConfig
+	client       *ssh.SshClient
+	streams      *model.BoxStreams
+	eventBus     *event.EventBus
 }
 
 func NewCloudBox(commonOpts *model.BoxCommonOptions, clientConfig *ssh.SshClientConfig) (*CloudBox, error) {

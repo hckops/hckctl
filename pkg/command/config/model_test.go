@@ -89,9 +89,10 @@ func TestToSshClientConfig(t *testing.T) {
 		Token:    "myToken",
 	}
 	expected := &ssh.SshClientConfig{
+		Version:  "hckctl-dev",
 		Address:  "0.0.0.0:2222",
 		Username: "myUsername",
 		Token:    "myToken",
 	}
-	assert.Equal(t, expected, cloudConfig.ToSshClientConfig())
+	assert.Equal(t, expected, cloudConfig.ToSshClientConfig("hckctl-dev"))
 }

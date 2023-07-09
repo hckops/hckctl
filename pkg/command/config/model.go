@@ -90,8 +90,9 @@ func (c *CloudConfig) address() string {
 	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
 }
 
-func (c *CloudConfig) ToSshClientConfig() *ssh.SshClientConfig {
+func (c *CloudConfig) ToSshClientConfig(version string) *ssh.SshClientConfig {
 	return &ssh.SshClientConfig{
+		Version:  version,
 		Address:  c.address(),
 		Username: c.Username,
 		Token:    c.Token,

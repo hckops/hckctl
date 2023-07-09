@@ -17,11 +17,10 @@ func newCloudBox(commonOpts *model.BoxCommonOptions, clientConfig *ssh.SshClient
 	}
 
 	return &CloudBox{
-		clientVersion: commonOpts.Version,
-		clientConfig:  clientConfig,
-		client:        sshClient,
-		streams:       commonOpts.Streams,
-		eventBus:      commonOpts.EventBus,
+		clientConfig: clientConfig,
+		client:       sshClient,
+		streams:      commonOpts.Streams,
+		eventBus:     commonOpts.EventBus,
 	}, nil
 }
 
@@ -34,7 +33,7 @@ func (box *CloudBox) close() error {
 func (box *CloudBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 	box.eventBus.Publish(newApiCreateCloudLoaderEvent(box.clientConfig.Address, template.Name))
 
-	request := v1.NewBoxCreateRequest(box.clientVersion, template.Name)
+	request := v1.NewBoxCreateRequest(box.clientConfig.Version, template.Name)
 	payload, err := request.Encode()
 	if err != nil {
 		return nil, errors.Wrap(err, "error cloud create request")
@@ -57,7 +56,7 @@ func (box *CloudBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 func (box *CloudBox) execBox(template *model.BoxV1, name string) error {
 	// TODO box.eventBus.Publish
 
-	request := v1.NewBoxExecRequest(box.clientVersion, name)
+	request := v1.NewBoxExecRequest(box.clientConfig.Version, name)
 	payload, err := request.Encode()
 	if err != nil {
 		return errors.Wrap(err, "error cloud exec request")
@@ -80,7 +79,7 @@ func (box *CloudBox) deleteBoxes(names []string) ([]model.BoxInfo, error) {
 	// TODO box.eventBus.Publish
 	// TODO delete namespace if empty
 
-	request := v1.NewBoxDeleteRequest(box.clientVersion, names)
+	request := v1.NewBoxDeleteRequest(box.clientConfig.Version, names)
 	payload, err := request.Encode()
 	if err != nil {
 		return nil, errors.Wrap(err, "error cloud delete request")
@@ -100,7 +99,7 @@ func (box *CloudBox) deleteBoxes(names []string) ([]model.BoxInfo, error) {
 func (box *CloudBox) listBoxes() ([]model.BoxInfo, error) {
 	// TODO box.eventBus.Publish
 
-	request := v1.NewBoxListRequest(box.clientVersion)
+	request := v1.NewBoxListRequest(box.clientConfig.Version)
 	payload, err := request.Encode()
 	if err != nil {
 		return nil, errors.Wrap(err, "error cloud list request")

@@ -125,9 +125,9 @@ func newBoxClientOpts(provider model.BoxProvider, configRef *config.ConfigRef) (
 		return nil, errors.Wrap(err, "invalid kube config")
 	}
 
-	commonOpts := model.NewBoxCommonOpts(version.ClientVersion())
+	commonOpts := model.NewBoxCommonOpts()
 	dockerClientConfig := configRef.Config.Provider.Docker.ToDockerClientConfig()
-	sshClientConfig := configRef.Config.Provider.Cloud.ToSshClientConfig()
+	sshClientConfig := configRef.Config.Provider.Cloud.ToSshClientConfig(version.ClientVersion())
 	boxClientOpts := &model.BoxClientOptions{
 		Provider:     provider,
 		CommonOpts:   commonOpts,

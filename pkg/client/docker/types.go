@@ -16,7 +16,7 @@ type DockerClient struct {
 
 type DockerClientConfig struct {
 	NetworkName          string
-	IgnoreImagePullError bool
+	IgnoreImagePullError bool // TODO currently used only in pkg/box
 }
 
 type ImagePullOpts struct {

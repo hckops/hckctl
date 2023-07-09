@@ -24,14 +24,12 @@ type BoxClientOptions struct {
 }
 
 type BoxCommonOptions struct {
-	Version  string      // TODO only cloud
 	Streams  *BoxStreams // TODO refactor TunnelOptions for connect/open
 	EventBus *event.EventBus
 }
 
-func NewBoxCommonOpts(version string) *BoxCommonOptions {
+func NewBoxCommonOpts() *BoxCommonOptions {
 	return &BoxCommonOptions{
-		Version:  version,
 		Streams:  newDefaultStreams(true),
 		EventBus: event.NewEventBus(),
 	}
