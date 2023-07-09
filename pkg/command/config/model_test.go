@@ -54,7 +54,8 @@ func TestToDockerClientConfig(t *testing.T) {
 		NetworkName: "myNetwork",
 	}
 	expected := &docker.DockerClientConfig{
-		NetworkName: "myNetwork",
+		NetworkName:          "myNetwork",
+		IgnoreImagePullError: true,
 	}
 	assert.Equal(t, expected, dockerConfig.ToDockerClientConfig())
 }

@@ -24,18 +24,16 @@ type BoxClientOptions struct {
 }
 
 type BoxCommonOptions struct {
-	Version      string // TODO only cloud
-	AllowOffline bool   // TODO only docker
-	Streams      *BoxStreams
-	EventBus     *event.EventBus
+	Version  string      // TODO only cloud
+	Streams  *BoxStreams // TODO refactor TunnelOptions for connect/open
+	EventBus *event.EventBus
 }
 
 func NewBoxCommonOpts(version string) *BoxCommonOptions {
 	return &BoxCommonOptions{
-		Version:      version,
-		AllowOffline: true, // always allow to start offline/obsolete images
-		Streams:      newDefaultStreams(true),
-		EventBus:     event.NewEventBus(),
+		Version:  version,
+		Streams:  newDefaultStreams(true),
+		EventBus: event.NewEventBus(),
 	}
 }
 

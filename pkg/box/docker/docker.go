@@ -19,8 +19,6 @@ func newDockerBox(commonOpts *model.BoxCommonOptions, clientConfig *docker.Docke
 		return nil, errors.Wrap(err, "error docker box")
 	}
 
-	clientConfig.IgnoreImagePullError = commonOpts.AllowOffline
-
 	return &DockerBox{
 		client:       dockerClient,
 		clientConfig: clientConfig,
@@ -46,6 +44,7 @@ func (box *DockerBox) createBox(template *model.BoxV1) (*model.BoxInfo, error) {
 	}
 	box.eventBus.Publish(newImagePullDockerEvent(imageName))
 	if err := box.client.ImagePull(imagePullOpts); err != nil {
+		// TODO search existing image and move IgnoreImagePullError/AllowOffline in docker client
 		// try to use existing images
 		if box.clientConfig.IgnoreImagePullError {
 			box.eventBus.Publish(newImagePullErrorDockerEvent(imageName))

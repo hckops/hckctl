@@ -55,7 +55,8 @@ type DockerConfig struct {
 
 func (c *DockerConfig) ToDockerClientConfig() *docker.DockerClientConfig {
 	return &docker.DockerClientConfig{
-		NetworkName: c.NetworkName,
+		NetworkName:          c.NetworkName,
+		IgnoreImagePullError: true, // always allow to start offline/obsolete images
 	}
 }
 
