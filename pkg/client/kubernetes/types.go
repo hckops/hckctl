@@ -16,6 +16,7 @@ type KubeClient struct {
 }
 
 type KubeClientConfig struct {
+	InCluster  bool
 	ConfigPath string
 	Namespace  string
 	Resource   *KubeResource

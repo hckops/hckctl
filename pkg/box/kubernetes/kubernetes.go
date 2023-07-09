@@ -20,7 +20,7 @@ import (
 func newKubeBox(commonOpts *model.BoxCommonOptions, clientConfig *kubernetes.KubeClientConfig) (*KubeBox, error) {
 	commonOpts.EventBus.Publish(newClientInitKubeEvent())
 
-	kubeClient, err := kubernetes.NewOutOfClusterKubeClient(clientConfig.ConfigPath)
+	kubeClient, err := kubernetes.NewKubeClient(clientConfig.InCluster, clientConfig.ConfigPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "error kube box")
 	}

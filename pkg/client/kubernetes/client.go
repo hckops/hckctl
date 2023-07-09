@@ -29,6 +29,14 @@ import (
 	"github.com/hckops/hckctl/pkg/client/common"
 )
 
+func NewKubeClient(inCluster bool, configPath string) (*KubeClient, error) {
+	if inCluster {
+		return NewInClusterKubeClient()
+	} else {
+		return NewOutOfClusterKubeClient(configPath)
+	}
+}
+
 func NewOutOfClusterKubeClient(configPath string) (*KubeClient, error) {
 
 	var kubeConfig string
@@ -41,12 +49,12 @@ func NewOutOfClusterKubeClient(configPath string) (*KubeClient, error) {
 
 	restConfig, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	if err != nil {
-		return nil, errors.Wrap(err, "error restConfig")
+		return nil, errors.Wrap(err, "error out-of-cluster restConfig")
 	}
 
 	clientSet, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
-		return nil, errors.Wrap(err, "error clientSet")
+		return nil, errors.Wrap(err, "error out-of-cluster clientSet")
 	}
 
 	return &KubeClient{
@@ -60,12 +68,12 @@ func NewInClusterKubeClient() (*KubeClient, error) {
 
 	restConfig, err := rest.InClusterConfig()
 	if err != nil {
-		return nil, errors.Wrap(err, "error restConfig")
+		return nil, errors.Wrap(err, "error in-cluster restConfig")
 	}
 
 	clientSet, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
-		return nil, errors.Wrap(err, "error clientSet")
+		return nil, errors.Wrap(err, "error in-cluster clientSet")
 	}
 
 	return &KubeClient{

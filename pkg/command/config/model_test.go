@@ -66,6 +66,7 @@ func TestToKubeClientConfig(t *testing.T) {
 		ResourceSize: "XL",
 	}
 	expected := &kubernetes.KubeClientConfig{
+		InCluster:  false,
 		ConfigPath: "/tmp/config.yml",
 		Namespace:  "namespace",
 		Resource: &kubernetes.KubeResource{

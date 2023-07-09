@@ -4,10 +4,10 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/hckops/hckctl/pkg/box/model"
-	clientCommon "github.com/hckops/hckctl/pkg/client/common"
+	boxModel "github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/docker"
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
+	clientModel "github.com/hckops/hckctl/pkg/client/model"
 	"github.com/hckops/hckctl/pkg/client/ssh"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/logger"
@@ -66,10 +66,11 @@ type KubeConfig struct {
 }
 
 func (c *KubeConfig) ToKubeClientConfig() (*kubernetes.KubeClientConfig, error) {
-	if size, err := clientCommon.ExistResourceSize(c.ResourceSize); err != nil {
+	if size, err := clientModel.ExistResourceSize(c.ResourceSize); err != nil {
 		return nil, err
 	} else {
 		return &kubernetes.KubeClientConfig{
+			InCluster:  false,
 			ConfigPath: c.ConfigPath,
 			Namespace:  c.Namespace,
 			Resource:   size.ToKubeResource(),
@@ -108,7 +109,7 @@ func newConfig(logFile, cacheDir string) *ConfigV1 {
 			CacheDir: cacheDir,
 		},
 		Box: BoxConfig{
-			Provider: model.Docker.String(),
+			Provider: boxModel.Docker.String(),
 		},
 		Provider: ProviderConfig{
 			Docker: DockerConfig{
@@ -117,7 +118,7 @@ func newConfig(logFile, cacheDir string) *ConfigV1 {
 			Kube: KubeConfig{
 				Namespace:    common.ProjectName,
 				ConfigPath:   "",
-				ResourceSize: clientCommon.Small.String(),
+				ResourceSize: clientModel.Small.String(),
 			},
 			Cloud: CloudConfig{
 				Host:     "0.0.0.0",
