@@ -8,6 +8,8 @@ import (
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
 )
 
+// TODO comparable e.g. "M > S"
+
 type ResourceSize uint
 
 const (
@@ -31,16 +33,21 @@ func (size ResourceSize) String() string {
 }
 
 func (size ResourceSize) ToKubeResource() *kubernetes.KubeResource {
-	smallSize := &kubernetes.KubeResource{
-		Memory: "512Mi",
-		Cpu:    "500m",
+	defaultSize := &kubernetes.KubeResource{
+		Memory: "1024Mi",
+		Cpu:    "1000m",
 	}
 	// TODO define sizes
 	switch size {
+	case ExtraSmall:
+		return &kubernetes.KubeResource{
+			Memory: "512Mi",
+			Cpu:    "500m",
+		}
 	case Small:
-		return smallSize
+		return defaultSize
 	default:
-		return smallSize
+		return defaultSize
 	}
 }
 

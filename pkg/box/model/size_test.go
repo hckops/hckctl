@@ -18,16 +18,20 @@ func TestResourceSizes(t *testing.T) {
 }
 
 func TestToKubeResource(t *testing.T) {
-	kubeResource := &kubernetes.KubeResource{
+	extraSmallSize := &kubernetes.KubeResource{
 		Memory: "512Mi",
 		Cpu:    "500m",
 	}
+	assert.Equal(t, extraSmallSize, ExtraSmall.ToKubeResource())
 
-	assert.Equal(t, kubeResource, ExtraSmall.ToKubeResource())
-	assert.Equal(t, kubeResource, Small.ToKubeResource())
-	assert.Equal(t, kubeResource, Medium.ToKubeResource())
-	assert.Equal(t, kubeResource, Large.ToKubeResource())
-	assert.Equal(t, kubeResource, ExtraLarge.ToKubeResource())
+	defaultSize := &kubernetes.KubeResource{
+		Memory: "1024Mi",
+		Cpu:    "1000m",
+	}
+	assert.Equal(t, defaultSize, Small.ToKubeResource())
+	assert.Equal(t, defaultSize, Medium.ToKubeResource())
+	assert.Equal(t, defaultSize, Large.ToKubeResource())
+	assert.Equal(t, defaultSize, ExtraLarge.ToKubeResource())
 }
 
 func TestExistResourceSize(t *testing.T) {
