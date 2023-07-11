@@ -29,6 +29,30 @@ func (box *CloudBox) close() error {
 	return box.client.Close()
 }
 
+// TODO move api/v1 in pkg
+// TODO add client.Version()
+
+func (box *CloudBox) ping() error {
+	request := v1.NewPingMessage(box.clientConfig.Version)
+	payload, err := request.Encode()
+	box.eventBus.Publish(newApiRawCloudEvent(payload))
+	if err != nil {
+		return errors.Wrap(err, "error cloud ping request")
+	}
+
+	value, err := box.client.SendRequest(request.Protocol(), payload)
+	if err != nil {
+		return errors.Wrap(err, "error cloud ping")
+	}
+
+	_, err = v1.Decode[v1.PongBody](value)
+	if err != nil {
+		return errors.Wrap(err, "error cloud pong response")
+	}
+	box.eventBus.Publish(newApiRawCloudEvent(value))
+	return nil
+}
+
 // TODO request size with limits
 func (box *CloudBox) createBox(template *model.BoxV1, size model.ResourceSize) (*model.BoxInfo, error) {
 	box.eventBus.Publish(newApiCreateCloudLoaderEvent(box.clientConfig.Address, template.Name))

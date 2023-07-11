@@ -32,6 +32,10 @@ func newClientCloseCloudEvent() *cloudEvent {
 	return &cloudEvent{kind: event.LogDebug, value: "close cloud client"}
 }
 
+func newApiRawCloudEvent(value string) *cloudEvent {
+	return &cloudEvent{kind: event.LogDebug, value: value}
+}
+
 func newApiCreateCloudLoaderEvent(address string, templateName string) *cloudEvent {
 	return &cloudEvent{kind: event.LoaderUpdate, value: fmt.Sprintf("loading %s/%s", address, templateName)}
 }
