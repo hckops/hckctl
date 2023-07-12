@@ -63,3 +63,8 @@ func (box *CloudBox) DeleteAll() ([]model.BoxInfo, error) {
 	defer box.close()
 	return box.deleteBoxes([]string{})
 }
+
+func (box *CloudBox) Version() (string, error) {
+	defer box.close()
+	return box.version()
+}

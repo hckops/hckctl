@@ -250,7 +250,7 @@ TODO
     - TODO ???
 * version
     - print if new version available
-    - add `VersionClient` interface to returns in json format docker/kube/cloud version
+    - implement server `version` in json format docker/kube/cloud
 * release
     - add brew https://goreleaser.com/customization/homebrew
     - test linux

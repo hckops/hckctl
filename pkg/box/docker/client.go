@@ -60,3 +60,7 @@ func (box *DockerBox) DeleteAll() ([]model.BoxInfo, error) {
 	defer box.close()
 	return box.deleteBoxes()
 }
+
+func (box *DockerBox) Version() (string, error) {
+	return "", errors.New("not implemented")
+}

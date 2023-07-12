@@ -60,3 +60,7 @@ func (box *KubeBox) DeleteAll() ([]model.BoxInfo, error) {
 	defer box.client.Close()
 	return box.deleteBoxes()
 }
+
+func (box *KubeBox) Version() (string, error) {
+	return "", errors.New("not implemented")
+}

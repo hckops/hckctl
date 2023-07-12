@@ -20,6 +20,7 @@ type BoxClient interface {
 	List() ([]model.BoxInfo, error)
 	Delete(name string) error
 	DeleteAll() ([]model.BoxInfo, error)
+	Version() (string, error)
 }
 
 // TODO https://stackoverflow.com/questions/30261032/how-to-implement-an-abstract-class-in-go
