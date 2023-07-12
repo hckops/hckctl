@@ -3,7 +3,7 @@ package cloud
 import (
 	"github.com/pkg/errors"
 
-	"github.com/hckops/hckctl/pkg/box/cloud/api/v1"
+	v1 "github.com/hckops/hckctl/pkg/api/v1"
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/ssh"
 )
@@ -29,7 +29,6 @@ func (box *CloudBox) close() error {
 	return box.client.Close()
 }
 
-// TODO move api/v1 in pkg
 // TODO add client.Version()
 
 func (box *CloudBox) ping() error {
