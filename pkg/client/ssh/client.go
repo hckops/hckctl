@@ -2,9 +2,11 @@ package ssh
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net"
 	"os"
+	"strings"
 
 	"github.com/pkg/errors"
 	gossh "golang.org/x/crypto/ssh"
@@ -48,8 +50,8 @@ func (client *SshClient) SendRequest(protocol string, payload string) (string, e
 	if !ok {
 		if err != nil {
 			return "", errors.Wrapf(err, "error ssh send request")
-		} else if string(response) == ServerRequestError {
-			return "", errors.New("error ssh server request")
+		} else if strings.TrimSpace(string(response)) != "" {
+			return "", fmt.Errorf("error ssh server response %s", response)
 		} else {
 			return "", errors.New("error ssh invalid request")
 		}

@@ -7,10 +7,6 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 )
 
-const (
-	ServerRequestError = "request-error"
-)
-
 type SshClient struct {
 	ctx context.Context
 	ssh *gossh.Client
