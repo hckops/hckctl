@@ -50,15 +50,15 @@ func TestPingResponse(t *testing.T) {
 }
 
 func TestBoxCreateRequest(t *testing.T) {
-	message := NewBoxCreateRequest(clientOrigin, "alpine")
-	value := `{"kind":"api/v1","origin":"hckctl-0.0.0-os","method":"hck-box-create","body":{"templateName":"alpine"}}`
+	message := NewBoxCreateRequest(clientOrigin, "alpine", "s")
+	value := `{"kind":"api/v1","origin":"hckctl-0.0.0-os","method":"hck-box-create","body":{"templateName":"alpine","size":"s"}}`
 
 	testMessage[BoxCreateRequestBody](t, message, value)
 }
 
 func TestBoxCreateResponse(t *testing.T) {
-	message := NewBoxCreateResponse(serverOrigin, testBoxes[0])
-	value := `{"kind":"api/v1","origin":"hckadm-0.0.0-info","method":"hck-box-create","body":{"name":"box-alpine-123"}}`
+	message := NewBoxCreateResponse(serverOrigin, testBoxes[0], "m")
+	value := `{"kind":"api/v1","origin":"hckadm-0.0.0-info","method":"hck-box-create","body":{"name":"box-alpine-123","size":"m"}}`
 
 	testMessage[BoxCreateResponseBody](t, message, value)
 }

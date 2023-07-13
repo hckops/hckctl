@@ -40,6 +40,14 @@ func newApiCreateCloudLoaderEvent(address string, templateName string) *cloudEve
 	return &cloudEvent{kind: event.LoaderUpdate, value: fmt.Sprintf("loading %s/%s", address, templateName)}
 }
 
-func newApiCreateCloudEvent(templateName string, boxName string) *cloudEvent {
-	return &cloudEvent{kind: event.LogDebug, value: fmt.Sprintf("api create: templateName=%s boxName=%s", templateName, boxName)}
+func newApiCreateCloudEvent(templateName string, boxName string, size string) *cloudEvent {
+	return &cloudEvent{kind: event.LogDebug, value: fmt.Sprintf("api create: templateName=%s boxName=%s size=%s", templateName, boxName, size)}
+}
+
+func newApiListCloudEvent(index int, boxName string) *cloudEvent {
+	return &cloudEvent{kind: event.LogDebug, value: fmt.Sprintf("api list: (%d) boxName=%s", index, boxName)}
+}
+
+func newApiDeleteCloudEvent(index int, boxName string) *cloudEvent {
+	return &cloudEvent{kind: event.LogDebug, value: fmt.Sprintf("api delete: (%d) boxName=%s", index, boxName)}
 }

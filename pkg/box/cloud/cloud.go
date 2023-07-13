@@ -29,11 +29,10 @@ func (box *CloudBox) close() error {
 	return box.client.Close()
 }
 
-// TODO request size with limits
 func (box *CloudBox) createBox(template *model.BoxV1, size model.ResourceSize) (*model.BoxInfo, error) {
 	box.eventBus.Publish(newApiCreateCloudLoaderEvent(box.clientConfig.Address, template.Name))
 
-	request := v1.NewBoxCreateRequest(box.clientConfig.Version, template.Name)
+	request := v1.NewBoxCreateRequest(box.clientConfig.Version, template.Name, size.String())
 	payload, err := request.Encode()
 	if err != nil {
 		return nil, errors.Wrap(err, "error cloud create request")
@@ -48,7 +47,7 @@ func (box *CloudBox) createBox(template *model.BoxV1, size model.ResourceSize) (
 		return nil, errors.Wrap(err, "error cloud create response")
 	}
 	boxName := response.Body.Name
-	box.eventBus.Publish(newApiCreateCloudEvent(template.Name, boxName))
+	box.eventBus.Publish(newApiCreateCloudEvent(template.Name, boxName, response.Body.Size))
 
 	return &model.BoxInfo{Id: boxName, Name: boxName}, nil
 }
@@ -74,10 +73,31 @@ func (box *CloudBox) execBox(template *model.BoxV1, name string) error {
 	return box.client.Exec(opts)
 }
 
+func (box *CloudBox) listBoxes() ([]model.BoxInfo, error) {
+
+	request := v1.NewBoxListRequest(box.clientConfig.Version)
+	payload, err := request.Encode()
+	if err != nil {
+		return nil, errors.Wrap(err, "error cloud list request")
+	}
+	value, err := box.client.SendRequest(request.Protocol(), payload)
+	if err != nil {
+		return nil, errors.Wrap(err, "error cloud list")
+	}
+
+	response, err := v1.Decode[v1.BoxListResponseBody](value)
+	if err != nil {
+		return nil, errors.Wrap(err, "error cloud list response")
+	}
+
+	callback := func(index int, name string) {
+		box.eventBus.Publish(newApiListCloudEvent(index, name))
+	}
+	return toBoxes(response.Body.Names, callback), nil
+}
+
 // empty "names" means all
 func (box *CloudBox) deleteBoxes(names []string) ([]model.BoxInfo, error) {
-	// TODO box.eventBus.Publish
-	// TODO delete namespace if empty
 
 	request := v1.NewBoxDeleteRequest(box.clientConfig.Version, names)
 	payload, err := request.Encode()
@@ -93,34 +113,18 @@ func (box *CloudBox) deleteBoxes(names []string) ([]model.BoxInfo, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "error cloud delete response")
 	}
-	return toBoxes(response.Body.Names), nil
+
+	callback := func(index int, name string) {
+		box.eventBus.Publish(newApiDeleteCloudEvent(index, name))
+	}
+	return toBoxes(response.Body.Names, callback), nil
 }
 
-func (box *CloudBox) listBoxes() ([]model.BoxInfo, error) {
-	// TODO box.eventBus.Publish
-
-	request := v1.NewBoxListRequest(box.clientConfig.Version)
-	payload, err := request.Encode()
-	if err != nil {
-		return nil, errors.Wrap(err, "error cloud list request")
-	}
-	value, err := box.client.SendRequest(request.Protocol(), payload)
-	if err != nil {
-		return nil, errors.Wrap(err, "error cloud list")
-	}
-
-	response, err := v1.Decode[v1.BoxListResponseBody](value)
-	if err != nil {
-		return nil, errors.Wrap(err, "error cloud delete response")
-	}
-	return toBoxes(response.Body.Names), nil
-}
-
-func toBoxes(names []string) []model.BoxInfo {
+func toBoxes(names []string, callback func(int, string)) []model.BoxInfo {
 	var result []model.BoxInfo
-	for _, name := range names {
+	for index, name := range names {
 		result = append(result, model.BoxInfo{Id: name, Name: name})
-		// TODO box.eventBus.Publish + index
+		callback(index, name)
 	}
 	return result
 }
