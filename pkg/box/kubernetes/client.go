@@ -32,32 +32,32 @@ func (box *KubeBox) Create(template *model.BoxV1, size model.ResourceSize) (*mod
 }
 
 func (box *KubeBox) Connect(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
-	defer box.client.Close()
+	defer box.close()
 	return box.connectBox(template, tunnelOpts, name)
 }
 
 func (box *KubeBox) Open(template *model.BoxV1, size model.ResourceSize, tunnelOpts *model.TunnelOptions) error {
-	defer box.client.Close()
+	defer box.close()
 	return box.openBox(template, size, tunnelOpts)
 }
 
 func (box *KubeBox) Copy(string, string, string) error {
-	defer box.client.Close()
+	defer box.close()
 	return errors.New("not implemented")
 }
 
 func (box *KubeBox) List() ([]model.BoxInfo, error) {
-	defer box.client.Close()
+	defer box.close()
 	return box.listBoxes()
 }
 
 func (box *KubeBox) Delete(name string) error {
-	defer box.client.Close()
+	defer box.close()
 	return box.deleteBox(name)
 }
 
 func (box *KubeBox) DeleteAll() ([]model.BoxInfo, error) {
-	defer box.client.Close()
+	defer box.close()
 	return box.deleteBoxes()
 }
 
