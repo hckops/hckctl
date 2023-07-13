@@ -76,14 +76,10 @@ func SetContext(source string) {
 		Logger()
 }
 
-func SetSession() {
+func SetSessionId() {
 	log.Logger = log.With().
-		Str("session", generateSession()).
+		Str("sessionId", strings.ToLower(uniuri.NewLen(5))).
 		Logger()
-}
-
-func generateSession() string {
-	return strings.ToLower(uniuri.NewLen(5))
 }
 
 func SetFileOutput(filePath string) (func() error, error) {

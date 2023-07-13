@@ -89,6 +89,6 @@ func setupLogger(configRef *configCmd.ConfigRef) (func() error, error) {
 	logger.SetTimestamp()
 	logger.SetLevel(logConfig.Level)
 	logger.SetContext(commonCmd.CliName)
-	logger.SetSession()
+	logger.SetSessionId()
 	return logger.SetFileOutput(logConfig.FilePath)
 }
