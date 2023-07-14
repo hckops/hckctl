@@ -51,6 +51,7 @@ type ContainerExecOpts struct {
 type ContainerInfo struct {
 	ContainerId   string
 	ContainerName string
+	Healthy       bool
 }
 
 type ContainerLogsOpts struct {

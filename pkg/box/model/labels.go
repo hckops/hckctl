@@ -1,6 +1,8 @@
 package model
 
 import (
+	"fmt"
+
 	"github.com/hckops/hckctl/pkg/schema"
 )
 
@@ -16,6 +18,10 @@ const (
 	LabelTemplateCommonPath  = "com.hckops.template.common.path"
 	LabelBoxSize             = "com.hckops.box.size"
 )
+
+func BoxLabel() string {
+	return fmt.Sprintf("%s=%s", LabelSchemaKind, schema.KindBoxV1.String())
+}
 
 func NewLocalLabels() map[string]string {
 	return map[string]string{

@@ -226,6 +226,7 @@ TODO
     - kube: verify if close is needed or `return nil`
     - kube: deployment list by labels or prefix
     - kube: deployment list only running
+    - kube: deployment always check/scale replica to 1 before exec (test with replica=0)
     - kube: verify `GetPodInfo` sidecar pod count
     - kube: verify `PodPortForward` callback vs channel
     - kube: update resources sizes
@@ -235,6 +236,7 @@ TODO
     - docker: create container with `Labels=["com.hckops.revision"=<REVISION>"]` to resolve template by name
     - docker: `listBoxes` by labels vs prefix
     - docker: `execBox` print ports and envs: retrieve actual bound ports from container
+    - docker: `execBox` restart stopped container
     - docker: COPY shared volume `XDG_DATA_HOME`
     - docker: support powershell `/usr/bin/pwsh` (attach with no tty and raw terminal) see `docker run --rm -it mcr.microsoft.com/powershell`
     - docker: add support for remote docker daemon with `DOCKER_HOST`

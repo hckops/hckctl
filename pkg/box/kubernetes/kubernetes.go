@@ -394,7 +394,7 @@ func (box *KubeBox) listBoxes() ([]model.BoxInfo, error) {
 	var result []model.BoxInfo
 	for index, d := range deployments {
 		result = append(result, model.BoxInfo{Id: d.PodInfo.Id, Name: d.DeploymentName})
-		box.eventBus.Publish(newDeploymentListKubeEvent(index, namespace, d.DeploymentName, d.PodInfo.Id))
+		box.eventBus.Publish(newDeploymentListKubeEvent(index, namespace, d.DeploymentName, d.PodInfo.Id, d.Healthy))
 	}
 
 	return result, nil

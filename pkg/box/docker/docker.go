@@ -289,15 +289,14 @@ func (box *DockerBox) logsBox(containerId string, tunnelOpts *model.TunnelOption
 }
 
 func (box *DockerBox) listBoxes() ([]model.BoxInfo, error) {
-	// TODO list by labels (add during creation)
-	containers, err := box.client.ContainerList(model.BoxPrefixName)
+	containers, err := box.client.ContainerList(model.BoxPrefixName, model.BoxLabel())
 	if err != nil {
 		return nil, err
 	}
 	var result []model.BoxInfo
 	for index, c := range containers {
 		result = append(result, model.BoxInfo{Id: c.ContainerId, Name: c.ContainerName})
-		box.eventBus.Publish(newContainerListDockerEvent(index, c.ContainerName, c.ContainerId))
+		box.eventBus.Publish(newContainerListDockerEvent(index, c.ContainerName, c.ContainerId, c.Healthy))
 	}
 	return result, nil
 }

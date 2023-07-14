@@ -36,6 +36,7 @@ type DeploymentInfo struct {
 	Namespace      string
 	DeploymentName string
 	PodInfo        *PodInfo
+	Healthy        bool
 }
 
 type PodInfo struct {

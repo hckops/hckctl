@@ -5,6 +5,10 @@ import (
 	"testing"
 )
 
+func TestBoxLabel(t *testing.T) {
+	expected := "com.hckops.schema.kind=box/v1"
+	assert.Equal(t, expected, BoxLabel())
+}
 func TestLocalLabels(t *testing.T) {
 	labels := NewLocalLabels()
 	expected := map[string]string{

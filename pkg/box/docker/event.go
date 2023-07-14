@@ -88,8 +88,8 @@ func newContainerExecErrorDockerEvent(containerId string, err error) *dockerEven
 	return &dockerEvent{kind: event.LogDebug, value: fmt.Sprintf("container exec error: containerId=%s error=%v", containerId, err)}
 }
 
-func newContainerListDockerEvent(index int, containerName string, containerId string) *dockerEvent {
-	return &dockerEvent{kind: event.LogDebug, value: fmt.Sprintf("container list: (%d) containerName=%s containerId=%s", index, containerName, containerId)}
+func newContainerListDockerEvent(index int, containerName string, containerId string, healthy bool) *dockerEvent {
+	return &dockerEvent{kind: event.LogDebug, value: fmt.Sprintf("container list: (%d) containerName=%s containerId=%s healthy=%v", index, containerName, containerId, healthy)}
 }
 
 func newContainerRemoveDockerEvent(containerId string) *dockerEvent {

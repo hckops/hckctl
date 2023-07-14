@@ -76,9 +76,6 @@ func (client *DockerClient) ImageRemoveDangling(opts *ImageRemoveOpts) error {
 
 func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, error) {
 
-	// TODO labels
-	// TODO env var
-
 	newContainer, err := client.docker.ContainerCreate(
 		client.ctx,
 		opts.ContainerConfig,
@@ -182,12 +179,14 @@ func (client *DockerClient) ContainerRemove(containerId string) error {
 	return nil
 }
 
-func (client *DockerClient) ContainerList(namePrefix string) ([]ContainerInfo, error) {
+func (client *DockerClient) ContainerList(namePrefix string, label string) ([]ContainerInfo, error) {
 
 	containers, err := client.docker.ContainerList(client.ctx, types.ContainerListOptions{
-		Filters: filters.NewArgs(filters.KeyValuePair{
-			Key: "name", Value: namePrefix,
-		}),
+		All: true, // include exited
+		Filters: filters.NewArgs(
+			filters.KeyValuePair{Key: "name", Value: namePrefix},
+			filters.KeyValuePair{Key: "label", Value: label},
+		),
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "error container list")
@@ -195,12 +194,17 @@ func (client *DockerClient) ContainerList(namePrefix string) ([]ContainerInfo, e
 
 	var result []ContainerInfo
 	for _, c := range containers {
+
+		// name starts with slash
+		containerName := strings.TrimPrefix(c.Names[0], "/")
 		// see types.ContainerState
-		if c.State == "running" {
-			// name starts with slash
-			containerName := strings.TrimPrefix(c.Names[0], "/")
-			result = append(result, ContainerInfo{ContainerId: c.ID, ContainerName: containerName})
-		}
+		healthy := c.State == "running"
+
+		result = append(result, ContainerInfo{
+			ContainerId:   c.ID,
+			ContainerName: containerName,
+			Healthy:       healthy,
+		})
 	}
 
 	return result, nil
