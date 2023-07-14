@@ -70,3 +70,8 @@ func TestBuildHNetworkingConfig(t *testing.T) {
 	result := buildNetworkingConfig("myNetwork", "123")
 	assert.Equal(t, expected, result)
 }
+
+func TestBoxLabel(t *testing.T) {
+	expected := "com.hckops.schema.kind=box/v1"
+	assert.Equal(t, expected, boxLabel())
+}

@@ -16,6 +16,7 @@ import (
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/common"
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
+	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
@@ -384,10 +385,15 @@ func toPortBindings(ports []model.BoxPort, onPortBindCallback func(port model.Bo
 	return portBindings, nil
 }
 
+func boxLabel() string {
+	// value must be sanitized
+	return fmt.Sprintf("%s=%s", model.LabelSchemaKind, common.ToKebabCase(schema.KindBoxV1.String()))
+}
+
 func (box *KubeBox) listBoxes() ([]model.BoxInfo, error) {
 	namespace := box.clientConfig.Namespace
 
-	deployments, err := box.client.DeploymentList(namespace)
+	deployments, err := box.client.DeploymentList(namespace, model.BoxPrefixName, boxLabel())
 	if err != nil {
 		return nil, err
 	}

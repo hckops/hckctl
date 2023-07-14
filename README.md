@@ -180,6 +180,7 @@ TODO
     - RELEASE
     - brew
     - add task
+    - client timeouts
 * general
     - update readme
         * remove comments
@@ -224,7 +225,6 @@ TODO
     - kube: add env var
     - kube: add distroless support
     - kube: verify if close is needed or `return nil`
-    - kube: deployment list by labels or prefix
     - kube: deployment list only running
     - kube: deployment always check/scale replica to 1 before exec (test with replica=0)
     - kube: verify `GetPodInfo` sidecar pod count
@@ -232,9 +232,6 @@ TODO
     - kube: update resources sizes
     - docker: restart exited container (switch off pc)
     - docker: `ContainerCreate` add env var
-    - docker: `ContainerCreate` add labels
-    - docker: create container with `Labels=["com.hckops.revision"=<REVISION>"]` to resolve template by name
-    - docker: `listBoxes` by labels vs prefix
     - docker: `execBox` print ports and envs: retrieve actual bound ports from container
     - docker: `execBox` restart stopped container
     - docker: COPY shared volume `XDG_DATA_HOME`

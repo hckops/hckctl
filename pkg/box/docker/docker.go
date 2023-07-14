@@ -1,6 +1,8 @@
 package docker
 
 import (
+	"fmt"
+
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
@@ -8,6 +10,7 @@ import (
 
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/docker"
+	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
@@ -288,8 +291,12 @@ func (box *DockerBox) logsBox(containerId string, tunnelOpts *model.TunnelOption
 	return box.client.ContainerLogs(opts)
 }
 
+func boxLabel() string {
+	return fmt.Sprintf("%s=%s", model.LabelSchemaKind, schema.KindBoxV1.String())
+}
+
 func (box *DockerBox) listBoxes() ([]model.BoxInfo, error) {
-	containers, err := box.client.ContainerList(model.BoxPrefixName, model.BoxLabel())
+	containers, err := box.client.ContainerList(model.BoxPrefixName, boxLabel())
 	if err != nil {
 		return nil, err
 	}

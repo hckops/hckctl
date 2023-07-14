@@ -142,21 +142,35 @@ func (client *KubeClient) DeploymentCreate(opts *DeploymentCreateOpts) error {
 	return nil
 }
 
-func (client *KubeClient) DeploymentList(namespace string) ([]DeploymentInfo, error) {
+func (client *KubeClient) DeploymentList(namespace string, namePrefix string, label string) ([]DeploymentInfo, error) {
 	appClient := client.kubeClientSet.AppsV1()
 
-	deployments, err := appClient.Deployments(namespace).List(client.ctx, metav1.ListOptions{})
+	deployments, err := appClient.Deployments(namespace).List(client.ctx, metav1.ListOptions{
+		// format <LABEL_KEY>=<SANITIZED_LABEL_VALUE>
+		LabelSelector: label,
+	})
 	if err != nil {
 		return nil, errors.Wrapf(err, "error deployment list: namespace=%s", namespace)
 	}
 	var result []DeploymentInfo
 	for _, deployment := range deployments.Items {
 
+		// check manually because ListOptions/FieldSelector supports only full name
+		if !strings.HasPrefix(deployment.Name, namePrefix) {
+			// skip invalid prefix
+			continue
+		}
+
+		// all conditions must be healthy
 		var healthy bool
-		if len(deployment.Status.Conditions) > 0 {
-			healthy = deployment.Status.Conditions[0].Type == appsv1.DeploymentAvailable
-		} else {
-			healthy = false
+		for _, condition := range deployment.Status.Conditions {
+			if condition.Status == corev1.ConditionTrue {
+				healthy = true
+			} else {
+				healthy = false
+				// mark as unhealthy if at least one condition is invalid e.g. stuck to progressing due to lack of resources
+				break
+			}
 		}
 
 		if podInfo, err := client.GetPodInfo(&deployment); err != nil {
