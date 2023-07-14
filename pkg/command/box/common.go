@@ -2,9 +2,11 @@ package box
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/exp/maps"
 
 	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/box/model"
@@ -19,12 +21,12 @@ import (
 
 type boxClientOptions struct {
 	client   box.BoxClient
-	template *model.BoxV1
+	template *template.BoxTemplate
 	loader   *common.Loader
 }
 
 // open and create
-func runBoxClient(src template.TemplateSource, provider model.BoxProvider, configRef *config.ConfigRef, invokeClient func(*boxClientOptions) error) error {
+func runBoxClient(src template.SourceTemplate, provider model.BoxProvider, configRef *config.ConfigRef, invokeClient func(*boxClientOptions) error) error {
 
 	boxTemplate, err := src.ReadBox()
 	if err != nil {
@@ -33,10 +35,10 @@ func runBoxClient(src template.TemplateSource, provider model.BoxProvider, confi
 	}
 
 	loader := common.NewLoader()
-	loader.Start("loading template %s", boxTemplate.Name)
+	loader.Start("loading template %s", boxTemplate.Template.Name)
 	defer loader.Stop()
 
-	log.Info().Msgf("loading template: provider=%s name=%s\n%s", provider, boxTemplate.Name, boxTemplate.Pretty())
+	log.Info().Msgf("loading template: provider=%s name=%s\n%s", provider, boxTemplate.Template.Name, boxTemplate.Template.Pretty())
 
 	boxClientOpts := newBoxClientOpts(provider, configRef)
 	boxClient, err := box.NewBoxClient(boxClientOpts)
@@ -103,7 +105,7 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 			break
 		}
 
-		if err := invokeClient(boxClient, boxTemplate); err != nil {
+		if err := invokeClient(boxClient, boxTemplate.Template); err != nil {
 			log.Warn().Err(err).Msgf("ignoring error invoking client: providerFlag=%v", providerFlag)
 		} else {
 			// return as soon as the client is invoked with success
@@ -149,4 +151,25 @@ func newDefaultBoxClient(providerFlag commonFlag.ProviderFlag, configRef *config
 		}
 	})
 	return boxClient, nil
+}
+
+func newTemplateOptions(template *template.BoxTemplate, labels model.BoxLabels, sizeValue string) (*model.TemplateOptions, error) {
+	size, err := model.ExistResourceSize(sizeValue)
+	if err != nil {
+		return nil, err
+	}
+
+	allLabels := map[string]string{
+		model.LabelTemplateCommonPath: template.Path,
+		model.LabelBoxSize:            strings.ToLower(size.String()),
+	}
+	// merge labels
+	maps.Copy(allLabels, labels)
+
+	templateOpts := &model.TemplateOptions{
+		Template: template.Template,
+		Size:     size,
+		Labels:   allLabels,
+	}
+	return templateOpts, nil
 }

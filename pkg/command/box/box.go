@@ -100,7 +100,7 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 			path := args[0]
 			log.Debug().Msgf("open box from local template: path=%s", path)
 
-			return opts.openBox(template.NewLocalSource(path), provider)
+			return opts.openBox(template.NewLocalSource(path), provider, model.NewLocalLabels())
 
 		} else {
 			name := args[0]
@@ -113,7 +113,8 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 			}
 			log.Debug().Msgf("open box from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
-			return opts.openBox(template.NewGitSource(sourceOpts, name), provider)
+			labels := model.NewGitLabels(common.TemplateSourceName, sourceOpts.SourceUrl, sourceOpts.SourceRevision)
+			return opts.openBox(template.NewGitSource(sourceOpts, name), provider, labels)
 		}
 
 	} else {
@@ -134,17 +135,17 @@ func (opts *boxCmdOptions) validateFlags(provider model.BoxProvider) error {
 	return nil
 }
 
-func (opts *boxCmdOptions) openBox(src template.TemplateSource, provider model.BoxProvider) error {
-	tunnelOpts := opts.tunnelFlag.ToTunnelOptions()
+func (opts *boxCmdOptions) openBox(src template.SourceTemplate, provider model.BoxProvider, labels model.BoxLabels) error {
 
 	openClient := func(clientOpts *boxClientOptions) error {
 
-		size, err := model.ExistResourceSize(opts.configRef.Config.Box.Size)
+		templateOpts, err := newTemplateOptions(clientOpts.template, labels, opts.configRef.Config.Box.Size)
 		if err != nil {
 			return err
 		}
+		tunnelOpts := opts.tunnelFlag.ToTunnelOptions()
 
-		return clientOpts.client.Open(clientOpts.template, size, tunnelOpts)
+		return clientOpts.client.Open(templateOpts, tunnelOpts)
 	}
 	return runBoxClient(src, provider, opts.configRef, openClient)
 }

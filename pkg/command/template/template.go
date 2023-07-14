@@ -104,7 +104,7 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func printTemplate(src TemplateSource, format string) error {
+func printTemplate(src SourceTemplate, format string) error {
 
 	value, err := src.ReadTemplate()
 	if err != nil {

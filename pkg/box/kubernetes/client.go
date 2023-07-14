@@ -26,9 +26,9 @@ func (box *KubeBox) Events() *event.EventBus {
 	return box.eventBus
 }
 
-func (box *KubeBox) Create(template *model.BoxV1, size model.ResourceSize) (*model.BoxInfo, error) {
+func (box *KubeBox) Create(templateOpts *model.TemplateOptions) (*model.BoxInfo, error) {
 	defer box.close()
-	return box.createBox(template, size)
+	return box.createBox(templateOpts)
 }
 
 func (box *KubeBox) Connect(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
@@ -36,9 +36,9 @@ func (box *KubeBox) Connect(template *model.BoxV1, tunnelOpts *model.TunnelOptio
 	return box.connectBox(template, tunnelOpts, name)
 }
 
-func (box *KubeBox) Open(template *model.BoxV1, size model.ResourceSize, tunnelOpts *model.TunnelOptions) error {
+func (box *KubeBox) Open(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
 	defer box.close()
-	return box.openBox(template, size, tunnelOpts)
+	return box.openBox(templateOpts, tunnelOpts)
 }
 
 func (box *KubeBox) Copy(string, string, string) error {

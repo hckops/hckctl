@@ -29,10 +29,10 @@ func (box *CloudBox) close() error {
 	return box.client.Close()
 }
 
-func (box *CloudBox) createBox(template *model.BoxV1, size model.ResourceSize) (*model.BoxInfo, error) {
-	box.eventBus.Publish(newApiCreateCloudLoaderEvent(box.clientConfig.Address, template.Name))
+func (box *CloudBox) createBox(opts *model.TemplateOptions) (*model.BoxInfo, error) {
+	box.eventBus.Publish(newApiCreateCloudLoaderEvent(box.clientConfig.Address, opts.Template.Name))
 
-	request := v1.NewBoxCreateRequest(box.clientConfig.Version, template.Name, size.String())
+	request := v1.NewBoxCreateRequest(box.clientConfig.Version, opts.Template.Name, opts.Size.String())
 	payload, err := request.Encode()
 	if err != nil {
 		return nil, errors.Wrap(err, "error cloud create request")
@@ -47,7 +47,7 @@ func (box *CloudBox) createBox(template *model.BoxV1, size model.ResourceSize) (
 		return nil, errors.Wrap(err, "error cloud create response")
 	}
 	boxName := response.Body.Name
-	box.eventBus.Publish(newApiCreateCloudEvent(template.Name, boxName, response.Body.Size))
+	box.eventBus.Publish(newApiCreateCloudEvent(opts.Template.Name, boxName, response.Body.Size))
 
 	return &model.BoxInfo{Id: boxName, Name: boxName}, nil
 }

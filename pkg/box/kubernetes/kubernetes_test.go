@@ -13,7 +13,6 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 
 	"github.com/hckops/hckctl/pkg/box/model"
-	"github.com/hckops/hckctl/pkg/client/kubernetes"
 )
 
 func TestBuildSpec(t *testing.T) {
@@ -35,10 +34,6 @@ func TestBuildSpec(t *testing.T) {
 	}
 	containerName := "my-container-name"
 	namespace := "my-namespace"
-	resourceOptions := &kubernetes.KubeResource{
-		Memory: "512Mi",
-		Cpu:    "500m",
-	}
 
 	expectedDeployment :=
 		`apiVersion: apps/v1
@@ -50,6 +45,8 @@ metadata:
    app.kubernetes.io/managed-by: hckops
    app.kubernetes.io/name: my-container-name
    app.kubernetes.io/version: latest
+   a.b.c: hello
+   x.y.z: world
  name: my-container-name
  namespace: my-namespace
 spec:
@@ -60,6 +57,8 @@ spec:
      app.kubernetes.io/managed-by: hckops
      app.kubernetes.io/name: my-container-name
      app.kubernetes.io/version: latest
+     a.b.c: hello
+     x.y.z: world
  strategy: {}
  template:
    metadata:
@@ -69,6 +68,8 @@ spec:
        app.kubernetes.io/managed-by: hckops
        app.kubernetes.io/name: my-container-name
        app.kubernetes.io/version: latest
+       a.b.c: hello
+       x.y.z: world
      name: my-container-name
      namespace: my-namespace
    spec:
@@ -104,6 +105,8 @@ metadata:
    app.kubernetes.io/managed-by: hckops
    app.kubernetes.io/name: my-container-name
    app.kubernetes.io/version: latest
+   a.b.c: hello
+   x.y.z: world
  name: my-container-name
  namespace: my-namespace
 spec:
@@ -121,11 +124,21 @@ spec:
    app.kubernetes.io/managed-by: hckops
    app.kubernetes.io/name: my-container-name
    app.kubernetes.io/version: latest
+   a.b.c: hello
+   x.y.z: world
  type: ClusterIP
 status:
  loadBalancer: {}
 `
-	actualDeployment, actualService, err := buildSpec(containerName, namespace, template, resourceOptions)
+	templateOpts := &model.TemplateOptions{
+		Template: template,
+		Size:     model.ExtraSmall,
+		Labels: map[string]string{
+			"a.b.c": "hello",
+			"x.y.z": "world",
+		},
+	}
+	actualDeployment, actualService, err := buildSpec(containerName, namespace, templateOpts)
 	// fix models
 	actualDeployment.TypeMeta = metav1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1"}
 	actualService.TypeMeta = metav1.TypeMeta{Kind: "Service", APIVersion: "v1"}

@@ -1,11 +1,12 @@
 package template
 
 import (
+	"fmt"
+
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/pkg/errors"
+	"path/filepath"
 
-	box "github.com/hckops/hckctl/pkg/box/model"
-	lab "github.com/hckops/hckctl/pkg/lab/model"
 	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/util"
 )
@@ -45,18 +46,46 @@ func readTemplates(wildcard string) ([]*TemplateValidated, error) {
 	return results, nil
 }
 
-func readBoxTemplate(path string) (*box.BoxV1, error) {
-	if value, err := readTemplate(path); err != nil {
+func readBoxTemplate(path string) (*BoxTemplate, error) {
+	value, err := readTemplate(path)
+	if err != nil {
 		return nil, err
-	} else {
-		return decodeBoxFromYaml(value.Data)
 	}
+
+	template, err := decodeBoxFromYaml(value.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	absolutePath, err := filepath.Abs(path)
+	if err != nil {
+		return nil, fmt.Errorf("unable to resolve absolute box path %s", absolutePath)
+	}
+
+	return &BoxTemplate{
+		Template: template,
+		Path:     absolutePath,
+	}, nil
 }
 
-func readLabTemplate(path string) (*lab.LabV1, error) {
-	if value, err := readTemplate(path); err != nil {
+func readLabTemplate(path string) (*LabTemplate, error) {
+	value, err := readTemplate(path)
+	if err != nil {
 		return nil, err
-	} else {
-		return decodeLabFromYaml(value.Data)
 	}
+
+	template, err := decodeLabFromYaml(value.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	absolutePath, err := filepath.Abs(path)
+	if err != nil {
+		return nil, fmt.Errorf("unable to resolve absolute lab path %s", absolutePath)
+	}
+
+	return &LabTemplate{
+		Template: template,
+		Path:     absolutePath,
+	}, nil
 }

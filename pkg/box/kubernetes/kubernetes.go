@@ -5,6 +5,8 @@ import (
 	"strconv"
 
 	"github.com/pkg/errors"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -38,14 +40,14 @@ func (box *KubeBox) close() error {
 	return box.client.Close()
 }
 
-func (box *KubeBox) createBox(template *model.BoxV1, size model.ResourceSize) (*model.BoxInfo, error) {
+func (box *KubeBox) createBox(opts *model.TemplateOptions) (*model.BoxInfo, error) {
 	namespace := box.clientConfig.Namespace
 
 	// TODO add env var container override
 
 	// boxName
-	containerName := template.GenerateName()
-	deployment, service, err := buildSpec(containerName, namespace, template, size.ToKubeResource())
+	containerName := opts.Template.GenerateName()
+	deployment, service, err := buildSpec(containerName, namespace, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +57,7 @@ func (box *KubeBox) createBox(template *model.BoxV1, size model.ResourceSize) (*
 	}
 	box.eventBus.Publish(newNamespaceApplyKubeEvent(namespace))
 
-	if template.HasPorts() {
+	if opts.Template.HasPorts() {
 		if err := box.client.ServiceCreate(namespace, service); err != nil {
 			return nil, err
 		}
@@ -64,7 +66,7 @@ func (box *KubeBox) createBox(template *model.BoxV1, size model.ResourceSize) (*
 		box.eventBus.Publish(newServiceCreateSkippedKubeEvent(namespace, service.Name))
 	}
 
-	box.eventBus.Publish(newResourcesDeployKubeLoaderEvent(namespace, template.Name))
+	box.eventBus.Publish(newResourcesDeployKubeLoaderEvent(namespace, opts.Template.Name))
 	deploymentOpts := &kubernetes.DeploymentCreateOpts{
 		Namespace: namespace,
 		Spec:      deployment,
@@ -86,22 +88,24 @@ func (box *KubeBox) createBox(template *model.BoxV1, size model.ResourceSize) (*
 	return &model.BoxInfo{Id: podInfo.Id, Name: containerName}, nil
 }
 
-func buildSpec(containerName string, namespace string, template *model.BoxV1, resourceOptions *kubernetes.KubeResource) (*appsv1.Deployment, *corev1.Service, error) {
+func buildSpec(containerName string, namespace string, templateOpts *model.TemplateOptions) (*appsv1.Deployment, *corev1.Service, error) {
 
-	customLabels := buildLabels(containerName, common.ToKebabCase(template.Image.Repository), template.ImageVersion())
+	labels := buildLabels(containerName, templateOpts.Template.Image.Repository, templateOpts.Template.ImageVersion(), templateOpts.Labels)
+
 	objectMeta := metav1.ObjectMeta{
 		Name:      containerName,
 		Namespace: namespace,
-		Labels:    customLabels,
+		Labels:    labels,
 	}
-	pod, err := buildPod(objectMeta, template, resourceOptions.Memory, resourceOptions.Cpu)
+	resourceOptions := templateOpts.Size.ToKubeResource()
+	pod, err := buildPod(objectMeta, templateOpts.Template, resourceOptions.Memory, resourceOptions.Cpu)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error kube pod spec")
 	}
 
 	deployment := buildDeployment(objectMeta, pod)
 
-	service, err := buildService(objectMeta, template)
+	service, err := buildService(objectMeta, templateOpts.Template)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error kube service spec")
 	}
@@ -109,15 +113,32 @@ func buildSpec(containerName string, namespace string, template *model.BoxV1, re
 	return deployment, service, nil
 }
 
-type Labels map[string]string
-
-func buildLabels(name, instance, version string) Labels {
-	return map[string]string{
+func buildLabels(name, instance, version string, customLabels model.BoxLabels) model.BoxLabels {
+	// default
+	labels := map[string]string{
 		"app.kubernetes.io/name":       name,
-		"app.kubernetes.io/instance":   instance,
+		"app.kubernetes.io/instance":   instance, // not sanitized
 		"app.kubernetes.io/version":    version,
 		"app.kubernetes.io/managed-by": "hckops", // TODO common?
 	}
+	// merge labels
+	maps.Copy(labels, customLabels)
+
+	// TODO temporarily remove or improve sanitization
+	labelBlacklist := []string{
+		model.LabelTemplateGitUrl,
+		model.LabelTemplateCommonPath,
+	}
+
+	// sanitize all values
+	for key, value := range labels {
+		if slices.Contains(labelBlacklist, key) {
+			delete(labels, key)
+		} else {
+			labels[key] = common.ToKebabCase(value)
+		}
+	}
+	return labels
 }
 
 func buildContainerPorts(ports []model.BoxPort) ([]corev1.ContainerPort, error) {
@@ -242,11 +263,11 @@ func (box *KubeBox) connectBox(template *model.BoxV1, tunnelOpts *model.TunnelOp
 }
 
 // TODO common
-func (box *KubeBox) openBox(template *model.BoxV1, size model.ResourceSize, tunnelOpts *model.TunnelOptions) error {
-	if info, err := box.createBox(template, size); err != nil {
+func (box *KubeBox) openBox(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
+	if info, err := box.createBox(templateOpts); err != nil {
 		return err
 	} else {
-		return box.execBox(template, info, tunnelOpts, true)
+		return box.execBox(templateOpts.Template, info, tunnelOpts, true)
 	}
 }
 

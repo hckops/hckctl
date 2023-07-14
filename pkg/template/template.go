@@ -21,6 +21,16 @@ type TemplateValidated struct {
 	IsValid bool
 }
 
+type BoxTemplate struct {
+	Template *box.BoxV1
+	Path     string
+}
+
+type LabTemplate struct {
+	Template *lab.LabV1
+	Path     string
+}
+
 func (t *TemplateValue) ToYaml() (*TemplateValue, error) {
 	if yamlValue, err := convertFromYamlToYaml(t.Kind, t.Data); err != nil {
 		return nil, errors.Wrap(err, "conversion to yaml failed")
@@ -45,11 +55,11 @@ func (t *TemplateValue) toValidated(path string, isValid bool) *TemplateValidate
 
 // TODO add RemoteSource http
 
-type TemplateSource interface {
+type SourceTemplate interface {
 	ReadTemplate() (*TemplateValue, error)
 	ReadTemplates() ([]*TemplateValidated, error)
-	ReadBox() (*box.BoxV1, error)
-	ReadLab() (*lab.LabV1, error)
+	ReadBox() (*BoxTemplate, error)
+	ReadLab() (*LabTemplate, error)
 }
 
 type LocalSource struct {
@@ -67,10 +77,10 @@ func (src *LocalSource) ReadTemplate() (*TemplateValue, error) {
 func (src *LocalSource) ReadTemplates() ([]*TemplateValidated, error) {
 	return readTemplates(src.path)
 }
-func (src *LocalSource) ReadBox() (*box.BoxV1, error) {
+func (src *LocalSource) ReadBox() (*BoxTemplate, error) {
 	return readBoxTemplate(src.path)
 }
-func (src *LocalSource) ReadLab() (*lab.LabV1, error) {
+func (src *LocalSource) ReadLab() (*LabTemplate, error) {
 	return readLabTemplate(src.path)
 }
 
@@ -91,9 +101,9 @@ func (src *GitSource) ReadTemplates() ([]*TemplateValidated, error) {
 	wildcard := fmt.Sprintf("%s/**/*.{yml,yaml}", src.opts.SourceCacheDir)
 	return readGitTemplates(src.opts, wildcard)
 }
-func (src *GitSource) ReadBox() (*box.BoxV1, error) {
+func (src *GitSource) ReadBox() (*BoxTemplate, error) {
 	return readGitBoxTemplate(src.opts, src.name)
 }
-func (src *GitSource) ReadLab() (*lab.LabV1, error) {
+func (src *GitSource) ReadLab() (*LabTemplate, error) {
 	return readGitLabTemplate(src.opts, src.name)
 }

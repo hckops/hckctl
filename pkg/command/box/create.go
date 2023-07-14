@@ -56,7 +56,7 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 			path := args[0]
 			log.Debug().Msgf("create box from local template: path=%s", path)
 
-			return createBox(template.NewLocalSource(path), provider, opts.configRef)
+			return createBox(template.NewLocalSource(path), provider, opts.configRef, model.NewLocalLabels())
 
 		} else {
 			name := args[0]
@@ -69,7 +69,8 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 			}
 			log.Debug().Msgf("create box from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
-			return createBox(template.NewGitSource(sourceOpts, name), provider, opts.configRef)
+			labels := model.NewGitLabels(common.TemplateSourceName, sourceOpts.SourceUrl, sourceOpts.SourceRevision)
+			return createBox(template.NewGitSource(sourceOpts, name), provider, opts.configRef, labels)
 		}
 	} else {
 		cmd.HelpFunc()(cmd, args)
@@ -77,18 +78,18 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func createBox(src template.TemplateSource, provider model.BoxProvider, configRef *config.ConfigRef) error {
-	createClient := func(opts *boxClientOptions) error {
+func createBox(src template.SourceTemplate, provider model.BoxProvider, configRef *config.ConfigRef, labels model.BoxLabels) error {
+	createClient := func(clientOpts *boxClientOptions) error {
 
-		size, err := model.ExistResourceSize(configRef.Config.Box.Size)
+		templateOpts, err := newTemplateOptions(clientOpts.template, labels, configRef.Config.Box.Size)
 		if err != nil {
 			return err
 		}
 
-		if boxInfo, err := opts.client.Create(opts.template, size); err != nil {
+		if boxInfo, err := clientOpts.client.Create(templateOpts); err != nil {
 			return err
 		} else {
-			opts.loader.Stop()
+			clientOpts.loader.Stop()
 			fmt.Println(boxInfo.Name)
 		}
 		return nil

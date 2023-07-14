@@ -8,8 +8,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	box "github.com/hckops/hckctl/pkg/box/model"
-	lab "github.com/hckops/hckctl/pkg/lab/model"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
@@ -82,7 +80,7 @@ func readGitTemplates(opts *SourceOptions, wildcard string) ([]*TemplateValidate
 	return readTemplates(wildcard)
 }
 
-func readGitBoxTemplate(opts *SourceOptions, name string) (*box.BoxV1, error) {
+func readGitBoxTemplate(opts *SourceOptions, name string) (*BoxTemplate, error) {
 	if path, err := resolvePathWithRevision(opts, name); err != nil {
 		return nil, err
 	} else {
@@ -90,7 +88,7 @@ func readGitBoxTemplate(opts *SourceOptions, name string) (*box.BoxV1, error) {
 	}
 }
 
-func readGitLabTemplate(opts *SourceOptions, name string) (*lab.LabV1, error) {
+func readGitLabTemplate(opts *SourceOptions, name string) (*LabTemplate, error) {
 	if path, err := resolvePathWithRevision(opts, name); err != nil {
 		return nil, err
 	} else {

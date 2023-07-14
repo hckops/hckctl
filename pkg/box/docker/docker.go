@@ -32,10 +32,10 @@ func (box *DockerBox) close() error {
 	return box.client.Close()
 }
 
-// TODO limit resources with size?
-func (box *DockerBox) createBox(template *model.BoxV1, size model.ResourceSize) (*model.BoxInfo, error) {
+// TODO limit resources by size?
+func (box *DockerBox) createBox(opts *model.TemplateOptions) (*model.BoxInfo, error) {
 
-	imageName := template.ImageName()
+	imageName := opts.Template.ImageName()
 	imagePullOpts := &docker.ImagePullOpts{
 		ImageName: imageName,
 		OnImagePullCallback: func() {
@@ -70,13 +70,14 @@ func (box *DockerBox) createBox(template *model.BoxV1, size model.ResourceSize) 
 	// TODO print environment variables
 
 	// boxName
-	containerName := template.GenerateName()
-	networkPorts := template.NetworkPorts(false)
-	containerConfig, err := buildContainerConfig(
-		template.ImageName(),
-		containerName,
-		networkPorts,
-	)
+	containerName := opts.Template.GenerateName()
+	networkPorts := opts.Template.NetworkPorts(false)
+	containerConfig, err := buildContainerConfig(&containerConfigOptions{
+		imageName:     opts.Template.ImageName(),
+		containerName: containerName,
+		ports:         networkPorts,
+		labels:        opts.Labels,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -109,15 +110,22 @@ func (box *DockerBox) createBox(template *model.BoxV1, size model.ResourceSize) 
 	if err != nil {
 		return nil, err
 	}
-	box.eventBus.Publish(newContainerCreateDockerEvent(template.Name, containerName, containerId))
+	box.eventBus.Publish(newContainerCreateDockerEvent(opts.Template.Name, containerName, containerId))
 
 	return &model.BoxInfo{Id: containerId, Name: containerName}, nil
 }
 
-func buildContainerConfig(imageName string, containerName string, ports []model.BoxPort) (*container.Config, error) {
+type containerConfigOptions struct {
+	imageName     string
+	containerName string
+	ports         []model.BoxPort
+	labels        map[string]string
+}
+
+func buildContainerConfig(opts *containerConfigOptions) (*container.Config, error) {
 
 	exposedPorts := make(nat.PortSet)
-	for _, port := range ports {
+	for _, port := range opts.ports {
 		p, err := nat.NewPort("tcp", port.Remote)
 		if err != nil {
 			return nil, errors.Wrap(err, "error docker port: containerConfig")
@@ -125,11 +133,10 @@ func buildContainerConfig(imageName string, containerName string, ports []model.
 		exposedPorts[p] = struct{}{}
 	}
 
-	// TODO add label revision: use correct revision when resolving template by name
-	// TODO add label owner/managed-by: use to list instead of prefix
+	// TODO add Env
 	return &container.Config{
-		Hostname:     containerName,
-		Image:        imageName,
+		Hostname:     opts.containerName,
+		Image:        opts.imageName,
 		AttachStdin:  true,
 		AttachStdout: true,
 		AttachStderr: true,
@@ -137,7 +144,7 @@ func buildContainerConfig(imageName string, containerName string, ports []model.
 		StdinOnce:    true,
 		Tty:          true,
 		ExposedPorts: exposedPorts,
-		//Labels:       map[string]string{"com.hckops.revision": "main-or-empty"},
+		Labels:       opts.labels,
 	}, nil
 }
 
@@ -188,11 +195,11 @@ func (box *DockerBox) connectBox(template *model.BoxV1, tunnelOpts *model.Tunnel
 }
 
 // TODO common
-func (box *DockerBox) openBox(template *model.BoxV1, size model.ResourceSize, tunnelOpts *model.TunnelOptions) error {
-	if info, err := box.createBox(template, size); err != nil {
+func (box *DockerBox) openBox(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
+	if info, err := box.createBox(templateOpts); err != nil {
 		return err
 	} else {
-		return box.execBox(template, info, tunnelOpts, true)
+		return box.execBox(templateOpts.Template, info, tunnelOpts, true)
 	}
 }
 

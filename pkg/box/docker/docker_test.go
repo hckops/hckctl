@@ -30,9 +30,22 @@ func TestBuildContainerConfig(t *testing.T) {
 			"123/tcp": struct{}{},
 			"789/tcp": struct{}{},
 		},
+		Labels: map[string]string{
+			"a.b.c": "hello",
+			"x.y.z": "world",
+		},
+	}
+	opts := &containerConfigOptions{
+		imageName:     "myImageName",
+		containerName: "myContainerName",
+		ports:         testPorts,
+		labels: map[string]string{
+			"a.b.c": "hello",
+			"x.y.z": "world",
+		},
 	}
 
-	result, err := buildContainerConfig("myImageName", "myContainerName", testPorts)
+	result, err := buildContainerConfig(opts)
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 }

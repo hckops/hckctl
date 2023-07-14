@@ -10,6 +10,8 @@ import (
 	"github.com/hckops/hckctl/pkg/event"
 )
 
+// TODO add Status: Healthy/Unknown/Error
+
 type BoxInfo struct {
 	Id   string
 	Name string
@@ -47,6 +49,12 @@ func NewDefaultStreams(tty bool) *BoxStreams {
 		Err:   os.Stderr,
 		IsTty: tty,
 	}
+}
+
+type TemplateOptions struct {
+	Template *BoxV1
+	Size     ResourceSize
+	Labels   BoxLabels
 }
 
 type TunnelOptions struct {
