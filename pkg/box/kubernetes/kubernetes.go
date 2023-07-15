@@ -86,7 +86,7 @@ func (box *KubeBox) createBox(opts *model.TemplateOptions) (*model.BoxInfo, erro
 	}
 	box.eventBus.Publish(newPodNameKubeEvent(namespace, podInfo.Name, podInfo.Id))
 
-	return &model.BoxInfo{Id: podInfo.Id, Name: containerName}, nil
+	return &model.BoxInfo{Id: podInfo.Id, Name: containerName, Healthy: true}, nil
 }
 
 func buildSpec(containerName string, namespace string, templateOpts *model.TemplateOptions) (*appsv1.Deployment, *corev1.Service, error) {
@@ -301,7 +301,9 @@ func (box *KubeBox) execBox(template *model.BoxV1, info *model.BoxInfo, tunnelOp
 		}
 	}
 
+	// TODO if BoxInfo not Healthy attempt scale 1
 	// TODO model.BoxShellNone
+	// TODO print environment variables
 
 	// exec
 	opts := &kubernetes.PodExecOpts{
@@ -399,7 +401,8 @@ func (box *KubeBox) listBoxes() ([]model.BoxInfo, error) {
 	}
 	var result []model.BoxInfo
 	for index, d := range deployments {
-		result = append(result, model.BoxInfo{Id: d.PodInfo.Id, Name: d.DeploymentName})
+		// TODO add ports
+		result = append(result, model.BoxInfo{Id: d.PodInfo.Id, Name: d.DeploymentName, Healthy: d.Healthy})
 		box.eventBus.Publish(newDeploymentListKubeEvent(index, namespace, d.DeploymentName, d.PodInfo.Id, d.Healthy))
 	}
 
@@ -438,6 +441,7 @@ func (box *KubeBox) deleteBoxes() ([]model.BoxInfo, error) {
 			box.eventBus.Publish(newResourcesDeleteSkippedKubeEvent(namespace, boxInfo.Name))
 		}
 	}
+	// TODO remove
 	if err := box.client.NamespaceDelete(namespace); err != nil {
 		// silently ignore
 		box.eventBus.Publish(newNamespaceDeleteSkippedKubeEvent(namespace))

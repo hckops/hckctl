@@ -10,28 +10,11 @@ import (
 	"github.com/hckops/hckctl/pkg/event"
 )
 
-type BoxStatus uint8
-
-const (
-	Healthy BoxStatus = iota
-	Error
-	Unknown
-)
-
-var statuses = map[BoxStatus]string{
-	Healthy: "healthy",
-	Error:   "error",
-	Unknown: "unknown",
-}
-
-func (s BoxStatus) String() string {
-	return statuses[s]
-}
-
+// TODO add actual bound ports map alias -> BoxPort
 type BoxInfo struct {
-	Id     string
-	Name   string
-	Status BoxStatus
+	Id      string
+	Name    string
+	Healthy bool // TODO BoxStatus healthy, offline, unknown, error, etc
 }
 
 type BoxClientOptions struct {

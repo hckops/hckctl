@@ -115,7 +115,7 @@ func (box *DockerBox) createBox(opts *model.TemplateOptions) (*model.BoxInfo, er
 	}
 	box.eventBus.Publish(newContainerCreateDockerEvent(opts.Template.Name, containerName, containerId))
 
-	return &model.BoxInfo{Id: containerId, Name: containerName}, nil
+	return &model.BoxInfo{Id: containerId, Name: containerName, Healthy: true}, nil
 }
 
 type containerConfigOptions struct {
@@ -224,6 +224,10 @@ func (box *DockerBox) execBox(template *model.BoxV1, info *model.BoxInfo, tunnel
 	command := template.Shell
 	box.eventBus.Publish(newContainerExecDockerEvent(info.Id, info.Name, command))
 
+	// TODO if BoxInfo not Healthy attempt restart
+	// TODO TunnelOnly > skip exec
+	// TODO NoTunnel > print console warning: flag ignored
+
 	// TODO it should print the actual bound ports, not the template
 	// box.publishBoxInfo(template, info)
 
@@ -302,7 +306,8 @@ func (box *DockerBox) listBoxes() ([]model.BoxInfo, error) {
 	}
 	var result []model.BoxInfo
 	for index, c := range containers {
-		result = append(result, model.BoxInfo{Id: c.ContainerId, Name: c.ContainerName})
+		// TODO add ports
+		result = append(result, model.BoxInfo{Id: c.ContainerId, Name: c.ContainerName, Healthy: c.Healthy})
 		box.eventBus.Publish(newContainerListDockerEvent(index, c.ContainerName, c.ContainerId, c.Healthy))
 	}
 	return result, nil

@@ -61,7 +61,11 @@ func listByProvider(providerFlag commonFlag.ProviderFlag, configRef *config.Conf
 
 	fmt.Println(fmt.Sprintf("# %v", boxClient.Provider()))
 	for _, b := range boxes {
-		fmt.Println(b.Name)
+		if b.Healthy {
+			fmt.Println(b.Name)
+		} else {
+			fmt.Println(fmt.Sprintf("%s (unhealthy)", b.Name))
+		}
 	}
 	fmt.Println(fmt.Sprintf("total: %v", len(boxes)))
 	return nil
