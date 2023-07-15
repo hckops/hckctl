@@ -69,7 +69,7 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 			}
 			log.Debug().Msgf("create box from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
-			labels := model.NewGitLabels(common.TemplateSourceName, sourceOpts.SourceUrl, sourceOpts.SourceRevision)
+			labels := model.NewGitLabels(sourceOpts.SourceUrl, sourceOpts.SourceRevision, sourceOpts.CacheDirName())
 			return createBox(template.NewGitSource(sourceOpts, name), provider, opts.configRef, labels)
 		}
 	} else {

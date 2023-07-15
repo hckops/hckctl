@@ -1,6 +1,8 @@
 package template
 
 import (
+	"path/filepath"
+
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -15,6 +17,10 @@ type SourceOptions struct {
 	SourceRevision string // default branch
 	Revision       string
 	AllowOffline   bool
+}
+
+func (s *SourceOptions) CacheDirName() string {
+	return filepath.Base(s.SourceCacheDir)
 }
 
 func refreshSource(opts *SourceOptions) error {

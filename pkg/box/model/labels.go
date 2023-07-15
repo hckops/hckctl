@@ -14,9 +14,9 @@ const (
 	LabelSchemaKind          = "com.hckops.schema.kind"
 	LabelTemplateLocal       = "com.hckops.template.local"
 	LabelTemplateGit         = "com.hckops.template.git"
-	LabelTemplateGitName     = "com.hckops.template.git.name"
 	LabelTemplateGitUrl      = "com.hckops.template.git.url"
 	LabelTemplateGitRevision = "com.hckops.template.git.revision"
+	LabelTemplateGitName     = "com.hckops.template.git.name"
 	LabelTemplateCommonPath  = "com.hckops.template.common.path"
 	LabelBoxSize             = "com.hckops.box.size"
 )
@@ -28,13 +28,13 @@ func NewLocalLabels() BoxLabels {
 	}
 }
 
-func NewGitLabels(name, url, revision string) BoxLabels {
+func NewGitLabels(url, revision, name string) BoxLabels {
 	return map[string]string{
 		LabelSchemaKind:          schema.KindBoxV1.String(),
 		LabelTemplateGit:         "true",
-		LabelTemplateGitName:     name,
 		LabelTemplateGitUrl:      url,
 		LabelTemplateGitRevision: revision,
+		LabelTemplateGitName:     name,
 	}
 }
 

@@ -18,13 +18,13 @@ func TestLocalLabels(t *testing.T) {
 }
 
 func TestGitLabels(t *testing.T) {
-	labels := NewGitLabels("myName", "myUrl", "myRevision")
+	labels := NewGitLabels("myUrl", "myRevision", "myName")
 	expected := BoxLabels{
 		"com.hckops.schema.kind":           "box/v1",
 		"com.hckops.template.git":          "true",
-		"com.hckops.template.git.name":     "myName",
 		"com.hckops.template.git.url":      "myUrl",
 		"com.hckops.template.git.revision": "myRevision",
+		"com.hckops.template.git.name":     "myName",
 	}
 
 	assert.Equal(t, 5, len(expected))

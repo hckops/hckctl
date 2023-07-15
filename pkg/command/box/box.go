@@ -113,7 +113,7 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 			}
 			log.Debug().Msgf("open box from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
-			labels := model.NewGitLabels(common.TemplateSourceName, sourceOpts.SourceUrl, sourceOpts.SourceRevision)
+			labels := model.NewGitLabels(sourceOpts.SourceUrl, sourceOpts.SourceRevision, sourceOpts.CacheDirName())
 			return opts.openBox(template.NewGitSource(sourceOpts, name), provider, labels)
 		}
 
