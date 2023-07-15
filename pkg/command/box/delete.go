@@ -55,8 +55,11 @@ func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 		log.Debug().Msgf("delete box: boxName=%s", boxName)
 
 		deleteClient := func(client box.BoxClient, _ *model.BoxV1) error {
-			if err := client.Delete(boxName); err != nil {
+			if result, err := client.Delete([]string{boxName}); err != nil {
 				return err
+			} else if len(result) == 0 {
+				// attempt next provider
+				return fmt.Errorf("box not found: boxName=%s", boxName)
 			}
 			fmt.Println(boxName)
 			return nil
@@ -78,7 +81,7 @@ func deleteByProvider(providerFlag commonFlag.ProviderFlag, configRef *config.Co
 		return err
 	}
 
-	boxes, err := boxClient.DeleteAll()
+	boxes, err := boxClient.Delete([]string{})
 	if err != nil {
 		log.Warn().Err(err).Msgf("error deleting boxes: provider=%v", boxClient.Provider())
 		return fmt.Errorf("%v delete error", boxClient.Provider())

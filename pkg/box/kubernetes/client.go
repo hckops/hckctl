@@ -51,14 +51,14 @@ func (box *KubeBox) List() ([]model.BoxInfo, error) {
 	return box.listBoxes()
 }
 
-func (box *KubeBox) Delete(name string) error {
+func (box *KubeBox) Delete(names []string) ([]model.BoxInfo, error) {
 	defer box.close()
-	return box.deleteBox(name)
+	return box.deleteBoxes(names)
 }
 
-func (box *KubeBox) DeleteAll() ([]model.BoxInfo, error) {
+func (box *KubeBox) Clean() error {
 	defer box.close()
-	return box.deleteBoxes()
+	return box.clean()
 }
 
 func (box *KubeBox) Version() (string, error) {

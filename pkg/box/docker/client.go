@@ -51,14 +51,15 @@ func (box *DockerBox) List() ([]model.BoxInfo, error) {
 	return box.listBoxes()
 }
 
-func (box *DockerBox) Delete(name string) error {
+func (box *DockerBox) Delete(names []string) ([]model.BoxInfo, error) {
 	defer box.close()
-	return box.deleteBoxByName(name)
+	return box.deleteBoxes(names)
 }
 
-func (box *DockerBox) DeleteAll() ([]model.BoxInfo, error) {
+func (box *DockerBox) Clean() error {
 	defer box.close()
-	return box.deleteBoxes()
+	// TODO remove network and volumes
+	return errors.New("not implemented")
 }
 
 func (box *DockerBox) Version() (string, error) {

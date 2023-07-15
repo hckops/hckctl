@@ -53,15 +53,14 @@ func (box *CloudBox) List() ([]model.BoxInfo, error) {
 	return box.listBoxes()
 }
 
-func (box *CloudBox) Delete(name string) error {
+func (box *CloudBox) Delete(names []string) ([]model.BoxInfo, error) {
 	defer box.close()
-	_, err := box.deleteBoxes([]string{name})
-	return err
+	return box.deleteBoxes(names)
 }
 
-func (box *CloudBox) DeleteAll() ([]model.BoxInfo, error) {
+func (box *CloudBox) Clean() error {
 	defer box.close()
-	return box.deleteBoxes([]string{})
+	return errors.New("not implemented")
 }
 
 func (box *CloudBox) Version() (string, error) {

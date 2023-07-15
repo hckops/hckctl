@@ -96,7 +96,6 @@ func (box *CloudBox) listBoxes() ([]model.BoxInfo, error) {
 	return toBoxes(response.Body.Names, callback), nil
 }
 
-// empty "names" means all
 func (box *CloudBox) deleteBoxes(names []string) ([]model.BoxInfo, error) {
 
 	request := v1.NewBoxDeleteRequest(box.clientConfig.Version, names)

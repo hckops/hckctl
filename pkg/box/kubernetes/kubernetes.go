@@ -409,6 +409,30 @@ func (box *KubeBox) listBoxes() ([]model.BoxInfo, error) {
 	return result, nil
 }
 
+func (box *KubeBox) deleteBoxes(names []string) ([]model.BoxInfo, error) {
+	namespace := box.clientConfig.Namespace
+
+	boxes, err := box.listBoxes()
+	if err != nil {
+		return nil, err
+	}
+
+	var deleted []model.BoxInfo
+	for _, boxInfo := range boxes {
+
+		if len(names) == 0 || slices.Contains(names, boxInfo.Name) {
+
+			if err := box.deleteBox(boxInfo.Name); err == nil {
+				deleted = append(deleted, boxInfo)
+			} else {
+				// silently ignore
+				box.eventBus.Publish(newResourcesDeleteSkippedKubeEvent(namespace, boxInfo.Name))
+			}
+		}
+	}
+	return deleted, nil
+}
+
 func (box *KubeBox) deleteBox(name string) error {
 	namespace := box.clientConfig.Namespace
 
@@ -425,29 +449,9 @@ func (box *KubeBox) deleteBox(name string) error {
 	return nil
 }
 
-func (box *KubeBox) deleteBoxes() ([]model.BoxInfo, error) {
+func (box *KubeBox) clean() error {
 	namespace := box.clientConfig.Namespace
 
-	boxes, err := box.listBoxes()
-	if err != nil {
-		return nil, err
-	}
-	var deleted []model.BoxInfo
-	for _, boxInfo := range boxes {
-		if err := box.deleteBox(boxInfo.Name); err == nil {
-			deleted = append(deleted, boxInfo)
-		} else {
-			// silently ignore
-			box.eventBus.Publish(newResourcesDeleteSkippedKubeEvent(namespace, boxInfo.Name))
-		}
-	}
-	// TODO remove
-	if err := box.client.NamespaceDelete(namespace); err != nil {
-		// silently ignore
-		box.eventBus.Publish(newNamespaceDeleteSkippedKubeEvent(namespace))
-	} else {
-		box.eventBus.Publish(newNamespaceDeleteKubeEvent(namespace))
-	}
-
-	return deleted, nil
+	box.eventBus.Publish(newNamespaceDeleteKubeEvent(namespace))
+	return box.client.NamespaceDelete(namespace)
 }

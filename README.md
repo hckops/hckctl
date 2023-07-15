@@ -225,19 +225,19 @@ TODO
     - kube: add env var
     - kube: add distroless support
     - kube: verify if close is needed or `return nil`
-    - kube: deployment list only running
-    - kube: deployment always check/scale replica to 1 before exec (test with replica=0)
+    - kube: `execBox` deployment always check/scale replica to 1 before exec (test with replica=0)
+    - kube: `execBox` print envs
     - kube: verify `GetPodInfo` sidecar pod count
     - kube: verify `PodPortForward` callback vs channel
     - kube: update resources sizes
-    - docker: restart exited container (switch off pc)
     - docker: `ContainerCreate` add env var
-    - docker: `execBox` print ports and envs: retrieve actual bound ports from container
-    - docker: `execBox` restart stopped container
+    - docker: `execBox` retrieve actual bound ports from container
+    - docker: `execBox` print ports and envs
+    - docker: `execBox` restart stopped/existed container
+    - docker: `execBox` fix tunnelOnly (skip exec) and noTunnel (print warning ignored)
     - docker: COPY shared volume `XDG_DATA_HOME`
     - docker: support powershell `/usr/bin/pwsh` (attach with no tty and raw terminal) see `docker run --rm -it mcr.microsoft.com/powershell`
     - docker: add support for remote docker daemon with `DOCKER_HOST`
-    - docker: delete should remove all containers (running and stopped) i.e. delete + prune
     - add podman provider
     - add context timeout
     - cloud: ssh key auth only + remove InsecureIgnoreHostKey

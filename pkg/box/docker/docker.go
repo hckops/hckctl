@@ -2,6 +2,7 @@ package docker
 
 import (
 	"fmt"
+	"golang.org/x/exp/slices"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
@@ -300,10 +301,12 @@ func boxLabel() string {
 }
 
 func (box *DockerBox) listBoxes() ([]model.BoxInfo, error) {
+
 	containers, err := box.client.ContainerList(model.BoxPrefixName, boxLabel())
 	if err != nil {
 		return nil, err
 	}
+
 	var result []model.BoxInfo
 	for index, c := range containers {
 		// TODO add ports
@@ -313,31 +316,25 @@ func (box *DockerBox) listBoxes() ([]model.BoxInfo, error) {
 	return result, nil
 }
 
-func (box *DockerBox) deleteBoxById(id string) error {
-	box.eventBus.Publish(newContainerRemoveDockerEvent(id))
-	return box.client.ContainerRemove(id)
-}
+func (box *DockerBox) deleteBoxes(names []string) ([]model.BoxInfo, error) {
 
-func (box *DockerBox) deleteBoxByName(name string) error {
-	if info, err := box.findBox(name); err != nil {
-		return err
-	} else {
-		return box.deleteBoxById(info.Id)
-	}
-}
-
-func (box *DockerBox) deleteBoxes() ([]model.BoxInfo, error) {
 	boxes, err := box.listBoxes()
 	if err != nil {
 		return nil, err
 	}
+
 	var deleted []model.BoxInfo
 	for _, boxInfo := range boxes {
-		if err := box.deleteBoxById(boxInfo.Id); err == nil {
-			deleted = append(deleted, boxInfo)
-		} else {
-			// silently ignore
-			box.eventBus.Publish(newContainerRemoveSkippedDockerEvent(boxInfo.Id))
+
+		if len(names) == 0 || slices.Contains(names, boxInfo.Name) {
+
+			if err := box.client.ContainerRemove(boxInfo.Id); err == nil {
+				deleted = append(deleted, boxInfo)
+				box.eventBus.Publish(newContainerRemoveDockerEvent(boxInfo.Id))
+			} else {
+				// silently ignore
+				box.eventBus.Publish(newContainerRemoveSkippedDockerEvent(boxInfo.Id))
+			}
 		}
 	}
 	return deleted, nil
