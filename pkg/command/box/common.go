@@ -2,12 +2,6 @@ package box
 
 import (
 	"fmt"
-	"strings"
-
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
-	"golang.org/x/exp/maps"
-
 	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/box/model"
 	boxFlag "github.com/hckops/hckctl/pkg/command/box/flag"
@@ -17,6 +11,8 @@ import (
 	"github.com/hckops/hckctl/pkg/command/version"
 	"github.com/hckops/hckctl/pkg/event"
 	"github.com/hckops/hckctl/pkg/template"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 type boxClientOptions struct {
@@ -159,17 +155,10 @@ func newTemplateOptions(template *template.BoxTemplate, labels model.BoxLabels, 
 		return nil, err
 	}
 
-	allLabels := map[string]string{
-		model.LabelTemplateCommonPath: template.Path,
-		model.LabelBoxSize:            strings.ToLower(size.String()),
-	}
-	// merge labels
-	maps.Copy(allLabels, labels)
-
 	templateOpts := &model.TemplateOptions{
 		Template: template.Template,
 		Size:     size,
-		Labels:   allLabels,
+		Labels:   labels.AddLabels(template.Path, size),
 	}
 	return templateOpts, nil
 }

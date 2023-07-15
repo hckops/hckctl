@@ -1,6 +1,10 @@
 package model
 
 import (
+	"strings"
+
+	"golang.org/x/exp/maps"
+
 	"github.com/hckops/hckctl/pkg/schema"
 )
 
@@ -17,14 +21,14 @@ const (
 	LabelBoxSize             = "com.hckops.box.size"
 )
 
-func NewLocalLabels() map[string]string {
+func NewLocalLabels() BoxLabels {
 	return map[string]string{
 		LabelSchemaKind:    schema.KindBoxV1.String(),
 		LabelTemplateLocal: "true",
 	}
 }
 
-func NewGitLabels(name, url, revision string) map[string]string {
+func NewGitLabels(name, url, revision string) BoxLabels {
 	return map[string]string{
 		LabelSchemaKind:          schema.KindBoxV1.String(),
 		LabelTemplateGit:         "true",
@@ -32,4 +36,15 @@ func NewGitLabels(name, url, revision string) map[string]string {
 		LabelTemplateGitUrl:      url,
 		LabelTemplateGitRevision: revision,
 	}
+}
+
+func (l BoxLabels) AddLabels(path string, size ResourceSize) BoxLabels {
+	labels := map[string]string{
+		LabelTemplateCommonPath: path,
+		LabelBoxSize:            strings.ToLower(size.String()),
+	}
+	// merge labels
+	maps.Copy(labels, l)
+
+	return labels
 }

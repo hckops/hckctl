@@ -8,7 +8,7 @@ import (
 
 func TestLocalLabels(t *testing.T) {
 	labels := NewLocalLabels()
-	expected := map[string]string{
+	expected := BoxLabels{
 		"com.hckops.schema.kind":    "box/v1",
 		"com.hckops.template.local": "true",
 	}
@@ -19,7 +19,7 @@ func TestLocalLabels(t *testing.T) {
 
 func TestGitLabels(t *testing.T) {
 	labels := NewGitLabels("myName", "myUrl", "myRevision")
-	expected := map[string]string{
+	expected := BoxLabels{
 		"com.hckops.schema.kind":           "box/v1",
 		"com.hckops.template.git":          "true",
 		"com.hckops.template.git.name":     "myName",
@@ -28,5 +28,22 @@ func TestGitLabels(t *testing.T) {
 	}
 
 	assert.Equal(t, 5, len(expected))
+	assert.Equal(t, expected, labels)
+}
+
+func TestAddLabels(t *testing.T) {
+	defaultLabels := BoxLabels{
+		"com.hckops.schema.kind": "box/v1",
+		"com.hckops.test":        "true",
+	}
+	labels := defaultLabels.AddLabels("myPath", ExtraLarge)
+	expected := BoxLabels{
+		"com.hckops.schema.kind":          "box/v1",
+		"com.hckops.test":                 "true",
+		"com.hckops.template.common.path": "myPath",
+		"com.hckops.box.size":             "xl",
+	}
+
+	assert.Equal(t, 4, len(expected))
 	assert.Equal(t, expected, labels)
 }

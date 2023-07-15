@@ -2,12 +2,12 @@ package docker
 
 import (
 	"fmt"
-	"golang.org/x/exp/slices"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/docker"
