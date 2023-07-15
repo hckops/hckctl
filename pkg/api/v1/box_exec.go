@@ -1,13 +1,15 @@
 package v1
 
-type BoxExecRequestBody struct {
+// TODO add tunnel options
+
+type BoxExecSessionBody struct {
 	Name string `json:"name"`
 }
 
-func (b BoxExecRequestBody) method() MethodName {
+func (b BoxExecSessionBody) method() MethodName {
 	return MethodBoxExec
 }
 
-func NewBoxExecRequest(origin string, name string) *Message[BoxExecRequestBody] {
-	return newMessage[BoxExecRequestBody](origin, BoxExecRequestBody{name})
+func NewBoxExecSession(origin string, name string) *Message[BoxExecSessionBody] {
+	return newMessage[BoxExecSessionBody](origin, BoxExecSessionBody{name})
 }

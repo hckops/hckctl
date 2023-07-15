@@ -80,7 +80,7 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 		SourceCacheDir: configRef.Config.Template.CacheDir,
 		SourceUrl:      common.TemplateSourceUrl,
 		SourceRevision: common.TemplateSourceRevision,
-		Revision:       common.TemplateSourceRevision, // TODO create container with Labels="com.hckops.template.git.revision=<REVISION>" to resolve exact template
+		Revision:       common.TemplateSourceRevision, // TODO always default, read from labels
 		AllowOffline:   true,
 	}
 	templateName := model.ToBoxTemplateName(boxName)

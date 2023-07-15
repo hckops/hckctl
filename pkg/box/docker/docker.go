@@ -226,6 +226,8 @@ func (box *DockerBox) execBox(template *model.BoxV1, info *model.BoxInfo, tunnel
 	box.eventBus.Publish(newContainerExecDockerEvent(info.Id, info.Name, command))
 
 	// TODO if BoxInfo not Healthy attempt restart
+
+	// TODO see command ValidateTunnelFlag ?!
 	// TODO TunnelOnly > skip exec
 	// TODO NoTunnel > print console warning: flag ignored
 

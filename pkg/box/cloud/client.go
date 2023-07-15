@@ -33,8 +33,7 @@ func (box *CloudBox) Create(templateOpts *model.TemplateOptions) (*model.BoxInfo
 
 func (box *CloudBox) Connect(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
 	defer box.close()
-	// TODO tunnelOpts
-	return box.execBox(template, name)
+	return box.execBox(template, tunnelOpts, name)
 }
 
 func (box *CloudBox) Open(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {

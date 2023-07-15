@@ -52,22 +52,23 @@ func (box *CloudBox) createBox(opts *model.TemplateOptions) (*model.BoxInfo, err
 	return &model.BoxInfo{Id: boxName, Name: boxName}, nil
 }
 
-func (box *CloudBox) execBox(template *model.BoxV1, name string) error {
-	// TODO box.eventBus.Publish
+func (box *CloudBox) execBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
+	// TODO event
+	box.eventBus.Publish(newApiExecCloudEvent(name))
 
-	request := v1.NewBoxExecRequest(box.clientConfig.Version, name)
-	payload, err := request.Encode()
+	session := v1.NewBoxExecSession(box.clientConfig.Version, name)
+	payload, err := session.Encode()
 	if err != nil {
-		return errors.Wrap(err, "error cloud exec request")
+		return errors.Wrap(err, "error cloud exec session")
 	}
 
 	opts := &ssh.SshExecOpts{
-		Payload: payload, // TODO BoxExecRequestBody
+		Payload: payload,
 		OnStreamStartCallback: func() {
-			// TODO
+			// TODO stop loader
 		},
 		OnStreamErrorCallback: func(err error) {
-			// TODO
+			// TODO stop loader
 		},
 	}
 	return box.client.Exec(opts)

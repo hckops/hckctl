@@ -63,13 +63,6 @@ func TestBoxCreateResponse(t *testing.T) {
 	testMessage[BoxCreateResponseBody](t, message, value)
 }
 
-func TestBoxExecRequest(t *testing.T) {
-	message := NewBoxExecRequest(clientOrigin, "alpine")
-	value := `{"kind":"api/v1","origin":"hckctl-0.0.0-os","method":"hck-box-exec","body":{"name":"alpine"}}`
-
-	testMessage[BoxExecRequestBody](t, message, value)
-}
-
 func TestBoxDeleteRequest(t *testing.T) {
 	message := NewBoxDeleteRequest(clientOrigin, testBoxes)
 	value := `{"kind":"api/v1","origin":"hckctl-0.0.0-os","method":"hck-box-delete","body":{"names":["box-alpine-123","box-alpine-456"]}}`
@@ -104,6 +97,13 @@ func TestBoxListResponse(t *testing.T) {
 	value := `{"kind":"api/v1","origin":"hckadm-0.0.0-info","method":"hck-box-list","body":{"items":[{"Id":"123","Name":"box-alpine-123","Healthy":true},{"Id":"456","Name":"box-alpine-456","Healthy":false}]}}`
 
 	testMessage[BoxListResponseBody](t, request, value)
+}
+
+func TestBoxExecSession(t *testing.T) {
+	message := NewBoxExecSession(clientOrigin, "alpine")
+	value := `{"kind":"api/v1","origin":"hckctl-0.0.0-os","method":"hck-box-exec","body":{"name":"alpine"}}`
+
+	testMessage[BoxExecSessionBody](t, message, value)
 }
 
 func testMessage[T body](t *testing.T, message *Message[T], value string) {

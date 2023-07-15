@@ -51,3 +51,7 @@ func newApiListCloudEvent(index int, boxName string) *cloudEvent {
 func newApiDeleteCloudEvent(index int, boxName string) *cloudEvent {
 	return &cloudEvent{kind: event.LogDebug, value: fmt.Sprintf("api delete: (%d) boxName=%s", index, boxName)}
 }
+
+func newApiExecCloudEvent(boxName string) *cloudEvent {
+	return &cloudEvent{kind: event.LogDebug, value: fmt.Sprintf("api exec: boxName=%s", boxName)}
+}
