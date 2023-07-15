@@ -90,10 +90,12 @@ func (box *CloudBox) listBoxes() ([]model.BoxInfo, error) {
 		return nil, errors.Wrap(err, "error cloud list response")
 	}
 
-	callback := func(index int, name string) {
-		box.eventBus.Publish(newApiListCloudEvent(index, name))
+	var result []model.BoxInfo
+	for index, item := range response.Body.Items {
+		result = append(result, model.BoxInfo{Id: item.Id, Name: item.Name, Healthy: item.Healthy})
+		box.eventBus.Publish(newApiListCloudEvent(index, item.Name))
 	}
-	return toBoxes(response.Body.Names, callback), nil
+	return result, nil
 }
 
 func (box *CloudBox) deleteBoxes(names []string) ([]model.BoxInfo, error) {
@@ -113,19 +115,12 @@ func (box *CloudBox) deleteBoxes(names []string) ([]model.BoxInfo, error) {
 		return nil, errors.Wrap(err, "error cloud delete response")
 	}
 
-	callback := func(index int, name string) {
-		box.eventBus.Publish(newApiDeleteCloudEvent(index, name))
-	}
-	return toBoxes(response.Body.Names, callback), nil
-}
-
-func toBoxes(names []string, callback func(int, string)) []model.BoxInfo {
 	var result []model.BoxInfo
-	for index, name := range names {
-		result = append(result, model.BoxInfo{Id: name, Name: name})
-		callback(index, name)
+	for index, item := range response.Body.Items {
+		result = append(result, model.BoxInfo{Id: item.Id, Name: item.Name, Healthy: false})
+		box.eventBus.Publish(newApiDeleteCloudEvent(index, item.Name))
 	}
-	return result
+	return result, nil
 }
 
 func (box *CloudBox) version() (string, error) {

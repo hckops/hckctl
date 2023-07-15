@@ -9,7 +9,12 @@ func (b BoxDeleteRequestBody) method() MethodName {
 }
 
 type BoxDeleteResponseBody struct {
-	Names []string `json:"names"`
+	Items []BoxDeleteItem `json:"items"`
+}
+
+type BoxDeleteItem struct {
+	Id   string
+	Name string
 }
 
 func (b BoxDeleteResponseBody) method() MethodName {
@@ -20,6 +25,6 @@ func NewBoxDeleteRequest(origin string, names []string) *Message[BoxDeleteReques
 	return newMessage[BoxDeleteRequestBody](origin, BoxDeleteRequestBody{names})
 }
 
-func NewBoxDeleteResponse(origin string, names []string) *Message[BoxDeleteResponseBody] {
-	return newMessage[BoxDeleteResponseBody](origin, BoxDeleteResponseBody{names})
+func NewBoxDeleteResponse(origin string, items []BoxDeleteItem) *Message[BoxDeleteResponseBody] {
+	return newMessage[BoxDeleteResponseBody](origin, BoxDeleteResponseBody{items})
 }

@@ -401,6 +401,7 @@ func (box *KubeBox) listBoxes() ([]model.BoxInfo, error) {
 	}
 	var result []model.BoxInfo
 	for index, d := range deployments {
+		// TODO add label info
 		// TODO add ports
 		result = append(result, model.BoxInfo{Id: d.PodInfo.Id, Name: d.DeploymentName, Healthy: d.Healthy})
 		box.eventBus.Publish(newDeploymentListKubeEvent(index, namespace, d.DeploymentName, d.PodInfo.Id, d.Healthy))

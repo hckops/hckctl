@@ -309,6 +309,7 @@ func (box *DockerBox) listBoxes() ([]model.BoxInfo, error) {
 
 	var result []model.BoxInfo
 	for index, c := range containers {
+		// TODO add label info
 		// TODO add ports
 		result = append(result, model.BoxInfo{Id: c.ContainerId, Name: c.ContainerName, Healthy: c.Healthy})
 		box.eventBus.Publish(newContainerListDockerEvent(index, c.ContainerName, c.ContainerId, c.Healthy))

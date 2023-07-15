@@ -37,11 +37,18 @@ type DeploymentInfo struct {
 	DeploymentName string
 	PodInfo        *PodInfo
 	Healthy        bool
+	Labels         map[string]string
+	ServicePorts   []ServicePort
 }
 
 type PodInfo struct {
 	Id   string
 	Name string
+}
+
+type ServicePort struct {
+	Name string
+	Port string
 }
 
 type PodPortForwardOpts struct {

@@ -10,7 +10,8 @@ import (
 	"github.com/hckops/hckctl/pkg/event"
 )
 
-// TODO add actual bound ports map alias -> BoxPort
+// TODO add actual bound ports
+// TODO add labels info
 type BoxInfo struct {
 	Id      string
 	Name    string

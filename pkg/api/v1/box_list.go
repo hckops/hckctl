@@ -7,7 +7,13 @@ func (b BoxListRequestBody) method() MethodName {
 }
 
 type BoxListResponseBody struct {
-	Names []string `json:"names"`
+	Items []BoxListItem `json:"items"`
+}
+
+type BoxListItem struct {
+	Id      string
+	Name    string
+	Healthy bool
 }
 
 func (b BoxListResponseBody) method() MethodName {
@@ -18,6 +24,6 @@ func NewBoxListRequest(origin string) *Message[BoxListRequestBody] {
 	return newMessage[BoxListRequestBody](origin, BoxListRequestBody{})
 }
 
-func NewBoxListResponse(origin string, names []string) *Message[BoxListResponseBody] {
-	return newMessage[BoxListResponseBody](origin, BoxListResponseBody{names})
+func NewBoxListResponse(origin string, items []BoxListItem) *Message[BoxListResponseBody] {
+	return newMessage[BoxListResponseBody](origin, BoxListResponseBody{items})
 }

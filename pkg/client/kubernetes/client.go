@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -161,32 +162,43 @@ func (client *KubeClient) DeploymentList(namespace string, namePrefix string, la
 			continue
 		}
 
-		// all conditions must be healthy
-		var healthy bool
-		for _, condition := range deployment.Status.Conditions {
-			if condition.Status == corev1.ConditionTrue {
-				healthy = true
-			} else {
-				healthy = false
-				// mark as unhealthy if at least one condition is invalid e.g. stuck to progressing due to lack of resources
-				break
-			}
+		podInfo, err := client.GetPodInfo(&deployment)
+		if err != nil {
+			// TODO verify if error sidecar container or continue
+			return nil, err
+		}
+		servicePorts, err := client.GetServicePorts(namespace, deployment.Name)
+		if err != nil {
+			// TODO return or continue (silently ignore)
+			return nil, err
 		}
 
-		if podInfo, err := client.GetPodInfo(&deployment); err != nil {
-			// TODO verify if error sidecar container
-			return nil, err
-		} else {
-			deploymentInfo := DeploymentInfo{
-				Namespace:      namespace,
-				DeploymentName: deployment.Name,
-				PodInfo:        podInfo,
-				Healthy:        healthy,
-			}
-			result = append(result, deploymentInfo)
+		deploymentInfo := DeploymentInfo{
+			Namespace:      namespace,
+			DeploymentName: deployment.Name,
+			PodInfo:        podInfo,
+			Healthy:        isDeploymentHealthy(deployment.Status),
+			Labels:         deployment.Labels,
+			ServicePorts:   servicePorts,
 		}
+		result = append(result, deploymentInfo)
 	}
 	return result, nil
+}
+
+func isDeploymentHealthy(status appsv1.DeploymentStatus) bool {
+	// all conditions must be healthy
+	var healthy bool
+	for _, condition := range status.Conditions {
+		if condition.Status == corev1.ConditionTrue {
+			healthy = true
+		} else {
+			healthy = false
+			// mark as unhealthy if at least one condition is invalid e.g. stuck to progressing due to lack of resources
+			break
+		}
+	}
+	return healthy
 }
 
 func (client *KubeClient) DeploymentDelete(namespace string, name string) error {
@@ -216,6 +228,22 @@ func (client *KubeClient) ServiceDelete(namespace string, name string) error {
 		return errors.Wrapf(err, "error service delete: namespace=%s name=%s", namespace, name)
 	}
 	return nil
+}
+
+func (client *KubeClient) GetServicePorts(namespace string, name string) ([]ServicePort, error) {
+	coreClient := client.kubeClientSet.CoreV1()
+
+	service, err := coreClient.Services(namespace).Get(client.ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "error get service ports: namespace=%s name=%s", namespace, name)
+	}
+
+	var ports []ServicePort
+	for _, port := range service.Spec.Ports {
+		ports = append(ports, ServicePort{Name: port.Name, Port: strconv.Itoa(int(port.Port))})
+	}
+
+	return ports, nil
 }
 
 func (client *KubeClient) GetPodInfo(deployment *appsv1.Deployment) (*PodInfo, error) {

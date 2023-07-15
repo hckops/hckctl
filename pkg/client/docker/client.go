@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"io"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -204,10 +205,23 @@ func (client *DockerClient) ContainerList(namePrefix string, label string) ([]Co
 			ContainerId:   c.ID,
 			ContainerName: containerName,
 			Healthy:       healthy,
+			Labels:        c.Labels,
+			Ports:         toContainerPort(c.Ports),
 		})
 	}
 
 	return result, nil
+}
+
+func toContainerPort(ports []types.Port) []ContainerPort {
+	var result []ContainerPort
+	for _, port := range ports {
+		result = append(result, ContainerPort{
+			Local:  strconv.Itoa(int(port.PublicPort)),
+			Remote: strconv.Itoa(int(port.PrivatePort)),
+		})
+	}
+	return result
 }
 
 func (client *DockerClient) ContainerLogs(opts *ContainerLogsOpts) error {

@@ -52,6 +52,13 @@ type ContainerInfo struct {
 	ContainerId   string
 	ContainerName string
 	Healthy       bool
+	Labels        map[string]string
+	Ports         []ContainerPort
+}
+
+type ContainerPort struct {
+	Local  string
+	Remote string
 }
 
 type ContainerLogsOpts struct {
