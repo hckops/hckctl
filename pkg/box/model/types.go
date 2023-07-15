@@ -17,6 +17,14 @@ type BoxInfo struct {
 	Healthy bool // TODO BoxStatus healthy, offline, unknown, error, etc
 }
 
+func ToBoxNames(boxes []BoxInfo) []string {
+	var names []string
+	for _, boxInfo := range boxes {
+		names = append(names, boxInfo.Name)
+	}
+	return names
+}
+
 type BoxClientOptions struct {
 	Provider     BoxProvider
 	CommonOpts   *BoxCommonOptions
