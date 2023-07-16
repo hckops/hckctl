@@ -352,7 +352,7 @@ func (client *KubeClient) PodExec(opts *PodExecOpts) error {
 			Stdin:     true,
 			Stdout:    true,
 			Stderr:    true,
-			TTY:       tty.Raw,
+			TTY:       true,
 		}, scheme.ParameterCodec).
 		URL()
 
@@ -361,7 +361,8 @@ func (client *KubeClient) PodExec(opts *PodExecOpts) error {
 	opts.OnExecCallback()
 
 	fn := func() error {
-		return executor.Execute(http.MethodPost, execUrl, client.kubeRestConfig, streamOptions.In, streamOptions.Out, streamOptions.ErrOut, tty.Raw, sizeQueue)
+		isTty := tty.Raw && opts.IsTty
+		return executor.Execute(http.MethodPost, execUrl, client.kubeRestConfig, streamOptions.In, streamOptions.Out, streamOptions.ErrOut, isTty, sizeQueue)
 	}
 	if err := tty.Safe(fn); err != nil {
 		return errors.Wrap(err, "terminal session closed")
