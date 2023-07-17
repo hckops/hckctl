@@ -8,31 +8,36 @@ import (
 	"github.com/hckops/hckctl/pkg/client/ssh"
 )
 
-func newCloudBox(commonOpts *model.BoxCommonOptions, clientConfig *ssh.SshClientConfig) (*CloudBox, error) {
+func newCloudBoxClient(commonOpts *model.CommonBoxOptions, cloudOpts *model.CloudBoxOptions) (*CloudBoxClient, error) {
 	commonOpts.EventBus.Publish(newClientInitCloudEvent())
 
+	clientConfig := &ssh.SshClientConfig{
+		Address:  cloudOpts.Address,
+		Username: cloudOpts.Username,
+		Token:    cloudOpts.Token,
+	}
 	sshClient, err := ssh.NewSshClient(clientConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "error cloud box")
 	}
 
-	return &CloudBox{
-		clientConfig: clientConfig,
-		client:       sshClient,
-		eventBus:     commonOpts.EventBus,
+	return &CloudBoxClient{
+		client:     sshClient,
+		clientOpts: cloudOpts,
+		eventBus:   commonOpts.EventBus,
 	}, nil
 }
 
-func (box *CloudBox) close() error {
+func (box *CloudBoxClient) close() error {
 	box.eventBus.Publish(newClientCloseCloudEvent())
 	box.eventBus.Close()
 	return box.client.Close()
 }
 
-func (box *CloudBox) createBox(opts *model.TemplateOptions) (*model.BoxInfo, error) {
-	box.eventBus.Publish(newApiCreateCloudLoaderEvent(box.clientConfig.Address, opts.Template.Name))
+func (box *CloudBoxClient) createBox(opts *model.TemplateOptions) (*model.BoxInfo, error) {
+	box.eventBus.Publish(newApiCreateCloudLoaderEvent(box.clientOpts.Address, opts.Template.Name))
 
-	request := v1.NewBoxCreateRequest(box.clientConfig.Version, opts.Template.Name, opts.Size.String())
+	request := v1.NewBoxCreateRequest(box.clientOpts.Version, opts.Template.Name, opts.Size.String())
 	payload, err := request.Encode()
 	if err != nil {
 		return nil, errors.Wrap(err, "error cloud create request")
@@ -52,11 +57,11 @@ func (box *CloudBox) createBox(opts *model.TemplateOptions) (*model.BoxInfo, err
 	return &model.BoxInfo{Id: boxName, Name: boxName}, nil
 }
 
-func (box *CloudBox) execBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
+func (box *CloudBoxClient) execBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
 	// TODO event
 	box.eventBus.Publish(newApiExecCloudEvent(name))
 
-	session := v1.NewBoxExecSession(box.clientConfig.Version, name)
+	session := v1.NewBoxExecSession(box.clientOpts.Version, name)
 	payload, err := session.Encode()
 	if err != nil {
 		return errors.Wrap(err, "error cloud exec session")
@@ -74,9 +79,9 @@ func (box *CloudBox) execBox(template *model.BoxV1, tunnelOpts *model.TunnelOpti
 	return box.client.Exec(opts)
 }
 
-func (box *CloudBox) listBoxes() ([]model.BoxInfo, error) {
+func (box *CloudBoxClient) listBoxes() ([]model.BoxInfo, error) {
 
-	request := v1.NewBoxListRequest(box.clientConfig.Version)
+	request := v1.NewBoxListRequest(box.clientOpts.Version)
 	payload, err := request.Encode()
 	if err != nil {
 		return nil, errors.Wrap(err, "error cloud list request")
@@ -99,9 +104,9 @@ func (box *CloudBox) listBoxes() ([]model.BoxInfo, error) {
 	return result, nil
 }
 
-func (box *CloudBox) deleteBoxes(names []string) ([]model.BoxInfo, error) {
+func (box *CloudBoxClient) deleteBoxes(names []string) ([]model.BoxInfo, error) {
 
-	request := v1.NewBoxDeleteRequest(box.clientConfig.Version, names)
+	request := v1.NewBoxDeleteRequest(box.clientOpts.Version, names)
 	payload, err := request.Encode()
 	if err != nil {
 		return nil, errors.Wrap(err, "error cloud delete request")
@@ -124,9 +129,9 @@ func (box *CloudBox) deleteBoxes(names []string) ([]model.BoxInfo, error) {
 	return result, nil
 }
 
-func (box *CloudBox) version() (string, error) {
+func (box *CloudBoxClient) version() (string, error) {
 
-	request := v1.NewPingMessage(box.clientConfig.Version)
+	request := v1.NewPingMessage(box.clientOpts.Version)
 	payload, err := request.Encode()
 	box.eventBus.Publish(newApiRawCloudEvent(payload))
 	if err != nil {

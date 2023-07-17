@@ -8,61 +8,61 @@ import (
 	"github.com/hckops/hckctl/pkg/event"
 )
 
-type CloudBox struct {
-	clientConfig *ssh.SshClientConfig
-	client       *ssh.SshClient
-	eventBus     *event.EventBus
+type CloudBoxClient struct {
+	client     *ssh.SshClient
+	clientOpts *model.CloudBoxOptions
+	eventBus   *event.EventBus
 }
 
-func NewCloudBox(commonOpts *model.BoxCommonOptions, clientConfig *ssh.SshClientConfig) (*CloudBox, error) {
-	return newCloudBox(commonOpts, clientConfig)
+func NewCloudBoxClient(commonOpts *model.CommonBoxOptions, cloudOpts *model.CloudBoxOptions) (*CloudBoxClient, error) {
+	return newCloudBoxClient(commonOpts, cloudOpts)
 }
 
-func (box *CloudBox) Provider() model.BoxProvider {
+func (box *CloudBoxClient) Provider() model.BoxProvider {
 	return model.Cloud
 }
 
-func (box *CloudBox) Events() *event.EventBus {
+func (box *CloudBoxClient) Events() *event.EventBus {
 	return box.eventBus
 }
 
-func (box *CloudBox) Create(templateOpts *model.TemplateOptions) (*model.BoxInfo, error) {
+func (box *CloudBoxClient) Create(templateOpts *model.TemplateOptions) (*model.BoxInfo, error) {
 	defer box.close()
 	return box.createBox(templateOpts)
 }
 
-func (box *CloudBox) Connect(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
+func (box *CloudBoxClient) Connect(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
 	defer box.close()
 	return box.execBox(template, tunnelOpts, name)
 }
 
-func (box *CloudBox) Open(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
+func (box *CloudBoxClient) Open(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
 	defer box.close()
 	// TODO tunnelOpts
 	return errors.New("not implemented")
 }
 
-func (box *CloudBox) Copy(string, string, string) error {
+func (box *CloudBoxClient) Copy(string, string, string) error {
 	defer box.close()
 	return errors.New("not implemented")
 }
 
-func (box *CloudBox) List() ([]model.BoxInfo, error) {
+func (box *CloudBoxClient) List() ([]model.BoxInfo, error) {
 	defer box.close()
 	return box.listBoxes()
 }
 
-func (box *CloudBox) Delete(names []string) ([]model.BoxInfo, error) {
+func (box *CloudBoxClient) Delete(names []string) ([]model.BoxInfo, error) {
 	defer box.close()
 	return box.deleteBoxes(names)
 }
 
-func (box *CloudBox) Clean() error {
+func (box *CloudBoxClient) Clean() error {
 	defer box.close()
 	return errors.New("not implemented")
 }
 
-func (box *CloudBox) Version() (string, error) {
+func (box *CloudBoxClient) Version() (string, error) {
 	defer box.close()
 	return box.version()
 }

@@ -4,10 +4,7 @@ import (
 	"net"
 	"strconv"
 
-	boxModel "github.com/hckops/hckctl/pkg/box/model"
-	"github.com/hckops/hckctl/pkg/client/docker"
-	"github.com/hckops/hckctl/pkg/client/kubernetes"
-	"github.com/hckops/hckctl/pkg/client/ssh"
+	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/logger"
 	"github.com/hckops/hckctl/pkg/schema"
@@ -54,8 +51,8 @@ type DockerConfig struct {
 	NetworkName string `yaml:"networkName"`
 }
 
-func (c *DockerConfig) ToDockerClientConfig() *docker.DockerClientConfig {
-	return &docker.DockerClientConfig{
+func (c *DockerConfig) ToDockerBoxOptions() *model.DockerBoxOptions {
+	return &model.DockerBoxOptions{
 		NetworkName:          c.NetworkName,
 		IgnoreImagePullError: true, // always allow to start offline/obsolete images
 	}
@@ -66,8 +63,8 @@ type KubeConfig struct {
 	Namespace  string `yaml:"namespace"`
 }
 
-func (c *KubeConfig) ToKubeClientConfig() *kubernetes.KubeClientConfig {
-	return &kubernetes.KubeClientConfig{
+func (c *KubeConfig) ToKubeBoxOptions() *model.KubeBoxOptions {
+	return &model.KubeBoxOptions{
 		InCluster:  false,
 		ConfigPath: c.ConfigPath,
 		Namespace:  c.Namespace,
@@ -85,8 +82,8 @@ func (c *CloudConfig) address() string {
 	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
 }
 
-func (c *CloudConfig) ToSshClientConfig(version string) *ssh.SshClientConfig {
-	return &ssh.SshClientConfig{
+func (c *CloudConfig) ToCloudBoxOptions(version string) *model.CloudBoxOptions {
+	return &model.CloudBoxOptions{
 		Version:  version,
 		Address:  c.address(),
 		Username: c.Username,
@@ -106,8 +103,8 @@ func newConfig(logFile, cacheDir string) *ConfigV1 {
 			CacheDir: cacheDir,
 		},
 		Box: BoxConfig{
-			Provider: boxModel.Docker.String(),
-			Size:     boxModel.Small.String(),
+			Provider: model.Docker.String(),
+			Size:     model.Small.String(),
 		},
 		Provider: ProviderConfig{
 			Docker: DockerConfig{

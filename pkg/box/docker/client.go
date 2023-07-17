@@ -8,60 +8,60 @@ import (
 	"github.com/hckops/hckctl/pkg/event"
 )
 
-type DockerBox struct {
-	client       *docker.DockerClient
-	clientConfig *docker.DockerClientConfig
-	eventBus     *event.EventBus
+type DockerBoxClient struct {
+	client     *docker.DockerClient
+	clientOpts *model.DockerBoxOptions
+	eventBus   *event.EventBus
 }
 
-func NewDockerBox(commonOpts *model.BoxCommonOptions, clientConfig *docker.DockerClientConfig) (*DockerBox, error) {
-	return newDockerBox(commonOpts, clientConfig)
+func NewDockerBoxClient(commonOpts *model.CommonBoxOptions, dockerOpts *model.DockerBoxOptions) (*DockerBoxClient, error) {
+	return newDockerBoxClient(commonOpts, dockerOpts)
 }
 
-func (box *DockerBox) Provider() model.BoxProvider {
+func (box *DockerBoxClient) Provider() model.BoxProvider {
 	return model.Docker
 }
 
-func (box *DockerBox) Events() *event.EventBus {
+func (box *DockerBoxClient) Events() *event.EventBus {
 	return box.eventBus
 }
 
-func (box *DockerBox) Create(templateOpts *model.TemplateOptions) (*model.BoxInfo, error) {
+func (box *DockerBoxClient) Create(templateOpts *model.TemplateOptions) (*model.BoxInfo, error) {
 	defer box.close()
 	return box.createBox(templateOpts)
 }
 
-func (box *DockerBox) Connect(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
+func (box *DockerBoxClient) Connect(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
 	defer box.close()
 	return box.connectBox(template, tunnelOpts, name)
 }
 
-func (box *DockerBox) Open(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
+func (box *DockerBoxClient) Open(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
 	defer box.close()
 	return box.openBox(templateOpts, tunnelOpts)
 }
 
-func (box *DockerBox) Copy(string, string, string) error {
+func (box *DockerBoxClient) Copy(string, string, string) error {
 	defer box.close()
 	return errors.New("not implemented")
 }
 
-func (box *DockerBox) List() ([]model.BoxInfo, error) {
+func (box *DockerBoxClient) List() ([]model.BoxInfo, error) {
 	defer box.close()
 	return box.listBoxes()
 }
 
-func (box *DockerBox) Delete(names []string) ([]model.BoxInfo, error) {
+func (box *DockerBoxClient) Delete(names []string) ([]model.BoxInfo, error) {
 	defer box.close()
 	return box.deleteBoxes(names)
 }
 
-func (box *DockerBox) Clean() error {
+func (box *DockerBoxClient) Clean() error {
 	defer box.close()
 	// TODO remove network and volumes
 	return errors.New("not implemented")
 }
 
-func (box *DockerBox) Version() (string, error) {
+func (box *DockerBoxClient) Version() (string, error) {
 	return "", errors.New("not implemented")
 }

@@ -14,9 +14,17 @@ type DockerClient struct {
 	docker *client.Client
 }
 
-type DockerClientConfig struct {
-	NetworkName          string
-	IgnoreImagePullError bool // TODO currently used only in pkg/box
+type ContainerInfo struct {
+	ContainerId   string
+	ContainerName string
+	Healthy       bool
+	Labels        map[string]string
+	Ports         []ContainerPort
+}
+
+type ContainerPort struct {
+	Local  string
+	Remote string
 }
 
 type ImagePullOpts struct {
@@ -46,19 +54,6 @@ type ContainerExecOpts struct {
 	OnContainerExecCallback func()
 	OnStreamCloseCallback   func()
 	OnStreamErrorCallback   func(error)
-}
-
-type ContainerInfo struct {
-	ContainerId   string
-	ContainerName string
-	Healthy       bool
-	Labels        map[string]string
-	Ports         []ContainerPort
-}
-
-type ContainerPort struct {
-	Local  string
-	Remote string
 }
 
 type ContainerLogsOpts struct {

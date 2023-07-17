@@ -8,59 +8,59 @@ import (
 	"github.com/hckops/hckctl/pkg/event"
 )
 
-type KubeBox struct {
-	client       *kubernetes.KubeClient
-	clientConfig *kubernetes.KubeClientConfig
-	eventBus     *event.EventBus
+type KubeBoxClient struct {
+	client     *kubernetes.KubeClient
+	clientOpts *model.KubeBoxOptions
+	eventBus   *event.EventBus
 }
 
-func NewKubeBox(commonOpts *model.BoxCommonOptions, clientConfig *kubernetes.KubeClientConfig) (*KubeBox, error) {
-	return newKubeBox(commonOpts, clientConfig)
+func NewKubeBoxClient(commonOpts *model.CommonBoxOptions, kubeOpts *model.KubeBoxOptions) (*KubeBoxClient, error) {
+	return newKubeBoxClient(commonOpts, kubeOpts)
 }
 
-func (box *KubeBox) Provider() model.BoxProvider {
+func (box *KubeBoxClient) Provider() model.BoxProvider {
 	return model.Kubernetes
 }
 
-func (box *KubeBox) Events() *event.EventBus {
+func (box *KubeBoxClient) Events() *event.EventBus {
 	return box.eventBus
 }
 
-func (box *KubeBox) Create(templateOpts *model.TemplateOptions) (*model.BoxInfo, error) {
+func (box *KubeBoxClient) Create(templateOpts *model.TemplateOptions) (*model.BoxInfo, error) {
 	defer box.close()
 	return box.createBox(templateOpts)
 }
 
-func (box *KubeBox) Connect(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
+func (box *KubeBoxClient) Connect(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
 	defer box.close()
 	return box.connectBox(template, tunnelOpts, name)
 }
 
-func (box *KubeBox) Open(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
+func (box *KubeBoxClient) Open(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
 	defer box.close()
 	return box.openBox(templateOpts, tunnelOpts)
 }
 
-func (box *KubeBox) Copy(string, string, string) error {
+func (box *KubeBoxClient) Copy(string, string, string) error {
 	defer box.close()
 	return errors.New("not implemented")
 }
 
-func (box *KubeBox) List() ([]model.BoxInfo, error) {
+func (box *KubeBoxClient) List() ([]model.BoxInfo, error) {
 	defer box.close()
 	return box.listBoxes()
 }
 
-func (box *KubeBox) Delete(names []string) ([]model.BoxInfo, error) {
+func (box *KubeBoxClient) Delete(names []string) ([]model.BoxInfo, error) {
 	defer box.close()
 	return box.deleteBoxes(names)
 }
 
-func (box *KubeBox) Clean() error {
+func (box *KubeBoxClient) Clean() error {
 	defer box.close()
 	return box.clean()
 }
 
-func (box *KubeBox) Version() (string, error) {
+func (box *KubeBoxClient) Version() (string, error) {
 	return "", errors.New("not implemented")
 }

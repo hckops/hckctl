@@ -4,9 +4,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/hckops/hckctl/pkg/client/docker"
-	"github.com/hckops/hckctl/pkg/client/kubernetes"
-	"github.com/hckops/hckctl/pkg/client/ssh"
 	"github.com/hckops/hckctl/pkg/event"
 )
 
@@ -19,21 +16,39 @@ type BoxInfo struct {
 }
 
 type BoxClientOptions struct {
-	Provider     BoxProvider
-	CommonOpts   *BoxCommonOptions
-	DockerConfig *docker.DockerClientConfig
-	KubeConfig   *kubernetes.KubeClientConfig
-	SshConfig    *ssh.SshClientConfig
+	Provider   BoxProvider
+	CommonOpts *CommonBoxOptions
+	DockerOpts *DockerBoxOptions
+	KubeOpts   *KubeBoxOptions
+	CloudOpts  *CloudBoxOptions
 }
 
-type BoxCommonOptions struct {
+type CommonBoxOptions struct {
 	EventBus *event.EventBus
 }
 
-func NewBoxCommonOpts() *BoxCommonOptions {
-	return &BoxCommonOptions{
+func NewCommonBoxOpts() *CommonBoxOptions {
+	return &CommonBoxOptions{
 		EventBus: event.NewEventBus(),
 	}
+}
+
+type DockerBoxOptions struct {
+	NetworkName          string
+	IgnoreImagePullError bool
+}
+
+type KubeBoxOptions struct {
+	InCluster  bool
+	ConfigPath string
+	Namespace  string
+}
+
+type CloudBoxOptions struct {
+	Version  string
+	Address  string
+	Username string
+	Token    string
 }
 
 type BoxStreams struct {

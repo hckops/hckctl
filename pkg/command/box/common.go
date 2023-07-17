@@ -2,6 +2,10 @@ package box
 
 import (
 	"fmt"
+
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
+
 	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/box/model"
 	boxFlag "github.com/hckops/hckctl/pkg/command/box/flag"
@@ -11,8 +15,6 @@ import (
 	"github.com/hckops/hckctl/pkg/command/version"
 	"github.com/hckops/hckctl/pkg/event"
 	"github.com/hckops/hckctl/pkg/template"
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 type boxClientOptions struct {
@@ -115,11 +117,11 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 func newBoxClientOpts(provider model.BoxProvider, configRef *config.ConfigRef) *model.BoxClientOptions {
 
 	return &model.BoxClientOptions{
-		Provider:     provider,
-		CommonOpts:   model.NewBoxCommonOpts(),
-		DockerConfig: configRef.Config.Provider.Docker.ToDockerClientConfig(),
-		KubeConfig:   configRef.Config.Provider.Kube.ToKubeClientConfig(),
-		SshConfig:    configRef.Config.Provider.Cloud.ToSshClientConfig(version.ClientVersion()),
+		Provider:   provider,
+		CommonOpts: model.NewCommonBoxOpts(),
+		DockerOpts: configRef.Config.Provider.Docker.ToDockerBoxOptions(),
+		KubeOpts:   configRef.Config.Provider.Kube.ToKubeBoxOptions(),
+		CloudOpts:  configRef.Config.Provider.Cloud.ToCloudBoxOptions(version.ClientVersion()),
 	}
 }
 

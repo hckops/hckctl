@@ -1,9 +1,9 @@
 package flag
 
 import (
+	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/spf13/cobra"
 
-	"github.com/hckops/hckctl/pkg/box/model"
 	commonFlag "github.com/hckops/hckctl/pkg/command/common/flag"
 )
 

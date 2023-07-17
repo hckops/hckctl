@@ -15,7 +15,7 @@ import (
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-func newDockerBox(commonOpts *model.BoxCommonOptions, clientConfig *docker.DockerClientConfig) (*DockerBox, error) {
+func newDockerBoxClient(commonOpts *model.CommonBoxOptions, dockerOpts *model.DockerBoxOptions) (*DockerBoxClient, error) {
 	commonOpts.EventBus.Publish(newClientInitDockerEvent())
 
 	dockerClient, err := docker.NewDockerClient()
@@ -23,21 +23,21 @@ func newDockerBox(commonOpts *model.BoxCommonOptions, clientConfig *docker.Docke
 		return nil, errors.Wrap(err, "error docker box")
 	}
 
-	return &DockerBox{
-		client:       dockerClient,
-		clientConfig: clientConfig,
-		eventBus:     commonOpts.EventBus,
+	return &DockerBoxClient{
+		client:     dockerClient,
+		clientOpts: dockerOpts,
+		eventBus:   commonOpts.EventBus,
 	}, nil
 }
 
-func (box *DockerBox) close() error {
+func (box *DockerBoxClient) close() error {
 	box.eventBus.Publish(newClientCloseDockerEvent())
 	box.eventBus.Close()
 	return box.client.Close()
 }
 
 // TODO limit resources by size?
-func (box *DockerBox) createBox(opts *model.TemplateOptions) (*model.BoxInfo, error) {
+func (box *DockerBoxClient) createBox(opts *model.TemplateOptions) (*model.BoxInfo, error) {
 
 	imageName := opts.Template.ImageName()
 	imagePullOpts := &docker.ImagePullOpts{
@@ -48,9 +48,9 @@ func (box *DockerBox) createBox(opts *model.TemplateOptions) (*model.BoxInfo, er
 	}
 	box.eventBus.Publish(newImagePullDockerEvent(imageName))
 	if err := box.client.ImagePull(imagePullOpts); err != nil {
-		// TODO search existing image and move IgnoreImagePullError/AllowOffline in docker client
+		// TODO search existing image
 		// try to use existing images
-		if box.clientConfig.IgnoreImagePullError {
+		if box.clientOpts.IgnoreImagePullError {
 			box.eventBus.Publish(newImagePullErrorDockerEvent(imageName))
 		} else {
 			return nil, err
@@ -96,7 +96,7 @@ func (box *DockerBox) createBox(opts *model.TemplateOptions) (*model.BoxInfo, er
 		return nil, err
 	}
 
-	networkName := box.clientConfig.NetworkName
+	networkName := box.clientOpts.NetworkName
 	networkId, err := box.client.NetworkUpsert(networkName)
 	if err != nil {
 		return nil, err
@@ -190,7 +190,7 @@ func buildNetworkingConfig(networkName, networkId string) *network.NetworkingCon
 }
 
 // TODO common
-func (box *DockerBox) connectBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
+func (box *DockerBoxClient) connectBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
 	if info, err := box.findBox(name); err != nil {
 		return err
 	} else {
@@ -199,7 +199,7 @@ func (box *DockerBox) connectBox(template *model.BoxV1, tunnelOpts *model.Tunnel
 }
 
 // TODO common
-func (box *DockerBox) openBox(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
+func (box *DockerBoxClient) openBox(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
 	if info, err := box.createBox(templateOpts); err != nil {
 		return err
 	} else {
@@ -208,7 +208,7 @@ func (box *DockerBox) openBox(templateOpts *model.TemplateOptions, tunnelOpts *m
 }
 
 // TODO common
-func (box *DockerBox) findBox(name string) (*model.BoxInfo, error) {
+func (box *DockerBoxClient) findBox(name string) (*model.BoxInfo, error) {
 	boxes, err := box.listBoxes()
 	if err != nil {
 		return nil, err
@@ -221,7 +221,7 @@ func (box *DockerBox) findBox(name string) (*model.BoxInfo, error) {
 	return nil, errors.New("box not found")
 }
 
-func (box *DockerBox) execBox(template *model.BoxV1, info *model.BoxInfo, tunnelOpts *model.TunnelOptions, removeOnExit bool) error {
+func (box *DockerBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, tunnelOpts *model.TunnelOptions, removeOnExit bool) error {
 	command := template.Shell
 	box.eventBus.Publish(newContainerExecDockerEvent(info.Id, info.Name, command))
 
@@ -272,7 +272,7 @@ func (box *DockerBox) execBox(template *model.BoxV1, info *model.BoxInfo, tunnel
 	return box.client.ContainerExec(containerOpts)
 }
 
-func (box *DockerBox) publishBoxInfo(template *model.BoxV1, info *model.BoxInfo) {
+func (box *DockerBoxClient) publishBoxInfo(template *model.BoxV1, info *model.BoxInfo) {
 	// print open ports
 	networkPorts := template.NetworkPorts(false)
 	portPadding := model.PortFormatPadding(networkPorts)
@@ -283,7 +283,7 @@ func (box *DockerBox) publishBoxInfo(template *model.BoxV1, info *model.BoxInfo)
 	// TODO print environment variables
 }
 
-func (box *DockerBox) logsBox(containerId string, tunnelOpts *model.TunnelOptions) error {
+func (box *DockerBoxClient) logsBox(containerId string, tunnelOpts *model.TunnelOptions) error {
 	opts := &docker.ContainerLogsOpts{
 		ContainerId: containerId,
 		OutStream:   tunnelOpts.Streams.Out,
@@ -302,7 +302,7 @@ func boxLabel() string {
 	return fmt.Sprintf("%s=%s", model.LabelSchemaKind, schema.KindBoxV1.String())
 }
 
-func (box *DockerBox) listBoxes() ([]model.BoxInfo, error) {
+func (box *DockerBoxClient) listBoxes() ([]model.BoxInfo, error) {
 
 	containers, err := box.client.ContainerList(model.BoxPrefixName, boxLabel())
 	if err != nil {
@@ -319,7 +319,7 @@ func (box *DockerBox) listBoxes() ([]model.BoxInfo, error) {
 	return result, nil
 }
 
-func (box *DockerBox) deleteBoxes(names []string) ([]model.BoxInfo, error) {
+func (box *DockerBoxClient) deleteBoxes(names []string) ([]model.BoxInfo, error) {
 
 	boxes, err := box.listBoxes()
 	if err != nil {

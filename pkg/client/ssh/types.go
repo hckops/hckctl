@@ -13,7 +13,6 @@ type SshClient struct {
 }
 
 type SshClientConfig struct {
-	Version  string // TODO currently used only in pkg/box
 	Address  string
 	Username string
 	Token    string

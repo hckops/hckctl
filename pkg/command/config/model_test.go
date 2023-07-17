@@ -5,9 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/hckops/hckctl/pkg/client/docker"
-	"github.com/hckops/hckctl/pkg/client/kubernetes"
-	"github.com/hckops/hckctl/pkg/client/ssh"
+	"github.com/hckops/hckctl/pkg/box/model"
 )
 
 func TestNewConfig(t *testing.T) {
@@ -49,42 +47,42 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(t, expected, result)
 }
 
-func TestToDockerClientConfig(t *testing.T) {
+func TestToDockerBoxOptions(t *testing.T) {
 	dockerConfig := &DockerConfig{
 		NetworkName: "myNetwork",
 	}
-	expected := &docker.DockerClientConfig{
+	expected := &model.DockerBoxOptions{
 		NetworkName:          "myNetwork",
 		IgnoreImagePullError: true,
 	}
-	assert.Equal(t, expected, dockerConfig.ToDockerClientConfig())
+	assert.Equal(t, expected, dockerConfig.ToDockerBoxOptions())
 }
 
-func TestToKubeClientConfig(t *testing.T) {
+func TestToKubeBoxOptions(t *testing.T) {
 	kubeConfig := &KubeConfig{
 		ConfigPath: "/tmp/config.yml",
 		Namespace:  "namespace",
 	}
-	expected := &kubernetes.KubeClientConfig{
+	expected := &model.KubeBoxOptions{
 		InCluster:  false,
 		ConfigPath: "/tmp/config.yml",
 		Namespace:  "namespace",
 	}
-	assert.Equal(t, expected, kubeConfig.ToKubeClientConfig())
+	assert.Equal(t, expected, kubeConfig.ToKubeBoxOptions())
 }
 
-func TestToSshClientConfig(t *testing.T) {
+func TestToCloudBoxOptions(t *testing.T) {
 	cloudConfig := &CloudConfig{
 		Host:     "0.0.0.0",
 		Port:     2222,
 		Username: "myUsername",
 		Token:    "myToken",
 	}
-	expected := &ssh.SshClientConfig{
+	expected := &model.CloudBoxOptions{
 		Version:  "hckctl-dev",
 		Address:  "0.0.0.0:2222",
 		Username: "myUsername",
 		Token:    "myToken",
 	}
-	assert.Equal(t, expected, cloudConfig.ToSshClientConfig("hckctl-dev"))
+	assert.Equal(t, expected, cloudConfig.ToCloudBoxOptions("hckctl-dev"))
 }

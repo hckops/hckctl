@@ -15,12 +15,6 @@ type KubeClient struct {
 	kubeClientSet  *kubernetes.Clientset
 }
 
-type KubeClientConfig struct {
-	InCluster  bool
-	ConfigPath string
-	Namespace  string
-}
-
 type KubeResource struct {
 	Memory string
 	Cpu    string

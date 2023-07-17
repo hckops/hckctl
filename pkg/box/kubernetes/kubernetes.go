@@ -20,29 +20,29 @@ import (
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-func newKubeBox(commonOpts *model.BoxCommonOptions, clientConfig *kubernetes.KubeClientConfig) (*KubeBox, error) {
+func newKubeBoxClient(commonOpts *model.CommonBoxOptions, kubeOpts *model.KubeBoxOptions) (*KubeBoxClient, error) {
 	commonOpts.EventBus.Publish(newClientInitKubeEvent())
 
-	kubeClient, err := kubernetes.NewKubeClient(clientConfig.InCluster, clientConfig.ConfigPath)
+	kubeClient, err := kubernetes.NewKubeClient(kubeOpts.InCluster, kubeOpts.ConfigPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "error kube box")
 	}
 
-	return &KubeBox{
-		client:       kubeClient,
-		clientConfig: clientConfig,
-		eventBus:     commonOpts.EventBus,
+	return &KubeBoxClient{
+		client:     kubeClient,
+		clientOpts: kubeOpts,
+		eventBus:   commonOpts.EventBus,
 	}, nil
 }
 
-func (box *KubeBox) close() error {
+func (box *KubeBoxClient) close() error {
 	box.eventBus.Publish(newClientCloseKubeEvent())
 	box.eventBus.Close()
 	return box.client.Close()
 }
 
-func (box *KubeBox) createBox(opts *model.TemplateOptions) (*model.BoxInfo, error) {
-	namespace := box.clientConfig.Namespace
+func (box *KubeBoxClient) createBox(opts *model.TemplateOptions) (*model.BoxInfo, error) {
+	namespace := box.clientOpts.Namespace
 
 	// TODO add env var container override
 
@@ -255,7 +255,7 @@ func buildService(objectMeta metav1.ObjectMeta, template *model.BoxV1) (*corev1.
 }
 
 // TODO common
-func (box *KubeBox) connectBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
+func (box *KubeBoxClient) connectBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
 	if info, err := box.findBox(name); err != nil {
 		return err
 	} else {
@@ -264,7 +264,7 @@ func (box *KubeBox) connectBox(template *model.BoxV1, tunnelOpts *model.TunnelOp
 }
 
 // TODO common
-func (box *KubeBox) openBox(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
+func (box *KubeBoxClient) openBox(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
 	if info, err := box.createBox(templateOpts); err != nil {
 		return err
 	} else {
@@ -273,7 +273,7 @@ func (box *KubeBox) openBox(templateOpts *model.TemplateOptions, tunnelOpts *mod
 }
 
 // TODO common
-func (box *KubeBox) findBox(name string) (*model.BoxInfo, error) {
+func (box *KubeBoxClient) findBox(name string) (*model.BoxInfo, error) {
 	boxes, err := box.listBoxes()
 	if err != nil {
 		return nil, err
@@ -286,8 +286,8 @@ func (box *KubeBox) findBox(name string) (*model.BoxInfo, error) {
 	return nil, errors.New("box not found")
 }
 
-func (box *KubeBox) execBox(template *model.BoxV1, info *model.BoxInfo, tunnelOpts *model.TunnelOptions, removeOnExit bool) error {
-	box.eventBus.Publish(newPodExecKubeEvent(template.Name, box.clientConfig.Namespace, info.Id, template.Shell))
+func (box *KubeBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, tunnelOpts *model.TunnelOptions, removeOnExit bool) error {
+	box.eventBus.Publish(newPodExecKubeEvent(template.Name, box.clientOpts.Namespace, info.Id, template.Shell))
 
 	if tunnelOpts.TunnelOnly {
 		// tunnel and exit, wait until killed
@@ -307,7 +307,7 @@ func (box *KubeBox) execBox(template *model.BoxV1, info *model.BoxInfo, tunnelOp
 
 	// exec
 	opts := &kubernetes.PodExecOpts{
-		Namespace: box.clientConfig.Namespace,
+		Namespace: box.clientOpts.Namespace,
 		PodName:   common.ToKebabCase(template.Image.Repository), // pod.Spec.Containers[0].Name
 		PodId:     info.Id,
 		Shell:     template.Shell,
@@ -330,8 +330,8 @@ func (box *KubeBox) execBox(template *model.BoxV1, info *model.BoxInfo, tunnelOp
 	return box.client.PodExec(opts)
 }
 
-func (box *KubeBox) podPortForward(template *model.BoxV1, boxInfo *model.BoxInfo, isWait bool) error {
-	namespace := box.clientConfig.Namespace
+func (box *KubeBoxClient) podPortForward(template *model.BoxV1, boxInfo *model.BoxInfo, isWait bool) error {
+	namespace := box.clientOpts.Namespace
 
 	if !template.HasPorts() {
 		box.eventBus.Publish(newPodPortForwardSkippedKubeEvent(namespace, boxInfo.Id))
@@ -392,8 +392,8 @@ func boxLabel() string {
 	return fmt.Sprintf("%s=%s", model.LabelSchemaKind, common.ToKebabCase(schema.KindBoxV1.String()))
 }
 
-func (box *KubeBox) listBoxes() ([]model.BoxInfo, error) {
-	namespace := box.clientConfig.Namespace
+func (box *KubeBoxClient) listBoxes() ([]model.BoxInfo, error) {
+	namespace := box.clientOpts.Namespace
 
 	deployments, err := box.client.DeploymentList(namespace, model.BoxPrefixName, boxLabel())
 	if err != nil {
@@ -410,8 +410,8 @@ func (box *KubeBox) listBoxes() ([]model.BoxInfo, error) {
 	return result, nil
 }
 
-func (box *KubeBox) deleteBoxes(names []string) ([]model.BoxInfo, error) {
-	namespace := box.clientConfig.Namespace
+func (box *KubeBoxClient) deleteBoxes(names []string) ([]model.BoxInfo, error) {
+	namespace := box.clientOpts.Namespace
 
 	boxes, err := box.listBoxes()
 	if err != nil {
@@ -434,8 +434,8 @@ func (box *KubeBox) deleteBoxes(names []string) ([]model.BoxInfo, error) {
 	return deleted, nil
 }
 
-func (box *KubeBox) deleteBox(name string) error {
-	namespace := box.clientConfig.Namespace
+func (box *KubeBoxClient) deleteBox(name string) error {
+	namespace := box.clientOpts.Namespace
 
 	box.eventBus.Publish(newDeploymentDeleteKubeEvent(namespace, name))
 	if err := box.client.DeploymentDelete(namespace, name); err != nil {
@@ -450,8 +450,8 @@ func (box *KubeBox) deleteBox(name string) error {
 	return nil
 }
 
-func (box *KubeBox) clean() error {
-	namespace := box.clientConfig.Namespace
+func (box *KubeBoxClient) clean() error {
+	namespace := box.clientOpts.Namespace
 
 	box.eventBus.Publish(newNamespaceDeleteKubeEvent(namespace))
 	return box.client.NamespaceDelete(namespace)
