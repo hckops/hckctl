@@ -319,20 +319,20 @@ func (box *DockerBoxClient) listBoxes() ([]model.BoxInfo, error) {
 	return result, nil
 }
 
-func (box *DockerBoxClient) deleteBoxes(names []string) ([]model.BoxInfo, error) {
+func (box *DockerBoxClient) deleteBoxes(names []string) ([]string, error) {
 
 	boxes, err := box.listBoxes()
 	if err != nil {
 		return nil, err
 	}
 
-	var deleted []model.BoxInfo
+	var deleted []string
 	for _, boxInfo := range boxes {
 
 		if len(names) == 0 || slices.Contains(names, boxInfo.Name) {
 
 			if err := box.client.ContainerRemove(boxInfo.Id); err == nil {
-				deleted = append(deleted, boxInfo)
+				deleted = append(deleted, boxInfo.Name)
 				box.eventBus.Publish(newContainerRemoveDockerEvent(boxInfo.Id))
 			} else {
 				// silently ignore

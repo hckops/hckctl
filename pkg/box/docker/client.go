@@ -51,7 +51,7 @@ func (box *DockerBoxClient) List() ([]model.BoxInfo, error) {
 	return box.listBoxes()
 }
 
-func (box *DockerBoxClient) Delete(names []string) ([]model.BoxInfo, error) {
+func (box *DockerBoxClient) Delete(names []string) ([]string, error) {
 	defer box.close()
 	return box.deleteBoxes(names)
 }

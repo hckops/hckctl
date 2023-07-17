@@ -15,6 +15,10 @@ type BoxInfo struct {
 	Healthy bool // TODO BoxStatus healthy, offline, unknown, error, etc
 }
 
+type BoxDetails struct {
+	// TODO
+}
+
 type BoxClientOptions struct {
 	Provider   BoxProvider
 	CommonOpts *CommonBoxOptions

@@ -18,7 +18,7 @@ type BoxClient interface {
 	Open(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error
 	Copy(name string, from string, to string) error
 	List() ([]model.BoxInfo, error)
-	Delete(names []string) ([]model.BoxInfo, error) // empty "names" means all boxes
+	Delete(names []string) ([]string, error) // empty "names" means all boxes
 	Clean() error
 	Version() (string, error) // TODO replace string with BoxVersion interface, return both client and server version
 }

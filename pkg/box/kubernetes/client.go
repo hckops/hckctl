@@ -51,7 +51,7 @@ func (box *KubeBoxClient) List() ([]model.BoxInfo, error) {
 	return box.listBoxes()
 }
 
-func (box *KubeBoxClient) Delete(names []string) ([]model.BoxInfo, error) {
+func (box *KubeBoxClient) Delete(names []string) ([]string, error) {
 	defer box.close()
 	return box.deleteBoxes(names)
 }

@@ -410,7 +410,7 @@ func (box *KubeBoxClient) listBoxes() ([]model.BoxInfo, error) {
 	return result, nil
 }
 
-func (box *KubeBoxClient) deleteBoxes(names []string) ([]model.BoxInfo, error) {
+func (box *KubeBoxClient) deleteBoxes(names []string) ([]string, error) {
 	namespace := box.clientOpts.Namespace
 
 	boxes, err := box.listBoxes()
@@ -418,13 +418,13 @@ func (box *KubeBoxClient) deleteBoxes(names []string) ([]model.BoxInfo, error) {
 		return nil, err
 	}
 
-	var deleted []model.BoxInfo
+	var deleted []string
 	for _, boxInfo := range boxes {
 
 		if len(names) == 0 || slices.Contains(names, boxInfo.Name) {
 
 			if err := box.deleteBox(boxInfo.Name); err == nil {
-				deleted = append(deleted, boxInfo)
+				deleted = append(deleted, boxInfo.Name)
 			} else {
 				// silently ignore
 				box.eventBus.Publish(newResourcesDeleteSkippedKubeEvent(namespace, boxInfo.Name))

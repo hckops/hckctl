@@ -104,7 +104,7 @@ func (box *CloudBoxClient) listBoxes() ([]model.BoxInfo, error) {
 	return result, nil
 }
 
-func (box *CloudBoxClient) deleteBoxes(names []string) ([]model.BoxInfo, error) {
+func (box *CloudBoxClient) deleteBoxes(names []string) ([]string, error) {
 
 	request := v1.NewBoxDeleteRequest(box.clientOpts.Version, names)
 	payload, err := request.Encode()
@@ -121,9 +121,9 @@ func (box *CloudBoxClient) deleteBoxes(names []string) ([]model.BoxInfo, error) 
 		return nil, errors.Wrap(err, "error cloud delete response")
 	}
 
-	var result []model.BoxInfo
+	var result []string
 	for index, item := range response.Body.Items {
-		result = append(result, model.BoxInfo{Id: item.Id, Name: item.Name, Healthy: false})
+		result = append(result, item.Name)
 		box.eventBus.Publish(newApiDeleteCloudEvent(index, item.Name))
 	}
 	return result, nil

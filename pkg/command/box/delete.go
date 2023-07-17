@@ -81,16 +81,16 @@ func deleteByProvider(providerFlag commonFlag.ProviderFlag, configRef *config.Co
 		return err
 	}
 
-	boxes, err := boxClient.Delete([]string{})
+	names, err := boxClient.Delete([]string{})
 	if err != nil {
 		log.Warn().Err(err).Msgf("error deleting boxes: provider=%v", boxClient.Provider())
 		return fmt.Errorf("%v delete error", boxClient.Provider())
 	}
 
 	fmt.Println(fmt.Sprintf("# %v", boxClient.Provider()))
-	for _, b := range boxes {
-		fmt.Println(b.Name)
+	for _, name := range names {
+		fmt.Println(name)
 	}
-	fmt.Println(fmt.Sprintf("total: %v", len(boxes)))
+	fmt.Println(fmt.Sprintf("total: %v", len(names)))
 	return nil
 }

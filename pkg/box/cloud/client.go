@@ -52,7 +52,7 @@ func (box *CloudBoxClient) List() ([]model.BoxInfo, error) {
 	return box.listBoxes()
 }
 
-func (box *CloudBoxClient) Delete(names []string) ([]model.BoxInfo, error) {
+func (box *CloudBoxClient) Delete(names []string) ([]string, error) {
 	defer box.close()
 	return box.deleteBoxes(names)
 }
