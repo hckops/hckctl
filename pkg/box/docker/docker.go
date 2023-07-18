@@ -312,12 +312,34 @@ func (box *DockerBoxClient) describe(name string) (*model.BoxDetails, error) {
 		return nil, err
 	}
 
-	return toBoxDetails(containerInfo), nil
+	return toBoxDetails(containerInfo)
 }
 
-func toBoxDetails(containerInfo docker.ContainerDetails) *model.BoxDetails {
+func toBoxDetails(container docker.ContainerDetails) (*model.BoxDetails, error) {
+
+	labels := model.BoxLabels(container.Labels)
+
+	size, err := labels.ToSize()
+	if err != nil {
+		return nil, err
+	}
+
+	// ignore errors e.g. local
+	template, _ := labels.ToBoxTemplateInfo()
+
 	return &model.BoxDetails{
-		// TODO
+		Info:     newBoxInfo(container.Info),
+		Provider: model.Docker,
+		Size:     size,
+		Template: template,
+	}, nil
+}
+
+func newBoxInfo(container docker.ContainerInfo) model.BoxInfo {
+	return model.BoxInfo{
+		Id:      container.ContainerId,
+		Name:    container.ContainerName,
+		Healthy: container.Healthy,
 	}
 }
 
@@ -334,7 +356,7 @@ func (box *DockerBoxClient) listBoxes() ([]model.BoxInfo, error) {
 
 	var result []model.BoxInfo
 	for index, c := range containers {
-		result = append(result, model.BoxInfo{Id: c.ContainerId, Name: c.ContainerName, Healthy: c.Healthy})
+		result = append(result, newBoxInfo(c))
 		box.eventBus.Publish(newContainerListDockerEvent(index, c.ContainerName, c.ContainerId, c.Healthy))
 	}
 	return result, nil

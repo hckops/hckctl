@@ -13,12 +13,26 @@ type BoxInfo struct {
 	Healthy bool // TODO BoxStatus healthy, offline, unknown, error, etc
 }
 
-// TODO provider, revision, commit, template type
-// TODO BoxDockerDetails, BoxKubeDetails, BoxCloudDetails
-// TODO add actual bound ports
-// TODO add labels info
 type BoxDetails struct {
-	// TODO
+	Info     BoxInfo
+	Provider BoxProvider
+	Size     ResourceSize
+	Template *BoxTemplateInfo
+	Env      []BoxEnv
+	Ports    []BoxPort
+	Docker   struct {
+		Network string
+	}
+	Kube struct {
+		Namespace string
+	}
+}
+
+type BoxTemplateInfo struct {
+	Url      string
+	Revision string
+	Commit   string
+	Name     string
 }
 
 type BoxClientOptions struct {

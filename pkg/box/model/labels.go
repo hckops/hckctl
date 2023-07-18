@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"strings"
 
 	"golang.org/x/exp/maps"
@@ -54,4 +55,33 @@ func (l BoxLabels) AddLabels(path string, commit string, size ResourceSize) BoxL
 	maps.Copy(labels, l)
 
 	return labels
+}
+
+func (l BoxLabels) exists(name string) (string, error) {
+	if label, ok := l[name]; !ok {
+		return "", fmt.Errorf("label %s not found", name)
+	} else {
+		return label, nil
+	}
+}
+
+func (l BoxLabels) ToSize() (ResourceSize, error) {
+	if label, err := l.exists(LabelBoxSize); err != nil {
+		return Small, err
+	} else {
+		return ExistResourceSize(label)
+	}
+}
+
+func (l BoxLabels) ToBoxTemplateInfo() (*BoxTemplateInfo, error) {
+	if _, err := l.exists(LabelTemplateGit); err != nil {
+		return nil, err
+	}
+
+	return &BoxTemplateInfo{
+		Url:      l[LabelTemplateGitUrl],
+		Revision: l[LabelTemplateGitRevision],
+		Commit:   l[LabelTemplateGitCommit],
+		Name:     l[LabelTemplateGitName],
+	}, nil
 }

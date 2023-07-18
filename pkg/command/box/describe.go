@@ -2,7 +2,7 @@ package box
 
 import (
 	"fmt"
-
+	"github.com/hckops/hckctl/pkg/util"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
@@ -39,14 +39,17 @@ func (opts *boxDescribeCmdOptions) run(cmd *cobra.Command, args []string) error 
 
 		describeClient := func(client box.BoxClient, template *model.BoxV1) error {
 
-			// TODO details
-			if _, err := client.Describe(boxName); err != nil {
+			details, err := client.Describe(boxName)
+			if err != nil {
 				// attempt next provider
 				return err
 			}
 
-			// TODO
-			fmt.Println(boxName)
+			if value, err := util.EncodeYaml(newBoxValue(details)); err != nil {
+				return err
+			} else {
+				fmt.Print(value)
+			}
 			return nil
 		}
 		return attemptRunBoxClients(opts.configRef, boxName, describeClient)
@@ -55,4 +58,26 @@ func (opts *boxDescribeCmdOptions) run(cmd *cobra.Command, args []string) error 
 	}
 
 	return nil
+}
+
+type BoxValue struct {
+	Name     string
+	Healthy  bool
+	Provider string
+	Size     string
+	Template *model.BoxTemplateInfo `yaml:",omitempty"`
+	Env      []model.BoxEnv         `yaml:",omitempty"`
+	Ports    []model.BoxPort        `yaml:",omitempty"`
+}
+
+func newBoxValue(details *model.BoxDetails) *BoxValue {
+	return &BoxValue{
+		Name:     details.Info.Name,
+		Healthy:  details.Info.Healthy,
+		Provider: details.Provider.String(),
+		Size:     details.Size.String(),
+		Template: details.Template,
+		Env:      details.Env,
+		Ports:    details.Ports,
+	}
 }

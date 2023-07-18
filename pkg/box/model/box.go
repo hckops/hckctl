@@ -37,6 +37,11 @@ type BoxPort struct {
 	Public bool // TODO not used, always false
 }
 
+type BoxEnv struct {
+	Key   string
+	Value string
+}
+
 func (box *BoxV1) GenerateName() string {
 	return fmt.Sprintf("%s%s-%s", BoxPrefixName, box.Name, strings.ToLower(uniuri.NewLen(5)))
 }
