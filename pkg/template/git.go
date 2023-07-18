@@ -11,7 +11,7 @@ import (
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-func readGitTemplate(opts *SourceOptions, name string) (*TemplateValue, error) {
+func readGitTemplate(opts *GitSourceOptions, name string) (*TemplateValue, error) {
 	if path, _, err := resolvePathWithRevision(opts, name); err != nil {
 		return nil, err
 	} else {
@@ -19,13 +19,13 @@ func readGitTemplate(opts *SourceOptions, name string) (*TemplateValue, error) {
 	}
 }
 
-func resolvePathWithRevision(opts *SourceOptions, name string) (string, string, error) {
+func resolvePathWithRevision(opts *GitSourceOptions, name string) (string, string, error) {
 	hash, err := refreshSource(opts)
 	if err != nil {
 		return "", "", errors.Wrap(err, "invalid template source")
 	}
 
-	path, err := resolvePath(opts.SourceCacheDir, name)
+	path, err := resolvePath(opts.CacheBaseDir, name)
 	if err != nil {
 		return "", "", errors.Wrap(err, "invalid template name")
 	}
@@ -74,14 +74,14 @@ func resolvePath(sourceCacheDir, name string) (string, error) {
 	return "", errors.New("path not found")
 }
 
-func readGitTemplates(opts *SourceOptions, wildcard string) ([]*TemplateValidated, error) {
+func readGitTemplates(opts *GitSourceOptions, wildcard string) ([]*TemplateValidated, error) {
 	if _, err := refreshSource(opts); err != nil {
 		return nil, errors.Wrap(err, "invalid template revision")
 	}
 	return readTemplates(wildcard)
 }
 
-func readGitBoxTemplate(opts *SourceOptions, name string) (*BoxTemplate, error) {
+func readGitBoxTemplate(opts *GitSourceOptions, name string) (*BoxTemplate, error) {
 	if path, hash, err := resolvePathWithRevision(opts, name); err != nil {
 		return nil, err
 	} else {
@@ -89,7 +89,7 @@ func readGitBoxTemplate(opts *SourceOptions, name string) (*BoxTemplate, error) 
 	}
 }
 
-func readGitLabTemplate(opts *SourceOptions, name string) (*LabTemplate, error) {
+func readGitLabTemplate(opts *GitSourceOptions, name string) (*LabTemplate, error) {
 	if path, hash, err := resolvePathWithRevision(opts, name); err != nil {
 		return nil, err
 	} else {

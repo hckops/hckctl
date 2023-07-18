@@ -65,12 +65,12 @@ func (opts *templateListCmdOptions) run(cmd *cobra.Command, args []string) error
 }
 
 func templateList(sourceDir string, revision string, offline bool) error {
-	sourceOpts := &SourceOptions{
-		SourceCacheDir: sourceDir,
-		SourceUrl:      common.TemplateSourceUrl,
-		SourceRevision: common.TemplateSourceRevision,
-		Revision:       revision,
-		AllowOffline:   offline,
+	sourceOpts := &GitSourceOptions{
+		CacheBaseDir:    sourceDir,
+		RepositoryUrl:   common.TemplateSourceUrl,
+		DefaultRevision: common.TemplateSourceRevision,
+		Revision:        revision,
+		AllowOffline:    offline,
 	}
 	log.Debug().Msgf("list git templates: revision=%s offline=%v", revision, offline)
 

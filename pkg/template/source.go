@@ -2,6 +2,7 @@ package template
 
 import (
 	"path/filepath"
+	"strings"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
@@ -11,32 +12,38 @@ import (
 
 // TODO add lock/sync wrapper to support concurrent requests
 
-type SourceOptions struct {
-	SourceCacheDir string
-	SourceUrl      string
-	SourceRevision string // default branch
-	Revision       string
-	AllowOffline   bool
+type GitSourceOptions struct {
+	CacheBaseDir    string
+	RepositoryUrl   string
+	DefaultRevision string
+	Revision        string
+	AllowOffline    bool
 }
 
-func (s *SourceOptions) CacheDirName() string {
-	return filepath.Base(s.SourceCacheDir)
+func (s *GitSourceOptions) CacheDirName() string {
+	// extracts repository name
+	index := strings.LastIndex(s.RepositoryUrl, "/")
+	return strings.TrimSuffix(strings.TrimPrefix(s.RepositoryUrl[index:], "/"), filepath.Ext(s.RepositoryUrl))
+}
+
+func (s *GitSourceOptions) CachePath() string {
+	return filepath.Join(s.CacheBaseDir, s.CacheDirName())
 }
 
 // returns the resolved commit sha
-func refreshSource(opts *SourceOptions) (string, error) {
+func refreshSource(opts *GitSourceOptions) (string, error) {
 
 	// first time clone repo always with default revision
 	// assume that path doesn't exist, or it's empty
-	if _, err := git.PlainClone(opts.SourceCacheDir, false, &git.CloneOptions{
-		URL:           opts.SourceUrl,
-		ReferenceName: plumbing.NewBranchReferenceName(opts.SourceRevision),
+	if _, err := git.PlainClone(opts.CachePath(), false, &git.CloneOptions{
+		URL:           opts.RepositoryUrl,
+		ReferenceName: plumbing.NewBranchReferenceName(opts.DefaultRevision),
 	}); err != nil && err != git.ErrRepositoryAlreadyExists {
 		return "", errors.Wrap(err, "unable to clone repository")
 	}
 
 	// access repository
-	repository, err := git.PlainOpen(opts.SourceCacheDir)
+	repository, err := git.PlainOpen(opts.CachePath())
 	if err != nil {
 		return "", errors.Wrap(err, "unable to open repository")
 	}

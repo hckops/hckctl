@@ -78,12 +78,12 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 
 	// best effort approach to resolve the box template by name with git source and default revision
 	// WARNING this might return unexpected results if the box was created with a different revision
-	sourceOpts := &template.SourceOptions{
-		SourceCacheDir: configRef.Config.Template.CacheDir,
-		SourceUrl:      common.TemplateSourceUrl,
-		SourceRevision: common.TemplateSourceRevision,
-		Revision:       common.TemplateSourceRevision, // TODO always default, read from labels and convert main to sha
-		AllowOffline:   true,
+	sourceOpts := &template.GitSourceOptions{
+		CacheBaseDir:    configRef.Config.Template.CacheDir,
+		RepositoryUrl:   common.TemplateSourceUrl,
+		DefaultRevision: common.TemplateSourceRevision,
+		Revision:        common.TemplateSourceRevision, // TODO always default, read from labels and convert main to sha
+		AllowOffline:    true,
 	}
 	// TODO add name to label and search for all provider
 	templateName := model.ToBoxTemplateName(boxName)

@@ -93,11 +93,11 @@ func (src *LocalSource) ReadLab() (*LabTemplate, error) {
 }
 
 type GitSource struct {
-	opts *SourceOptions
+	opts *GitSourceOptions
 	name string
 }
 
-func NewGitSource(opts *SourceOptions, name string) *GitSource {
+func NewGitSource(opts *GitSourceOptions, name string) *GitSource {
 	return &GitSource{opts, name}
 }
 
@@ -106,7 +106,7 @@ func (src *GitSource) ReadTemplate() (*TemplateValue, error) {
 }
 
 func (src *GitSource) ReadTemplates() ([]*TemplateValidated, error) {
-	wildcard := fmt.Sprintf("%s/**/*.{yml,yaml}", src.opts.SourceCacheDir)
+	wildcard := fmt.Sprintf("%s/**/*.{yml,yaml}", src.opts.CacheBaseDir)
 	return readGitTemplates(src.opts, wildcard)
 }
 func (src *GitSource) ReadBox() (*BoxTemplate, error) {

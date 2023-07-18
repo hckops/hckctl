@@ -87,12 +87,12 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	} else if len(args) == 1 {
 		name := args[0]
-		sourceOpts := &SourceOptions{
-			SourceCacheDir: opts.configRef.Config.Template.CacheDir,
-			SourceUrl:      common.TemplateSourceUrl,
-			SourceRevision: common.TemplateSourceRevision,
-			Revision:       opts.sourceFlag.Revision,
-			AllowOffline:   opts.offline,
+		sourceOpts := &GitSourceOptions{
+			CacheBaseDir:    opts.configRef.Config.Template.CacheDir,
+			RepositoryUrl:   common.TemplateSourceUrl,
+			DefaultRevision: common.TemplateSourceRevision,
+			Revision:        opts.sourceFlag.Revision,
+			AllowOffline:    opts.offline,
 		}
 		log.Debug().Msgf("print git template: name=%s revision=%s offline=%v", name, opts.sourceFlag.Revision, opts.offline)
 

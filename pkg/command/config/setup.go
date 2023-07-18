@@ -80,7 +80,7 @@ func createDefaultConfig(configPath string) error {
 	}
 
 	// default config
-	cliConfig := newConfig(logFile, getTemplateSourceDir())
+	cliConfig := newConfig(logFile, getCacheDir())
 
 	var configString string
 	if configString, err = util.EncodeYaml(&cliConfig); err != nil {
@@ -107,8 +107,8 @@ func getLogFile() (string, error) {
 	return logFile, nil
 }
 
-func getTemplateSourceDir() string {
-	return filepath.Join(xdg.CacheHome, common.DefaultDirName, common.TemplateSourceName)
+func getCacheDir() string {
+	return filepath.Join(xdg.CacheHome, common.DefaultDirName)
 }
 
 func LoadConfig() (*ConfigV1, error) {

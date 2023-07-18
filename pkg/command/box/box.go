@@ -105,16 +105,16 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 		} else {
 			name := args[0]
-			sourceOpts := &template.SourceOptions{
-				SourceCacheDir: opts.configRef.Config.Template.CacheDir,
-				SourceUrl:      common.TemplateSourceUrl,
-				SourceRevision: common.TemplateSourceRevision,
-				Revision:       opts.sourceFlag.Revision,
-				AllowOffline:   true,
+			sourceOpts := &template.GitSourceOptions{
+				CacheBaseDir:    opts.configRef.Config.Template.CacheDir,
+				RepositoryUrl:   common.TemplateSourceUrl,
+				DefaultRevision: common.TemplateSourceRevision,
+				Revision:        opts.sourceFlag.Revision,
+				AllowOffline:    true,
 			}
 			log.Debug().Msgf("open box from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
-			labels := model.NewGitLabels(sourceOpts.SourceUrl, sourceOpts.SourceRevision, sourceOpts.CacheDirName())
+			labels := model.NewGitLabels(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
 			return opts.openBox(template.NewGitSource(sourceOpts, name), provider, labels)
 		}
 
