@@ -1,75 +1,62 @@
 package template
 
 import (
-	"path/filepath"
-	"strings"
-
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/config"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/pkg/errors"
+	"fmt"
 )
 
-// TODO add lock/sync wrapper to support concurrent requests
+// TODO add RemoteSource http
 
-type GitSourceOptions struct {
-	CacheBaseDir    string
-	RepositoryUrl   string
-	DefaultRevision string
-	Revision        string
-	AllowOffline    bool
+type SourceTemplate interface {
+	ReadTemplate() (*TemplateValue, error)
+	ReadTemplates() ([]*TemplateValidated, error)
+	ReadBox() (*BoxTemplate, error)
+	ReadLab() (*LabTemplate, error)
 }
 
-func (s *GitSourceOptions) CacheDirName() string {
-	// extracts repository name
-	index := strings.LastIndex(s.RepositoryUrl, "/")
-	return strings.TrimSuffix(strings.TrimPrefix(s.RepositoryUrl[index:], "/"), filepath.Ext(s.RepositoryUrl))
+type LocalSource struct {
+	path string
 }
 
-func (s *GitSourceOptions) CachePath() string {
-	return filepath.Join(s.CacheBaseDir, s.CacheDirName())
+func NewLocalSource(path string) *LocalSource {
+	return &LocalSource{path}
 }
 
-// returns the resolved commit sha
-func refreshSource(opts *GitSourceOptions) (string, error) {
+func (src *LocalSource) ReadTemplate() (*TemplateValue, error) {
+	return readTemplate(src.path)
+}
 
-	// first time clone repo always with default revision
-	// assume that path doesn't exist, or it's empty
-	if _, err := git.PlainClone(opts.CachePath(), false, &git.CloneOptions{
-		URL:           opts.RepositoryUrl,
-		ReferenceName: plumbing.NewBranchReferenceName(opts.DefaultRevision),
-	}); err != nil && err != git.ErrRepositoryAlreadyExists {
-		return "", errors.Wrap(err, "unable to clone repository")
-	}
+func (src *LocalSource) ReadTemplates() ([]*TemplateValidated, error) {
+	return readTemplates(src.path)
+}
 
-	// access repository
-	repository, err := git.PlainOpen(opts.CachePath())
-	if err != nil {
-		return "", errors.Wrap(err, "unable to open repository")
-	}
-	workTree, err := repository.Worktree()
-	if err != nil {
-		return "", errors.Wrap(err, "unable to access repository")
-	}
+func (src *LocalSource) ReadBox() (*BoxTemplate, error) {
+	return readBoxTemplate(src.path, InvalidCommit)
+}
 
-	// fetch latest changes, ignore error if is offline
-	// https://git-scm.com/book/en/v2/Git-Internals-The-Refspec
-	if err := repository.Fetch(&git.FetchOptions{
-		RefSpecs: []config.RefSpec{"+refs/*:refs/*"},
-	}); err != nil && err != git.NoErrAlreadyUpToDate && !opts.AllowOffline {
-		return "", errors.Wrap(err, "unable to fetch repository")
-	}
+func (src *LocalSource) ReadLab() (*LabTemplate, error) {
+	return readLabTemplate(src.path, InvalidCommit)
+}
 
-	// resolve revision (branch|tag|sha) to hash
-	hash, err := repository.ResolveRevision(plumbing.Revision(opts.Revision))
-	if err != nil {
-		return "", errors.Wrap(err, "unable to resolve revision")
-	}
+type GitSource struct {
+	opts *GitSourceOptions
+	name string
+}
 
-	// update latest revision
-	if err := workTree.Checkout(&git.CheckoutOptions{Hash: *hash, Force: true}); err != nil {
-		return "", errors.Wrap(err, "unable to checkout revision")
-	}
+func NewGitSource(opts *GitSourceOptions, name string) *GitSource {
+	return &GitSource{opts, name}
+}
 
-	return hash.String(), nil
+func (src *GitSource) ReadTemplate() (*TemplateValue, error) {
+	return readGitTemplate(src.opts, src.name)
+}
+
+func (src *GitSource) ReadTemplates() ([]*TemplateValidated, error) {
+	wildcard := fmt.Sprintf("%s/**/*.{yml,yaml}", src.opts.CacheBaseDir)
+	return readGitTemplates(src.opts, wildcard)
+}
+func (src *GitSource) ReadBox() (*BoxTemplate, error) {
+	return readGitBoxTemplate(src.opts, src.name)
+}
+func (src *GitSource) ReadLab() (*LabTemplate, error) {
+	return readGitLabTemplate(src.opts, src.name)
 }
