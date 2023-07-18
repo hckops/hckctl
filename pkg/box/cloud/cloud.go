@@ -57,6 +57,8 @@ func (box *CloudBoxClient) createBox(opts *model.TemplateOptions) (*model.BoxInf
 	return &model.BoxInfo{Id: boxName, Name: boxName}, nil
 }
 
+// TODO tunnel + open
+
 func (box *CloudBoxClient) execBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
 	// TODO event
 	box.eventBus.Publish(newApiExecCloudEvent(name))

@@ -73,7 +73,7 @@ func runBoxClient(src template.SourceTemplate, provider model.BoxProvider, confi
 	return nil
 }
 
-// exec and delete
+// exec, describe and delete
 func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeClient func(box.BoxClient, *model.BoxV1) error) error {
 
 	// best effort approach to resolve the box template by name with git source and default revision
@@ -82,9 +82,10 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 		SourceCacheDir: configRef.Config.Template.CacheDir,
 		SourceUrl:      common.TemplateSourceUrl,
 		SourceRevision: common.TemplateSourceRevision,
-		Revision:       common.TemplateSourceRevision, // TODO always default, read from labels
+		Revision:       common.TemplateSourceRevision, // TODO always default, read from labels and convert main to sha
 		AllowOffline:   true,
 	}
+	// TODO add name to label and search for all provider
 	templateName := model.ToBoxTemplateName(boxName)
 	boxTemplate, err := template.NewGitSource(sourceOpts, templateName).ReadBox()
 	if err != nil {
@@ -160,7 +161,7 @@ func newTemplateOptions(template *template.BoxTemplate, labels model.BoxLabels, 
 	templateOpts := &model.TemplateOptions{
 		Template: template.Template,
 		Size:     size,
-		Labels:   labels.AddLabels(template.Path, size),
+		Labels:   labels.AddLabels(template.Path, template.Commit, size),
 	}
 	return templateOpts, nil
 }

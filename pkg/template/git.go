@@ -12,24 +12,25 @@ import (
 )
 
 func readGitTemplate(opts *SourceOptions, name string) (*TemplateValue, error) {
-	if path, err := resolvePathWithRevision(opts, name); err != nil {
+	if path, _, err := resolvePathWithRevision(opts, name); err != nil {
 		return nil, err
 	} else {
 		return readTemplate(path)
 	}
 }
 
-func resolvePathWithRevision(opts *SourceOptions, name string) (string, error) {
-	if err := refreshSource(opts); err != nil {
-		return "", errors.Wrap(err, "invalid template source")
+func resolvePathWithRevision(opts *SourceOptions, name string) (string, string, error) {
+	hash, err := refreshSource(opts)
+	if err != nil {
+		return "", "", errors.Wrap(err, "invalid template source")
 	}
 
 	path, err := resolvePath(opts.SourceCacheDir, name)
 	if err != nil {
-		return "", errors.Wrap(err, "invalid template name")
+		return "", "", errors.Wrap(err, "invalid template name")
 	}
 
-	return path, nil
+	return path, hash, nil
 }
 
 func resolvePath(sourceCacheDir, name string) (string, error) {
@@ -74,24 +75,24 @@ func resolvePath(sourceCacheDir, name string) (string, error) {
 }
 
 func readGitTemplates(opts *SourceOptions, wildcard string) ([]*TemplateValidated, error) {
-	if err := refreshSource(opts); err != nil {
+	if _, err := refreshSource(opts); err != nil {
 		return nil, errors.Wrap(err, "invalid template revision")
 	}
 	return readTemplates(wildcard)
 }
 
 func readGitBoxTemplate(opts *SourceOptions, name string) (*BoxTemplate, error) {
-	if path, err := resolvePathWithRevision(opts, name); err != nil {
+	if path, hash, err := resolvePathWithRevision(opts, name); err != nil {
 		return nil, err
 	} else {
-		return readBoxTemplate(path)
+		return readBoxTemplate(path, hash)
 	}
 }
 
 func readGitLabTemplate(opts *SourceOptions, name string) (*LabTemplate, error) {
-	if path, err := resolvePathWithRevision(opts, name); err != nil {
+	if path, hash, err := resolvePathWithRevision(opts, name); err != nil {
 		return nil, err
 	} else {
-		return readLabTemplate(path)
+		return readLabTemplate(path, hash)
 	}
 }

@@ -222,6 +222,9 @@ TODO
     - refactor common `BoxClient` methods (abstract)
     - mount `/dev/tun` for vpn
     - implement copy ???
+    - in `box/common/attemptRunBoxClients` replace `ToBoxTemplateName` with `BoxClient.Describe`
+        * read template name from label
+        * read revision (sha) from label
     - kube: add env var
     - kube: add distroless support
     - kube: verify if close is needed or `return nil`

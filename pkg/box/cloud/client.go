@@ -47,6 +47,11 @@ func (box *CloudBoxClient) Copy(string, string, string) error {
 	return errors.New("not implemented")
 }
 
+func (box *CloudBoxClient) Describe(name string) (*model.BoxDetails, error) {
+	defer box.close()
+	return nil, errors.New("not implemented")
+}
+
 func (box *CloudBoxClient) List() ([]model.BoxInfo, error) {
 	defer box.close()
 	return box.listBoxes()

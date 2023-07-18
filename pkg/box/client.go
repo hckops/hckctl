@@ -17,6 +17,7 @@ type BoxClient interface {
 	Connect(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error
 	Open(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error
 	Copy(name string, from string, to string) error
+	Describe(name string) (*model.BoxDetails, error)
 	List() ([]model.BoxInfo, error)
 	Delete(names []string) ([]string, error) // empty "names" means all boxes
 	Clean() error

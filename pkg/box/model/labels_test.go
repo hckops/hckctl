@@ -36,7 +36,7 @@ func TestAddLabels(t *testing.T) {
 		"com.hckops.schema.kind": "box/v1",
 		"com.hckops.test":        "true",
 	}
-	labels := defaultLabels.AddLabels("myPath", ExtraLarge)
+	labels := defaultLabels.AddLabels("myPath", "skipped", ExtraLarge)
 	expected := BoxLabels{
 		"com.hckops.schema.kind":          "box/v1",
 		"com.hckops.test":                 "true",
@@ -45,5 +45,23 @@ func TestAddLabels(t *testing.T) {
 	}
 
 	assert.Equal(t, 4, len(expected))
+	assert.Equal(t, expected, labels)
+}
+
+func TestAddGitLabels(t *testing.T) {
+	defaultLabels := BoxLabels{
+		"com.hckops.schema.kind":           "box/v1",
+		"com.hckops.template.git.revision": "main",
+	}
+	labels := defaultLabels.AddLabels("myPath", "myCommit", Medium)
+	expected := BoxLabels{
+		"com.hckops.schema.kind":           "box/v1",
+		"com.hckops.template.git.revision": "main",
+		"com.hckops.template.git.commit":   "myCommit",
+		"com.hckops.template.common.path":  "myPath",
+		"com.hckops.box.size":              "m",
+	}
+
+	assert.Equal(t, 5, len(expected))
 	assert.Equal(t, expected, labels)
 }

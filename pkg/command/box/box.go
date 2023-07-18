@@ -81,6 +81,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 	command.AddCommand(NewBoxConnectCmd(configRef))
 	command.AddCommand(NewBoxCreateCmd(configRef))
 	command.AddCommand(NewBoxDeleteCmd(configRef))
+	command.AddCommand(NewBoxDescribeCmd(configRef))
 	command.AddCommand(NewBoxListCmd(configRef))
 
 	return command

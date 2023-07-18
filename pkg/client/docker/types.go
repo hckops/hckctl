@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"io"
+	"strings"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
@@ -18,8 +19,28 @@ type ContainerInfo struct {
 	ContainerId   string
 	ContainerName string
 	Healthy       bool
-	Labels        map[string]string
-	Ports         []ContainerPort
+}
+
+func NewContainerInfo(id, name, status string) ContainerInfo {
+
+	// name starts with slash
+	containerName := strings.TrimPrefix(name, "/")
+	// see types.ContainerState
+	healthy := status == "running"
+
+	return ContainerInfo{
+		ContainerId:   id,
+		ContainerName: containerName,
+		Healthy:       healthy,
+	}
+}
+
+type ContainerDetails struct {
+	Info    ContainerInfo
+	Created string
+	Labels  map[string]string
+	Env     []string
+	Ports   []ContainerPort
 }
 
 type ContainerPort struct {

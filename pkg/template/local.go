@@ -46,7 +46,7 @@ func readTemplates(wildcard string) ([]*TemplateValidated, error) {
 	return results, nil
 }
 
-func readBoxTemplate(path string) (*BoxTemplate, error) {
+func readBoxTemplate(path, hash string) (*BoxTemplate, error) {
 	value, err := readTemplate(path)
 	if err != nil {
 		return nil, err
@@ -65,10 +65,11 @@ func readBoxTemplate(path string) (*BoxTemplate, error) {
 	return &BoxTemplate{
 		Template: template,
 		Path:     absolutePath,
+		Commit:   hash,
 	}, nil
 }
 
-func readLabTemplate(path string) (*LabTemplate, error) {
+func readLabTemplate(path, hash string) (*LabTemplate, error) {
 	value, err := readTemplate(path)
 	if err != nil {
 		return nil, err
@@ -87,5 +88,6 @@ func readLabTemplate(path string) (*LabTemplate, error) {
 	return &LabTemplate{
 		Template: template,
 		Path:     absolutePath,
+		Commit:   hash,
 	}, nil
 }

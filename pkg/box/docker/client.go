@@ -46,6 +46,11 @@ func (box *DockerBoxClient) Copy(string, string, string) error {
 	return errors.New("not implemented")
 }
 
+func (box *DockerBoxClient) Describe(name string) (*model.BoxDetails, error) {
+	defer box.close()
+	return box.describe(name)
+}
+
 func (box *DockerBoxClient) List() ([]model.BoxInfo, error) {
 	defer box.close()
 	return box.listBoxes()

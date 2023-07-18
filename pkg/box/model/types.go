@@ -7,14 +7,16 @@ import (
 	"github.com/hckops/hckctl/pkg/event"
 )
 
-// TODO add actual bound ports
-// TODO add labels info
 type BoxInfo struct {
 	Id      string
 	Name    string
 	Healthy bool // TODO BoxStatus healthy, offline, unknown, error, etc
 }
 
+// TODO provider, revision, commit, template type
+// TODO BoxDockerDetails, BoxKubeDetails, BoxCloudDetails
+// TODO add actual bound ports
+// TODO add labels info
 type BoxDetails struct {
 	// TODO
 }

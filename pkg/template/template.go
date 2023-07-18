@@ -24,12 +24,18 @@ type TemplateValidated struct {
 type BoxTemplate struct {
 	Template *box.BoxV1
 	Path     string
+	Commit   string
 }
 
 type LabTemplate struct {
 	Template *lab.LabV1
 	Path     string
+	Commit   string
 }
+
+const (
+	InvalidCommit = "INVALID_COMMIT"
+)
 
 func (t *TemplateValue) ToYaml() (*TemplateValue, error) {
 	if yamlValue, err := convertFromYamlToYaml(t.Kind, t.Data); err != nil {
@@ -77,11 +83,13 @@ func (src *LocalSource) ReadTemplate() (*TemplateValue, error) {
 func (src *LocalSource) ReadTemplates() ([]*TemplateValidated, error) {
 	return readTemplates(src.path)
 }
+
 func (src *LocalSource) ReadBox() (*BoxTemplate, error) {
-	return readBoxTemplate(src.path)
+	return readBoxTemplate(src.path, InvalidCommit)
 }
+
 func (src *LocalSource) ReadLab() (*LabTemplate, error) {
-	return readLabTemplate(src.path)
+	return readLabTemplate(src.path, InvalidCommit)
 }
 
 type GitSource struct {

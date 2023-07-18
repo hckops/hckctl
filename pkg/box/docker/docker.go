@@ -3,8 +3,8 @@ package docker
 import (
 	"fmt"
 
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/network"
+	"github.com/docker/docker/api/types/container" // TODO remove
+	"github.com/docker/docker/api/types/network"   // TODO remove
 	"github.com/docker/go-connections/nat"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/slices"
@@ -126,6 +126,7 @@ type containerConfigOptions struct {
 	labels        map[string]string
 }
 
+// TODO refactor in docker client
 func buildContainerConfig(opts *containerConfigOptions) (*container.Config, error) {
 
 	exposedPorts := make(nat.PortSet)
@@ -152,6 +153,7 @@ func buildContainerConfig(opts *containerConfigOptions) (*container.Config, erro
 	}, nil
 }
 
+// TODO refactor in docker client
 func buildHostConfig(ports []model.BoxPort, onPortBindCallback func(port model.BoxPort)) (*container.HostConfig, error) {
 
 	portBindings := make(nat.PortMap)
@@ -185,6 +187,7 @@ func buildHostConfig(ports []model.BoxPort, onPortBindCallback func(port model.B
 	}, nil
 }
 
+// TODO refactor in docker client
 func buildNetworkingConfig(networkName, networkId string) *network.NetworkingConfig {
 	return &network.NetworkingConfig{EndpointsConfig: map[string]*network.EndpointSettings{networkName: {NetworkID: networkId}}}
 }
@@ -298,6 +301,26 @@ func (box *DockerBoxClient) logsBox(containerId string, tunnelOpts *model.Tunnel
 	return box.client.ContainerLogs(opts)
 }
 
+func (box *DockerBoxClient) describe(name string) (*model.BoxDetails, error) {
+	info, err := box.findBox(name)
+	if err != nil {
+		return nil, err
+	}
+
+	containerInfo, err := box.client.ContainerInspect(info.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return toBoxDetails(containerInfo), nil
+}
+
+func toBoxDetails(containerInfo docker.ContainerDetails) *model.BoxDetails {
+	return &model.BoxDetails{
+		// TODO
+	}
+}
+
 func boxLabel() string {
 	return fmt.Sprintf("%s=%s", model.LabelSchemaKind, schema.KindBoxV1.String())
 }
@@ -311,8 +334,6 @@ func (box *DockerBoxClient) listBoxes() ([]model.BoxInfo, error) {
 
 	var result []model.BoxInfo
 	for index, c := range containers {
-		// TODO add label info
-		// TODO add ports
 		result = append(result, model.BoxInfo{Id: c.ContainerId, Name: c.ContainerName, Healthy: c.Healthy})
 		box.eventBus.Publish(newContainerListDockerEvent(index, c.ContainerName, c.ContainerId, c.Healthy))
 	}

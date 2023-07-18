@@ -3,8 +3,6 @@ package docker
 import (
 	"context"
 	"io"
-	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/docker/docker/api/types"
@@ -180,6 +178,35 @@ func (client *DockerClient) ContainerRemove(containerId string) error {
 	return nil
 }
 
+func (client *DockerClient) ContainerInspect(containerId string) (ContainerDetails, error) {
+
+	containerJson, err := client.docker.ContainerInspect(client.ctx, containerId)
+	if err != nil {
+		return ContainerDetails{}, errors.Wrap(err, "error container inspect")
+	}
+
+	return newContainerDetails(containerJson), nil
+}
+
+func newContainerDetails(container types.ContainerJSON) ContainerDetails {
+
+	var ports []ContainerPort
+	for remotePort, port := range container.HostConfig.PortBindings {
+		ports = append(ports, ContainerPort{
+			Local:  port[0].HostPort,
+			Remote: remotePort.Port(),
+		})
+	}
+
+	return ContainerDetails{
+		Info:    NewContainerInfo(container.ID, container.Name, container.State.Status),
+		Created: container.Created,
+		Labels:  container.Config.Labels,
+		Env:     container.Config.Env,
+		Ports:   ports,
+	}
+}
+
 func (client *DockerClient) ContainerList(namePrefix string, label string) ([]ContainerInfo, error) {
 
 	containers, err := client.docker.ContainerList(client.ctx, types.ContainerListOptions{
@@ -194,34 +221,11 @@ func (client *DockerClient) ContainerList(namePrefix string, label string) ([]Co
 	}
 
 	var result []ContainerInfo
-	for _, c := range containers {
-
-		// name starts with slash
-		containerName := strings.TrimPrefix(c.Names[0], "/")
-		// see types.ContainerState
-		healthy := c.State == "running"
-
-		result = append(result, ContainerInfo{
-			ContainerId:   c.ID,
-			ContainerName: containerName,
-			Healthy:       healthy,
-			Labels:        c.Labels,
-			Ports:         toContainerPort(c.Ports),
-		})
+	for _, container := range containers {
+		result = append(result, NewContainerInfo(container.ID, container.Names[0], container.State))
 	}
 
 	return result, nil
-}
-
-func toContainerPort(ports []types.Port) []ContainerPort {
-	var result []ContainerPort
-	for _, port := range ports {
-		result = append(result, ContainerPort{
-			Local:  strconv.Itoa(int(port.PublicPort)),
-			Remote: strconv.Itoa(int(port.PrivatePort)),
-		})
-	}
-	return result
 }
 
 func (client *DockerClient) ContainerLogs(opts *ContainerLogsOpts) error {

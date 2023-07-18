@@ -46,6 +46,11 @@ func (box *KubeBoxClient) Copy(string, string, string) error {
 	return errors.New("not implemented")
 }
 
+func (box *KubeBoxClient) Describe(name string) (*model.BoxDetails, error) {
+	defer box.close()
+	return nil, errors.New("not implemented")
+}
+
 func (box *KubeBoxClient) List() ([]model.BoxInfo, error) {
 	defer box.close()
 	return box.listBoxes()
