@@ -63,8 +63,7 @@ func (l BoxLabels) AddLabels(path string, commit string, size ResourceSize) BoxL
 	return labels
 }
 
-// TODO test
-func (l BoxLabels) exists(name string) (string, error) {
+func (l BoxLabels) exist(name string) (string, error) {
 	if label, ok := l[name]; !ok {
 		return "", fmt.Errorf("label %s not found", name)
 	} else {
@@ -72,18 +71,16 @@ func (l BoxLabels) exists(name string) (string, error) {
 	}
 }
 
-// TODO test
 func (l BoxLabels) ToSize() (ResourceSize, error) {
-	if label, err := l.exists(LabelBoxSize); err != nil {
+	if label, err := l.exist(LabelBoxSize); err != nil {
 		return Small, err
 	} else {
 		return ExistResourceSize(label)
 	}
 }
 
-// TODO test
 func (l BoxLabels) ToBoxTemplateInfo() (*BoxTemplateInfo, error) {
-	if _, err := l.exists(LabelTemplateGit); err != nil {
+	if _, err := l.exist(LabelTemplateGit); err != nil {
 		return nil, err
 	}
 

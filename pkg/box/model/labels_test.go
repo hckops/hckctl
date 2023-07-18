@@ -68,3 +68,61 @@ func TestAddGitLabels(t *testing.T) {
 	assert.Equal(t, 9, len(expected))
 	assert.Equal(t, expected, labels)
 }
+
+func TestExist(t *testing.T) {
+	labels := BoxLabels{
+		"my.name": "myValue",
+	}
+	value, err := labels.exist("my.name")
+
+	assert.NoError(t, err)
+	assert.Equal(t, "myValue", value)
+}
+
+func TestExistError(t *testing.T) {
+	_, err := BoxLabels{}.exist("my.name")
+	assert.EqualError(t, err, "label my.name not found")
+}
+
+func TestToSize(t *testing.T) {
+	labels := BoxLabels{
+		"com.hckops.box.size": "xl",
+	}
+	size, err := labels.ToSize()
+
+	assert.NoError(t, err)
+	assert.Equal(t, ExtraLarge, size)
+}
+
+func TestToSizeError(t *testing.T) {
+	_, errLabel := BoxLabels{}.ToSize()
+	assert.EqualError(t, errLabel, "label com.hckops.box.size not found")
+
+	_, errSize := BoxLabels{"com.hckops.box.size": "invalid"}.ToSize()
+	assert.EqualError(t, errSize, "invalid resource size")
+}
+
+func TestToBoxTemplateInfo(t *testing.T) {
+	labels := BoxLabels{
+		"com.hckops.template.git":          "true",
+		"com.hckops.template.git.url":      "myUrl",
+		"com.hckops.template.git.revision": "myRevision",
+		"com.hckops.template.git.commit":   "myCommit",
+		"com.hckops.template.git.name":     "myName",
+	}
+	expected := &BoxTemplateInfo{
+		Url:      "myUrl",
+		Revision: "myRevision",
+		Commit:   "myCommit",
+		Name:     "myName",
+	}
+	result, err := labels.ToBoxTemplateInfo()
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+}
+
+func TestToBoxTemplateInfoError(t *testing.T) {
+	_, err := BoxLabels{}.ToBoxTemplateInfo()
+	assert.EqualError(t, err, "label com.hckops.template.git not found")
+}
