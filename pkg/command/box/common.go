@@ -89,7 +89,7 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 	}
 	// TODO add name to label and search for all provider
 	templateName := model.ToBoxTemplateName(boxName)
-	boxTemplate, err := old.NewGitSource(sourceOpts, templateName).ReadBox()
+	boxTemplate, err := template.NewGitLoader[model.BoxV1](sourceOpts, templateName).Read()
 	if err != nil {
 		log.Warn().Err(err).Msgf("error reading box template: templateName=%v", templateName)
 		return errors.New("invalid template")
@@ -106,7 +106,7 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 			break
 		}
 
-		if err := invokeClient(boxClient, boxTemplate.Template); err != nil {
+		if err := invokeClient(boxClient, &boxTemplate.Value.Data); err != nil {
 			log.Warn().Err(err).Msgf("ignoring error invoking client: providerFlag=%v", providerFlag)
 		} else {
 			// return as soon as the client is invoked with success

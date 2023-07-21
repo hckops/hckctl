@@ -1,13 +1,15 @@
-package old
+package template
 
 import (
+	"path/filepath"
+
 	"github.com/bmatcuk/doublestar/v4"
+	"github.com/pkg/errors"
+
 	box "github.com/hckops/hckctl/pkg/box/model"
 	lab "github.com/hckops/hckctl/pkg/lab/model"
 	"github.com/hckops/hckctl/pkg/schema"
-	"github.com/hckops/hckctl/pkg/template"
 	"github.com/hckops/hckctl/pkg/util"
-	"github.com/pkg/errors"
 )
 
 func readRawTemplate(path string) (*RawTemplate, error) {
@@ -45,67 +47,59 @@ func readTemplates(wildcard string) ([]*TemplateValidated, error) {
 	return results, nil
 }
 
-func decodeFromYaml(raw *RawTemplate) (any, error) {
-	switch raw.Kind {
-	case schema.KindBoxV1:
-		return template.decodeBoxFromYaml(raw.Data)
-	case schema.KindLabV1:
-		return template.decodeLabFromYaml(raw.Data)
-	}
-}
-
-// https://stackoverflow.com/questions/71047848/how-to-assign-or-return-generic-t-that-is-constrained-by-union
 func readTemplate[T TemplateType](path string) (*TemplateValue[T], error) {
 	raw, err := readRawTemplate(path)
 	if err != nil {
 		return nil, err
 	}
+	return decodeFromYaml[T](raw)
+}
 
+func decodeFromYaml[T TemplateType](raw *RawTemplate) (*TemplateValue[T], error) {
+
+	// https://stackoverflow.com/questions/71047848/how-to-assign-or-return-generic-t-that-is-constrained-by-union
 	var templateType T
 	switch typeRef := any(&templateType).(type) {
 	case *box.BoxV1:
-		template, err := template.decodeBoxFromYaml(raw.Data)
+		template, err := decodeBoxFromYaml(raw.Data)
 		if err != nil {
 			return nil, err
 		}
 		*typeRef = *template
-		return newBoxTemplate(template), nil
 
 	case *lab.LabV1:
-		template, err := template.decodeLabFromYaml(raw.Data)
+		template, err := decodeLabFromYaml(raw.Data)
 		if err != nil {
 			return nil, err
 		}
 		*typeRef = *template
+
 	}
 
-	return templateType, nil
+	return &TemplateValue[T]{Kind: raw.Kind, Data: templateType}, nil
 }
 
-func readBoxTemplate(path string) (*BoxTemplate, error) {
-	raw, err := readRawTemplate(path)
-	if err != nil {
-		return nil, err
-	}
-
-	template, err := template.decodeBoxFromYaml(raw.Data)
-	if err != nil {
-		return nil, err
-	}
-
-	return newBoxTemplate(template), nil
+// nil for generics
+func none[T TemplateType]() T {
+	return *new(T)
 }
 
-func readLabTemplate(path string) (*LabTemplate, error) {
-	value, err := readRawTemplate(path)
+func readCachedTemplateInfo[T TemplateType](cacheOpts *CacheSourceOpts, path string, sourceType SourceType) (*TemplateInfo[T], error) {
+
+	value, err := readTemplate[T](path)
 	if err != nil {
 		return nil, err
 	}
 
-	template, err := template.decodeLabFromYaml(value.Data)
-	if err != nil {
-		return nil, err
-	}
+	// TODO gen name
+	// TODO save value.Data to cachedPath
+	cachedPath := filepath.Join(cacheOpts.cacheDir, cacheOpts.cacheName, "TODO_GEN_NAME")
 
-	return newLabTemplate(template), nil
+	return &TemplateInfo[T]{
+		Value:      value,
+		SourceType: sourceType,
+		Cached:     true,
+		Path:       cachedPath,
+		Revision:   sourceType.String(),
+	}, nil
 }

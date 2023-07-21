@@ -65,3 +65,7 @@ func (t *RawTemplate) ToJson() (*RawTemplate, error) {
 		return t, nil
 	}
 }
+
+func (t *RawTemplate) toValidated(path string, isValid bool) *TemplateValidated {
+	return &TemplateValidated{t, path, isValid}
+}

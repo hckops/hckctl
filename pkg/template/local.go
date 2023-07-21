@@ -1,22 +1,18 @@
 package template
 
-import (
-	"github.com/pkg/errors"
-)
-
 type LocalSource[T TemplateType] struct {
 	cacheOpts *CacheSourceOpts
 	path      string
 }
 
 func (src *LocalSource[T]) Parse() (*RawTemplate, error) {
-	return nil, errors.New("not implemented")
+	return readRawTemplate(src.path)
 }
 
 func (src *LocalSource[T]) Validate() ([]*TemplateValidated, error) {
-	return nil, errors.New("not implemented")
+	return readTemplates(src.path)
 }
 
 func (src *LocalSource[T]) Read() (*TemplateInfo[T], error) {
-	return nil, errors.New("not implemented")
+	return readCachedTemplateInfo[T](src.cacheOpts, src.path, Local)
 }
