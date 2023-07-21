@@ -351,8 +351,8 @@ func toBoxDetails(container docker.ContainerDetails) (*model.BoxDetails, error) 
 		Provider: model.Docker,
 		Size:     size,
 		TemplateInfo: &model.BoxTemplateInfo{
-			LocalTemplate: labels.ToLocalTemplateInfo(),
-			GitTemplate:   labels.ToGitTemplateInfo(),
+			CachedTemplate: labels.ToCachedTemplateInfo(),
+			GitTemplate:    labels.ToGitTemplateInfo(),
 		},
 		Env:   env,
 		Ports: ports,

@@ -45,7 +45,7 @@ type TemplateInfo[T TemplateType] struct {
 	Revision   string // local/remote or git commit
 }
 
-// fixes receiver types with generics
+// alias to fix receiver types with generics
 type RawTemplate TemplateValue[string]
 
 func (t *RawTemplate) ToYaml() (*RawTemplate, error) {

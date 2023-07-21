@@ -8,8 +8,3 @@ const (
 	TemplateSourceUrl      = "https://github.com/hckops/megalopolis"
 	TemplateSourceRevision = "main"
 )
-
-// TODO move ^^^ default to template?
-// TODO fix cyclic import
-// TODO label in kube base64?
-// TODO cloud/hckadm

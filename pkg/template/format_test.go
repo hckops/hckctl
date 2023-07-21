@@ -114,7 +114,7 @@ func TestConvertFromYamlToJson(t *testing.T) {
 	assert.Equal(t, expected, result)
 }
 
-func TestDecodeBoxFromYaml(t *testing.T) {
+func TestDecodeFromYaml(t *testing.T) {
 	expected := &model.BoxV1{
 		Kind: "box/v1",
 		Name: "my-box",

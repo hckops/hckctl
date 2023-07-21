@@ -112,12 +112,12 @@ func TestToSizeError(t *testing.T) {
 	assert.EqualError(t, errSize, "invalid resource size")
 }
 
-func TestToLocalTemplateInfo(t *testing.T) {
+func TestToCachedTemplateInfo(t *testing.T) {
 	info := NewLocalLabels().
 		AddLocalLabels(Small, "/tmp/cache").
-		ToLocalTemplateInfo()
+		ToCachedTemplateInfo()
 
-	expected := &LocalTemplateInfo{
+	expected := &CachedTemplateInfo{
 		Path: "/tmp/cache",
 	}
 

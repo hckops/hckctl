@@ -91,11 +91,12 @@ func (l BoxLabels) ToSize() (ResourceSize, error) {
 	}
 }
 
-func (l BoxLabels) ToLocalTemplateInfo() *LocalTemplateInfo {
+func (l BoxLabels) ToCachedTemplateInfo() *CachedTemplateInfo {
+	// TODO local and remote
 	if _, err := l.exist(LabelTemplateLocal); err != nil {
 		return nil
 	}
-	return &LocalTemplateInfo{Path: l[LabelTemplateCommonPath]}
+	return &CachedTemplateInfo{Path: l[LabelTemplateCommonPath]}
 }
 
 func (l BoxLabels) ToGitTemplateInfo() *GitTemplateInfo {

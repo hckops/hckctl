@@ -25,12 +25,15 @@ type BoxDetails struct {
 }
 
 type BoxTemplateInfo struct {
-	//template.SourceType
-	LocalTemplate *LocalTemplateInfo
-	GitTemplate   *GitTemplateInfo
+	CachedTemplate *CachedTemplateInfo
+	GitTemplate    *GitTemplateInfo
 }
 
-type LocalTemplateInfo struct {
+func (info *BoxTemplateInfo) IsCached() bool {
+	return info.CachedTemplate != nil
+}
+
+type CachedTemplateInfo struct {
 	Path string
 }
 

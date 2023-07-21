@@ -65,10 +65,10 @@ type BoxValue struct {
 	Healthy       bool
 	Provider      string
 	Size          string
-	LocalTemplate *model.LocalTemplateInfo `yaml:"local,omitempty"`
-	GitTemplate   *model.GitTemplateInfo   `yaml:"git,omitempty"`
-	Env           []model.BoxEnv           `yaml:",omitempty"`
-	Ports         []model.BoxPort          `yaml:",omitempty"`
+	CacheTemplate *model.CachedTemplateInfo `yaml:"cache,omitempty"`
+	GitTemplate   *model.GitTemplateInfo    `yaml:"git,omitempty"`
+	Env           []model.BoxEnv            `yaml:",omitempty"`
+	Ports         []model.BoxPort           `yaml:",omitempty"`
 }
 
 func newBoxValue(details *model.BoxDetails) *BoxValue {
@@ -77,7 +77,7 @@ func newBoxValue(details *model.BoxDetails) *BoxValue {
 		Healthy:       details.Info.Healthy,
 		Provider:      details.Provider.String(),
 		Size:          details.Size.String(),
-		LocalTemplate: details.TemplateInfo.LocalTemplate,
+		CacheTemplate: details.TemplateInfo.CachedTemplate,
 		GitTemplate:   details.TemplateInfo.GitTemplate,
 		Env:           details.Env,
 		Ports:         details.Ports,

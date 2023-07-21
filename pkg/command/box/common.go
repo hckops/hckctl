@@ -91,13 +91,7 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 			break
 		}
 
-		sourceLoader, err := newSourceLoader(boxDetails, configRef.Config.Template.CacheDir)
-		if err != nil {
-			log.Warn().Err(err).Msgf("ignoring error source loader: providerFlag=%v", providerFlag)
-			break
-		}
-
-		templateInfo, err := sourceLoader.Read()
+		templateInfo, err := newSourceLoader(boxDetails, configRef.Config.Template.CacheDir).Read()
 		if err != nil {
 			log.Warn().Err(err).Msgf("ignoring error reading source: providerFlag=%v ", providerFlag)
 			break
@@ -118,24 +112,20 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 	return errors.New("not found")
 }
 
-// TODO issue sourceType
+func newSourceLoader(boxDetails *model.BoxDetails, cacheDir string) template.SourceLoader[model.BoxV1] {
 
-func newSourceLoader(boxDetails *model.BoxDetails, cacheDir string) (template.SourceLoader[model.BoxV1], error) {
-
-	//switch boxDetails.TemplateInfo.SourceType {
-	//case template.Local:
-	//	return template.NewLocalLoader[model.BoxV1](boxDetails.TemplateInfo.LocalTemplate.Path), nil
-	//case template.Git:
-	//	sourceOpts := &template.GitSourceOptions{
-	//		CacheBaseDir:    cacheDir,
-	//		RepositoryUrl:   common.TemplateSourceUrl,
-	//		DefaultRevision: common.TemplateSourceRevision,
-	//		Revision:        boxDetails.TemplateInfo.GitTemplate.Commit,
-	//		AllowOffline:    true,
-	//	}
-	//	return template.NewGitLoader[model.BoxV1](sourceOpts, boxDetails.Info.Name), nil
-	//}
-	return nil, errors.New("invalid source type")
+	if boxDetails.TemplateInfo.IsCached() {
+		return template.NewLocalLoader[model.BoxV1](boxDetails.TemplateInfo.CachedTemplate.Path)
+	} else {
+		sourceOpts := &template.GitSourceOptions{
+			CacheBaseDir:    cacheDir,
+			RepositoryUrl:   common.TemplateSourceUrl,
+			DefaultRevision: common.TemplateSourceRevision,
+			Revision:        boxDetails.TemplateInfo.GitTemplate.Commit,
+			AllowOffline:    true,
+		}
+		return template.NewGitLoader[model.BoxV1](sourceOpts, boxDetails.Info.Name)
+	}
 }
 
 func newBoxClientOpts(provider model.BoxProvider, configRef *config.ConfigRef) *model.BoxClientOptions {
