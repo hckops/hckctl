@@ -1,8 +1,6 @@
 package template
 
 import (
-	"path/filepath"
-
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/pkg/errors"
 
@@ -55,6 +53,7 @@ func readTemplate[T TemplateType](path string) (*TemplateValue[T], error) {
 	return decodeFromYaml[T](raw)
 }
 
+// TODO refactor decoder with yaml.Unmarshal
 func decodeFromYaml[T TemplateType](raw *RawTemplate) (*TemplateValue[T], error) {
 
 	// https://stackoverflow.com/questions/71047848/how-to-assign-or-return-generic-t-that-is-constrained-by-union
@@ -75,31 +74,10 @@ func decodeFromYaml[T TemplateType](raw *RawTemplate) (*TemplateValue[T], error)
 		*typeRef = *template
 
 	}
-
 	return &TemplateValue[T]{Kind: raw.Kind, Data: templateType}, nil
 }
 
 // nil for generics
 func none[T TemplateType]() T {
 	return *new(T)
-}
-
-func readCachedTemplateInfo[T TemplateType](cacheOpts *CacheSourceOpts, path string, sourceType SourceType) (*TemplateInfo[T], error) {
-
-	value, err := readTemplate[T](path)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO gen name
-	// TODO save value.Data to cachedPath
-	cachedPath := filepath.Join(cacheOpts.cacheDir, cacheOpts.cacheName, "TODO_GEN_NAME")
-
-	return &TemplateInfo[T]{
-		Value:      value,
-		SourceType: sourceType,
-		Cached:     true,
-		Path:       cachedPath,
-		Revision:   sourceType.String(),
-	}, nil
 }

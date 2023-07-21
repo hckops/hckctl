@@ -28,3 +28,24 @@ func ReadFile(path string) (string, error) {
 	}
 	return string(data), nil
 }
+
+func CopyFile(from string, to string) (int64, error) {
+
+	if err := CreateBaseDir(to); err != nil {
+		return -1, err
+	}
+
+	reader, err := os.Open(from)
+	if err != nil {
+		return -1, errors.Wrapf(err, "unable to open source file %s", from)
+	}
+	defer reader.Close()
+
+	writer, err := os.Create(to)
+	if err != nil {
+		return -1, errors.Wrapf(err, "unable to open destination file %s", to)
+	}
+	defer writer.Close()
+
+	return writer.ReadFrom(reader)
+}
