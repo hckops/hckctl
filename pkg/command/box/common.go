@@ -117,19 +117,22 @@ func newSourceLoader(boxDetails *model.BoxDetails, cacheDir string) template.Sou
 	if boxDetails.TemplateInfo.IsCached() {
 		return template.NewLocalLoader[model.BoxV1](boxDetails.TemplateInfo.CachedTemplate.Path)
 	} else {
-		sourceOpts := &template.GitSourceOptions{
-			CacheBaseDir:    cacheDir,
-			RepositoryUrl:   common.TemplateSourceUrl,
-			DefaultRevision: common.TemplateSourceRevision,
-			Revision:        boxDetails.TemplateInfo.GitTemplate.Commit,
-			AllowOffline:    true,
-		}
+		sourceOpts := newGitSourceOptions(cacheDir, boxDetails.TemplateInfo.GitTemplate.Commit)
 		return template.NewGitLoader[model.BoxV1](sourceOpts, boxDetails.TemplateInfo.GitTemplate.Name)
 	}
 }
 
-func newBoxClientOpts(provider model.BoxProvider, configRef *config.ConfigRef) *model.BoxClientOptions {
+func newGitSourceOptions(cacheDir string, revision string) *template.GitSourceOptions {
+	return &template.GitSourceOptions{
+		CacheBaseDir:    cacheDir,
+		RepositoryUrl:   common.TemplateSourceUrl,
+		DefaultRevision: common.TemplateSourceRevision,
+		Revision:        revision,
+		AllowOffline:    true,
+	}
+}
 
+func newBoxClientOpts(provider model.BoxProvider, configRef *config.ConfigRef) *model.BoxClientOptions {
 	return &model.BoxClientOptions{
 		Provider:   provider,
 		CommonOpts: model.NewCommonBoxOpts(),

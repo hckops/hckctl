@@ -24,9 +24,6 @@ type BoxClient interface {
 	Version() (string, error)                // TODO replace string with BoxVersion interface, return both client and server version
 }
 
-// TODO https://stackoverflow.com/questions/30261032/how-to-implement-an-abstract-class-in-go
-// TODO https://golangbyexample.com/go-abstract-class
-
 func NewBoxClient(opts *model.BoxClientOptions) (BoxClient, error) {
 	switch opts.Provider {
 	case model.Docker:

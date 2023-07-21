@@ -41,8 +41,6 @@ func NewBoxDeleteCmd(configRef *config.ConfigRef) *cobra.Command {
 
 func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 
-	// TODO delete cached templates
-
 	if len(args) == 0 && opts.all {
 		// silently fail attempting all the providers
 		for _, providerFlag := range boxFlag.BoxProviders() {
@@ -50,6 +48,7 @@ func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 				log.Warn().Err(err).Msgf("ignoring error delete boxes: providerFlag=%v", providerFlag)
 			}
 		}
+		// cleanup cache directory
 		if localPath, err := template.DeleteLocalCacheDir(opts.configRef.Config.Template.CacheDir); err != nil {
 			return err
 		} else {

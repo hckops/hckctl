@@ -70,7 +70,7 @@ hckctl box down dvwa # <<<
 [open|xdg-open] http://localhost:8080
 ```
 
-*There is no difference between attacker or vulnerable boxes, if you can containerize it you can run it*
+*There are no differences between an attacker or a vulnerable box, if you can containerize it you can run it*
 
 ### Task
 
@@ -262,3 +262,6 @@ TODO
 * docs
 - https://jogendra.dev/import-cycles-in-golang-and-how-to-deal-with-them
 - https://benjiv.com/golang-generics-introduction
+- boxClient refactor
+    * https://stackoverflow.com/questions/30261032/how-to-implement-an-abstract-class-in-go
+    * https://golangbyexample.com/go-abstract-class
