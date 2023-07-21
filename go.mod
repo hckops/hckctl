@@ -27,9 +27,9 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.27.4
 	k8s.io/apimachinery v0.27.4
-	k8s.io/cli-runtime v0.27.3
-	k8s.io/client-go v0.27.3
-	k8s.io/kubectl v0.27.3
+	k8s.io/cli-runtime v0.27.4
+	k8s.io/client-go v0.27.4
+	k8s.io/kubectl v0.27.4
 )
 
 require (
@@ -116,7 +116,7 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gotest.tools/v3 v3.4.0 // indirect
-	k8s.io/component-base v0.27.3 // indirect
+	k8s.io/component-base v0.27.4 // indirect
 	k8s.io/klog/v2 v2.90.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230501164219-8b0f38b5fd1f // indirect
 	k8s.io/utils v0.0.0-20230209194617-a36077c30491 // indirect
