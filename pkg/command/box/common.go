@@ -112,10 +112,6 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 	return errors.New("not found")
 }
 
-// TODO move constant to default template?
-// TODO label in kube base64?
-// TODO cloud/hckadm
-
 func newSourceLoader(boxDetails *model.BoxDetails, cacheDir string) template.SourceLoader[model.BoxV1] {
 
 	if boxDetails.TemplateInfo.IsCached() {
@@ -128,7 +124,7 @@ func newSourceLoader(boxDetails *model.BoxDetails, cacheDir string) template.Sou
 			Revision:        boxDetails.TemplateInfo.GitTemplate.Commit,
 			AllowOffline:    true,
 		}
-		return template.NewGitLoader[model.BoxV1](sourceOpts, boxDetails.Info.Name)
+		return template.NewGitLoader[model.BoxV1](sourceOpts, boxDetails.TemplateInfo.GitTemplate.Name)
 	}
 }
 
