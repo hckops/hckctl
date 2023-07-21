@@ -2,6 +2,7 @@ package docker
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/docker/docker/api/types/container" // TODO remove
 	"github.com/docker/docker/api/types/network"   // TODO remove
@@ -315,6 +316,7 @@ func (box *DockerBoxClient) describe(name string) (*model.BoxDetails, error) {
 	return toBoxDetails(containerInfo)
 }
 
+// TODO test
 func toBoxDetails(container docker.ContainerDetails) (*model.BoxDetails, error) {
 
 	labels := model.BoxLabels(container.Labels)
@@ -324,12 +326,34 @@ func toBoxDetails(container docker.ContainerDetails) (*model.BoxDetails, error) 
 		return nil, err
 	}
 
+	// TODO filter by prefix e.g. "HCK_"
+	var env []model.BoxEnv
+	for _, e := range container.Env {
+		items := strings.Split(e, "=")
+		env = append(env, model.BoxEnv{
+			Key:   items[0],
+			Value: items[1],
+		})
+	}
+
+	var ports []model.BoxPort
+	for _, p := range container.Ports {
+		ports = append(ports, model.BoxPort{
+			Alias:  "TODO", // TODO match with template
+			Local:  p.Local,
+			Remote: p.Remote,
+			Public: false,
+		})
+	}
+
 	return &model.BoxDetails{
 		Info:          newBoxInfo(container.Info),
 		Provider:      model.Docker,
 		Size:          size,
 		LocalTemplate: labels.ToLocalTemplateInfo(),
 		GitTemplate:   labels.ToGitTemplateInfo(),
+		Env:           env,
+		Ports:         ports,
 	}, nil
 }
 
