@@ -6,9 +6,11 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
+	"github.com/hckops/hckctl/pkg/box/model"
 	boxFlag "github.com/hckops/hckctl/pkg/command/box/flag"
 	commonFlag "github.com/hckops/hckctl/pkg/command/common/flag"
 	"github.com/hckops/hckctl/pkg/command/config"
+	"github.com/hckops/hckctl/pkg/template"
 )
 
 type boxDeleteCmdOptions struct {
@@ -48,13 +50,19 @@ func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 				log.Warn().Err(err).Msgf("ignoring error delete boxes: providerFlag=%v", providerFlag)
 			}
 		}
-		return nil
+		if localPath, err := template.DeleteLocalCacheDir(opts.configRef.Config.Template.CacheDir); err != nil {
+			return err
+		} else {
+			log.Debug().Msgf("delete local cache path: localPath=%s", localPath)
+			return nil
+		}
 
 	} else if len(args) == 1 && !opts.all {
 		boxName := args[0]
 		log.Debug().Msgf("delete box: boxName=%s", boxName)
 
-		deleteClient := func(invokeOpts *invokeOptions) error {
+		deleteClient := func(invokeOpts *invokeOptions, boxDetails *model.BoxDetails) error {
+
 			if result, err := invokeOpts.client.Delete([]string{boxName}); err != nil {
 				return err
 			} else if len(result) == 0 {
@@ -62,6 +70,11 @@ func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 				return fmt.Errorf("box not found: boxName=%s", boxName)
 			}
 			fmt.Println(boxName)
+
+			if boxDetails.TemplateInfo.IsCached() {
+				log.Debug().Msgf("delete cached template: path=%s", invokeOpts.template.Path)
+				return template.DeleteCachedTemplate(invokeOpts.template.Path)
+			}
 			return nil
 		}
 		return attemptRunBoxClients(opts.configRef, boxName, deleteClient)

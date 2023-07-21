@@ -4,6 +4,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
+	"github.com/hckops/hckctl/pkg/box/model"
 	boxFlag "github.com/hckops/hckctl/pkg/command/box/flag"
 	commonFlag "github.com/hckops/hckctl/pkg/command/common/flag"
 	"github.com/hckops/hckctl/pkg/command/config"
@@ -38,7 +39,7 @@ func (opts *boxConnectCmdOptions) run(cmd *cobra.Command, args []string) error {
 		boxName := args[0]
 		log.Debug().Msgf("connect box: boxName=%s", boxName)
 
-		execClient := func(invokeOpts *invokeOptions) error {
+		execClient := func(invokeOpts *invokeOptions, _ *model.BoxDetails) error {
 
 			// log only and ignore invalid tunnel flags to avoid false positive during provider attempts
 			if err := boxFlag.ValidateTunnelFlag(invokeOpts.client.Provider(), opts.tunnelFlag); err != nil {

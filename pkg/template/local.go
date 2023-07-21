@@ -43,8 +43,16 @@ func readLocalCachedTemplateInfo[T TemplateType](cacheOpts *CacheSourceOpts, pat
 	return &TemplateInfo[T]{
 		Value:      value,
 		SourceType: sourceType,
-		Cached:     true,
 		Path:       cachedPath,
 		Revision:   sourceType.String(),
 	}, nil
+}
+
+func DeleteCachedTemplate(path string) error {
+	return util.DeleteFile(path)
+}
+
+func DeleteLocalCacheDir(cacheDir string) (string, error) {
+	localPath := filepath.Join(cacheDir, Local.String())
+	return localPath, util.DeleteDir(localPath)
 }

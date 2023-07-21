@@ -70,7 +70,6 @@ func readTemplateInfo[T TemplateType](sourceType SourceType, path string, revisi
 	return &TemplateInfo[T]{
 		Value:      value,
 		SourceType: sourceType,
-		Cached:     false,
 		Path:       path,
 		Revision:   revision,
 	}, nil

@@ -37,15 +37,8 @@ func (opts *boxDescribeCmdOptions) run(cmd *cobra.Command, args []string) error 
 		boxName := args[0]
 		log.Debug().Msgf("describe box: boxName=%s", boxName)
 
-		describeClient := func(invokeOpts *invokeOptions) error {
-
-			details, err := invokeOpts.client.Describe(boxName)
-			if err != nil {
-				// attempt next provider
-				return err
-			}
-
-			if value, err := util.EncodeYaml(newBoxValue(details)); err != nil {
+		describeClient := func(invokeOpts *invokeOptions, boxDetails *model.BoxDetails) error {
+			if value, err := util.EncodeYaml(newBoxValue(boxDetails)); err != nil {
 				return err
 			} else {
 				fmt.Print(value)

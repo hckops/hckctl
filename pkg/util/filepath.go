@@ -49,3 +49,19 @@ func CopyFile(from string, to string) (int64, error) {
 
 	return writer.ReadFrom(reader)
 }
+
+func DeleteFile(path string) error {
+	err := os.Remove(path)
+	if err != nil {
+		return errors.Wrapf(err, "unable to delete file %s", path)
+	}
+	return nil
+}
+
+func DeleteDir(path string) error {
+	err := os.RemoveAll(path)
+	if err != nil {
+		return errors.Wrapf(err, "unable to delete dir %s", path)
+	}
+	return nil
+}

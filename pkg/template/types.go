@@ -40,7 +40,6 @@ type TemplateValidated struct {
 type TemplateInfo[T TemplateType] struct {
 	Value      *TemplateValue[T]
 	SourceType SourceType
-	Cached     bool
 	Path       string // absolute path cached or resolved git path
 	Revision   string // local/remote or git commit
 }

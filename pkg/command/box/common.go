@@ -71,8 +71,8 @@ func runBoxClient(sourceLoader template.SourceLoader[model.BoxV1], provider mode
 	return nil
 }
 
-// exec, describe and delete
-func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeClient func(*invokeOptions) error) error {
+// connect, describe and delete
+func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeClient func(*invokeOptions, *model.BoxDetails) error) error {
 
 	// silently fail attempting all the providers
 	for _, providerFlag := range boxFlag.BoxProviders() {
@@ -101,7 +101,7 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 			client:   boxClient,
 			template: templateInfo,
 		}
-		if err := invokeClient(invokeOpts); err != nil {
+		if err := invokeClient(invokeOpts, boxDetails); err != nil {
 			log.Warn().Err(err).Msgf("ignoring error invoking client: providerFlag=%v", providerFlag)
 		} else {
 			// return as soon as the client is invoked with success
@@ -111,6 +111,10 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 	// nothing happened and all the providers failed
 	return errors.New("not found")
 }
+
+// TODO move constant to default template?
+// TODO label in kube base64?
+// TODO cloud/hckadm
 
 func newSourceLoader(boxDetails *model.BoxDetails, cacheDir string) template.SourceLoader[model.BoxV1] {
 
