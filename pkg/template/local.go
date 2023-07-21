@@ -22,10 +22,13 @@ func (src *LocalSource[T]) Validate() ([]*TemplateValidated, error) {
 }
 
 func (src *LocalSource[T]) Read() (*TemplateInfo[T], error) {
-	return readLocalTemplateInfo[T](src.cacheOpts, src.path, Local)
+	if src.cacheOpts != nil {
+		return readLocalCachedTemplateInfo[T](src.cacheOpts, src.path, Local)
+	}
+	return readTemplateInfo[T](Local, src.path, Local.String())
 }
 
-func readLocalTemplateInfo[T TemplateType](cacheOpts *CacheSourceOpts, path string, sourceType SourceType) (*TemplateInfo[T], error) {
+func readLocalCachedTemplateInfo[T TemplateType](cacheOpts *CacheSourceOpts, path string, sourceType SourceType) (*TemplateInfo[T], error) {
 
 	value, err := readTemplate[T](path)
 	if err != nil {

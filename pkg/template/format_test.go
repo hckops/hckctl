@@ -133,7 +133,7 @@ func TestDecodeBoxFromYaml(t *testing.T) {
 		}},
 	}
 
-	result, err := decodeBoxFromYaml(exampleYaml)
+	result, err := decodeFromYaml[model.BoxV1](exampleYaml)
 	assert.NoError(t, err)
-	assert.Equal(t, expected, result)
+	assert.Equal(t, expected, &result)
 }

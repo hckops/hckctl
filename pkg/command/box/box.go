@@ -101,8 +101,7 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 			path := args[0]
 			log.Debug().Msgf("open box from local template: path=%s", path)
 
-			// TODO add cached path to label
-			sourceLoader := template.NewLocalLoader[model.BoxV1](path, opts.configRef.Config.Template.CacheDir)
+			sourceLoader := template.NewLocalCachedLoader[model.BoxV1](path, opts.configRef.Config.Template.CacheDir)
 			return opts.openBox(sourceLoader, provider, model.NewLocalLabels())
 
 		} else {
@@ -116,8 +115,8 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 			}
 			log.Debug().Msgf("open box from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
-			labels := model.NewGitLabels(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
 			sourceLoader := template.NewGitLoader[model.BoxV1](sourceOpts, name)
+			labels := model.NewGitLabels(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
 			return opts.openBox(sourceLoader, provider, labels)
 		}
 
@@ -141,15 +140,15 @@ func (opts *boxCmdOptions) validateFlags(provider model.BoxProvider) error {
 
 func (opts *boxCmdOptions) openBox(sourceLoader template.SourceLoader[model.BoxV1], provider model.BoxProvider, labels model.BoxLabels) error {
 
-	openClient := func(clientOpts *boxClientOptions) error {
+	openClient := func(invokeOpts *invokeOptions, loader *common.Loader) error {
 
-		templateOpts, err := newTemplateOptions(clientOpts.template, labels, opts.configRef.Config.Box.Size)
+		templateOpts, err := newTemplateOptions(invokeOpts.template, labels, opts.configRef.Config.Box.Size)
 		if err != nil {
 			return err
 		}
 		tunnelOpts := opts.tunnelFlag.ToTunnelOptions()
 
-		return clientOpts.client.Open(templateOpts, tunnelOpts)
+		return invokeOpts.client.Open(templateOpts, tunnelOpts)
 	}
 	return runBoxClient(sourceLoader, provider, opts.configRef, openClient)
 }

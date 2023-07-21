@@ -17,14 +17,13 @@ import (
 	"github.com/hckops/hckctl/pkg/template"
 )
 
-type boxClientOptions struct {
-	template *template.TemplateInfo[model.BoxV1]
+type invokeOptions struct {
 	client   box.BoxClient
-	loader   *common.Loader
+	template *template.TemplateInfo[model.BoxV1]
 }
 
 // open and create
-func runBoxClient(sourceLoader template.SourceLoader[model.BoxV1], provider model.BoxProvider, configRef *config.ConfigRef, invokeClient func(*boxClientOptions) error) error {
+func runBoxClient(sourceLoader template.SourceLoader[model.BoxV1], provider model.BoxProvider, configRef *config.ConfigRef, invokeClient func(*invokeOptions, *common.Loader) error) error {
 
 	boxTemplate, err := sourceLoader.Read()
 	if err != nil {
@@ -61,12 +60,11 @@ func runBoxClient(sourceLoader template.SourceLoader[model.BoxV1], provider mode
 		}
 	})
 
-	opts := &boxClientOptions{
-		template: boxTemplate,
+	invokeOpts := &invokeOptions{
 		client:   boxClient,
-		loader:   loader,
+		template: boxTemplate,
 	}
-	if err := invokeClient(opts); err != nil {
+	if err := invokeClient(invokeOpts, loader); err != nil {
 		log.Warn().Err(err).Msgf("error invoking client: provider=%v", provider)
 		return fmt.Errorf("error %v client invoke", provider)
 	}
@@ -74,26 +72,7 @@ func runBoxClient(sourceLoader template.SourceLoader[model.BoxV1], provider mode
 }
 
 // exec, describe and delete
-func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeClient func(box.BoxClient, *model.BoxV1) error) error {
-
-	// TODO describe box and depending on the source type instantiate sourceLoader
-
-	// best effort approach to resolve the box template by name with git source and default revision
-	// WARNING this might return unexpected results if the box was created with a different revision
-	sourceOpts := &template.GitSourceOptions{
-		CacheBaseDir:    configRef.Config.Template.CacheDir,
-		RepositoryUrl:   common.TemplateSourceUrl,
-		DefaultRevision: common.TemplateSourceRevision,
-		Revision:        common.TemplateSourceRevision, // TODO always default, read from labels and convert main to sha
-		AllowOffline:    true,
-	}
-	// TODO add name to label and search for all provider
-	templateName := model.ToBoxTemplateName(boxName)
-	boxTemplate, err := template.NewGitLoader[model.BoxV1](sourceOpts, templateName).Read()
-	if err != nil {
-		log.Warn().Err(err).Msgf("error reading box template: templateName=%v", templateName)
-		return errors.New("invalid template")
-	}
+func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeClient func(*invokeOptions) error) error {
 
 	// silently fail attempting all the providers
 	for _, providerFlag := range boxFlag.BoxProviders() {
@@ -106,7 +85,29 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 			break
 		}
 
-		if err := invokeClient(boxClient, &boxTemplate.Value.Data); err != nil {
+		boxDetails, err := boxClient.Describe(boxName)
+		if err != nil {
+			log.Warn().Err(err).Msgf("ignoring error describe box: providerFlag=%v", providerFlag)
+			break
+		}
+
+		sourceLoader, err := newSourceLoader(boxDetails, configRef.Config.Template.CacheDir)
+		if err != nil {
+			log.Warn().Err(err).Msgf("ignoring error source loader: providerFlag=%v", providerFlag)
+			break
+		}
+
+		templateInfo, err := sourceLoader.Read()
+		if err != nil {
+			log.Warn().Err(err).Msgf("ignoring error reading source: providerFlag=%v ", providerFlag)
+			break
+		}
+
+		invokeOpts := &invokeOptions{
+			client:   boxClient,
+			template: templateInfo,
+		}
+		if err := invokeClient(invokeOpts); err != nil {
 			log.Warn().Err(err).Msgf("ignoring error invoking client: providerFlag=%v", providerFlag)
 		} else {
 			// return as soon as the client is invoked with success
@@ -115,6 +116,26 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 	}
 	// nothing happened and all the providers failed
 	return errors.New("not found")
+}
+
+// TODO issue sourceType
+
+func newSourceLoader(boxDetails *model.BoxDetails, cacheDir string) (template.SourceLoader[model.BoxV1], error) {
+
+	//switch boxDetails.TemplateInfo.SourceType {
+	//case template.Local:
+	//	return template.NewLocalLoader[model.BoxV1](boxDetails.TemplateInfo.LocalTemplate.Path), nil
+	//case template.Git:
+	//	sourceOpts := &template.GitSourceOptions{
+	//		CacheBaseDir:    cacheDir,
+	//		RepositoryUrl:   common.TemplateSourceUrl,
+	//		DefaultRevision: common.TemplateSourceRevision,
+	//		Revision:        boxDetails.TemplateInfo.GitTemplate.Commit,
+	//		AllowOffline:    true,
+	//	}
+	//	return template.NewGitLoader[model.BoxV1](sourceOpts, boxDetails.Info.Name), nil
+	//}
+	return nil, errors.New("invalid source type")
 }
 
 func newBoxClientOpts(provider model.BoxProvider, configRef *config.ConfigRef) *model.BoxClientOptions {

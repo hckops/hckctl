@@ -4,8 +4,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/hckops/hckctl/pkg/box"
-	"github.com/hckops/hckctl/pkg/box/model"
 	boxFlag "github.com/hckops/hckctl/pkg/command/box/flag"
 	commonFlag "github.com/hckops/hckctl/pkg/command/common/flag"
 	"github.com/hckops/hckctl/pkg/command/config"
@@ -40,14 +38,14 @@ func (opts *boxConnectCmdOptions) run(cmd *cobra.Command, args []string) error {
 		boxName := args[0]
 		log.Debug().Msgf("connect box: boxName=%s", boxName)
 
-		execClient := func(client box.BoxClient, template *model.BoxV1) error {
+		execClient := func(invokeOpts *invokeOptions) error {
 
 			// log only and ignore invalid tunnel flags to avoid false positive during provider attempts
-			if err := boxFlag.ValidateTunnelFlag(client.Provider(), opts.tunnelFlag); err != nil {
+			if err := boxFlag.ValidateTunnelFlag(invokeOpts.client.Provider(), opts.tunnelFlag); err != nil {
 				log.Warn().Err(err).Msgf("ignore validation %s", commonFlag.ErrorFlagNotSupported)
 			}
 
-			return client.Connect(template, opts.tunnelFlag.ToTunnelOptions(), boxName)
+			return invokeOpts.client.Connect(&invokeOpts.template.Value.Data, opts.tunnelFlag.ToTunnelOptions(), boxName)
 		}
 		return attemptRunBoxClients(opts.configRef, boxName, execClient)
 	} else {

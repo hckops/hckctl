@@ -6,7 +6,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/util"
@@ -38,9 +37,9 @@ func (opts *boxDescribeCmdOptions) run(cmd *cobra.Command, args []string) error 
 		boxName := args[0]
 		log.Debug().Msgf("describe box: boxName=%s", boxName)
 
-		describeClient := func(client box.BoxClient, template *model.BoxV1) error {
+		describeClient := func(invokeOpts *invokeOptions) error {
 
-			details, err := client.Describe(boxName)
+			details, err := invokeOpts.client.Describe(boxName)
 			if err != nil {
 				// attempt next provider
 				return err
@@ -78,8 +77,8 @@ func newBoxValue(details *model.BoxDetails) *BoxValue {
 		Healthy:       details.Info.Healthy,
 		Provider:      details.Provider.String(),
 		Size:          details.Size.String(),
-		LocalTemplate: details.LocalTemplate,
-		GitTemplate:   details.GitTemplate,
+		LocalTemplate: details.TemplateInfo.LocalTemplate,
+		GitTemplate:   details.TemplateInfo.GitTemplate,
 		Env:           details.Env,
 		Ports:         details.Ports,
 	}

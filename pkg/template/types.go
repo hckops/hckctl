@@ -42,10 +42,10 @@ type TemplateInfo[T TemplateType] struct {
 	SourceType SourceType
 	Cached     bool
 	Path       string // absolute path cached or resolved git path
-	Revision   string // local/remote always none, git commit
+	Revision   string // local/remote or git commit
 }
 
-// fixes receiver types
+// fixes receiver types with generics
 type RawTemplate TemplateValue[string]
 
 func (t *RawTemplate) ToYaml() (*RawTemplate, error) {

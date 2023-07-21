@@ -6,8 +6,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/hckops/hckctl/pkg/box"
-	"github.com/hckops/hckctl/pkg/box/model"
 	boxFlag "github.com/hckops/hckctl/pkg/command/box/flag"
 	commonFlag "github.com/hckops/hckctl/pkg/command/common/flag"
 	"github.com/hckops/hckctl/pkg/command/config"
@@ -56,8 +54,8 @@ func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 		boxName := args[0]
 		log.Debug().Msgf("delete box: boxName=%s", boxName)
 
-		deleteClient := func(client box.BoxClient, _ *model.BoxV1) error {
-			if result, err := client.Delete([]string{boxName}); err != nil {
+		deleteClient := func(invokeOpts *invokeOptions) error {
+			if result, err := invokeOpts.client.Delete([]string{boxName}); err != nil {
 				return err
 			} else if len(result) == 0 {
 				// attempt next provider

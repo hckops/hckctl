@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <i>The Cloud Native HaCKing Tool</i><br>
+  <i>The Cloud Native Breach and Attack Simulation Tool</i><br>
   <a href="#quick-start">Quick start</a>&nbsp;&bull;
   <a href="#setup">Setup</a>&nbsp;&bull;
   <a href="#development">Development</a>
@@ -222,9 +222,6 @@ TODO
     - refactor common `BoxClient` methods (abstract)
     - mount `/dev/tun` for vpn
     - implement copy ???
-    - in `box/common/attemptRunBoxClients` replace `ToBoxTemplateName` with `BoxClient.Describe`
-        * read template name from label
-        * read revision (sha) from label
     - kube: add env var
     - kube: add distroless support
     - kube: verify if close is needed or `return nil`
@@ -262,3 +259,6 @@ TODO
     - man (plugin)
     - kube-inject (plugin) mount sidecar pod at runtime with debugging tools
     - pro (bundle) e.g. flow
+* docs
+- https://jogendra.dev/import-cycles-in-golang-and-how-to-deal-with-them
+- https://benjiv.com/golang-generics-introduction

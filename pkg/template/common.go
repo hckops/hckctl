@@ -4,8 +4,6 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/pkg/errors"
 
-	box "github.com/hckops/hckctl/pkg/box/model"
-	lab "github.com/hckops/hckctl/pkg/lab/model"
 	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/util"
 )
@@ -50,34 +48,30 @@ func readTemplate[T TemplateType](path string) (*TemplateValue[T], error) {
 	if err != nil {
 		return nil, err
 	}
-	return decodeFromYaml[T](raw)
-}
 
-// TODO refactor decoder with yaml.Unmarshal
-func decodeFromYaml[T TemplateType](raw *RawTemplate) (*TemplateValue[T], error) {
-
-	// https://stackoverflow.com/questions/71047848/how-to-assign-or-return-generic-t-that-is-constrained-by-union
-	var templateType T
-	switch typeRef := any(&templateType).(type) {
-	case *box.BoxV1:
-		template, err := decodeBoxFromYaml(raw.Data)
-		if err != nil {
-			return nil, err
-		}
-		*typeRef = *template
-
-	case *lab.LabV1:
-		template, err := decodeLabFromYaml(raw.Data)
-		if err != nil {
-			return nil, err
-		}
-		*typeRef = *template
-
+	value, err := decodeFromYaml[T](raw.Data)
+	if err != nil {
+		return nil, err
 	}
-	return &TemplateValue[T]{Kind: raw.Kind, Data: templateType}, nil
+
+	return &TemplateValue[T]{
+		Kind: raw.Kind,
+		Data: value,
+	}, nil
 }
 
-// nil for generics
-func none[T TemplateType]() T {
-	return *new(T)
+func readTemplateInfo[T TemplateType](sourceType SourceType, path string, revision string) (*TemplateInfo[T], error) {
+
+	value, err := readTemplate[T](path)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TemplateInfo[T]{
+		Value:      value,
+		SourceType: sourceType,
+		Cached:     false,
+		Path:       path,
+		Revision:   revision,
+	}, nil
 }

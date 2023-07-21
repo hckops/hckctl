@@ -26,7 +26,11 @@ type CacheSourceOpts struct {
 	cacheName string
 }
 
-func NewLocalLoader[T TemplateType](path string, cacheDir string) SourceLoader[T] {
+func NewLocalLoader[T TemplateType](path string) SourceLoader[T] {
+	return &LocalSource[T]{path: path}
+}
+
+func NewLocalCachedLoader[T TemplateType](path string, cacheDir string) SourceLoader[T] {
 	return &LocalSource[T]{
 		path: path,
 		cacheOpts: &CacheSourceOpts{

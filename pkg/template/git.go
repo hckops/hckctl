@@ -104,21 +104,5 @@ func readGitTemplateInfo[T TemplateType](opts *GitSourceOptions, name string) (*
 		return nil, err
 	}
 
-	value, err := readTemplate[T](path)
-	if err != nil {
-		return nil, err
-	}
-
-	absolutePath, err := filepath.Abs(path)
-	if err != nil {
-		return nil, fmt.Errorf("unable to resolve absolute path %s", path)
-	}
-
-	return &TemplateInfo[T]{
-		Value:      value,
-		SourceType: Git,
-		Cached:     true,
-		Path:       absolutePath,
-		Revision:   hash,
-	}, nil
+	return readTemplateInfo[T](Git, path, hash)
 }
