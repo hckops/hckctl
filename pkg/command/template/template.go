@@ -83,7 +83,7 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 		path := args[0]
 		log.Debug().Msgf("print local template: path=%s", path)
 
-		return printTemplate(NewLocalSource(path), format)
+		return printTemplate(NewLocalValidator(path), format)
 
 	} else if len(args) == 1 {
 		name := args[0]
@@ -96,7 +96,7 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 		}
 		log.Debug().Msgf("print git template: name=%s revision=%s offline=%v", name, opts.sourceFlag.Revision, opts.offline)
 
-		return printTemplate(NewGitSource(sourceOpts, name), format)
+		return printTemplate(NewGitValidator(sourceOpts, name), format)
 
 	} else {
 		cmd.HelpFunc()(cmd, args)
@@ -104,9 +104,9 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func printTemplate(src SourceTemplate, format string) error {
+func printTemplate(src SourceValidator, format string) error {
 
-	value, err := src.ReadTemplate()
+	value, err := src.Parse()
 	if err != nil {
 		log.Warn().Err(err).Msg("error reading template")
 		return errors.New("invalid template")
@@ -122,7 +122,7 @@ func printTemplate(src SourceTemplate, format string) error {
 	return nil
 }
 
-func formatTemplate(value *TemplateValue, format string) (string, error) {
+func formatTemplate(value *RawTemplate, format string) (string, error) {
 	switch format {
 	case jsonFlag.String():
 		if jsonValue, err := value.ToJson(); err != nil {

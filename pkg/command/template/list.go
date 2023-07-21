@@ -64,9 +64,9 @@ func (opts *templateListCmdOptions) run(cmd *cobra.Command, args []string) error
 	return nil
 }
 
-func templateList(sourceDir string, revision string, offline bool) error {
+func templateList(cacheDir string, revision string, offline bool) error {
 	sourceOpts := &GitSourceOptions{
-		CacheBaseDir:    sourceDir,
+		CacheBaseDir:    cacheDir,
 		RepositoryUrl:   common.TemplateSourceUrl,
 		DefaultRevision: common.TemplateSourceRevision,
 		Revision:        revision,
@@ -75,7 +75,7 @@ func templateList(sourceDir string, revision string, offline bool) error {
 	log.Debug().Msgf("list git templates: revision=%s offline=%v", revision, offline)
 
 	// name is overridden with custom wildcard
-	if validations, err := NewGitSource(sourceOpts, "").ReadTemplates(); err != nil {
+	if validations, err := NewGitValidator(sourceOpts, "").Validate(); err != nil {
 		log.Warn().Err(err).Msg("error listing templates")
 		return errors.New("error")
 
@@ -86,7 +86,7 @@ func templateList(sourceDir string, revision string, offline bool) error {
 				total = total + 1
 				// remove prefix and suffix
 				prettyPath := strings.NewReplacer(
-					fmt.Sprintf("%s/", sourceDir), "",
+					fmt.Sprintf("%s/", cacheDir), "",
 					".yml", "",
 					".yaml", "",
 				).Replace(validation.Path)

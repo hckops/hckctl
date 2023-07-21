@@ -56,7 +56,9 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 			path := args[0]
 			log.Debug().Msgf("create box from local template: path=%s", path)
 
-			return createBox(template.NewLocalSource(path), provider, opts.configRef, model.NewLocalLabels())
+			// TODO add cached path to label
+			sourceLoader := template.NewLocalLoader[model.BoxV1](path, opts.configRef.Config.Template.CacheDir)
+			return createBox(sourceLoader, provider, opts.configRef, model.NewLocalLabels())
 
 		} else {
 			name := args[0]
@@ -70,7 +72,8 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 			log.Debug().Msgf("create box from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
 			labels := model.NewGitLabels(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
-			return createBox(template.NewGitSource(sourceOpts, name), provider, opts.configRef, labels)
+			sourceLoader := template.NewGitLoader[model.BoxV1](sourceOpts, name)
+			return createBox(sourceLoader, provider, opts.configRef, labels)
 		}
 	} else {
 		cmd.HelpFunc()(cmd, args)
@@ -78,7 +81,7 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func createBox(src template.SourceTemplate, provider model.BoxProvider, configRef *config.ConfigRef, labels model.BoxLabels) error {
+func createBox(sourceLoader template.SourceLoader[model.BoxV1], provider model.BoxProvider, configRef *config.ConfigRef, labels model.BoxLabels) error {
 	createClient := func(clientOpts *boxClientOptions) error {
 
 		templateOpts, err := newTemplateOptions(clientOpts.template, labels, configRef.Config.Box.Size)
@@ -94,5 +97,5 @@ func createBox(src template.SourceTemplate, provider model.BoxProvider, configRe
 		}
 		return nil
 	}
-	return runBoxClient(src, provider, configRef, createClient)
+	return runBoxClient(sourceLoader, provider, configRef, createClient)
 }

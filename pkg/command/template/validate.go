@@ -47,14 +47,14 @@ func (opts *templateValidateCmdOptions) run(cmd *cobra.Command, args []string) e
 
 // TODO color output
 func templateValidate(path string) error {
-	src := NewLocalSource(path)
+	src := NewLocalValidator(path)
 
 	// attempt single file validation
-	if templateValue, err := src.ReadTemplate(); err == nil {
+	if templateValue, err := src.Parse(); err == nil {
 		printValidTemplate(path, templateValue)
 
 		// attempt wildcard validation
-	} else if validations, err := src.ReadTemplates(); err == nil {
+	} else if validations, err := src.Validate(); err == nil {
 		for _, validation := range validations {
 			if validation.IsValid {
 				printValidTemplate(validation.Path, validation.Value)
@@ -73,7 +73,7 @@ func templateValidate(path string) error {
 	return nil
 }
 
-func printValidTemplate(path string, value *TemplateValue) {
+func printValidTemplate(path string, value *RawTemplate) {
 	log.Debug().Msgf("valid template: kind=%s path=%s", value.Kind.String(), path)
 	fmt.Println(fmt.Sprintf("[OK] %s\t%s", value.Kind.String(), path))
 }

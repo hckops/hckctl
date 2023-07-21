@@ -8,34 +8,47 @@ import (
 	"github.com/hckops/hckctl/pkg/schema"
 )
 
+type SourceType uint
+
 const (
-	InvalidCommit = "INVALID_COMMIT"
+	Local SourceType = iota
+	Remote
+	Git
 )
 
-type TemplateValue struct {
+var sources = []string{"local", "remote", "git"}
+
+func (s SourceType) String() string {
+	return sources[s]
+}
+
+type TemplateType interface {
+	string | box.BoxV1 | lab.LabV1
+}
+
+type TemplateValue[T TemplateType] struct {
 	Kind schema.SchemaKind
-	Data string
+	Data T // string or actual model
 }
 
 type TemplateValidated struct {
-	Value   *TemplateValue
+	Value   *RawTemplate
 	Path    string
 	IsValid bool
 }
 
-type BoxTemplate struct {
-	Template *box.BoxV1
-	Path     string
-	Commit   string
+type TemplateInfo[T TemplateType] struct {
+	Value      *TemplateValue[T]
+	SourceType SourceType
+	Cached     bool
+	Path       string // absolute path cached or resolved git path
+	Revision   string // local/remote always none, git commit
 }
 
-type LabTemplate struct {
-	Template *lab.LabV1
-	Path     string
-	Commit   string
-}
+// fixes receiver types
+type RawTemplate TemplateValue[string]
 
-func (t *TemplateValue) ToYaml() (*TemplateValue, error) {
+func (t *RawTemplate) ToYaml() (*RawTemplate, error) {
 	if yamlValue, err := convertFromYamlToYaml(t.Kind, t.Data); err != nil {
 		return nil, errors.Wrap(err, "conversion to yaml failed")
 	} else {
@@ -44,15 +57,11 @@ func (t *TemplateValue) ToYaml() (*TemplateValue, error) {
 	}
 }
 
-func (t *TemplateValue) ToJson() (*TemplateValue, error) {
+func (t *RawTemplate) ToJson() (*RawTemplate, error) {
 	if jsonValue, err := convertFromYamlToJson(t.Kind, t.Data); err != nil {
 		return nil, errors.Wrap(err, "conversion to json failed")
 	} else {
 		t.Data = jsonValue
 		return t, nil
 	}
-}
-
-func (t *TemplateValue) toValidated(path string, isValid bool) *TemplateValidated {
-	return &TemplateValidated{t, path, isValid}
 }

@@ -18,25 +18,25 @@ import (
 )
 
 type boxClientOptions struct {
+	template *template.TemplateInfo[model.BoxV1]
 	client   box.BoxClient
-	template *template.BoxTemplate
 	loader   *common.Loader
 }
 
 // open and create
-func runBoxClient(src template.SourceTemplate, provider model.BoxProvider, configRef *config.ConfigRef, invokeClient func(*boxClientOptions) error) error {
+func runBoxClient(sourceLoader template.SourceLoader[model.BoxV1], provider model.BoxProvider, configRef *config.ConfigRef, invokeClient func(*boxClientOptions) error) error {
 
-	boxTemplate, err := src.ReadBox()
+	boxTemplate, err := sourceLoader.Read()
 	if err != nil {
 		log.Warn().Err(err).Msg("error reading template")
 		return errors.New("invalid template")
 	}
 
 	loader := common.NewLoader()
-	loader.Start("loading template %s", boxTemplate.Template.Name)
+	loader.Start("loading template %s", boxTemplate.Value.Data.Name)
 	defer loader.Stop()
 
-	log.Info().Msgf("loading template: provider=%s name=%s\n%s", provider, boxTemplate.Template.Name, boxTemplate.Template.Pretty())
+	log.Info().Msgf("loading template: provider=%s name=%s\n%s", provider, boxTemplate.Value.Data.Name, boxTemplate.Value.Data.Pretty())
 
 	boxClientOpts := newBoxClientOpts(provider, configRef)
 	boxClient, err := box.NewBoxClient(boxClientOpts)
@@ -62,8 +62,8 @@ func runBoxClient(src template.SourceTemplate, provider model.BoxProvider, confi
 	})
 
 	opts := &boxClientOptions{
-		client:   boxClient,
 		template: boxTemplate,
+		client:   boxClient,
 		loader:   loader,
 	}
 	if err := invokeClient(opts); err != nil {
@@ -76,6 +76,8 @@ func runBoxClient(src template.SourceTemplate, provider model.BoxProvider, confi
 // exec, describe and delete
 func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeClient func(box.BoxClient, *model.BoxV1) error) error {
 
+	// TODO describe box and depending on the source type instantiate sourceLoader
+
 	// best effort approach to resolve the box template by name with git source and default revision
 	// WARNING this might return unexpected results if the box was created with a different revision
 	sourceOpts := &template.GitSourceOptions{
@@ -87,7 +89,7 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 	}
 	// TODO add name to label and search for all provider
 	templateName := model.ToBoxTemplateName(boxName)
-	boxTemplate, err := template.NewGitSource(sourceOpts, templateName).ReadBox()
+	boxTemplate, err := old.NewGitSource(sourceOpts, templateName).ReadBox()
 	if err != nil {
 		log.Warn().Err(err).Msgf("error reading box template: templateName=%v", templateName)
 		return errors.New("invalid template")
@@ -152,16 +154,18 @@ func newDefaultBoxClient(providerFlag commonFlag.ProviderFlag, configRef *config
 	return boxClient, nil
 }
 
-func newTemplateOptions(template *template.BoxTemplate, labels model.BoxLabels, sizeValue string) (*model.TemplateOptions, error) {
+func newTemplateOptions(info *template.TemplateInfo[model.BoxV1], labels model.BoxLabels, sizeValue string) (*model.TemplateOptions, error) {
 	size, err := model.ExistResourceSize(sizeValue)
 	if err != nil {
 		return nil, err
 	}
 
+	// info.SourceType info.cached
+	// TODO info.Revision or LOCAL // TODO different label for source
 	templateOpts := &model.TemplateOptions{
-		Template: template.Template,
+		Template: &info.Value.Data,
 		Size:     size,
-		Labels:   labels.AddLabels(template.Path, template.Commit, size),
+		Labels:   labels.AddLabels(info.Path, info.Revision, size), // TODO
 	}
 	return templateOpts, nil
 }

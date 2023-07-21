@@ -15,6 +15,8 @@ const (
 	OfflineFlagName  = "offline"
 )
 
+// TODO add remote
+
 type SourceFlag struct {
 	Revision string
 	Local    bool

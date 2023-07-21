@@ -1,62 +1,51 @@
 package template
 
-import (
-	"fmt"
-)
-
-// TODO add RemoteSource http
-
-type SourceTemplate interface {
-	ReadTemplate() (*TemplateValue, error)
-	ReadTemplates() ([]*TemplateValidated, error)
-	ReadBox() (*BoxTemplate, error)
-	ReadLab() (*LabTemplate, error)
+type SourceValidator interface {
+	Parse() (*RawTemplate, error)
+	Validate() ([]*TemplateValidated, error)
 }
 
-type LocalSource struct {
-	path string
+func NewLocalValidator(path string) SourceValidator {
+	return &LocalSource[string]{path: path}
 }
 
-func NewLocalSource(path string) *LocalSource {
-	return &LocalSource{path}
+func NewRemoteValidator(url string) SourceValidator {
+	return &RemoteSource[string]{url: url}
 }
 
-func (src *LocalSource) ReadTemplate() (*TemplateValue, error) {
-	return readTemplate(src.path)
+func NewGitValidator(opts *GitSourceOptions, name string) SourceValidator {
+	return &GitSource[string]{opts, name}
 }
 
-func (src *LocalSource) ReadTemplates() ([]*TemplateValidated, error) {
-	return readTemplates(src.path)
+type SourceLoader[T TemplateType] interface {
+	Read() (*TemplateInfo[T], error)
 }
 
-func (src *LocalSource) ReadBox() (*BoxTemplate, error) {
-	return readBoxTemplate(src.path, InvalidCommit)
+type CacheSourceOpts struct {
+	cacheDir  string
+	cacheName string
 }
 
-func (src *LocalSource) ReadLab() (*LabTemplate, error) {
-	return readLabTemplate(src.path, InvalidCommit)
+func NewLocalLoader[T TemplateType](path string, cacheDir string) SourceLoader[T] {
+	return &LocalSource[T]{
+		path: path,
+		cacheOpts: &CacheSourceOpts{
+			cacheDir:  cacheDir,
+			cacheName: Local.String(),
+		},
+	}
 }
 
-type GitSource struct {
-	opts *GitSourceOptions
-	name string
+func NewRemoteLoader[T TemplateType](url string, cacheDir string) SourceLoader[T] {
+	return &RemoteSource[T]{
+		url: url,
+		cacheOpts: &CacheSourceOpts{
+			cacheDir:  cacheDir,
+			cacheName: Remote.String(),
+		},
+	}
 }
 
-func NewGitSource(opts *GitSourceOptions, name string) *GitSource {
-	return &GitSource{opts, name}
-}
-
-func (src *GitSource) ReadTemplate() (*TemplateValue, error) {
-	return readGitTemplate(src.opts, src.name)
-}
-
-func (src *GitSource) ReadTemplates() ([]*TemplateValidated, error) {
-	wildcard := fmt.Sprintf("%s/**/*.{yml,yaml}", src.opts.CacheBaseDir)
-	return readGitTemplates(src.opts, wildcard)
-}
-func (src *GitSource) ReadBox() (*BoxTemplate, error) {
-	return readGitBoxTemplate(src.opts, src.name)
-}
-func (src *GitSource) ReadLab() (*LabTemplate, error) {
-	return readGitLabTemplate(src.opts, src.name)
+func NewGitLoader[T TemplateType](opts *GitSourceOptions, name string) SourceLoader[T] {
+	return &GitSource[T]{opts, name}
 }
