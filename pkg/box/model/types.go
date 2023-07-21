@@ -14,21 +14,22 @@ type BoxInfo struct {
 }
 
 type BoxDetails struct {
-	Info     BoxInfo
-	Provider BoxProvider
-	Size     ResourceSize
-	Template *BoxTemplateInfo
-	Env      []BoxEnv
-	Ports    []BoxPort
-	Docker   struct {
-		Network string
-	}
-	Kube struct {
-		Namespace string
-	}
+	Info          BoxInfo
+	Provider      BoxProvider
+	Size          ResourceSize
+	LocalTemplate *LocalTemplateInfo
+	GitTemplate   *GitTemplateInfo
+	Env           []BoxEnv
+	Ports         []BoxPort
+	Docker        struct{ Network string }   // TODO missing
+	Kube          struct{ Namespace string } // TODO missing
 }
 
-type BoxTemplateInfo struct {
+type LocalTemplateInfo struct {
+	Path string
+}
+
+type GitTemplateInfo struct {
 	Url      string
 	Revision string
 	Commit   string

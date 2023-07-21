@@ -160,12 +160,18 @@ func newTemplateOptions(info *template.TemplateInfo[model.BoxV1], labels model.B
 		return nil, err
 	}
 
-	// info.SourceType info.cached
-	// TODO info.Revision or LOCAL // TODO different label for source
+	var allLabels model.BoxLabels
+	switch info.SourceType {
+	case template.Local:
+		allLabels = labels.AddLocalLabels(size, info.Path)
+	case template.Git:
+		allLabels = labels.AddGitLabels(size, info.Path, info.Revision)
+	}
+
 	templateOpts := &model.TemplateOptions{
 		Template: &info.Value.Data,
 		Size:     size,
-		Labels:   labels.AddLabels(info.Path, info.Revision, size), // TODO
+		Labels:   allLabels,
 	}
 	return templateOpts, nil
 }

@@ -324,14 +324,12 @@ func toBoxDetails(container docker.ContainerDetails) (*model.BoxDetails, error) 
 		return nil, err
 	}
 
-	// ignore errors e.g. local
-	template, _ := labels.ToBoxTemplateInfo()
-
 	return &model.BoxDetails{
-		Info:     newBoxInfo(container.Info),
-		Provider: model.Docker,
-		Size:     size,
-		Template: template,
+		Info:          newBoxInfo(container.Info),
+		Provider:      model.Docker,
+		Size:          size,
+		LocalTemplate: labels.ToLocalTemplateInfo(),
+		GitTemplate:   labels.ToGitTemplateInfo(),
 	}, nil
 }
 

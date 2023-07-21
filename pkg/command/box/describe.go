@@ -2,13 +2,14 @@ package box
 
 import (
 	"fmt"
-	"github.com/hckops/hckctl/pkg/util"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
 	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/command/config"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 // TODO output format yaml/json
@@ -61,23 +62,25 @@ func (opts *boxDescribeCmdOptions) run(cmd *cobra.Command, args []string) error 
 }
 
 type BoxValue struct {
-	Name     string
-	Healthy  bool
-	Provider string
-	Size     string
-	Template *model.BoxTemplateInfo `yaml:",omitempty"`
-	Env      []model.BoxEnv         `yaml:",omitempty"`
-	Ports    []model.BoxPort        `yaml:",omitempty"`
+	Name          string
+	Healthy       bool
+	Provider      string
+	Size          string
+	LocalTemplate *model.LocalTemplateInfo `yaml:"local,omitempty"`
+	GitTemplate   *model.GitTemplateInfo   `yaml:"git,omitempty"`
+	Env           []model.BoxEnv           `yaml:",omitempty"`
+	Ports         []model.BoxPort          `yaml:",omitempty"`
 }
 
 func newBoxValue(details *model.BoxDetails) *BoxValue {
 	return &BoxValue{
-		Name:     details.Info.Name,
-		Healthy:  details.Info.Healthy,
-		Provider: details.Provider.String(),
-		Size:     details.Size.String(),
-		Template: details.Template,
-		Env:      details.Env,
-		Ports:    details.Ports,
+		Name:          details.Info.Name,
+		Healthy:       details.Info.Healthy,
+		Provider:      details.Provider.String(),
+		Size:          details.Size.String(),
+		LocalTemplate: details.LocalTemplate,
+		GitTemplate:   details.GitTemplate,
+		Env:           details.Env,
+		Ports:         details.Ports,
 	}
 }

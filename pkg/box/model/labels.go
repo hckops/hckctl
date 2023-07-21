@@ -41,20 +41,32 @@ func NewGitLabels(url, revision, dir string) BoxLabels {
 		LabelTemplateGitDir:      dir,
 	}
 }
+func (l BoxLabels) AddLocalLabels(size ResourceSize, path string) BoxLabels {
+	if _, err := l.exist(LabelTemplateLocal); err != nil {
+		return l
+	}
+	return mergeWithCommonLabels(l, size, path)
+}
 
-func (l BoxLabels) AddLabels(path string, commit string, size ResourceSize) BoxLabels {
-	labels := map[string]string{
-		LabelTemplateCommonPath: path, // absolute path
-		LabelBoxSize:            strings.ToLower(size.String()),
+func (l BoxLabels) AddGitLabels(size ResourceSize, path string, commit string) BoxLabels {
+	if _, err := l.exist(LabelTemplateGit); err != nil {
+		return l
 	}
 
-	// add labels only to git template
-	if _, exist := l[LabelTemplateGit]; exist {
-		l[LabelTemplateGitCommit] = commit
+	l[LabelTemplateGitCommit] = commit
 
-		templatePath := strings.SplitAfter(path, l[LabelTemplateGitDir])
-		name := strings.TrimSuffix(strings.TrimPrefix(templatePath[1], "/"), filepath.Ext(path))
-		l[LabelTemplateGitName] = name
+	templatePath := strings.SplitAfter(path, l[LabelTemplateGitDir])
+	// unsafe assume valid path
+	name := strings.TrimSuffix(strings.TrimPrefix(templatePath[1], "/"), filepath.Ext(path))
+	l[LabelTemplateGitName] = name
+
+	return mergeWithCommonLabels(l, size, path)
+}
+
+func mergeWithCommonLabels(labels BoxLabels, size ResourceSize, path string) BoxLabels {
+	l := map[string]string{
+		LabelTemplateCommonPath: path, // absolute path
+		LabelBoxSize:            strings.ToLower(size.String()),
 	}
 
 	// merge labels
@@ -79,15 +91,22 @@ func (l BoxLabels) ToSize() (ResourceSize, error) {
 	}
 }
 
-func (l BoxLabels) ToBoxTemplateInfo() (*BoxTemplateInfo, error) {
+func (l BoxLabels) ToLocalTemplateInfo() *LocalTemplateInfo {
+	if _, err := l.exist(LabelTemplateLocal); err != nil {
+		return nil
+	}
+	return &LocalTemplateInfo{Path: l[LabelTemplateCommonPath]}
+}
+
+func (l BoxLabels) ToGitTemplateInfo() *GitTemplateInfo {
 	if _, err := l.exist(LabelTemplateGit); err != nil {
-		return nil, err
+		return nil
 	}
 
-	return &BoxTemplateInfo{
+	return &GitTemplateInfo{
 		Url:      l[LabelTemplateGitUrl],
 		Revision: l[LabelTemplateGitRevision],
 		Commit:   l[LabelTemplateGitCommit],
 		Name:     l[LabelTemplateGitName],
-	}, nil
+	}
 }
