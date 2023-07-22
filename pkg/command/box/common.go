@@ -82,19 +82,19 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 		if err != nil {
 			log.Warn().Err(err).Msgf("ignoring error default client: providerFlag=%v", providerFlag)
 			// skip to the next provider
-			break
+			continue
 		}
 
 		boxDetails, err := boxClient.Describe(boxName)
 		if err != nil {
 			log.Warn().Err(err).Msgf("ignoring error describe box: providerFlag=%v", providerFlag)
-			break
+			continue
 		}
 
 		templateInfo, err := newSourceLoader(boxDetails, configRef.Config.Template.CacheDir).Read()
 		if err != nil {
 			log.Warn().Err(err).Msgf("ignoring error reading source: providerFlag=%v ", providerFlag)
-			break
+			continue
 		}
 
 		invokeOpts := &invokeOptions{

@@ -167,19 +167,12 @@ func (client *KubeClient) DeploymentList(namespace string, namePrefix string, la
 			// TODO verify if error sidecar container or continue
 			return nil, err
 		}
-		servicePorts, err := client.GetServicePorts(namespace, deployment.Name)
-		if err != nil {
-			// TODO return or continue (silently ignore)
-			return nil, err
-		}
 
 		deploymentInfo := DeploymentInfo{
 			Namespace:      namespace,
 			DeploymentName: deployment.Name,
 			PodInfo:        podInfo,
 			Healthy:        isDeploymentHealthy(deployment.Status),
-			Labels:         deployment.Labels,
-			ServicePorts:   servicePorts,
 		}
 		result = append(result, deploymentInfo)
 	}

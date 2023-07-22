@@ -35,18 +35,20 @@ func TestBuildSpec(t *testing.T) {
 	containerName := "my-container-name"
 	namespace := "my-namespace"
 
-	expectedDeployment :=
-		`apiVersion: apps/v1
+	expectedDeployment := `
+apiVersion: apps/v1
 kind: Deployment
 metadata:
  creationTimestamp: null
+ annotations:
+  a.b.c: hello
+  x.y.z: world
  labels:
    app.kubernetes.io/instance: hckops-my-image
    app.kubernetes.io/managed-by: hckops
    app.kubernetes.io/name: my-container-name
    app.kubernetes.io/version: latest
-   a.b.c: hello
-   x.y.z: world
+   com.hckops.schema.kind: box-v1
  name: my-container-name
  namespace: my-namespace
 spec:
@@ -57,19 +59,20 @@ spec:
      app.kubernetes.io/managed-by: hckops
      app.kubernetes.io/name: my-container-name
      app.kubernetes.io/version: latest
-     a.b.c: hello
-     x.y.z: world
+     com.hckops.schema.kind: box-v1
  strategy: {}
  template:
    metadata:
      creationTimestamp: null
+     annotations:
+       a.b.c: hello
+       x.y.z: world
      labels:
        app.kubernetes.io/instance: hckops-my-image
        app.kubernetes.io/managed-by: hckops
        app.kubernetes.io/name: my-container-name
        app.kubernetes.io/version: latest
-       a.b.c: hello
-       x.y.z: world
+       com.hckops.schema.kind: box-v1
      name: my-container-name
      namespace: my-namespace
    spec:
@@ -100,13 +103,15 @@ apiVersion: v1
 kind: Service
 metadata:
  creationTimestamp: null
+ annotations:
+  a.b.c: hello
+  x.y.z: world
  labels:
    app.kubernetes.io/instance: hckops-my-image
    app.kubernetes.io/managed-by: hckops
    app.kubernetes.io/name: my-container-name
    app.kubernetes.io/version: latest
-   a.b.c: hello
-   x.y.z: world
+   com.hckops.schema.kind: box-v1
  name: my-container-name
  namespace: my-namespace
 spec:
@@ -124,8 +129,7 @@ spec:
    app.kubernetes.io/managed-by: hckops
    app.kubernetes.io/name: my-container-name
    app.kubernetes.io/version: latest
-   a.b.c: hello
-   x.y.z: world
+   com.hckops.schema.kind: box-v1
  type: ClusterIP
 status:
  loadBalancer: {}

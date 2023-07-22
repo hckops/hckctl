@@ -64,6 +64,8 @@ type BoxValue struct {
 	Ports         []model.BoxPort           `yaml:",omitempty"`
 }
 
+// TODO alias from invokeOpts.template.Value.Data.Network.Ports
+// TODO filter template env invokeOpts.template.Value.Data.Env
 func newBoxValue(details *model.BoxDetails) *BoxValue {
 	return &BoxValue{
 		Name:          details.Info.Name,

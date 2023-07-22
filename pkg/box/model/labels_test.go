@@ -34,10 +34,10 @@ func TestGitLabels(t *testing.T) {
 func TestAddLocalLabels(t *testing.T) {
 	labels := NewLocalLabels().AddLocalLabels(Small, "/tmp/cache")
 	expected := BoxLabels{
-		"com.hckops.schema.kind":          "box/v1",
-		"com.hckops.template.local":       "true",
-		"com.hckops.template.common.path": "/tmp/cache",
-		"com.hckops.box.size":             "s",
+		"com.hckops.schema.kind":         "box/v1",
+		"com.hckops.template.local":      "true",
+		"com.hckops.template.cache.path": "/tmp/cache",
+		"com.hckops.box.size":            "s",
 	}
 
 	assert.Equal(t, 4, len(labels))
@@ -64,7 +64,7 @@ func TestAddGitLabels(t *testing.T) {
 		"com.hckops.template.git.dir":      "megalopolis",
 		"com.hckops.template.git.commit":   "myCommit",
 		"com.hckops.template.git.name":     "box/base/arch",
-		"com.hckops.template.common.path":  path,
+		"com.hckops.template.cache.path":   path,
 		"com.hckops.box.size":              "m",
 	}
 

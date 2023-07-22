@@ -21,7 +21,7 @@ const (
 	LabelTemplateGitCommit   = "com.hckops.template.git.commit"
 	LabelTemplateGitDir      = "com.hckops.template.git.dir"
 	LabelTemplateGitName     = "com.hckops.template.git.name"
-	LabelTemplateCommonPath  = "com.hckops.template.common.path"
+	LabelTemplateCachePath   = "com.hckops.template.cache.path"
 	LabelBoxSize             = "com.hckops.box.size"
 )
 
@@ -65,8 +65,8 @@ func (l BoxLabels) AddGitLabels(size ResourceSize, path string, commit string) B
 
 func mergeWithCommonLabels(labels BoxLabels, size ResourceSize, path string) BoxLabels {
 	l := map[string]string{
-		LabelTemplateCommonPath: path, // absolute path
-		LabelBoxSize:            strings.ToLower(size.String()),
+		LabelTemplateCachePath: path, // absolute path
+		LabelBoxSize:           strings.ToLower(size.String()),
 	}
 
 	// merge labels
@@ -96,7 +96,7 @@ func (l BoxLabels) ToCachedTemplateInfo() *CachedTemplateInfo {
 	if _, err := l.exist(LabelTemplateLocal); err != nil {
 		return nil
 	}
-	return &CachedTemplateInfo{Path: l[LabelTemplateCommonPath]}
+	return &CachedTemplateInfo{Path: l[LabelTemplateCachePath]}
 }
 
 func (l BoxLabels) ToGitTemplateInfo() *GitTemplateInfo {

@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/pkg/errors"
-	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -91,12 +90,13 @@ func (box *KubeBoxClient) createBox(opts *model.TemplateOptions) (*model.BoxInfo
 
 func buildSpec(containerName string, namespace string, templateOpts *model.TemplateOptions) (*appsv1.Deployment, *corev1.Service, error) {
 
-	labels := buildLabels(containerName, templateOpts.Template.Image.Repository, templateOpts.Template.ImageVersion(), templateOpts.Labels)
+	labels := buildLabels(containerName, templateOpts.Template.Image.Repository, templateOpts.Template.ImageVersion())
 
 	objectMeta := metav1.ObjectMeta{
-		Name:      containerName,
-		Namespace: namespace,
-		Labels:    labels,
+		Name:        containerName,
+		Namespace:   namespace,
+		Annotations: templateOpts.Labels,
+		Labels:      labels,
 	}
 	resourceOptions := templateOpts.Size.ToKubeResource()
 	pod, err := buildPod(objectMeta, templateOpts.Template, resourceOptions.Memory, resourceOptions.Cpu)
@@ -114,30 +114,14 @@ func buildSpec(containerName string, namespace string, templateOpts *model.Templ
 	return deployment, service, nil
 }
 
-func buildLabels(name, instance, version string, customLabels model.BoxLabels) model.BoxLabels {
+func buildLabels(name, instance, version string) model.BoxLabels {
 	// default
 	labels := map[string]string{
 		"app.kubernetes.io/name":       name,
-		"app.kubernetes.io/instance":   instance, // not sanitized
+		"app.kubernetes.io/instance":   common.ToKebabCase(instance),
 		"app.kubernetes.io/version":    version,
 		"app.kubernetes.io/managed-by": "hckops", // TODO common?
-	}
-	// merge labels
-	maps.Copy(labels, customLabels)
-
-	// TODO temporarily remove or improve sanitization
-	labelBlacklist := []string{
-		model.LabelTemplateGitUrl,
-		model.LabelTemplateCommonPath,
-	}
-
-	// sanitize all values
-	for key, value := range labels {
-		if slices.Contains(labelBlacklist, key) {
-			delete(labels, key)
-		} else {
-			labels[key] = common.ToKebabCase(value)
-		}
+		model.LabelSchemaKind:          common.ToKebabCase(schema.KindBoxV1.String()),
 	}
 	return labels
 }
@@ -401,8 +385,6 @@ func (box *KubeBoxClient) listBoxes() ([]model.BoxInfo, error) {
 	}
 	var result []model.BoxInfo
 	for index, d := range deployments {
-		// TODO add label info
-		// TODO add ports
 		result = append(result, model.BoxInfo{Id: d.PodInfo.Id, Name: d.DeploymentName, Healthy: d.Healthy})
 		box.eventBus.Publish(newDeploymentListKubeEvent(index, namespace, d.DeploymentName, d.PodInfo.Id, d.Healthy))
 	}
