@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/hckops/hckctl/pkg/box/model"
+	"github.com/hckops/hckctl/pkg/client/docker"
 )
 
 var testPorts = []model.BoxPort{
@@ -64,7 +65,7 @@ func TestBuildHostConfig(t *testing.T) {
 	assert.Equal(t, expected, result)
 }
 
-func TestBuildHNetworkingConfig(t *testing.T) {
+func TestBuildNetworkingConfig(t *testing.T) {
 	expected := &network.NetworkingConfig{EndpointsConfig: map[string]*network.EndpointSettings{"myNetwork": {NetworkID: "123"}}}
 
 	result := buildNetworkingConfig("myNetwork", "123")
@@ -77,5 +78,55 @@ func TestBoxLabel(t *testing.T) {
 }
 
 func TestToBoxDetails(t *testing.T) {
-	assert.Equal(t, true, false)
+	containerDetails := docker.ContainerDetails{
+		Info: docker.ContainerInfo{
+			ContainerId:   "myId",
+			ContainerName: "myName",
+			Healthy:       true,
+		},
+		Created: "dd-mm-yyyy",
+		Labels: map[string]string{
+			"com.hckops.template.local":      "true",
+			"com.hckops.template.cache.path": "/tmp/cache/myUuid",
+			"com.hckops.box.size":            "m",
+		},
+		Env: []string{
+			"MY_KEY_1=MY_VALUE_1",
+			"MY_KEY_2=MY_VALUE_2",
+		},
+		Ports: []docker.ContainerPort{
+			{Local: "123", Remote: "456"},
+		},
+	}
+	expected := &model.BoxDetails{
+		Info: model.BoxInfo{
+			Id:      "myId",
+			Name:    "myName",
+			Healthy: true,
+		},
+		TemplateInfo: &model.BoxTemplateInfo{
+			CachedTemplate: &model.CachedTemplateInfo{
+				Path: "/tmp/cache/myUuid",
+			},
+		},
+		ProviderInfo: &model.BoxProviderInfo{
+			Provider: model.Docker,
+			DockerProvider: &model.DockerProviderInfo{
+				Network: "TODO",
+			},
+		},
+		Size: model.Medium,
+		Env: []model.BoxEnv{
+			{Key: "MY_KEY_1", Value: "MY_VALUE_1"},
+			{Key: "MY_KEY_2", Value: "MY_VALUE_2"},
+		},
+		Ports: []model.BoxPort{
+			{Alias: "TODO", Local: "123", Remote: "456", Public: false},
+		},
+		Created: "dd-mm-yyyy",
+	}
+	result, err := toBoxDetails(containerDetails)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
 }

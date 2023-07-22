@@ -13,6 +13,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 
 	"github.com/hckops/hckctl/pkg/box/model"
+	"github.com/hckops/hckctl/pkg/client/kubernetes"
 )
 
 func TestBuildSpec(t *testing.T) {
@@ -178,5 +179,71 @@ func TestBoxLabel(t *testing.T) {
 }
 
 func TestToBoxDetails(t *testing.T) {
-	assert.Equal(t, true, false)
+	deployment := &kubernetes.DeploymentDetails{
+		Info: &kubernetes.DeploymentInfo{
+			Namespace: "myDeploymentNamespace",
+			Name:      "myDeploymentName",
+			Healthy:   false,
+			PodInfo: &kubernetes.PodInfo{
+				Namespace: "myPodNamespace",
+				Id:        "myPodId",
+				Name:      "myPodName",
+				Env: map[string]string{
+					"MY_KEY_1": "MY_VALUE_1",
+					"MY_KEY_2": "MY_VALUE_2",
+				},
+			},
+		},
+		Created: "dd-mm-yyyy",
+		Annotations: map[string]string{
+			"com.hckops.template.git":          "true",
+			"com.hckops.template.git.url":      "myUrl",
+			"com.hckops.template.git.revision": "myRevision",
+			"com.hckops.template.git.commit":   "myCommit",
+			"com.hckops.template.git.name":     "box/base/arch",
+			"com.hckops.template.cache.path":   "/tmp/cache/myUuid",
+			"com.hckops.box.size":              "m",
+		},
+	}
+	serviceInfo := &kubernetes.ServiceInfo{
+		Namespace: "myServiceNamespace",
+		Name:      "myServiceName",
+		Ports: []kubernetes.ServicePort{
+			{Name: "portName", Port: "remotePort"},
+		},
+	}
+	expected := &model.BoxDetails{
+		Info: model.BoxInfo{
+			Id:      "myPodId",
+			Name:    "myDeploymentName",
+			Healthy: false,
+		},
+		TemplateInfo: &model.BoxTemplateInfo{
+			GitTemplate: &model.GitTemplateInfo{
+				Url:      "myUrl",
+				Revision: "myRevision",
+				Commit:   "myCommit",
+				Name:     "box/base/arch",
+			},
+		},
+		ProviderInfo: &model.BoxProviderInfo{
+			Provider: model.Kubernetes,
+			KubeProvider: &model.KubeProviderInfo{
+				Namespace: "myDeploymentNamespace",
+			},
+		},
+		Size: model.Medium,
+		Env: []model.BoxEnv{
+			{Key: "MY_KEY_1", Value: "MY_VALUE_1"},
+			{Key: "MY_KEY_2", Value: "MY_VALUE_2"},
+		},
+		Ports: []model.BoxPort{
+			{Alias: "portName", Local: "TODO", Remote: "remotePort", Public: false},
+		},
+		Created: "dd-mm-yyyy",
+	}
+	result, err := toBoxDetails(deployment, serviceInfo)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
 }

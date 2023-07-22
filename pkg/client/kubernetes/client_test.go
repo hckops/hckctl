@@ -10,6 +10,10 @@ func TestNewDeploymentInfo(t *testing.T) {
 	assert.Equal(t, true, false)
 }
 
+func TestIsDeploymentHealthy(t *testing.T) {
+	assert.Equal(t, true, false)
+}
+
 func TestNewDeploymentDetails(t *testing.T) {
 	assert.Equal(t, true, false)
 }

@@ -316,7 +316,6 @@ func (box *DockerBoxClient) describe(name string) (*model.BoxDetails, error) {
 	return toBoxDetails(containerInfo)
 }
 
-// TODO test
 func toBoxDetails(container docker.ContainerDetails) (*model.BoxDetails, error) {
 
 	labels := model.BoxLabels(container.Labels)
