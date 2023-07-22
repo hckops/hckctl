@@ -9,6 +9,10 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+const (
+	SingleReplica = 1
+)
+
 type KubeClient struct {
 	ctx            context.Context
 	kubeRestConfig *rest.Config
@@ -20,27 +24,41 @@ type KubeResource struct {
 	Cpu    string
 }
 
-type DeploymentCreateOpts struct {
-	Namespace             string
-	Spec                  *appsv1.Deployment
-	OnStatusEventCallback func(event string)
+type DeploymentInfo struct {
+	Namespace string
+	Name      string
+	Healthy   bool
+	PodInfo   *PodInfo
 }
 
-type DeploymentInfo struct {
-	Namespace      string
-	DeploymentName string
-	PodInfo        *PodInfo
-	Healthy        bool
+type DeploymentDetails struct {
+	Info        *DeploymentInfo
+	Created     string
+	Annotations map[string]string
 }
 
 type PodInfo struct {
-	Id   string
-	Name string
+	Namespace string
+	Id        string
+	Name      string
+	Env       map[string]string
+}
+
+type ServiceInfo struct {
+	Namespace string
+	Name      string
+	Ports     []ServicePort
 }
 
 type ServicePort struct {
 	Name string
 	Port string
+}
+
+type DeploymentCreateOpts struct {
+	Namespace             string
+	Spec                  *appsv1.Deployment
+	OnStatusEventCallback func(event string)
 }
 
 type PodPortForwardOpts struct {

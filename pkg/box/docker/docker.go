@@ -347,15 +347,21 @@ func toBoxDetails(container docker.ContainerDetails) (*model.BoxDetails, error) 
 	}
 
 	return &model.BoxDetails{
-		Info:     newBoxInfo(container.Info),
-		Provider: model.Docker,
-		Size:     size,
+		Info: newBoxInfo(container.Info),
 		TemplateInfo: &model.BoxTemplateInfo{
 			CachedTemplate: labels.ToCachedTemplateInfo(),
 			GitTemplate:    labels.ToGitTemplateInfo(),
 		},
-		Env:   env,
-		Ports: ports,
+		ProviderInfo: &model.BoxProviderInfo{
+			Provider: model.Docker,
+			DockerProvider: &model.DockerProviderInfo{
+				Network: "TODO",
+			},
+		},
+		Size:    size,
+		Env:     env,
+		Ports:   ports,
+		Created: container.Created,
 	}, nil
 }
 

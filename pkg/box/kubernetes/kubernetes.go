@@ -79,7 +79,7 @@ func (box *KubeBoxClient) createBox(opts *model.TemplateOptions) (*model.BoxInfo
 	}
 	box.eventBus.Publish(newDeploymentCreateKubeEvent(namespace, deployment.Name))
 
-	podInfo, err := box.client.GetPodInfo(deployment)
+	podInfo, err := box.client.PodDescribe(deployment)
 	if err != nil {
 		return nil, err
 	}
@@ -187,7 +187,7 @@ func buildDeployment(objectMeta metav1.ObjectMeta, pod *corev1.Pod) *appsv1.Depl
 	return &appsv1.Deployment{
 		ObjectMeta: objectMeta,
 		Spec: appsv1.DeploymentSpec{
-			Replicas: int32Ptr(1), // only 1 replica
+			Replicas: int32Ptr(kubernetes.SingleReplica), // only 1 replica
 			Selector: &metav1.LabelSelector{
 				MatchLabels: objectMeta.Labels,
 			},
@@ -371,6 +371,74 @@ func toPortBindings(ports []model.BoxPort, onPortBindCallback func(port model.Bo
 	return portBindings, nil
 }
 
+func (box *KubeBoxClient) describe(name string) (*model.BoxDetails, error) {
+	namespace := box.clientOpts.Namespace
+
+	info, err := box.findBox(name)
+	if err != nil {
+		return nil, err
+	}
+
+	deployment, err := box.client.DeploymentDescribe(namespace, info.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	service, err := box.client.ServiceDescribe(namespace, info.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	return toBoxDetails(deployment, service)
+}
+
+func toBoxDetails(deployment *kubernetes.DeploymentDetails, serviceInfo *kubernetes.ServiceInfo) (*model.BoxDetails, error) {
+
+	labels := model.BoxLabels(deployment.Annotations)
+
+	size, err := labels.ToSize()
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO filter by prefix e.g. "HCK_"
+	var env []model.BoxEnv
+	for key, value := range deployment.Info.PodInfo.Env {
+		env = append(env, model.BoxEnv{
+			Key:   key,
+			Value: value,
+		})
+	}
+
+	var ports []model.BoxPort
+	for _, p := range serviceInfo.Ports {
+		ports = append(ports, model.BoxPort{
+			Alias:  p.Name,
+			Local:  "TODO", // TODO runtime only
+			Remote: p.Port,
+			Public: false,
+		})
+	}
+
+	return &model.BoxDetails{
+		Info: newBoxInfo(*deployment.Info),
+		TemplateInfo: &model.BoxTemplateInfo{
+			CachedTemplate: labels.ToCachedTemplateInfo(),
+			GitTemplate:    labels.ToGitTemplateInfo(),
+		},
+		ProviderInfo: &model.BoxProviderInfo{
+			Provider: model.Kubernetes,
+			KubeProvider: &model.KubeProviderInfo{
+				Namespace: deployment.Info.Namespace,
+			},
+		},
+		Size:    size,
+		Env:     env,
+		Ports:   ports,
+		Created: deployment.Created,
+	}, nil
+}
+
 func boxLabel() string {
 	// value must be sanitized
 	return fmt.Sprintf("%s=%s", model.LabelSchemaKind, common.ToKebabCase(schema.KindBoxV1.String()))
@@ -385,11 +453,19 @@ func (box *KubeBoxClient) listBoxes() ([]model.BoxInfo, error) {
 	}
 	var result []model.BoxInfo
 	for index, d := range deployments {
-		result = append(result, model.BoxInfo{Id: d.PodInfo.Id, Name: d.DeploymentName, Healthy: d.Healthy})
-		box.eventBus.Publish(newDeploymentListKubeEvent(index, namespace, d.DeploymentName, d.PodInfo.Id, d.Healthy))
+		result = append(result, newBoxInfo(d))
+		box.eventBus.Publish(newDeploymentListKubeEvent(index, namespace, d.Name, d.PodInfo.Id, d.Healthy))
 	}
 
 	return result, nil
+}
+
+func newBoxInfo(deployment kubernetes.DeploymentInfo) model.BoxInfo {
+	return model.BoxInfo{
+		Id:      deployment.PodInfo.Id,
+		Name:    deployment.Name,
+		Healthy: deployment.Healthy,
+	}
 }
 
 func (box *KubeBoxClient) deleteBoxes(names []string) ([]string, error) {

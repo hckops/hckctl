@@ -55,23 +55,34 @@ func (opts *boxDescribeCmdOptions) run(cmd *cobra.Command, args []string) error 
 
 type BoxValue struct {
 	Name          string
+	Created       string // TODO format
 	Healthy       bool
-	Provider      string
 	Size          string
+	Provider      ProviderValue
 	CacheTemplate *model.CachedTemplateInfo `yaml:"cache,omitempty"`
 	GitTemplate   *model.GitTemplateInfo    `yaml:"git,omitempty"`
 	Env           []model.BoxEnv            `yaml:",omitempty"`
 	Ports         []model.BoxPort           `yaml:",omitempty"`
 }
+type ProviderValue struct {
+	Name           string
+	DockerProvider *model.DockerProviderInfo `yaml:"docker,omitempty"`
+	KubeProvider   *model.KubeProviderInfo   `yaml:"kubernetes,omitempty"`
+}
 
-// TODO alias from invokeOpts.template.Value.Data.Network.Ports
-// TODO filter template env invokeOpts.template.Value.Data.Env
+// TODO match port alias and local
+// TODO filter env from template
 func newBoxValue(details *model.BoxDetails) *BoxValue {
 	return &BoxValue{
-		Name:          details.Info.Name,
-		Healthy:       details.Info.Healthy,
-		Provider:      details.Provider.String(),
-		Size:          details.Size.String(),
+		Name:    details.Info.Name,
+		Created: details.Created,
+		Healthy: details.Info.Healthy,
+		Size:    details.Size.String(),
+		Provider: ProviderValue{
+			Name:           details.ProviderInfo.Provider.String(),
+			DockerProvider: details.ProviderInfo.DockerProvider,
+			KubeProvider:   details.ProviderInfo.KubeProvider,
+		},
 		CacheTemplate: details.TemplateInfo.CachedTemplate,
 		GitTemplate:   details.TemplateInfo.GitTemplate,
 		Env:           details.Env,

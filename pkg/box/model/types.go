@@ -15,13 +15,12 @@ type BoxInfo struct {
 
 type BoxDetails struct {
 	Info         BoxInfo
-	Provider     BoxProvider
-	Size         ResourceSize
 	TemplateInfo *BoxTemplateInfo
+	ProviderInfo *BoxProviderInfo
+	Size         ResourceSize
 	Env          []BoxEnv
 	Ports        []BoxPort
-	Docker       struct{ Network string }   // TODO missing
-	Kube         struct{ Namespace string } // TODO missing
+	Created      string // timestamp
 }
 
 type BoxTemplateInfo struct {
@@ -42,6 +41,20 @@ type GitTemplateInfo struct {
 	Revision string
 	Commit   string
 	Name     string
+}
+
+type BoxProviderInfo struct {
+	Provider       BoxProvider
+	DockerProvider *DockerProviderInfo
+	KubeProvider   *KubeProviderInfo
+}
+
+type DockerProviderInfo struct {
+	Network string
+}
+
+type KubeProviderInfo struct {
+	Namespace string
 }
 
 type BoxClientOptions struct {

@@ -75,3 +75,7 @@ func TestBoxLabel(t *testing.T) {
 	expected := "com.hckops.schema.kind=box/v1"
 	assert.Equal(t, expected, boxLabel())
 }
+
+func TestToBoxDetails(t *testing.T) {
+	assert.Equal(t, true, false)
+}

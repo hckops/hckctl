@@ -162,21 +162,24 @@ func (client *KubeClient) DeploymentList(namespace string, namePrefix string, la
 			continue
 		}
 
-		podInfo, err := client.GetPodInfo(&deployment)
+		podInfo, err := client.PodDescribe(&deployment)
 		if err != nil {
-			// TODO verify if error sidecar container or continue
-			return nil, err
+			// skip invalid pod
+			continue
 		}
 
-		deploymentInfo := DeploymentInfo{
-			Namespace:      namespace,
-			DeploymentName: deployment.Name,
-			PodInfo:        podInfo,
-			Healthy:        isDeploymentHealthy(deployment.Status),
-		}
-		result = append(result, deploymentInfo)
+		result = append(result, newDeploymentInfo(&deployment, podInfo))
 	}
 	return result, nil
+}
+
+func newDeploymentInfo(deployment *appsv1.Deployment, podInfo *PodInfo) DeploymentInfo {
+	return DeploymentInfo{
+		Namespace: deployment.Namespace,
+		Name:      deployment.Name,
+		Healthy:   isDeploymentHealthy(deployment.Status),
+		PodInfo:   podInfo,
+	}
 }
 
 func isDeploymentHealthy(status appsv1.DeploymentStatus) bool {
@@ -187,11 +190,36 @@ func isDeploymentHealthy(status appsv1.DeploymentStatus) bool {
 			healthy = true
 		} else {
 			healthy = false
-			// mark as unhealthy if at least one condition is invalid e.g. stuck to progressing due to lack of resources
+			// mark as unhealthy if at least one condition is invalid e.g. stuck due to lack of resources
 			break
 		}
 	}
 	return healthy
+}
+
+func (client *KubeClient) DeploymentDescribe(namespace string, name string) (*DeploymentDetails, error) {
+	appClient := client.kubeClientSet.AppsV1()
+
+	deployment, err := appClient.Deployments(namespace).Get(client.ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "error deployment describe: namespace=%s name=%s", namespace, name)
+	}
+
+	podInfo, err := client.PodDescribe(deployment)
+	if err != nil {
+		return nil, err
+	}
+
+	return newDeploymentDetails(deployment, podInfo), nil
+}
+
+func newDeploymentDetails(deployment *appsv1.Deployment, podInfo *PodInfo) *DeploymentDetails {
+	deploymentInfo := newDeploymentInfo(deployment, podInfo)
+	return &DeploymentDetails{
+		Info:        &deploymentInfo,
+		Created:     deployment.CreationTimestamp.String(),
+		Annotations: deployment.Annotations,
+	}
 }
 
 func (client *KubeClient) DeploymentDelete(namespace string, name string) error {
@@ -214,6 +242,30 @@ func (client *KubeClient) ServiceCreate(namespace string, spec *corev1.Service) 
 	return nil
 }
 
+func (client *KubeClient) ServiceDescribe(namespace string, name string) (*ServiceInfo, error) {
+	coreClient := client.kubeClientSet.CoreV1()
+
+	service, err := coreClient.Services(namespace).Get(client.ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "error service describe: namespace=%s name=%s", namespace, name)
+	}
+
+	return newServiceInfo(service), nil
+}
+
+func newServiceInfo(service *corev1.Service) *ServiceInfo {
+	var ports []ServicePort
+	for _, port := range service.Spec.Ports {
+		ports = append(ports, ServicePort{Name: port.Name, Port: strconv.Itoa(int(port.Port))})
+	}
+
+	return &ServiceInfo{
+		Namespace: service.Namespace,
+		Name:      service.Name,
+		Ports:     ports,
+	}
+}
+
 func (client *KubeClient) ServiceDelete(namespace string, name string) error {
 	coreClient := client.kubeClientSet.CoreV1()
 
@@ -223,23 +275,7 @@ func (client *KubeClient) ServiceDelete(namespace string, name string) error {
 	return nil
 }
 
-func (client *KubeClient) GetServicePorts(namespace string, name string) ([]ServicePort, error) {
-	coreClient := client.kubeClientSet.CoreV1()
-
-	service, err := coreClient.Services(namespace).Get(client.ctx, name, metav1.GetOptions{})
-	if err != nil {
-		return nil, errors.Wrapf(err, "error get service ports: namespace=%s name=%s", namespace, name)
-	}
-
-	var ports []ServicePort
-	for _, port := range service.Spec.Ports {
-		ports = append(ports, ServicePort{Name: port.Name, Port: strconv.Itoa(int(port.Port))})
-	}
-
-	return ports, nil
-}
-
-func (client *KubeClient) GetPodInfo(deployment *appsv1.Deployment) (*PodInfo, error) {
+func (client *KubeClient) PodDescribe(deployment *appsv1.Deployment) (*PodInfo, error) {
 	coreClient := client.kubeClientSet.CoreV1()
 
 	labelSet := labels.Set(deployment.Spec.Selector.MatchLabels)
@@ -249,17 +285,33 @@ func (client *KubeClient) GetPodInfo(deployment *appsv1.Deployment) (*PodInfo, e
 	if err != nil {
 		return nil, errors.Wrapf(err, "error pod list: namespace=%s labels=%v", deployment.Namespace, labelSet)
 	}
-	// TODO verify with sidecar container ??? select by podName == deploymentName
-	if len(pods.Items) != 1 {
-		return nil, errors.Wrapf(err, "found %d pods, expected only 1 pod for deployment: namespace=%s labels=%v", len(pods.Items), deployment.Namespace, labelSet)
+
+	return newPodInfo(deployment.Namespace, pods)
+}
+
+func newPodInfo(namespace string, pods *corev1.PodList) (*PodInfo, error) {
+	if len(pods.Items) != SingleReplica {
+		return nil, fmt.Errorf("found %d pods, expected only 1 pod for deployment: namespace=%s", len(pods.Items), namespace)
 	}
 
 	pod := pods.Items[0]
-	info := &PodInfo{
-		Id:   pod.ObjectMeta.Name, // pod.Name + unique generated suffix
-		Name: pod.Name,
+
+	// TODO verify with injected sidecar containers ???
+	if len(pod.Spec.Containers) != 1 {
+		return nil, fmt.Errorf("found %d containers, expected only 1 container for pod: namespace=%s", len(pod.Spec.Containers), namespace)
 	}
-	return info, nil
+
+	var env map[string]string
+	for _, e := range pod.Spec.Containers[0].Env {
+		env[e.Name] = e.Value
+	}
+
+	return &PodInfo{
+		Namespace: namespace,
+		Id:        pod.ObjectMeta.Name, // pod.Name + unique generated suffix
+		Name:      pod.Name,
+		Env:       env,
+	}, nil
 }
 
 func (client *KubeClient) PodPortForward(opts *PodPortForwardOpts) error {

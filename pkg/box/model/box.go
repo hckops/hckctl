@@ -32,9 +32,9 @@ type BoxV1 struct {
 
 type BoxPort struct {
 	Alias  string
-	Local  string
-	Remote string
-	Public bool // TODO not used, always false
+	Local  string // TODO int ?
+	Remote string // TODO int ?
+	Public bool   // TODO not used, always false
 }
 
 type BoxEnv struct {
