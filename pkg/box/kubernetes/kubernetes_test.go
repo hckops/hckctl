@@ -39,62 +39,62 @@ func TestBuildSpec(t *testing.T) {
 apiVersion: apps/v1
 kind: Deployment
 metadata:
- creationTimestamp: null
- annotations:
-  a.b.c: hello
-  x.y.z: world
- labels:
-   app.kubernetes.io/instance: hckops-my-image
-   app.kubernetes.io/managed-by: hckops
-   app.kubernetes.io/name: my-container-name
-   app.kubernetes.io/version: latest
-   com.hckops.schema.kind: box-v1
- name: my-container-name
- namespace: my-namespace
+  creationTimestamp: null
+  annotations:
+    a.b.c: hello
+    x.y.z: world
+  labels:
+    app.kubernetes.io/instance: hckops-my-image
+    app.kubernetes.io/managed-by: hckops
+    app.kubernetes.io/name: my-container-name
+    app.kubernetes.io/version: latest
+    com.hckops.schema.kind: box-v1
+  name: my-container-name
+  namespace: my-namespace
 spec:
- replicas: 1
- selector:
-   matchLabels:
-     app.kubernetes.io/instance: hckops-my-image
-     app.kubernetes.io/managed-by: hckops
-     app.kubernetes.io/name: my-container-name
-     app.kubernetes.io/version: latest
-     com.hckops.schema.kind: box-v1
- strategy: {}
- template:
-   metadata:
-     creationTimestamp: null
-     annotations:
-       a.b.c: hello
-       x.y.z: world
-     labels:
-       app.kubernetes.io/instance: hckops-my-image
-       app.kubernetes.io/managed-by: hckops
-       app.kubernetes.io/name: my-container-name
-       app.kubernetes.io/version: latest
-       com.hckops.schema.kind: box-v1
-     name: my-container-name
-     namespace: my-namespace
-   spec:
-     containers:
-     - image: hckops/my-image:latest
-       imagePullPolicy: IfNotPresent
-       name: hckops-my-image
-       ports:
-       - containerPort: 123
-         name: aaa-svc
-         protocol: TCP
-       - containerPort: 789
-         name: bbb-svc
-         protocol: TCP
-       resources:
-         limits:
-           memory: 512Mi
-         requests:
-           cpu: 500m
-           memory: 512Mi
-       stdin: true
-       tty: true
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: hckops-my-image
+      app.kubernetes.io/managed-by: hckops
+      app.kubernetes.io/name: my-container-name
+      app.kubernetes.io/version: latest
+      com.hckops.schema.kind: box-v1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      annotations:
+        a.b.c: hello
+        x.y.z: world
+      labels:
+        app.kubernetes.io/instance: hckops-my-image
+        app.kubernetes.io/managed-by: hckops
+        app.kubernetes.io/name: my-container-name
+        app.kubernetes.io/version: latest
+        com.hckops.schema.kind: box-v1
+      name: my-container-name
+      namespace: my-namespace
+    spec:
+      containers:
+      - image: hckops/my-image:latest
+        imagePullPolicy: IfNotPresent
+        name: hckops-my-image
+        ports:
+        - containerPort: 123
+          name: aaa-svc
+          protocol: TCP
+        - containerPort: 789
+          name: bbb-svc
+          protocol: TCP
+        resources:
+          limits:
+            memory: 512Mi
+          requests:
+            cpu: 500m
+            memory: 512Mi
+        stdin: true
+        tty: true
 status: {}
 `
 
@@ -102,37 +102,37 @@ status: {}
 apiVersion: v1
 kind: Service
 metadata:
- creationTimestamp: null
- annotations:
-  a.b.c: hello
-  x.y.z: world
- labels:
-   app.kubernetes.io/instance: hckops-my-image
-   app.kubernetes.io/managed-by: hckops
-   app.kubernetes.io/name: my-container-name
-   app.kubernetes.io/version: latest
-   com.hckops.schema.kind: box-v1
- name: my-container-name
- namespace: my-namespace
+  creationTimestamp: null
+  annotations:
+    a.b.c: hello
+    x.y.z: world
+  labels:
+    app.kubernetes.io/instance: hckops-my-image
+    app.kubernetes.io/managed-by: hckops
+    app.kubernetes.io/name: my-container-name
+    app.kubernetes.io/version: latest
+    com.hckops.schema.kind: box-v1
+  name: my-container-name
+  namespace: my-namespace
 spec:
- ports:
- - name: aaa
-   port: 123
-   protocol: TCP
-   targetPort: aaa-svc
- - name: bbb
-   port: 789
-   protocol: TCP
-   targetPort: bbb-svc
- selector:
-   app.kubernetes.io/instance: hckops-my-image
-   app.kubernetes.io/managed-by: hckops
-   app.kubernetes.io/name: my-container-name
-   app.kubernetes.io/version: latest
-   com.hckops.schema.kind: box-v1
- type: ClusterIP
+  ports:
+  - name: aaa
+    port: 123
+    protocol: TCP
+    targetPort: aaa-svc
+  - name: bbb
+    port: 789
+    protocol: TCP
+    targetPort: bbb-svc
+  selector:
+    app.kubernetes.io/instance: hckops-my-image
+    app.kubernetes.io/managed-by: hckops
+    app.kubernetes.io/name: my-container-name
+    app.kubernetes.io/version: latest
+    com.hckops.schema.kind: box-v1
+  type: ClusterIP
 status:
- loadBalancer: {}
+  loadBalancer: {}
 `
 	templateOpts := &model.TemplateOptions{
 		Template: template,
