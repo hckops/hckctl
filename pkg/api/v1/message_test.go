@@ -72,12 +72,8 @@ func TestBoxDeleteRequest(t *testing.T) {
 }
 
 func TestBoxDeleteResponse(t *testing.T) {
-	items := []BoxDeleteItem{
-		{Id: "123", Name: testBoxes[0]},
-		{Id: "456", Name: testBoxes[1]},
-	}
-	message := NewBoxDeleteResponse(serverOrigin, items)
-	value := `{"kind":"api/v1","origin":"hckadm-0.0.0-info","method":"hck-box-delete","body":{"items":[{"Id":"123","Name":"box-alpine-123"},{"Id":"456","Name":"box-alpine-456"}]}}`
+	message := NewBoxDeleteResponse(serverOrigin, testBoxes)
+	value := `{"kind":"api/v1","origin":"hckadm-0.0.0-info","method":"hck-box-delete","body":{"names":["box-alpine-123","box-alpine-456"]}}`
 
 	testMessage[BoxDeleteResponseBody](t, message, value)
 }
