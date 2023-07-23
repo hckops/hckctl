@@ -180,6 +180,8 @@ func TestBoxLabel(t *testing.T) {
 }
 
 func TestToBoxDetails(t *testing.T) {
+	createdTime, _ := time.Parse(time.RFC3339, "2042-12-08T10:30:05.265113665Z")
+
 	deployment := &kubernetes.DeploymentDetails{
 		Info: &kubernetes.DeploymentInfo{
 			Namespace: "myDeploymentNamespace",
@@ -195,7 +197,7 @@ func TestToBoxDetails(t *testing.T) {
 				},
 			},
 		},
-		Created: time.Now(),
+		Created: createdTime,
 		Annotations: map[string]string{
 			"com.hckops.template.git":          "true",
 			"com.hckops.template.git.url":      "myUrl",
@@ -215,7 +217,7 @@ func TestToBoxDetails(t *testing.T) {
 	}
 	expected := &model.BoxDetails{
 		Info: model.BoxInfo{
-			Id:      "myPodId",
+			Id:      "myPodName",
 			Name:    "myDeploymentName",
 			Healthy: false,
 		},
@@ -241,7 +243,7 @@ func TestToBoxDetails(t *testing.T) {
 		Ports: []model.BoxPort{
 			{Alias: "portName", Local: "TODO", Remote: "remotePort", Public: false},
 		},
-		Created: time.Now(),
+		Created: createdTime,
 	}
 	result, err := toBoxDetails(deployment, serviceInfo)
 

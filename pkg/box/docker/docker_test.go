@@ -79,13 +79,15 @@ func TestBoxLabel(t *testing.T) {
 }
 
 func TestToBoxDetails(t *testing.T) {
+	createdTime, _ := time.Parse(time.RFC3339, "2042-12-08T10:30:05.265113665Z")
+
 	containerDetails := docker.ContainerDetails{
 		Info: docker.ContainerInfo{
 			ContainerId:   "myId",
 			ContainerName: "myName",
 			Healthy:       true,
 		},
-		Created: time.Now(),
+		Created: createdTime,
 		Labels: map[string]string{
 			"com.hckops.template.local":      "true",
 			"com.hckops.template.cache.path": "/tmp/cache/myUuid",
@@ -124,7 +126,7 @@ func TestToBoxDetails(t *testing.T) {
 		Ports: []model.BoxPort{
 			{Alias: "TODO", Local: "123", Remote: "456", Public: false},
 		},
-		Created: time.Now(),
+		Created: createdTime,
 	}
 	result, err := toBoxDetails(containerDetails)
 

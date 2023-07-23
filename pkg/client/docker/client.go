@@ -186,10 +186,10 @@ func (client *DockerClient) ContainerInspect(containerId string) (ContainerDetai
 		return ContainerDetails{}, errors.Wrap(err, "error container inspect")
 	}
 
-	return newContainerDetails(containerJson), nil
+	return newContainerDetails(containerJson)
 }
 
-func newContainerDetails(container types.ContainerJSON) ContainerDetails {
+func newContainerDetails(container types.ContainerJSON) (ContainerDetails, error) {
 
 	var ports []ContainerPort
 	for remotePort, port := range container.HostConfig.PortBindings {
@@ -199,13 +199,18 @@ func newContainerDetails(container types.ContainerJSON) ContainerDetails {
 		})
 	}
 
+	created, err := time.Parse(time.RFC3339, container.Created)
+	if err != nil {
+		return ContainerDetails{}, errors.Wrapf(err, "invalid container created time format %s", container.Created)
+	}
+
 	return ContainerDetails{
 		Info:    NewContainerInfo(container.ID, container.Name, container.State.Status),
-		Created: time.Now(), // TODO container.Created
+		Created: created,
 		Labels:  container.Config.Labels,
 		Env:     container.Config.Env,
 		Ports:   ports,
-	}
+	}, nil
 }
 
 func (client *DockerClient) ContainerList(namePrefix string, label string) ([]ContainerInfo, error) {

@@ -60,15 +60,13 @@ func TestIsDeploymentHealthy(t *testing.T) {
 }
 
 func TestNewDeploymentDetails(t *testing.T) {
-	timeString := "2006-01-02T15:04:05"
-	theTime, err := time.Parse(time.RFC3339, timeString)
-	assert.NoError(t, err)
+	createdTime, _ := time.Parse(time.RFC3339, "2042-12-08T10:30:05.265113665Z")
 
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:         "myDeploymentNamespace",
 			Name:              "myDeploymentName",
-			CreationTimestamp: metav1.Time{Time: theTime},
+			CreationTimestamp: metav1.Time{Time: createdTime},
 			Annotations: map[string]string{
 				"com.hckops.schema.kind": "box/v1",
 			},
@@ -95,7 +93,7 @@ func TestNewDeploymentDetails(t *testing.T) {
 			Healthy:   true,
 			PodInfo:   podInfo,
 		},
-		Created: theTime,
+		Created: createdTime,
 		Annotations: map[string]string{
 			"com.hckops.schema.kind": "box/v1",
 		},

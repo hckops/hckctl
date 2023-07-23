@@ -22,6 +22,8 @@ func TestNewContainerInfo(t *testing.T) {
 }
 
 func TestNewContainerDetails(t *testing.T) {
+	created := "2042-12-08T10:30:05.265113665Z"
+	createdTime, _ := time.Parse(time.RFC3339, created)
 
 	portBindings := make(nat.PortMap)
 	remotePort, _ := nat.NewPort("tcp", "7681")
@@ -34,7 +36,7 @@ func TestNewContainerDetails(t *testing.T) {
 		ContainerJSONBase: &types.ContainerJSONBase{
 			ID:      "myId",
 			Name:    "/myName",
-			Created: "2022-06-28 09:25:38",
+			Created: created,
 			State: &types.ContainerState{
 				Status: "exited",
 			},
@@ -51,7 +53,6 @@ func TestNewContainerDetails(t *testing.T) {
 			},
 		},
 	}
-	containerDetails := newContainerDetails(containerJson)
 
 	expected := ContainerDetails{
 		Info: ContainerInfo{
@@ -59,7 +60,7 @@ func TestNewContainerDetails(t *testing.T) {
 			ContainerName: "myName",
 			Healthy:       false,
 		},
-		Created: time.Now(),
+		Created: createdTime,
 		Labels: map[string]string{
 			"com.hckops.test": "true",
 		},
@@ -70,6 +71,8 @@ func TestNewContainerDetails(t *testing.T) {
 			{Local: "7683", Remote: "7681"},
 		},
 	}
+	containerDetails, err := newContainerDetails(containerJson)
 
+	assert.NoError(t, err)
 	assert.Equal(t, expected, containerDetails)
 }
