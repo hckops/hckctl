@@ -25,5 +25,5 @@ func NewBoxListRequest(origin string) *Message[BoxListRequestBody] {
 }
 
 func NewBoxListResponse(origin string, items []BoxListItem) *Message[BoxListResponseBody] {
-	return newMessage[BoxListResponseBody](origin, BoxListResponseBody{items})
+	return newMessage[BoxListResponseBody](origin, BoxListResponseBody{Items: items})
 }

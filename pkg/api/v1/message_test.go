@@ -18,8 +18,9 @@ func TestMethods(t *testing.T) {
 	assert.Equal(t, 5, len(methods))
 	assert.Equal(t, "hck-ping", MethodPing.String())
 	assert.Equal(t, "hck-box-create", MethodBoxCreate.String())
-	assert.Equal(t, "hck-box-exec", MethodBoxExec.String())
 	assert.Equal(t, "hck-box-delete", MethodBoxDelete.String())
+	assert.Equal(t, "hck-box-describe", MethodBoxDescribe.String())
+	assert.Equal(t, "hck-box-exec", MethodBoxExec.String())
 	assert.Equal(t, "hck-box-list", MethodBoxList.String())
 }
 
@@ -79,6 +80,14 @@ func TestBoxDeleteResponse(t *testing.T) {
 	value := `{"kind":"api/v1","origin":"hckadm-0.0.0-info","method":"hck-box-delete","body":{"items":[{"Id":"123","Name":"box-alpine-123"},{"Id":"456","Name":"box-alpine-456"}]}}`
 
 	testMessage[BoxDeleteResponseBody](t, message, value)
+}
+
+func TestBoxDescribeRequest(t *testing.T) {
+	assert.Equal(t, true, false)
+}
+
+func TestBoxDescribeResponse(t *testing.T) {
+	assert.Equal(t, true, false)
 }
 
 func TestBoxListRequest(t *testing.T) {

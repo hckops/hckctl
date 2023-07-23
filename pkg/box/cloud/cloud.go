@@ -81,6 +81,36 @@ func (box *CloudBoxClient) execBox(template *model.BoxV1, tunnelOpts *model.Tunn
 	return box.client.Exec(opts)
 }
 
+func (box *CloudBoxClient) describe(name string) (*model.BoxDetails, error) {
+	box.eventBus.Publish(newApiDescribeCloudEvent(name))
+
+	request := v1.NewBoxDescribeRequest(box.clientOpts.Version, name)
+	payload, err := request.Encode()
+	if err != nil {
+		return nil, errors.Wrap(err, "error cloud describe request")
+	}
+	value, err := box.client.SendRequest(request.Protocol(), payload)
+	if err != nil {
+		return nil, errors.Wrap(err, "error cloud describe")
+	}
+
+	response, err := v1.Decode[v1.BoxDescribeResponseBody](value)
+	if err != nil {
+		return nil, errors.Wrap(err, "error cloud describe response")
+	}
+
+	return toBoxDetails(response), nil
+}
+
+// TODO test
+func toBoxDetails(response *v1.Message[v1.BoxDescribeResponseBody]) *model.BoxDetails {
+	return &model.BoxDetails{
+		Info: model.BoxInfo{
+			Name: response.Body.Name,
+		},
+	}
+}
+
 func (box *CloudBoxClient) listBoxes() ([]model.BoxInfo, error) {
 
 	request := v1.NewBoxListRequest(box.clientOpts.Version)

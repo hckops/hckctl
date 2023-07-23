@@ -22,9 +22,9 @@ func (b BoxDeleteResponseBody) method() MethodName {
 }
 
 func NewBoxDeleteRequest(origin string, names []string) *Message[BoxDeleteRequestBody] {
-	return newMessage[BoxDeleteRequestBody](origin, BoxDeleteRequestBody{names})
+	return newMessage[BoxDeleteRequestBody](origin, BoxDeleteRequestBody{Names: names})
 }
 
 func NewBoxDeleteResponse(origin string, items []BoxDeleteItem) *Message[BoxDeleteResponseBody] {
-	return newMessage[BoxDeleteResponseBody](origin, BoxDeleteResponseBody{items})
+	return newMessage[BoxDeleteResponseBody](origin, BoxDeleteResponseBody{Items: items})
 }

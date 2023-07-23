@@ -19,9 +19,9 @@ func (b BoxCreateResponseBody) method() MethodName {
 }
 
 func NewBoxCreateRequest(origin string, templateName string, size string) *Message[BoxCreateRequestBody] {
-	return newMessage[BoxCreateRequestBody](origin, BoxCreateRequestBody{templateName, size})
+	return newMessage[BoxCreateRequestBody](origin, BoxCreateRequestBody{TemplateName: templateName, Size: size})
 }
 
 func NewBoxCreateResponse(origin string, name string, size string) *Message[BoxCreateResponseBody] {
-	return newMessage[BoxCreateResponseBody](origin, BoxCreateResponseBody{name, size})
+	return newMessage[BoxCreateResponseBody](origin, BoxCreateResponseBody{Name: name, Size: size})
 }

@@ -11,5 +11,5 @@ func (b BoxExecSessionBody) method() MethodName {
 }
 
 func NewBoxExecSession(origin string, name string) *Message[BoxExecSessionBody] {
-	return newMessage[BoxExecSessionBody](origin, BoxExecSessionBody{name})
+	return newMessage[BoxExecSessionBody](origin, BoxExecSessionBody{Name: name})
 }
