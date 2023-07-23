@@ -2,25 +2,201 @@ package kubernetes
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestNewDeploymentInfo(t *testing.T) {
-	assert.Equal(t, true, false)
+	deployment := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: "myDeploymentNamespace",
+			Name:      "myDeploymentName",
+		},
+		Status: appsv1.DeploymentStatus{
+			Conditions: []appsv1.DeploymentCondition{
+				{Status: corev1.ConditionTrue},
+			},
+		},
+	}
+	podInfo := &PodInfo{
+		Namespace:     "myPodNamespace",
+		PodName:       "myPodName",
+		ContainerName: "myContainerName",
+		Env: map[string]string{
+			"MY_KEY_1": "MY_VALUE_1",
+			"MY_KEY_2": "MY_VALUE_2",
+		},
+	}
+	expected := DeploymentInfo{
+		Namespace: "myDeploymentNamespace",
+		Name:      "myDeploymentName",
+		Healthy:   true,
+		PodInfo:   podInfo,
+	}
+
+	assert.Equal(t, expected, newDeploymentInfo(deployment, podInfo))
 }
 
 func TestIsDeploymentHealthy(t *testing.T) {
-	assert.Equal(t, true, false)
+	statusHealthy := appsv1.DeploymentStatus{
+		Conditions: []appsv1.DeploymentCondition{
+			{Status: corev1.ConditionTrue},
+		},
+	}
+	assert.True(t, isDeploymentHealthy(statusHealthy))
+
+	statusNotHealthy := appsv1.DeploymentStatus{
+		Conditions: []appsv1.DeploymentCondition{
+			{Status: corev1.ConditionTrue},
+			{Status: corev1.ConditionFalse},
+			{Status: corev1.ConditionTrue},
+		},
+	}
+	assert.False(t, isDeploymentHealthy(statusNotHealthy))
 }
 
 func TestNewDeploymentDetails(t *testing.T) {
-	assert.Equal(t, true, false)
+	timeString := "2006-01-02T15:04:05"
+	theTime, err := time.Parse(time.RFC3339, timeString)
+	assert.NoError(t, err)
+
+	deployment := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:         "myDeploymentNamespace",
+			Name:              "myDeploymentName",
+			CreationTimestamp: metav1.Time{Time: theTime},
+			Annotations: map[string]string{
+				"com.hckops.schema.kind": "box/v1",
+			},
+		},
+		Status: appsv1.DeploymentStatus{
+			Conditions: []appsv1.DeploymentCondition{
+				{Status: corev1.ConditionTrue},
+			},
+		},
+	}
+	podInfo := &PodInfo{
+		Namespace:     "myPodNamespace",
+		PodName:       "myPodName",
+		ContainerName: "myContainerName",
+		Env: map[string]string{
+			"MY_KEY_1": "MY_VALUE_1",
+			"MY_KEY_2": "MY_VALUE_2",
+		},
+	}
+	expected := &DeploymentDetails{
+		Info: &DeploymentInfo{
+			Namespace: "myDeploymentNamespace",
+			Name:      "myDeploymentName",
+			Healthy:   true,
+			PodInfo:   podInfo,
+		},
+		Created: theTime,
+		Annotations: map[string]string{
+			"com.hckops.schema.kind": "box/v1",
+		},
+	}
+
+	assert.Equal(t, expected, newDeploymentDetails(deployment, podInfo))
 }
+
 func TestNewPodInfo(t *testing.T) {
-	assert.Equal(t, true, false)
+	pods := &corev1.PodList{
+		Items: []corev1.Pod{
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "myPodNamespace",
+					Name:      "myPodName",
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name: "myContainerName",
+							Env: []corev1.EnvVar{
+								{Name: "MY_KEY_1", Value: "MY_VALUE_1"},
+								{Name: "MY_KEY_2", Value: "MY_VALUE_2"},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	result, err := newPodInfo("myNamespace", pods)
+	expected := &PodInfo{
+		Namespace:     "myPodNamespace",
+		PodName:       "myPodName",
+		ContainerName: "myContainerName",
+		Env: map[string]string{
+			"MY_KEY_1": "MY_VALUE_1",
+			"MY_KEY_2": "MY_VALUE_2",
+		},
+	}
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+}
+
+func TestNewPodInfoErrorReplica(t *testing.T) {
+	pods := &corev1.PodList{
+		Items: []corev1.Pod{
+			{ObjectMeta: metav1.ObjectMeta{Name: "pod-1"}},
+			{ObjectMeta: metav1.ObjectMeta{Name: "pod-2"}},
+		},
+	}
+	result, err := newPodInfo("myPodNamespace", pods)
+
+	assert.EqualError(t, err, "found 2 pods, expected only 1 pod for deployment: namespace=myPodNamespace")
+	assert.Nil(t, result)
+}
+
+func TestNewPodInfoErrorContainer(t *testing.T) {
+	pods := &corev1.PodList{
+		Items: []corev1.Pod{
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "pod-1",
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{Name: "myContainer-1"},
+						{Name: "myContainer-2"},
+					},
+				},
+			},
+		},
+	}
+	result, err := newPodInfo("myPodNamespace", pods)
+
+	assert.EqualError(t, err, "found 2 containers, expected only 1 container for pod: namespace=myPodNamespace")
+	assert.Nil(t, result)
 }
 
 func TestNewServiceInfo(t *testing.T) {
-	assert.Equal(t, true, false)
+	service := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: "myServiceNamespace",
+			Name:      "myServiceName",
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{
+				{Name: "alias-1", Port: 123},
+				{Name: "alias-2", Port: 456},
+			},
+		},
+	}
+	serviceInfo := &ServiceInfo{
+		Namespace: "myServiceNamespace",
+		Name:      "myServiceName",
+		Ports: []ServicePort{
+			{Name: "alias-1", Port: "123"},
+			{Name: "alias-2", Port: "456"},
+		},
+	}
+
+	assert.Equal(t, serviceInfo, newServiceInfo(service))
 }

@@ -2,6 +2,7 @@ package docker
 
 import (
 	"testing"
+	"time"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
@@ -84,7 +85,7 @@ func TestToBoxDetails(t *testing.T) {
 			ContainerName: "myName",
 			Healthy:       true,
 		},
-		Created: "dd-mm-yyyy",
+		Created: time.Now(),
 		Labels: map[string]string{
 			"com.hckops.template.local":      "true",
 			"com.hckops.template.cache.path": "/tmp/cache/myUuid",
@@ -123,7 +124,7 @@ func TestToBoxDetails(t *testing.T) {
 		Ports: []model.BoxPort{
 			{Alias: "TODO", Local: "123", Remote: "456", Public: false},
 		},
-		Created: "dd-mm-yyyy",
+		Created: time.Now(),
 	}
 	result, err := toBoxDetails(containerDetails)
 

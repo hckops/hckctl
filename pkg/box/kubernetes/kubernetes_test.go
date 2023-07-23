@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"log"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
@@ -185,16 +186,16 @@ func TestToBoxDetails(t *testing.T) {
 			Name:      "myDeploymentName",
 			Healthy:   false,
 			PodInfo: &kubernetes.PodInfo{
-				Namespace: "myPodNamespace",
-				Id:        "myPodId",
-				Name:      "myPodName",
+				Namespace:     "myPodNamespace",
+				PodName:       "myPodName",
+				ContainerName: "myContainerName",
 				Env: map[string]string{
 					"MY_KEY_1": "MY_VALUE_1",
 					"MY_KEY_2": "MY_VALUE_2",
 				},
 			},
 		},
-		Created: "dd-mm-yyyy",
+		Created: time.Now(),
 		Annotations: map[string]string{
 			"com.hckops.template.git":          "true",
 			"com.hckops.template.git.url":      "myUrl",
@@ -240,7 +241,7 @@ func TestToBoxDetails(t *testing.T) {
 		Ports: []model.BoxPort{
 			{Alias: "portName", Local: "TODO", Remote: "remotePort", Public: false},
 		},
-		Created: "dd-mm-yyyy",
+		Created: time.Now(),
 	}
 	result, err := toBoxDetails(deployment, serviceInfo)
 

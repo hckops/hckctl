@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
@@ -37,7 +38,7 @@ func NewContainerInfo(id, name, status string) ContainerInfo {
 
 type ContainerDetails struct {
 	Info    ContainerInfo
-	Created string
+	Created time.Time
 	Labels  map[string]string
 	Env     []string
 	Ports   []ContainerPort

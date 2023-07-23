@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"context"
 	"io"
+	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/client-go/kubernetes"
@@ -33,15 +34,15 @@ type DeploymentInfo struct {
 
 type DeploymentDetails struct {
 	Info        *DeploymentInfo
-	Created     string
+	Created     time.Time
 	Annotations map[string]string
 }
 
 type PodInfo struct {
-	Namespace string
-	Id        string
-	Name      string
-	Env       map[string]string
+	Namespace     string
+	PodName       string
+	ContainerName string
+	Env           map[string]string
 }
 
 type ServiceInfo struct {

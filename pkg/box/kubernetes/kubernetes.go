@@ -45,9 +45,8 @@ func (box *KubeBoxClient) createBox(opts *model.TemplateOptions) (*model.BoxInfo
 
 	// TODO add env var container override
 
-	// boxName
-	containerName := opts.Template.GenerateName()
-	deployment, service, err := buildSpec(containerName, namespace, opts)
+	boxName := opts.Template.GenerateName()
+	deployment, service, err := buildSpec(boxName, namespace, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -83,17 +82,17 @@ func (box *KubeBoxClient) createBox(opts *model.TemplateOptions) (*model.BoxInfo
 	if err != nil {
 		return nil, err
 	}
-	box.eventBus.Publish(newPodNameKubeEvent(namespace, podInfo.Name, podInfo.Id))
+	box.eventBus.Publish(newPodNameKubeEvent(namespace, podInfo.PodName, podInfo.ContainerName))
 
-	return &model.BoxInfo{Id: podInfo.Id, Name: containerName, Healthy: true}, nil
+	return &model.BoxInfo{Id: podInfo.PodName, Name: boxName, Healthy: true}, nil
 }
 
-func buildSpec(containerName string, namespace string, templateOpts *model.TemplateOptions) (*appsv1.Deployment, *corev1.Service, error) {
+func buildSpec(name string, namespace string, templateOpts *model.TemplateOptions) (*appsv1.Deployment, *corev1.Service, error) {
 
-	labels := buildLabels(containerName, templateOpts.Template.Image.Repository, templateOpts.Template.ImageVersion())
+	labels := buildLabels(name, templateOpts.Template.Image.Repository, templateOpts.Template.ImageVersion())
 
 	objectMeta := metav1.ObjectMeta{
-		Name:        containerName,
+		Name:        name,
 		Namespace:   namespace,
 		Annotations: templateOpts.Labels,
 		Labels:      labels,
@@ -454,7 +453,7 @@ func (box *KubeBoxClient) listBoxes() ([]model.BoxInfo, error) {
 	var result []model.BoxInfo
 	for index, d := range deployments {
 		result = append(result, newBoxInfo(d))
-		box.eventBus.Publish(newDeploymentListKubeEvent(index, namespace, d.Name, d.PodInfo.Id, d.Healthy))
+		box.eventBus.Publish(newDeploymentListKubeEvent(index, namespace, d.Name, d.PodInfo.PodName, d.Healthy))
 	}
 
 	return result, nil
@@ -462,7 +461,7 @@ func (box *KubeBoxClient) listBoxes() ([]model.BoxInfo, error) {
 
 func newBoxInfo(deployment kubernetes.DeploymentInfo) model.BoxInfo {
 	return model.BoxInfo{
-		Id:      deployment.PodInfo.Id,
+		Id:      deployment.PodInfo.PodName,
 		Name:    deployment.Name,
 		Healthy: deployment.Healthy,
 	}

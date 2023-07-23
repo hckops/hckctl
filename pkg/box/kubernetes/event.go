@@ -76,8 +76,8 @@ func newDeploymentDeleteKubeEvent(namespace string, name string) *kubeEvent {
 	return &kubeEvent{kind: event.LogDebug, value: fmt.Sprintf("deployment delete: namespace=%s name=%s", namespace, name)}
 }
 
-func newPodNameKubeEvent(namespace string, podName string, podId string) *kubeEvent {
-	return &kubeEvent{kind: event.LogDebug, value: fmt.Sprintf("found unique pod: namespace=%s podName=%s podId=%s", namespace, podName, podId)}
+func newPodNameKubeEvent(namespace string, podName string, containerName string) *kubeEvent {
+	return &kubeEvent{kind: event.LogDebug, value: fmt.Sprintf("found unique pod: namespace=%s podName=%s containerName=%s", namespace, podName, containerName)}
 }
 
 func newPodPortForwardSkippedKubeEvent(namespace string, podId string) *kubeEvent {

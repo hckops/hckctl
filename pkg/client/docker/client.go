@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"sync"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
@@ -200,7 +201,7 @@ func newContainerDetails(container types.ContainerJSON) ContainerDetails {
 
 	return ContainerDetails{
 		Info:    NewContainerInfo(container.ID, container.Name, container.State.Status),
-		Created: container.Created,
+		Created: time.Now(), // TODO container.Created
 		Labels:  container.Config.Labels,
 		Env:     container.Config.Env,
 		Ports:   ports,

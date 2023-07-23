@@ -75,7 +75,7 @@ type ProviderValue struct {
 func newBoxValue(details *model.BoxDetails) *BoxValue {
 	return &BoxValue{
 		Name:    details.Info.Name,
-		Created: details.Created,
+		Created: details.Created.String(),
 		Healthy: details.Info.Healthy,
 		Size:    details.Size.String(),
 		Provider: ProviderValue{

@@ -3,6 +3,7 @@ package model
 import (
 	"io"
 	"os"
+	"time"
 
 	"github.com/hckops/hckctl/pkg/event"
 )
@@ -20,7 +21,7 @@ type BoxDetails struct {
 	Size         ResourceSize
 	Env          []BoxEnv
 	Ports        []BoxPort
-	Created      string // timestamp
+	Created      time.Time
 }
 
 type BoxTemplateInfo struct {

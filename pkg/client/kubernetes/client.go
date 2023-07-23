@@ -217,7 +217,7 @@ func newDeploymentDetails(deployment *appsv1.Deployment, podInfo *PodInfo) *Depl
 	deploymentInfo := newDeploymentInfo(deployment, podInfo)
 	return &DeploymentDetails{
 		Info:        &deploymentInfo,
-		Created:     deployment.CreationTimestamp.String(),
+		Created:     deployment.CreationTimestamp.Time,
 		Annotations: deployment.Annotations,
 	}
 }
@@ -294,23 +294,25 @@ func newPodInfo(namespace string, pods *corev1.PodList) (*PodInfo, error) {
 		return nil, fmt.Errorf("found %d pods, expected only 1 pod for deployment: namespace=%s", len(pods.Items), namespace)
 	}
 
-	pod := pods.Items[0]
+	podItem := pods.Items[0]
 
 	// TODO verify with injected sidecar containers ???
-	if len(pod.Spec.Containers) != 1 {
-		return nil, fmt.Errorf("found %d containers, expected only 1 container for pod: namespace=%s", len(pod.Spec.Containers), namespace)
+	if len(podItem.Spec.Containers) != 1 {
+		return nil, fmt.Errorf("found %d containers, expected only 1 container for pod: namespace=%s", len(podItem.Spec.Containers), namespace)
 	}
 
-	var env map[string]string
-	for _, e := range pod.Spec.Containers[0].Env {
+	containerItem := podItem.Spec.Containers[0]
+
+	env := make(map[string]string)
+	for _, e := range containerItem.Env {
 		env[e.Name] = e.Value
 	}
 
 	return &PodInfo{
-		Namespace: namespace,
-		Id:        pod.ObjectMeta.Name, // pod.Name + unique generated suffix
-		Name:      pod.Name,
-		Env:       env,
+		Namespace:     podItem.Namespace,
+		PodName:       podItem.Name, // pod.Name + unique generated suffix
+		ContainerName: containerItem.Name,
+		Env:           env,
 	}, nil
 }
 

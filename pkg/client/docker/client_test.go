@@ -2,6 +2,7 @@ package docker
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -33,7 +34,7 @@ func TestNewContainerDetails(t *testing.T) {
 		ContainerJSONBase: &types.ContainerJSONBase{
 			ID:      "myId",
 			Name:    "/myName",
-			Created: "yyyy-mm-dd",
+			Created: "2022-06-28 09:25:38",
 			State: &types.ContainerState{
 				Status: "exited",
 			},
@@ -58,7 +59,7 @@ func TestNewContainerDetails(t *testing.T) {
 			ContainerName: "myName",
 			Healthy:       false,
 		},
-		Created: "yyyy-mm-dd",
+		Created: time.Now(),
 		Labels: map[string]string{
 			"com.hckops.test": "true",
 		},
