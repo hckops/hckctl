@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"io"
+	"strings"
 	"sync"
 	"time"
 
@@ -201,11 +202,11 @@ func newContainerDetails(container types.ContainerJSON) (ContainerDetails, error
 
 	created, err := time.Parse(time.RFC3339, container.Created)
 	if err != nil {
-		return ContainerDetails{}, errors.Wrapf(err, "invalid container created time format %s", container.Created)
+		return ContainerDetails{}, errors.Wrapf(err, "error parsing container created time %s", container.Created)
 	}
 
 	return ContainerDetails{
-		Info:    NewContainerInfo(container.ID, container.Name, container.State.Status),
+		Info:    newContainerInfo(container.ID, container.Name, container.State.Status),
 		Created: created,
 		Labels:  container.Config.Labels,
 		Env:     container.Config.Env,
@@ -228,10 +229,24 @@ func (client *DockerClient) ContainerList(namePrefix string, label string) ([]Co
 
 	var result []ContainerInfo
 	for _, container := range containers {
-		result = append(result, NewContainerInfo(container.ID, container.Names[0], container.State))
+		result = append(result, newContainerInfo(container.ID, container.Names[0], container.State))
 	}
 
 	return result, nil
+}
+
+func newContainerInfo(id, name, status string) ContainerInfo {
+
+	// name starts with slash
+	containerName := strings.TrimPrefix(name, "/")
+	// see types.ContainerState
+	healthy := status == "running"
+
+	return ContainerInfo{
+		ContainerId:   id,
+		ContainerName: containerName,
+		Healthy:       healthy,
+	}
 }
 
 func (client *DockerClient) ContainerLogs(opts *ContainerLogsOpts) error {

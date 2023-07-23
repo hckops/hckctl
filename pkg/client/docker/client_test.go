@@ -12,7 +12,7 @@ import (
 )
 
 func TestNewContainerInfo(t *testing.T) {
-	containerInfo := NewContainerInfo("myId", "/myName", "running")
+	containerInfo := newContainerInfo("myId", "/myName", "running")
 	expected := ContainerInfo{
 		ContainerId:   "myId",
 		ContainerName: "myName",

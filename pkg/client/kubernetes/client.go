@@ -85,7 +85,6 @@ func NewInClusterKubeClient() (*KubeClient, error) {
 }
 
 func (client *KubeClient) Close() error {
-	// TODO
 	return errors.New("not implemented")
 }
 
@@ -183,14 +182,14 @@ func newDeploymentInfo(deployment *appsv1.Deployment, podInfo *PodInfo) Deployme
 }
 
 func isDeploymentHealthy(status appsv1.DeploymentStatus) bool {
-	// all conditions must be healthy
+	// all conditions must be true to be healthy
 	var healthy bool
 	for _, condition := range status.Conditions {
 		if condition.Status == corev1.ConditionTrue {
 			healthy = true
 		} else {
 			healthy = false
-			// mark as unhealthy if at least one condition is invalid e.g. stuck due to lack of resources
+			// mark as unhealthy if at least one condition is false e.g. stuck due to lack of resources
 			break
 		}
 	}

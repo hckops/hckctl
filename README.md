@@ -222,6 +222,7 @@ TODO
     - refactor common `BoxClient` methods (abstract)
     - mount `/dev/tun` for vpn
     - implement copy ???
+    - uniform describe time format
     - kube: add env var
     - kube: add distroless support
     - kube: verify if close is needed or `return nil`
