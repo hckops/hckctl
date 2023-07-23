@@ -13,12 +13,11 @@ import (
 	"github.com/hckops/hckctl/pkg/client/docker"
 )
 
-var testPorts = []model.BoxPort{
-	{Alias: "aaa", Local: "123", Remote: "123"},
-	{Alias: "bbb", Local: "456", Remote: "789"},
-}
-
 func TestBuildContainerConfig(t *testing.T) {
+	ports := []model.BoxPort{
+		{Alias: "aaa", Local: "123", Remote: "123"},
+		{Alias: "bbb", Local: "456", Remote: "789"},
+	}
 	expected := &container.Config{
 		Hostname:     "myContainerName",
 		Image:        "myImageName",
@@ -40,7 +39,7 @@ func TestBuildContainerConfig(t *testing.T) {
 	opts := &containerConfigOptions{
 		imageName:     "myImageName",
 		containerName: "myContainerName",
-		ports:         testPorts,
+		ports:         ports,
 		labels: map[string]string{
 			"a.b.c": "hello",
 			"x.y.z": "world",
@@ -54,14 +53,16 @@ func TestBuildContainerConfig(t *testing.T) {
 
 func TestBuildHostConfig(t *testing.T) {
 	// 1024 is the first user port available https://superuser.com/questions/1631280/what-exactly-are-user-ports
+	ports := []model.BoxPort{
+		{Alias: "random", Local: "1024", Remote: "1024"},
+	}
 	expected := &container.HostConfig{
 		PortBindings: nat.PortMap{
-			"123/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "1024"}},
-			"789/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "1024"}},
+			"1024/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "1024"}},
 		},
 	}
 
-	result, err := buildHostConfig(testPorts, func(port model.BoxPort) {})
+	result, err := buildHostConfig(ports, func(port model.BoxPort) {})
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 }
