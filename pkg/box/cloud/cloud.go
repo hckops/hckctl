@@ -154,9 +154,9 @@ func (box *CloudBoxClient) deleteBoxes(names []string) ([]string, error) {
 	}
 
 	var result []string
-	for index, item := range response.Body.Items {
-		result = append(result, item.Name)
-		box.eventBus.Publish(newApiDeleteCloudEvent(index, item.Name))
+	for index, name := range response.Body.Names {
+		result = append(result, name)
+		box.eventBus.Publish(newApiDeleteCloudEvent(index, name))
 	}
 	return result, nil
 }

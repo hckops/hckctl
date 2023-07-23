@@ -10,8 +10,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// TODO add lock/sync wrapper to support concurrent requests
-
 type GitSourceOptions struct {
 	CacheBaseDir    string
 	RepositoryUrl   string
@@ -29,6 +27,8 @@ func (s *GitSourceOptions) CacheDirName() string {
 func (s *GitSourceOptions) CachePath() string {
 	return filepath.Join(s.CacheBaseDir, s.CacheDirName())
 }
+
+// TODO add lock/sync wrapper to support concurrent requests
 
 // returns the resolved commit sha
 func refreshSource(opts *GitSourceOptions) (string, error) {
