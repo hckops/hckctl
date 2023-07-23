@@ -15,7 +15,7 @@ const (
 var testBoxes = []string{"box-alpine-123", "box-alpine-456"}
 
 func TestMethods(t *testing.T) {
-	assert.Equal(t, 5, len(methods))
+	assert.Equal(t, 6, len(methods))
 	assert.Equal(t, "hck-ping", MethodPing.String())
 	assert.Equal(t, "hck-box-create", MethodBoxCreate.String())
 	assert.Equal(t, "hck-box-delete", MethodBoxDelete.String())
@@ -83,11 +83,17 @@ func TestBoxDeleteResponse(t *testing.T) {
 }
 
 func TestBoxDescribeRequest(t *testing.T) {
-	assert.Equal(t, true, false)
+	message := NewBoxDescribeRequest(clientOrigin, testBoxes[0])
+	value := `{"kind":"api/v1","origin":"hckctl-0.0.0-os","method":"hck-box-describe","body":{"name":"box-alpine-123"}}`
+
+	testMessage[BoxDescribeRequestBody](t, message, value)
 }
 
 func TestBoxDescribeResponse(t *testing.T) {
-	assert.Equal(t, true, false)
+	message := NewBoxDescribeResponse(serverOrigin, testBoxes[0])
+	value := `{"kind":"api/v1","origin":"hckadm-0.0.0-info","method":"hck-box-describe","body":{"name":"box-alpine-123"}}`
+
+	testMessage[BoxDescribeResponseBody](t, message, value)
 }
 
 func TestBoxListRequest(t *testing.T) {
