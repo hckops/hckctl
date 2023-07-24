@@ -86,18 +86,23 @@ func TestBoxDescribeRequest(t *testing.T) {
 }
 
 func TestBoxDescribeResponse(t *testing.T) {
-	message := NewBoxDescribeResponse(
-		serverOrigin,
-		"myId",
-		"myName",
-		"myCreated",
-		true,
-		"mySize",
-		"myRevision",
-		[]string{"KEY_1=VALUE_1", "KEY_2=VALUE_2"},
-		[]string{"alias-1/123", "alias-2/456"},
-	)
-	value := `{"kind":"api/v1","origin":"hckadm-0.0.0-info","method":"hck-box-describe","body":{"id":"myId","name":"myName","created":"myCreated","healthy":true,"size":"mySize","revision":"myRevision","env":["KEY_1=VALUE_1","KEY_2=VALUE_2"],"ports":["alias-1/123","alias-2/456"]}}`
+	message := NewBoxDescribeResponse(serverOrigin, BoxDescribeResponseBody{
+		Id:      "myId",
+		Name:    "myName",
+		Created: "myCreated",
+		Healthy: true,
+		Size:    "mySize",
+		Template: &BoxDescribeTemplateInfo{
+			Public:   true,
+			Url:      "infoUrl",
+			Revision: "infoRevision",
+			Commit:   "infoCommit",
+			Name:     "infoName",
+		},
+		Env:   []string{"KEY_1=VALUE_1", "KEY_2=VALUE_2"},
+		Ports: []string{"alias-1/123", "alias-2/456"},
+	})
+	value := `{"kind":"api/v1","origin":"hckadm-0.0.0-info","method":"hck-box-describe","body":{"id":"myId","name":"myName","created":"myCreated","healthy":true,"size":"mySize","template":{"public":true,"url":"infoUrl","revision":"infoRevision","commit":"infoCommit","name":"infoName"},"env":["KEY_1=VALUE_1","KEY_2=VALUE_2"],"ports":["alias-1/123","alias-2/456"]}}`
 
 	testMessage[BoxDescribeResponseBody](t, message, value)
 }

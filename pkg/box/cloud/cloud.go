@@ -150,8 +150,12 @@ func toBoxDetails(response *v1.Message[v1.BoxDescribeResponseBody]) (*model.BoxD
 			Healthy: response.Body.Healthy,
 		},
 		TemplateInfo: &model.BoxTemplateInfo{
-			CloudTemplate: &model.CloudTemplateInfo{
-				Revision: response.Body.Revision,
+			// TODO only if response.Body.Template.Public
+			GitTemplate: &model.GitTemplateInfo{
+				Url:      response.Body.Template.Url,
+				Revision: response.Body.Template.Revision,
+				Commit:   response.Body.Template.Commit,
+				Name:     response.Body.Template.Name,
 			},
 		},
 		ProviderInfo: &model.BoxProviderInfo{

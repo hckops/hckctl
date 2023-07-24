@@ -14,17 +14,22 @@ func TestToBoxDetails(t *testing.T) {
 	created := "2042-12-08T10:30:05.265113665Z"
 	createdTime, _ := time.Parse(time.RFC3339, created)
 
-	message := v1.NewBoxDescribeResponse(
-		"hckadm-0.0.0-info",
-		"myId",
-		"myName",
-		created,
-		true,
-		"M",
-		"myRevision",
-		[]string{"KEY_1=VALUE_1", "KEY_2=VALUE_2", "INVALID", "=INVALID="},
-		[]string{"alias-1/123", "alias-2/456", "INVALID", "/INVALID/"},
-	)
+	message := v1.NewBoxDescribeResponse("hckadm-0.0.0-info", v1.BoxDescribeResponseBody{
+		Id:      "myId",
+		Name:    "myName",
+		Created: created,
+		Healthy: true,
+		Size:    "M",
+		Template: &v1.BoxDescribeTemplateInfo{
+			Public:   true,
+			Url:      "infoUrl",
+			Revision: "infoRevision",
+			Commit:   "infoCommit",
+			Name:     "infoName",
+		},
+		Env:   []string{"KEY_1=VALUE_1", "KEY_2=VALUE_2", "INVALID", "=INVALID="},
+		Ports: []string{"alias-1/123", "alias-2/456", "INVALID", "/INVALID/"},
+	})
 	expected := &model.BoxDetails{
 		Info: model.BoxInfo{
 			Id:      "myId",
@@ -32,8 +37,11 @@ func TestToBoxDetails(t *testing.T) {
 			Healthy: true,
 		},
 		TemplateInfo: &model.BoxTemplateInfo{
-			CloudTemplate: &model.CloudTemplateInfo{
-				Revision: "myRevision",
+			GitTemplate: &model.GitTemplateInfo{
+				Url:      "infoUrl",
+				Revision: "infoRevision",
+				Commit:   "infoCommit",
+				Name:     "infoName",
 			},
 		},
 		ProviderInfo: &model.BoxProviderInfo{

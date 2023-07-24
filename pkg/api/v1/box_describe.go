@@ -9,14 +9,22 @@ func (b BoxDescribeRequestBody) method() MethodName {
 }
 
 type BoxDescribeResponseBody struct {
-	Id       string   `json:"id"`
-	Name     string   `json:"name"`
-	Created  string   `json:"created"`
-	Healthy  bool     `json:"healthy"`
-	Size     string   `json:"size"`
-	Revision string   `json:"revision"` // public template commit
-	Env      []string `json:"env"`
-	Ports    []string `json:"ports"`
+	Id       string                   `json:"id"`
+	Name     string                   `json:"name"`
+	Created  string                   `json:"created"`
+	Healthy  bool                     `json:"healthy"`
+	Size     string                   `json:"size"`
+	Template *BoxDescribeTemplateInfo `json:"template"`
+	Env      []string                 `json:"env"`
+	Ports    []string                 `json:"ports"`
+}
+
+type BoxDescribeTemplateInfo struct {
+	Public   bool   `json:"public"`
+	Url      string `json:"url"`
+	Revision string `json:"revision"`
+	Commit   string `json:"commit"`
+	Name     string `json:"name"`
 }
 
 func (b BoxDescribeResponseBody) method() MethodName {
@@ -27,25 +35,6 @@ func NewBoxDescribeRequest(origin string, name string) *Message[BoxDescribeReque
 	return newMessage[BoxDescribeRequestBody](origin, BoxDescribeRequestBody{Name: name})
 }
 
-func NewBoxDescribeResponse(
-	origin string,
-	id string,
-	name string,
-	created string,
-	healthy bool,
-	size string,
-	revision string,
-	env []string,
-	ports []string,
-) *Message[BoxDescribeResponseBody] {
-	return newMessage[BoxDescribeResponseBody](origin, BoxDescribeResponseBody{
-		Id:       id,
-		Name:     name,
-		Created:  created,
-		Healthy:  healthy,
-		Size:     size,
-		Revision: revision,
-		Env:      env,
-		Ports:    ports,
-	})
+func NewBoxDescribeResponse(origin string, body BoxDescribeResponseBody) *Message[BoxDescribeResponseBody] {
+	return newMessage[BoxDescribeResponseBody](origin, body)
 }

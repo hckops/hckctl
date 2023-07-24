@@ -116,16 +116,10 @@ func newSourceLoader(boxDetails *model.BoxDetails, cacheDir string) template.Sou
 
 	if boxDetails.TemplateInfo.IsCached() {
 		return template.NewLocalLoader[model.BoxV1](boxDetails.TemplateInfo.CachedTemplate.Path)
-	}
-
-	var commit string
-	if boxDetails.TemplateInfo.CloudTemplate != nil {
-		// assume public templates only
-		commit = boxDetails.TemplateInfo.CloudTemplate.Revision
 	} else {
-		commit = boxDetails.TemplateInfo.GitTemplate.Commit
+		sourceOpts := newGitSourceOptions(cacheDir, boxDetails.TemplateInfo.GitTemplate.Commit)
+		return template.NewGitLoader[model.BoxV1](sourceOpts, boxDetails.TemplateInfo.GitTemplate.Name)
 	}
-	return template.NewGitLoader[model.BoxV1](newGitSourceOptions(cacheDir, commit), boxDetails.TemplateInfo.GitTemplate.Name)
 }
 
 func newGitSourceOptions(cacheDir string, revision string) *template.GitSourceOptions {
