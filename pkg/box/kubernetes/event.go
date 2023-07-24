@@ -40,10 +40,6 @@ func newNamespaceDeleteKubeEvent(namespace string) *kubeEvent {
 	return &kubeEvent{kind: event.LogDebug, value: fmt.Sprintf("namespace delete: namespace=%s", namespace)}
 }
 
-func newNamespaceDeleteSkippedKubeEvent(namespace string) *kubeEvent {
-	return &kubeEvent{kind: event.LogWarning, value: fmt.Sprintf("namespace delete skipped: namespace=%s", namespace)}
-}
-
 func newResourcesDeployKubeLoaderEvent(namespace string, name string) *kubeEvent {
 	return &kubeEvent{kind: event.LoaderUpdate, value: fmt.Sprintf("deploying %s/%s", namespace, name)}
 }

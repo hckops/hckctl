@@ -9,7 +9,6 @@ import (
 
 	"github.com/hckops/hckctl/pkg/box/model"
 	boxFlag "github.com/hckops/hckctl/pkg/command/box/flag"
-	"github.com/hckops/hckctl/pkg/command/common"
 	commonFlag "github.com/hckops/hckctl/pkg/command/common/flag"
 	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/template"
@@ -75,7 +74,8 @@ func (opts *boxCreateCmdOptions) run(cmd *cobra.Command, args []string) error {
 }
 
 func createBox(sourceLoader template.SourceLoader[model.BoxV1], provider model.BoxProvider, configRef *config.ConfigRef, labels model.BoxLabels) error {
-	createClient := func(invokeOpts *invokeOptions, loader *common.Loader) error {
+
+	createClient := func(invokeOpts *invokeOptions) error {
 
 		templateOpts, err := newTemplateOptions(invokeOpts.template, labels, configRef.Config.Box.Size)
 		if err != nil {
@@ -85,7 +85,7 @@ func createBox(sourceLoader template.SourceLoader[model.BoxV1], provider model.B
 		if boxInfo, err := invokeOpts.client.Create(templateOpts); err != nil {
 			return err
 		} else {
-			loader.Stop()
+			invokeOpts.loader.Stop()
 			fmt.Println(boxInfo.Name)
 		}
 		return nil

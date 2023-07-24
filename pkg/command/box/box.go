@@ -8,7 +8,6 @@ import (
 
 	"github.com/hckops/hckctl/pkg/box/model"
 	boxFlag "github.com/hckops/hckctl/pkg/command/box/flag"
-	"github.com/hckops/hckctl/pkg/command/common"
 	commonFlag "github.com/hckops/hckctl/pkg/command/common/flag"
 	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/template"
@@ -95,6 +94,7 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 	} else if len(args) == 1 {
 
 		if err := opts.validateFlags(provider); err != nil {
+			log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
 			return errors.New(commonFlag.ErrorFlagNotSupported)
 
 		} else if opts.sourceFlag.Local {
@@ -134,7 +134,7 @@ func (opts *boxCmdOptions) validateFlags(provider model.BoxProvider) error {
 
 func (opts *boxCmdOptions) openBox(sourceLoader template.SourceLoader[model.BoxV1], provider model.BoxProvider, labels model.BoxLabels) error {
 
-	openClient := func(invokeOpts *invokeOptions, loader *common.Loader) error {
+	openClient := func(invokeOpts *invokeOptions) error {
 
 		templateOpts, err := newTemplateOptions(invokeOpts.template, labels, opts.configRef.Config.Box.Size)
 		if err != nil {

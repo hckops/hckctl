@@ -10,7 +10,6 @@ import (
 	"github.com/hckops/hckctl/pkg/box/model"
 	boxFlag "github.com/hckops/hckctl/pkg/command/box/flag"
 	"github.com/hckops/hckctl/pkg/command/common"
-	commonFlag "github.com/hckops/hckctl/pkg/command/common/flag"
 	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/command/version"
 	"github.com/hckops/hckctl/pkg/event"
@@ -20,10 +19,11 @@ import (
 type invokeOptions struct {
 	client   box.BoxClient
 	template *template.TemplateInfo[model.BoxV1]
+	loader   *common.Loader
 }
 
 // open and create
-func runBoxClient(sourceLoader template.SourceLoader[model.BoxV1], provider model.BoxProvider, configRef *config.ConfigRef, invokeClient func(*invokeOptions, *common.Loader) error) error {
+func runBoxClient(sourceLoader template.SourceLoader[model.BoxV1], provider model.BoxProvider, configRef *config.ConfigRef, invokeClient func(*invokeOptions) error) error {
 
 	boxTemplate, err := sourceLoader.Read()
 	if err != nil {
@@ -37,74 +37,66 @@ func runBoxClient(sourceLoader template.SourceLoader[model.BoxV1], provider mode
 
 	log.Info().Msgf("loading template: provider=%s name=%s\n%s", provider, boxTemplate.Value.Data.Name, boxTemplate.Value.Data.Pretty())
 
-	boxClientOpts := newBoxClientOpts(provider, configRef)
-	boxClient, err := box.NewBoxClient(boxClientOpts)
+	boxClient, err := newDefaultBoxClient(provider, configRef, loader)
 	if err != nil {
-		log.Warn().Err(err).Msgf("error creating client: provider=%v", provider)
-		return fmt.Errorf("error %v client create", provider)
+		return err
 	}
-
-	boxClient.Events().Subscribe(func(e event.Event) {
-		switch e.Kind() {
-		case event.PrintConsole:
-			loader.Refresh("loading")
-			fmt.Println(e.String())
-		case event.LoaderUpdate:
-			loader.Refresh(e.String())
-		case event.LoaderStop:
-			loader.Stop()
-		case event.LogWarning:
-			log.Warn().Msgf("[%v] %s", e.Source(), e.String())
-		default:
-			log.Debug().Msgf("[%v][%s] %s", e.Source(), e.Kind(), e.String())
-		}
-	})
 
 	invokeOpts := &invokeOptions{
 		client:   boxClient,
 		template: boxTemplate,
+		loader:   loader,
 	}
-	if err := invokeClient(invokeOpts, loader); err != nil {
+	if err := invokeClient(invokeOpts); err != nil {
 		log.Warn().Err(err).Msgf("error invoking client: provider=%v", provider)
 		return fmt.Errorf("error %v client invoke", provider)
 	}
 	return nil
 }
 
-// TODO loader + review removeOnExit
-
-// connect, describe and delete
+// connect, describe and delete-one
 func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeClient func(*invokeOptions, *model.BoxDetails) error) error {
+
+	loader := common.NewLoader()
+	loader.Start("loading %s", boxName)
+	defer loader.Stop()
 
 	// silently fail attempting all the providers
 	for _, providerFlag := range boxFlag.BoxProviders() {
-		log.Debug().Msgf("attempt box template: providerFlag=%v", providerFlag)
+		log.Debug().Msgf("attempt box template: providerFlag=%s boxName=%s", providerFlag, boxName)
 
-		boxClient, err := newDefaultBoxClient(providerFlag, configRef)
+		provider, err := boxFlag.ToBoxProvider(providerFlag)
 		if err != nil {
-			log.Warn().Err(err).Msgf("ignoring error default client: providerFlag=%v", providerFlag)
+			log.Warn().Err(err).Msgf("ignoring error provider: provider=%s", provider)
 			// skip to the next provider
+			continue
+		}
+
+		boxClient, err := newDefaultBoxClient(provider, configRef, loader)
+		if err != nil {
+			log.Warn().Err(err).Msgf("ignoring error default client: provider=%s", provider)
 			continue
 		}
 
 		boxDetails, err := boxClient.Describe(boxName)
 		if err != nil {
-			log.Warn().Err(err).Msgf("ignoring error describe box: providerFlag=%v", providerFlag)
+			log.Warn().Err(err).Msgf("ignoring error describe box: provider=%s boxName=%s", provider, boxName)
 			continue
 		}
 
 		templateInfo, err := newSourceLoader(boxDetails, configRef.Config.Template.CacheDir).Read()
 		if err != nil {
-			log.Warn().Err(err).Msgf("ignoring error reading source: providerFlag=%v ", providerFlag)
+			log.Warn().Err(err).Msgf("ignoring error reading source: provider=%s boxName=%s", provider, boxName)
 			continue
 		}
 
 		invokeOpts := &invokeOptions{
 			client:   boxClient,
 			template: templateInfo,
+			loader:   loader,
 		}
 		if err := invokeClient(invokeOpts, boxDetails); err != nil {
-			log.Warn().Err(err).Msgf("ignoring error invoking client: providerFlag=%v", providerFlag)
+			log.Warn().Err(err).Msgf("ignoring error invoking client: provider=%s boxName=%s", provider, boxName)
 		} else {
 			// return as soon as the client is invoked with success
 			return nil
@@ -144,23 +136,23 @@ func newBoxClientOpts(provider model.BoxProvider, configRef *config.ConfigRef) *
 	}
 }
 
-func newDefaultBoxClient(providerFlag commonFlag.ProviderFlag, configRef *config.ConfigRef) (box.BoxClient, error) {
+func newDefaultBoxClient(provider model.BoxProvider, configRef *config.ConfigRef, loader *common.Loader) (box.BoxClient, error) {
 
-	provider, err := boxFlag.ToBoxProvider(providerFlag)
+	boxClientOpts := newBoxClientOpts(provider, configRef)
+	boxClient, err := box.NewBoxClient(boxClientOpts)
 	if err != nil {
-		return nil, err
-	}
-	opts := newBoxClientOpts(provider, configRef)
-	boxClient, err := box.NewBoxClient(opts)
-	if err != nil {
-		log.Warn().Err(err).Msgf("error creating client: provider=%v", opts.Provider)
-		return nil, fmt.Errorf("create %v client error", opts.Provider)
+		return nil, fmt.Errorf("error %s client", provider)
 	}
 
 	boxClient.Events().Subscribe(func(e event.Event) {
 		switch e.Kind() {
 		case event.PrintConsole:
+			loader.Refresh("loading")
 			fmt.Println(e.String())
+		case event.LoaderUpdate:
+			loader.Refresh(e.String())
+		case event.LoaderStop:
+			loader.Stop()
 		case event.LogWarning:
 			log.Warn().Msgf("[%v] %s", e.Source(), e.String())
 		default:

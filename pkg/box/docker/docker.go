@@ -254,10 +254,8 @@ func (box *DockerBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, 
 		ErrStream:   tunnelOpts.Streams.Err,
 		IsTty:       tunnelOpts.Streams.IsTty,
 		OnContainerExecCallback: func() {
-			if removeOnExit {
-				// stop loader
-				box.eventBus.Publish(newContainerExecDockerLoaderEvent())
-			}
+			// stop loader
+			box.eventBus.Publish(newContainerExecDockerLoaderEvent())
 		},
 		OnStreamCloseCallback: func() {
 			box.eventBus.Publish(newContainerExecExitDockerEvent(info.Id))

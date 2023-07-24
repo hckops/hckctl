@@ -2,6 +2,7 @@ package box
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/command/common"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -33,9 +34,13 @@ func NewBoxListCmd(configRef *config.ConfigRef) *cobra.Command {
 
 func (opts *boxListCmdOptions) run(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
+		loader := common.NewLoader()
+		loader.Start("loading boxes")
+		defer loader.Stop()
+
 		// silently fail attempting all the providers
 		for _, providerFlag := range boxFlag.BoxProviders() {
-			if err := listByProvider(providerFlag, opts.configRef); err != nil {
+			if err := listByProvider(providerFlag, opts.configRef, loader); err != nil {
 				log.Warn().Err(err).Msgf("ignoring error list boxes: providerFlag=%v", providerFlag)
 			}
 		}
@@ -45,10 +50,15 @@ func (opts *boxListCmdOptions) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func listByProvider(providerFlag commonFlag.ProviderFlag, configRef *config.ConfigRef) error {
-	log.Debug().Msgf("list boxes: providerFlag=%v", providerFlag)
+func listByProvider(providerFlag commonFlag.ProviderFlag, configRef *config.ConfigRef, loader *common.Loader) error {
+	log.Debug().Msgf("list boxes: providerFlag=%s", providerFlag)
 
-	boxClient, err := newDefaultBoxClient(providerFlag, configRef)
+	provider, err := boxFlag.ToBoxProvider(providerFlag)
+	if err != nil {
+		return fmt.Errorf("%s provider error", providerFlag)
+	}
+
+	boxClient, err := newDefaultBoxClient(provider, configRef, loader)
 	if err != nil {
 		return err
 	}
@@ -56,10 +66,11 @@ func listByProvider(providerFlag commonFlag.ProviderFlag, configRef *config.Conf
 	boxes, err := boxClient.List()
 	if err != nil {
 		log.Warn().Err(err).Msgf("error listing boxes: provider=%v", boxClient.Provider())
-		return fmt.Errorf("%v list error", boxClient.Provider())
+		return fmt.Errorf("%s list error", boxClient.Provider())
 	}
 
-	fmt.Println(fmt.Sprintf("# %v", boxClient.Provider()))
+	loader.Stop()
+	fmt.Println(fmt.Sprintf("# %s", boxClient.Provider()))
 	for _, b := range boxes {
 		if b.Healthy {
 			fmt.Println(b.Name)
@@ -67,6 +78,6 @@ func listByProvider(providerFlag commonFlag.ProviderFlag, configRef *config.Conf
 			fmt.Println(fmt.Sprintf("%s (unhealthy)", b.Name))
 		}
 	}
-	fmt.Println(fmt.Sprintf("total: %v", len(boxes)))
+	fmt.Println(fmt.Sprintf("total: %d", len(boxes)))
 	return nil
 }

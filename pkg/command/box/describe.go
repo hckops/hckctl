@@ -42,6 +42,7 @@ func (opts *boxDescribeCmdOptions) run(cmd *cobra.Command, args []string) error 
 			if value, err := util.EncodeYaml(newBoxValue(boxDetails)); err != nil {
 				return err
 			} else {
+				invokeOpts.loader.Stop()
 				fmt.Print(value)
 			}
 			return nil

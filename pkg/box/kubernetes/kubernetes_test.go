@@ -179,6 +179,7 @@ func TestBoxLabel(t *testing.T) {
 	assert.Equal(t, expected, boxLabel())
 }
 
+// TODO flaky test due to order of map/string
 func TestToBoxDetails(t *testing.T) {
 	createdTime, _ := time.Parse(time.RFC3339, "2042-12-08T10:30:05.265113665Z")
 

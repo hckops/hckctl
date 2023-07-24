@@ -299,10 +299,8 @@ func (box *KubeBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, tu
 		ErrStream: tunnelOpts.Streams.Err,
 		IsTty:     tunnelOpts.Streams.IsTty,
 		OnExecCallback: func() {
-			if removeOnExit {
-				// stop loader
-				box.eventBus.Publish(newPodExecKubeLoaderEvent())
-			}
+			// stop loader
+			box.eventBus.Publish(newPodExecKubeLoaderEvent())
 		},
 	}
 

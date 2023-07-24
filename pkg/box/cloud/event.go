@@ -56,6 +56,10 @@ func newApiExecCloudEvent(boxName string) *cloudEvent {
 	return &cloudEvent{kind: event.LogDebug, value: fmt.Sprintf("api exec: boxName=%s", boxName)}
 }
 
+func newApiExecErrorCloudEvent(boxName string, err error) *cloudEvent {
+	return &cloudEvent{kind: event.LogWarning, value: fmt.Sprintf("api exec error: boxName=%s error=%v", boxName, err)}
+}
+
 func newApiExecCloudLoaderEvent() *cloudEvent {
 	return &cloudEvent{kind: event.LoaderStop, value: "waiting"}
 }

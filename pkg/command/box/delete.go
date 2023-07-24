@@ -8,6 +8,7 @@ import (
 
 	"github.com/hckops/hckctl/pkg/box/model"
 	boxFlag "github.com/hckops/hckctl/pkg/command/box/flag"
+	"github.com/hckops/hckctl/pkg/command/common"
 	commonFlag "github.com/hckops/hckctl/pkg/command/common/flag"
 	"github.com/hckops/hckctl/pkg/command/config"
 	"github.com/hckops/hckctl/pkg/template"
@@ -42,10 +43,14 @@ func NewBoxDeleteCmd(configRef *config.ConfigRef) *cobra.Command {
 func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	if len(args) == 0 && opts.all {
+		loader := common.NewLoader()
+		defer loader.Stop()
+		loader.Start("deleting boxes")
+
 		// silently fail attempting all the providers
 		for _, providerFlag := range boxFlag.BoxProviders() {
-			if err := deleteByProvider(providerFlag, opts.configRef); err != nil {
-				log.Warn().Err(err).Msgf("ignoring error delete boxes: providerFlag=%v", providerFlag)
+			if err := deleteByProvider(providerFlag, opts.configRef, loader); err != nil {
+				log.Warn().Err(err).Msgf("ignoring error delete boxes: providerFlag=%s", providerFlag)
 			}
 		}
 		// cleanup cache directory
@@ -68,6 +73,7 @@ func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 				// attempt next provider
 				return fmt.Errorf("box not found: boxName=%s", boxName)
 			}
+			invokeOpts.loader.Stop()
 			fmt.Println(boxName)
 
 			// cleanup cached template
@@ -86,24 +92,29 @@ func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func deleteByProvider(providerFlag commonFlag.ProviderFlag, configRef *config.ConfigRef) error {
-	log.Debug().Msgf("delete boxes: providerFlag=%v", providerFlag)
+func deleteByProvider(providerFlag commonFlag.ProviderFlag, configRef *config.ConfigRef, loader *common.Loader) error {
+	log.Debug().Msgf("delete boxes: providerFlag=%s", providerFlag)
 
-	boxClient, err := newDefaultBoxClient(providerFlag, configRef)
+	provider, err := boxFlag.ToBoxProvider(providerFlag)
+	if err != nil {
+		return fmt.Errorf("%s provider error", providerFlag)
+	}
+
+	boxClient, err := newDefaultBoxClient(provider, configRef, loader)
 	if err != nil {
 		return err
 	}
 
 	names, err := boxClient.Delete([]string{})
 	if err != nil {
-		log.Warn().Err(err).Msgf("error deleting boxes: provider=%v", boxClient.Provider())
-		return fmt.Errorf("%v delete error", boxClient.Provider())
+		return fmt.Errorf("%s delete error", boxClient.Provider())
 	}
 
-	fmt.Println(fmt.Sprintf("# %v", boxClient.Provider()))
+	loader.Reload()
+	fmt.Println(fmt.Sprintf("# %s", boxClient.Provider()))
 	for _, name := range names {
 		fmt.Println(name)
 	}
-	fmt.Println(fmt.Sprintf("total: %v", len(names)))
+	fmt.Println(fmt.Sprintf("total: %d", len(names)))
 	return nil
 }

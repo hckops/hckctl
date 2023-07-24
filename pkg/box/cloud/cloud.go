@@ -61,16 +61,19 @@ func (box *CloudBoxClient) createBox(opts *model.TemplateOptions) (*model.BoxInf
 	return &model.BoxInfo{Id: boxName, Name: boxName}, nil
 }
 
+// TODO common (no exec info)
 func (box *CloudBoxClient) openBox(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
 	if info, err := box.createBox(templateOpts); err != nil {
 		return err
 	} else {
-		return box.execBox(templateOpts.Template, tunnelOpts, info.Name)
+		return box.execBox(templateOpts.Template, tunnelOpts, info.Name, true)
 	}
 }
 
-func (box *CloudBoxClient) execBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
+func (box *CloudBoxClient) execBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string, removeOnExit bool) error {
 	box.eventBus.Publish(newApiExecCloudEvent(name))
+
+	// TODO print environment variables
 
 	if tunnelOpts.TunnelOnly {
 		return box.tunnelBox(template, name)
@@ -93,9 +96,14 @@ func (box *CloudBoxClient) execBox(template *model.BoxV1, tunnelOpts *model.Tunn
 			box.eventBus.Publish(newApiExecCloudLoaderEvent())
 		},
 		OnStreamErrorCallback: func(err error) {
-			// TODO stop loader
+			box.eventBus.Publish(newApiExecErrorCloudEvent(name, err))
 		},
 	}
+
+	if removeOnExit {
+		defer box.deleteBoxes([]string{name})
+	}
+
 	return box.client.Exec(opts)
 }
 
