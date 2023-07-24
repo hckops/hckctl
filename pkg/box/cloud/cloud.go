@@ -1,6 +1,7 @@
 package cloud
 
 import (
+	"github.com/hckops/hckctl/pkg/util"
 	"strings"
 	"time"
 
@@ -60,10 +61,26 @@ func (box *CloudBoxClient) createBox(opts *model.TemplateOptions) (*model.BoxInf
 	return &model.BoxInfo{Id: boxName, Name: boxName}, nil
 }
 
-func (box *CloudBoxClient) execBox(_ *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
+func (box *CloudBoxClient) openBox(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
+	if info, err := box.createBox(templateOpts); err != nil {
+		return err
+	} else {
+		return box.execBox(templateOpts.Template, tunnelOpts, info.Name)
+	}
+}
+
+func (box *CloudBoxClient) execBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
 	box.eventBus.Publish(newApiExecCloudEvent(name))
 
-	session := v1.NewBoxExecSession(box.clientOpts.Version, name, tunnelOpts.TunnelOnly, tunnelOpts.NoTunnel)
+	if tunnelOpts.TunnelOnly {
+		return box.tunnelBox(template, name)
+	}
+
+	if !tunnelOpts.NoTunnel {
+		// TODO
+	}
+
+	session := v1.NewBoxExecSession(box.clientOpts.Version, name)
 	payload, err := session.Encode()
 	if err != nil {
 		return errors.Wrap(err, "error cloud exec session")
@@ -72,7 +89,8 @@ func (box *CloudBoxClient) execBox(_ *model.BoxV1, tunnelOpts *model.TunnelOptio
 	opts := &ssh.SshExecOpts{
 		Payload: payload,
 		OnStreamStartCallback: func() {
-			// TODO stop loader
+			// stop loader
+			box.eventBus.Publish(newApiExecCloudLoaderEvent())
 		},
 		OnStreamErrorCallback: func(err error) {
 			// TODO stop loader
@@ -81,12 +99,38 @@ func (box *CloudBoxClient) execBox(_ *model.BoxV1, tunnelOpts *model.TunnelOptio
 	return box.client.Exec(opts)
 }
 
-func (box *CloudBoxClient) openBox(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
-	if info, err := box.createBox(templateOpts); err != nil {
-		return err
-	} else {
-		return box.execBox(templateOpts.Template, tunnelOpts, info.Name)
+func (box *CloudBoxClient) tunnelBox(template *model.BoxV1, name string) error {
+
+	if !template.HasPorts() {
+		box.eventBus.Publish(newApiTunnelSkippedCloudEvent(name))
+		// exit, no service/port available to bind
+		return nil
 	}
+
+	networkPorts := template.NetworkPorts(true)
+	portPadding := model.PortFormatPadding(networkPorts)
+
+	for _, port := range networkPorts {
+		localPort, err := util.FindOpenPort(port.Local)
+		if err != nil {
+			return errors.Wrapf(err, "error cloud tunnel port local=%s", port.Local)
+		}
+
+		// TODO print remote url
+		box.eventBus.Publish(newApiTunnelBindingCloudEvent(name, port))
+		box.eventBus.Publish(newApiTunnelBindingCloudConsoleEvent(name, port, portPadding))
+
+		sshTunnelOpts := &ssh.SshTunnelOpts{
+			LocalPort:  localPort,
+			RemoteHost: name,
+			RemotePort: port.Remote,
+			OnTunnelErrorCallback: func(err error) {
+				box.eventBus.Publish(newApiTunnelErrorCloudEvent(name, err))
+			},
+		}
+		go box.client.Tunnel(sshTunnelOpts)
+	}
+	return nil
 }
 
 func (box *CloudBoxClient) describe(name string) (*model.BoxDetails, error) {

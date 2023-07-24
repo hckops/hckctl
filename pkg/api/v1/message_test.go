@@ -126,8 +126,8 @@ func TestBoxListResponse(t *testing.T) {
 }
 
 func TestBoxExecSession(t *testing.T) {
-	message := NewBoxExecSession(clientOrigin, "alpine", false, false)
-	value := `{"kind":"api/v1","origin":"hckctl-0.0.0-os","method":"hck-box-exec","body":{"name":"alpine","tunnelOnly":false,"noTunnel":false}}`
+	message := NewBoxExecSession(clientOrigin, "alpine")
+	value := `{"kind":"api/v1","origin":"hckctl-0.0.0-os","method":"hck-box-exec","body":{"name":"alpine"}}`
 
 	testMessage[BoxExecSessionBody](t, message, value)
 }

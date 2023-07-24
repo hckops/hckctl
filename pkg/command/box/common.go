@@ -71,6 +71,8 @@ func runBoxClient(sourceLoader template.SourceLoader[model.BoxV1], provider mode
 	return nil
 }
 
+// TODO loader + review removeOnExit
+
 // connect, describe and delete
 func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeClient func(*invokeOptions, *model.BoxDetails) error) error {
 
