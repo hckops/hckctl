@@ -207,7 +207,7 @@ func newContainerDetails(container types.ContainerJSON) (ContainerDetails, error
 
 	return ContainerDetails{
 		Info:    newContainerInfo(container.ID, container.Name, container.State.Status),
-		Created: created,
+		Created: created.UTC(),
 		Labels:  container.Config.Labels,
 		Env:     container.Config.Env,
 		Ports:   ports,

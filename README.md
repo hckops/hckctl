@@ -208,7 +208,7 @@ TODO
         * reset config
         * delete all
 * template
-    - add remote template
+    - add `--remote` mutually exclusive flag
     - update directories to exclude in `resolvePath` e.g. charts
 * box
     - review command: `copy` vs `upload/download`
@@ -216,7 +216,6 @@ TODO
     - refactor common `BoxClient` methods (abstract)
     - mount `/dev/tun` for vpn
     - implement copy ???
-    - uniform describe time format
     - kube: add env var
     - kube: add distroless support
     - kube: verify if close is needed or `return nil`
@@ -239,7 +238,6 @@ TODO
     - cloud: remove body from empty request `omitempty to remove "body":{}`
     - remove lab ??? are envs + copy enough?
     - list boxes in table with padding see `tabwriter` https://gosamples.dev/string-padding
-    - template: rename `remote` to `git` and add `--remote` mutually exclusive flag to fetch via http
 * task
     - TODO ???
 * version

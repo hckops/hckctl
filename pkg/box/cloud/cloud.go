@@ -149,7 +149,11 @@ func toBoxDetails(response *v1.Message[v1.BoxDescribeResponseBody]) (*model.BoxD
 			Name:    response.Body.Name,
 			Healthy: response.Body.Healthy,
 		},
-		TemplateInfo: &model.BoxTemplateInfo{},
+		TemplateInfo: &model.BoxTemplateInfo{
+			CloudTemplate: &model.CloudTemplateInfo{
+				Revision: response.Body.Revision,
+			},
+		},
 		ProviderInfo: &model.BoxProviderInfo{
 			Provider: model.Cloud,
 		},

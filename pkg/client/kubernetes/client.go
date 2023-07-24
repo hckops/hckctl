@@ -216,7 +216,7 @@ func newDeploymentDetails(deployment *appsv1.Deployment, podInfo *PodInfo) *Depl
 	deploymentInfo := newDeploymentInfo(deployment, podInfo)
 	return &DeploymentDetails{
 		Info:        &deploymentInfo,
-		Created:     deployment.CreationTimestamp.Time,
+		Created:     deployment.CreationTimestamp.Time.UTC(),
 		Annotations: deployment.Annotations,
 	}
 }

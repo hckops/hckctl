@@ -9,13 +9,14 @@ func (b BoxDescribeRequestBody) method() MethodName {
 }
 
 type BoxDescribeResponseBody struct {
-	Id      string   `json:"id"`
-	Name    string   `json:"name"`
-	Created string   `json:"created"`
-	Healthy bool     `json:"healthy"`
-	Size    string   `json:"size"`
-	Env     []string `json:"env"`
-	Ports   []string `json:"ports"`
+	Id       string   `json:"id"`
+	Name     string   `json:"name"`
+	Created  string   `json:"created"`
+	Healthy  bool     `json:"healthy"`
+	Size     string   `json:"size"`
+	Revision string   `json:"revision"` // public template commit
+	Env      []string `json:"env"`
+	Ports    []string `json:"ports"`
 }
 
 func (b BoxDescribeResponseBody) method() MethodName {
@@ -33,16 +34,18 @@ func NewBoxDescribeResponse(
 	created string,
 	healthy bool,
 	size string,
+	revision string,
 	env []string,
 	ports []string,
 ) *Message[BoxDescribeResponseBody] {
 	return newMessage[BoxDescribeResponseBody](origin, BoxDescribeResponseBody{
-		Id:      id,
-		Name:    name,
-		Created: created,
-		Healthy: healthy,
-		Size:    size,
-		Env:     env,
-		Ports:   ports,
+		Id:       id,
+		Name:     name,
+		Created:  created,
+		Healthy:  healthy,
+		Size:     size,
+		Revision: revision,
+		Env:      env,
+		Ports:    ports,
 	})
 }

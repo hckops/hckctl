@@ -2,6 +2,7 @@ package box
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -55,7 +56,7 @@ func (opts *boxDescribeCmdOptions) run(cmd *cobra.Command, args []string) error 
 
 type BoxValue struct {
 	Name          string
-	Created       string // TODO format
+	Created       string
 	Healthy       bool
 	Size          string
 	Provider      ProviderValue
@@ -75,7 +76,7 @@ type ProviderValue struct {
 func newBoxValue(details *model.BoxDetails) *BoxValue {
 	return &BoxValue{
 		Name:    details.Info.Name,
-		Created: details.Created.String(),
+		Created: details.Created.Format(time.RFC3339),
 		Healthy: details.Info.Healthy,
 		Size:    details.Size.String(),
 		Provider: ProviderValue{

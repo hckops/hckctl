@@ -21,6 +21,7 @@ func TestToBoxDetails(t *testing.T) {
 		created,
 		true,
 		"M",
+		"myRevision",
 		[]string{"KEY_1=VALUE_1", "KEY_2=VALUE_2", "INVALID", "=INVALID="},
 		[]string{"alias-1/123", "alias-2/456", "INVALID", "/INVALID/"},
 	)
@@ -30,7 +31,11 @@ func TestToBoxDetails(t *testing.T) {
 			Name:    "myName",
 			Healthy: true,
 		},
-		TemplateInfo: &model.BoxTemplateInfo{},
+		TemplateInfo: &model.BoxTemplateInfo{
+			CloudTemplate: &model.CloudTemplateInfo{
+				Revision: "myRevision",
+			},
+		},
 		ProviderInfo: &model.BoxProviderInfo{
 			Provider: model.Cloud,
 		},

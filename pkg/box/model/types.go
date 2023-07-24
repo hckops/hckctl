@@ -27,6 +27,7 @@ type BoxDetails struct {
 type BoxTemplateInfo struct {
 	CachedTemplate *CachedTemplateInfo
 	GitTemplate    *GitTemplateInfo
+	CloudTemplate  *CloudTemplateInfo
 }
 
 func (info *BoxTemplateInfo) IsCached() bool {
@@ -42,6 +43,10 @@ type GitTemplateInfo struct {
 	Revision string
 	Commit   string
 	Name     string
+}
+
+type CloudTemplateInfo struct {
+	Revision string
 }
 
 type BoxProviderInfo struct {
