@@ -70,6 +70,7 @@ func (opts *boxDeleteCmdOptions) run(cmd *cobra.Command, args []string) error {
 			}
 			fmt.Println(boxName)
 
+			// cleanup cached template
 			if boxDetails.TemplateInfo.IsCached() {
 				log.Debug().Msgf("delete cached template: path=%s", invokeOpts.template.Path)
 				return template.DeleteCachedTemplate(invokeOpts.template.Path)

@@ -60,13 +60,10 @@ func (box *CloudBoxClient) createBox(opts *model.TemplateOptions) (*model.BoxInf
 	return &model.BoxInfo{Id: boxName, Name: boxName}, nil
 }
 
-// TODO tunnel + open
-
-func (box *CloudBoxClient) execBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
-	// TODO event
+func (box *CloudBoxClient) execBox(_ *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
 	box.eventBus.Publish(newApiExecCloudEvent(name))
 
-	session := v1.NewBoxExecSession(box.clientOpts.Version, name)
+	session := v1.NewBoxExecSession(box.clientOpts.Version, name, tunnelOpts.TunnelOnly, tunnelOpts.NoTunnel)
 	payload, err := session.Encode()
 	if err != nil {
 		return errors.Wrap(err, "error cloud exec session")
@@ -82,6 +79,14 @@ func (box *CloudBoxClient) execBox(template *model.BoxV1, tunnelOpts *model.Tunn
 		},
 	}
 	return box.client.Exec(opts)
+}
+
+func (box *CloudBoxClient) openBox(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
+	if info, err := box.createBox(templateOpts); err != nil {
+		return err
+	} else {
+		return box.execBox(templateOpts.Template, tunnelOpts, info.Name)
+	}
 }
 
 func (box *CloudBoxClient) describe(name string) (*model.BoxDetails, error) {

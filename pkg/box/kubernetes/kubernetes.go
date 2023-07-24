@@ -272,8 +272,12 @@ func (box *KubeBoxClient) findBox(name string) (*model.BoxInfo, error) {
 func (box *KubeBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, tunnelOpts *model.TunnelOptions, removeOnExit bool) error {
 	box.eventBus.Publish(newPodExecKubeEvent(template.Name, box.clientOpts.Namespace, info.Id, template.Shell))
 
+	if tunnelOpts.TunnelOnly && tunnelOpts.NoTunnel {
+		return errors.New("error invalid tunnel options")
+	}
+
 	if tunnelOpts.TunnelOnly {
-		// tunnel and exit, wait until killed
+		// tunnel and block to exit, wait until killed
 		return box.podPortForward(template, info, true)
 	}
 

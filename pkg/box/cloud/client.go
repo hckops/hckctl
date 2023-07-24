@@ -38,8 +38,7 @@ func (box *CloudBoxClient) Connect(template *model.BoxV1, tunnelOpts *model.Tunn
 
 func (box *CloudBoxClient) Open(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
 	defer box.close()
-	// TODO tunnelOpts
-	return errors.New("not implemented")
+	return box.openBox(templateOpts, tunnelOpts)
 }
 
 func (box *CloudBoxClient) Copy(string, string, string) error {
@@ -48,7 +47,8 @@ func (box *CloudBoxClient) Copy(string, string, string) error {
 }
 
 func (box *CloudBoxClient) Describe(name string) (*model.BoxDetails, error) {
-	defer box.close()
+	// TODO refactor client close: issue "use of closed network connection" when describing before connect/list
+	//defer box.close()
 	return box.describe(name)
 }
 
