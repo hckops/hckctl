@@ -167,11 +167,6 @@ TODO
 * priority
     - cloud tunnel
     - finish cloud e.g. loader/event
-    - server
-        * refactor and uniform cmd/internal/pkg/config/logger etc.
-        * update session/request
-        * refactor providers
-        * review charts
     - implement env
     - implement copy
     - mount vpn docker/kube
@@ -216,7 +211,6 @@ TODO
     - add remote template
     - update directories to exclude in `resolvePath` e.g. charts
 * box
-    - review command: `create/remove` vs `start/stop` vs `up/down`
     - review command: `copy` vs `upload/download`
     - review tty resize
     - refactor common `BoxClient` methods (abstract)

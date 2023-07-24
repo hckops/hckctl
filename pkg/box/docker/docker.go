@@ -329,10 +329,12 @@ func toBoxDetails(container docker.ContainerDetails) (*model.BoxDetails, error) 
 	var env []model.BoxEnv
 	for _, e := range container.Env {
 		items := strings.Split(e, "=")
-		env = append(env, model.BoxEnv{
-			Key:   items[0],
-			Value: items[1],
-		})
+		if len(items) == 2 {
+			env = append(env, model.BoxEnv{
+				Key:   items[0],
+				Value: items[1],
+			})
+		}
 	}
 
 	var ports []model.BoxPort

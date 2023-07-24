@@ -1,6 +1,9 @@
 package cloud
 
 import (
+	"strings"
+	"time"
+
 	"github.com/pkg/errors"
 
 	v1 "github.com/hckops/hckctl/pkg/api/v1"
@@ -99,16 +102,62 @@ func (box *CloudBoxClient) describe(name string) (*model.BoxDetails, error) {
 		return nil, errors.Wrap(err, "error cloud describe response")
 	}
 
-	return toBoxDetails(response), nil
+	return toBoxDetails(response)
 }
 
-// TODO test
-func toBoxDetails(response *v1.Message[v1.BoxDescribeResponseBody]) *model.BoxDetails {
+func toBoxDetails(response *v1.Message[v1.BoxDescribeResponseBody]) (*model.BoxDetails, error) {
+
+	size, err := model.ExistResourceSize(response.Body.Size)
+	if err != nil {
+		return nil, errors.Wrap(err, "error cloud box details size")
+	}
+
+	var env []model.BoxEnv
+	for _, e := range response.Body.Env {
+		items := strings.Split(e, "=")
+		// silently ignore invalid
+		if len(items) == 2 {
+			env = append(env, model.BoxEnv{
+				Key:   items[0],
+				Value: items[1],
+			})
+		}
+	}
+
+	var ports []model.BoxPort
+	for _, p := range response.Body.Ports {
+		items := strings.Split(p, "/")
+		// silently ignore invalid
+		if len(items) == 2 {
+			ports = append(ports, model.BoxPort{
+				Alias:  items[0],
+				Local:  "TODO", // TODO runtime only
+				Remote: items[1],
+				Public: false, // TODO
+			})
+		}
+	}
+
+	created, err := time.Parse(time.RFC3339, response.Body.Created)
+	if err != nil {
+		return nil, errors.Wrap(err, "error cloud box details created")
+	}
+
 	return &model.BoxDetails{
 		Info: model.BoxInfo{
-			Name: response.Body.Name,
+			Id:      response.Body.Id,
+			Name:    response.Body.Name,
+			Healthy: response.Body.Healthy,
 		},
-	}
+		TemplateInfo: &model.BoxTemplateInfo{},
+		ProviderInfo: &model.BoxProviderInfo{
+			Provider: model.Cloud,
+		},
+		Size:    size,
+		Env:     env,
+		Ports:   ports,
+		Created: created,
+	}, nil
 }
 
 func (box *CloudBoxClient) listBoxes() ([]model.BoxInfo, error) {

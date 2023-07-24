@@ -40,5 +40,5 @@ func TestExistResourceSize(t *testing.T) {
 	assert.Equal(t, Small, size)
 
 	_, err = ExistResourceSize("abc")
-	assert.EqualError(t, err, "invalid resource size")
+	assert.EqualError(t, err, "invalid resource size value=abc")
 }

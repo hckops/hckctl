@@ -108,8 +108,8 @@ func TestToSizeError(t *testing.T) {
 	_, errLabel := BoxLabels{}.ToSize()
 	assert.EqualError(t, errLabel, "label com.hckops.box.size not found")
 
-	_, errSize := BoxLabels{"com.hckops.box.size": "invalid"}.ToSize()
-	assert.EqualError(t, errSize, "invalid resource size")
+	_, errSize := BoxLabels{"com.hckops.box.size": "abc"}.ToSize()
+	assert.EqualError(t, errSize, "invalid resource size value=abc")
 }
 
 func TestToCachedTemplateInfo(t *testing.T) {

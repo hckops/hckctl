@@ -1,9 +1,8 @@
 package model
 
 import (
+	"fmt"
 	"strings"
-
-	"github.com/pkg/errors"
 
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
 )
@@ -51,12 +50,12 @@ func (size ResourceSize) ToKubeResource() *kubernetes.KubeResource {
 	}
 }
 
-func ExistResourceSize(str string) (ResourceSize, error) {
-	for size, value := range resourceSizes {
+func ExistResourceSize(value string) (ResourceSize, error) {
+	for size, str := range resourceSizes {
 		// case insensitive
-		if strings.ToUpper(str) == value {
+		if strings.ToUpper(value) == str {
 			return size, nil
 		}
 	}
-	return Small, errors.New("invalid resource size")
+	return Small, fmt.Errorf("invalid resource size value=%s", value)
 }

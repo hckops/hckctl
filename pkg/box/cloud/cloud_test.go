@@ -2,6 +2,7 @@ package cloud
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -10,12 +11,42 @@ import (
 )
 
 func TestToBoxDetails(t *testing.T) {
-	message := v1.NewBoxDescribeResponse("hckadm-0.0.0-info", "myName")
+	created := "2042-12-08T10:30:05.265113665Z"
+	createdTime, _ := time.Parse(time.RFC3339, created)
+
+	message := v1.NewBoxDescribeResponse(
+		"hckadm-0.0.0-info",
+		"myId",
+		"myName",
+		created,
+		true,
+		"M",
+		[]string{"KEY_1=VALUE_1", "KEY_2=VALUE_2", "INVALID", "=INVALID="},
+		[]string{"alias-1/123", "alias-2/456", "INVALID", "/INVALID/"},
+	)
 	expected := &model.BoxDetails{
 		Info: model.BoxInfo{
-			Name: "myName",
+			Id:      "myId",
+			Name:    "myName",
+			Healthy: true,
 		},
+		TemplateInfo: &model.BoxTemplateInfo{},
+		ProviderInfo: &model.BoxProviderInfo{
+			Provider: model.Cloud,
+		},
+		Size: model.Medium,
+		Env: []model.BoxEnv{
+			{Key: "KEY_1", Value: "VALUE_1"},
+			{Key: "KEY_2", Value: "VALUE_2"},
+		},
+		Ports: []model.BoxPort{
+			{Alias: "alias-1", Local: "TODO", Remote: "123", Public: false},
+			{Alias: "alias-2", Local: "TODO", Remote: "456", Public: false},
+		},
+		Created: createdTime,
 	}
+	result, err := toBoxDetails(message)
 
-	assert.Equal(t, expected, toBoxDetails(message))
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
 }
