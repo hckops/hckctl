@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hckops/hckctl/pkg/command"
+	"github.com/hckops/hckctl/internal/command"
 )
 
 func main() {
