@@ -1,13 +1,31 @@
-package schema
+package client
 
 import (
 	"fmt"
 	"github.com/hckops/hckctl/pkg/util"
+	"io"
+	"os"
 	"regexp"
 	"strings"
 
 	"github.com/dchest/uniuri"
 )
+
+type BoxStreams struct {
+	Stdin  io.Reader
+	Stdout io.Writer
+	Stderr io.Writer
+	IsTty  bool // tty false for tunnel only
+}
+
+func NewDefaultStreams(tty bool) *BoxStreams {
+	return &BoxStreams{
+		Stdin:  os.Stdin,
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+		IsTty:  tty,
+	}
+}
 
 type BoxV1 struct {
 	Kind  string

@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/hckops/hckctl/internal/common"
-	"github.com/hckops/hckctl/internal/model"
-	"github.com/hckops/hckctl/internal/schema"
+	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/util"
 	"net/http"
 	"path/filepath"
@@ -38,12 +36,12 @@ type KubeBox struct {
 	ctx             context.Context
 	KubeRestConfig  *rest.Config
 	KubeClientSet   *kubernetes.Clientset
-	Template        *schema.BoxV1
+	Template        *BoxV1
 	ResourceOptions *ResourceOptions
 
 	// TODO look for better design than callbacks
 	OnSetupCallback       func(string)
-	OnTunnelCallback      func(port schema.PortV1)
+	OnTunnelCallback      func(port PortV1)
 	OnTunnelErrorCallback func(error, string)
 	OnExecCallback        func()
 	OnCloseCallback       func(string)
@@ -56,7 +54,7 @@ type ResourceOptions struct {
 	Cpu       string
 }
 
-func NewOutOfClusterKubeBox(template *schema.BoxV1, resourceOptions *ResourceOptions, configPath string) (*KubeBox, error) {
+func NewOutOfClusterKubeBox(template *BoxV1, resourceOptions *ResourceOptions, configPath string) (*KubeBox, error) {
 
 	restConfig, clientSet, err := NewOutOfClusterClients(configPath)
 	if err != nil {
@@ -72,7 +70,7 @@ func NewOutOfClusterKubeBox(template *schema.BoxV1, resourceOptions *ResourceOpt
 	}, nil
 }
 
-func NewInClusterKubeBox(template *schema.BoxV1, resourceOptions *ResourceOptions) (*KubeBox, error) {
+func NewInClusterKubeBox(template *BoxV1, resourceOptions *ResourceOptions) (*KubeBox, error) {
 
 	restConfig, clientSet, err := NewInClusterClients()
 	if err != nil {
@@ -235,11 +233,11 @@ func (box *KubeBox) PortForward(podName, namespace string) {
 	for _, port := range box.Template.NetworkPorts() {
 		localPort, _ := util.FindOpenPort(port.Local)
 
-		box.OnTunnelCallback(schema.PortV1{
-			Alias:  port.Alias,
-			Local:  localPort,
-			Remote: port.Remote,
-		})
+		//box.OnTunnelCallback(box.PortV1{
+		//	Alias:  port.Alias,
+		//	Local:  localPort,
+		//	Remote: port.Remote,
+		//})
 
 		portBindings = append(portBindings, fmt.Sprintf("%s:%s", localPort, port.Remote))
 	}
@@ -281,7 +279,7 @@ func (box *KubeBox) PortForward(podName, namespace string) {
 	}
 }
 
-func (box *KubeBox) Exec(pod *corev1.Pod, streams *model.BoxStreams) error {
+func (box *KubeBox) Exec(pod *corev1.Pod, streams *BoxStreams) error {
 	coreClient := box.KubeClientSet.CoreV1()
 
 	streamOptions := buildStreamOptions(streams)
@@ -326,7 +324,7 @@ func (box *KubeBox) Exec(pod *corev1.Pod, streams *model.BoxStreams) error {
 	return nil
 }
 
-func buildStreamOptions(streams *model.BoxStreams) exec.StreamOptions {
+func buildStreamOptions(streams *BoxStreams) exec.StreamOptions {
 	return exec.StreamOptions{
 		Stdin: true,
 		TTY:   streams.IsTty,
@@ -338,7 +336,7 @@ func buildStreamOptions(streams *model.BoxStreams) exec.StreamOptions {
 	}
 }
 
-func buildSpec(containerName string, template *schema.BoxV1, resourceOptions *ResourceOptions) (*appsv1.Deployment, *corev1.Service, error) {
+func buildSpec(containerName string, template *BoxV1, resourceOptions *ResourceOptions) (*appsv1.Deployment, *corev1.Service, error) {
 
 	customLabels := buildLabels(containerName, template.SafeName(), template.ImageVersion())
 	objectMeta := metav1.ObjectMeta{
@@ -372,7 +370,7 @@ func buildLabels(name, instance, version string) Labels {
 	}
 }
 
-func buildContainerPorts(ports []schema.PortV1) ([]corev1.ContainerPort, error) {
+func buildContainerPorts(ports []PortV1) ([]corev1.ContainerPort, error) {
 
 	containerPorts := make([]corev1.ContainerPort, 0)
 	for _, port := range ports {
@@ -392,7 +390,7 @@ func buildContainerPorts(ports []schema.PortV1) ([]corev1.ContainerPort, error) 
 	return containerPorts, nil
 }
 
-func buildPod(objectMeta metav1.ObjectMeta, template *schema.BoxV1, memory string, cpu string) (*corev1.Pod, error) {
+func buildPod(objectMeta metav1.ObjectMeta, template *BoxV1, memory string, cpu string) (*corev1.Pod, error) {
 
 	containerPorts, err := buildContainerPorts(template.NetworkPorts())
 	if err != nil {
@@ -444,7 +442,7 @@ func buildDeployment(objectMeta metav1.ObjectMeta, pod *corev1.Pod) *appsv1.Depl
 	}
 }
 
-func buildServicePorts(ports []schema.PortV1) ([]corev1.ServicePort, error) {
+func buildServicePorts(ports []PortV1) ([]corev1.ServicePort, error) {
 
 	servicePorts := make([]corev1.ServicePort, 0)
 	for _, port := range ports {
@@ -465,7 +463,7 @@ func buildServicePorts(ports []schema.PortV1) ([]corev1.ServicePort, error) {
 	return servicePorts, nil
 }
 
-func buildService(objectMeta metav1.ObjectMeta, template *schema.BoxV1) (*corev1.Service, error) {
+func buildService(objectMeta metav1.ObjectMeta, template *BoxV1) (*corev1.Service, error) {
 
 	servicePorts, err := buildServicePorts(template.NetworkPorts())
 	if err != nil {

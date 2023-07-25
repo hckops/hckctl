@@ -3,32 +3,42 @@ package box
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/hckops/hckctl/internal/schema"
+	"github.com/hckops/hckctl/internal/client"
 	common3 "github.com/hckops/hckctl/pkg/client/common"
 	common2 "github.com/hckops/hckctl/pkg/command/common"
 	"github.com/hckops/hckctl/pkg/util"
 	"io"
 	"net"
 	"os"
+	"strconv"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	logger "github.com/rs/zerolog/log"
 	"golang.org/x/crypto/ssh"
-
-	"github.com/hckops/hckctl/internal/config"
 )
+
+type CloudConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Username string `yaml:"username"`
+	Token    string `yaml:"token"`
+}
+
+func (c *CloudConfig) Address() string {
+	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
+}
 
 type RemoteSshBox struct {
 	log      zerolog.Logger
 	loader   *common2.Loader
-	config   *config.CloudConfig
+	config   *CloudConfig
 	revision string
-	template *schema.BoxV1 // only name is actually needed
+	template *client.BoxV1 // only name is actually needed
 	client   *ssh.Client
 }
 
-func NewRemoteSshBox(template *schema.BoxV1, revision string, config *config.CloudConfig) *RemoteSshBox {
+func NewRemoteSshBox(template *client.BoxV1, revision string, config *CloudConfig) *RemoteSshBox {
 	l := logger.With().Str("provider", "cloud").Logger()
 
 	return &RemoteSshBox{
@@ -105,7 +115,7 @@ func (remote *RemoteSshBox) tunnelBox(boxId string) {
 	for _, port := range remote.template.NetworkPorts() {
 		localPort, _ := util.FindOpenPort(port.Local)
 
-		openPort := schema.PortV1{
+		openPort := client.PortV1{
 			Alias:  port.Alias,
 			Local:  localPort,
 			Remote: port.Remote,
@@ -119,7 +129,7 @@ func (remote *RemoteSshBox) tunnelBox(boxId string) {
 	}
 }
 
-func (remote *RemoteSshBox) tunnel(boxId string, port schema.PortV1) {
+func (remote *RemoteSshBox) tunnel(boxId string, port client.PortV1) {
 
 	// starts local server to forward traffic to remote connection
 	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%s", port.Local))
@@ -186,7 +196,7 @@ func (remote *RemoteSshBox) exec(boxId string) {
 }
 
 // TODO ssh agent auth
-func sshClientConfig(config *config.CloudConfig) *ssh.ClientConfig {
+func sshClientConfig(config *CloudConfig) *ssh.ClientConfig {
 	sshConfig := &ssh.ClientConfig{
 		User: config.Username,
 		Auth: []ssh.AuthMethod{

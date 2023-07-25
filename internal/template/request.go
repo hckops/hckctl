@@ -2,13 +2,21 @@ package template
 
 import (
 	"fmt"
-	"github.com/hckops/hckctl/internal/common"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"regexp"
 
 	"github.com/pkg/errors"
+)
+
+const (
+	ApiUrl            string = "https://api.hckops.com"
+	MegalopolisRawUrl string = "https://raw.githubusercontent.com/hckops/megalopolis"
+)
+
+const (
+	ProjectName string = "hckops"
 )
 
 type TemplateParam struct {
@@ -34,7 +42,7 @@ func ValidateTemplateParam(param *TemplateParam) error {
 // TODO or content https://schema.hckops.com/template?kind=box&group=official&name=alpine&version=main&format=json|yaml
 func (param *TemplateParam) RequestApiTemplate() (string, error) {
 
-	templateUrl, err := url.Parse(fmt.Sprintf("%s/todo", common.ApiUrl))
+	templateUrl, err := url.Parse(fmt.Sprintf("%s/todo", ApiUrl))
 	if err != nil {
 		return "", errors.Wrapf(err, "invalid api url: %s", templateUrl.String())
 	}
@@ -80,7 +88,7 @@ func buildPath(param *TemplateParam) (string, error) {
 	}
 
 	path := fmt.Sprintf("%s/%s/official/%s.yml", param.Revision, kind, param.TemplateName)
-	fullPath := fmt.Sprintf("%s/%s", common.MegalopolisRawUrl, path)
+	fullPath := fmt.Sprintf("%s/%s", MegalopolisRawUrl, path)
 
 	return fullPath, nil
 }

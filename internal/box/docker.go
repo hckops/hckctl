@@ -3,8 +3,6 @@ package box
 import (
 	"fmt"
 	"github.com/hckops/hckctl/internal/client"
-	"github.com/hckops/hckctl/internal/model"
-	"github.com/hckops/hckctl/internal/schema"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"github.com/rs/zerolog"
 	logger "github.com/rs/zerolog/log"
@@ -15,10 +13,10 @@ type LocalDockerBox struct {
 	log     zerolog.Logger
 	loader  *common.Loader
 	box     *client.DockerBox
-	streams *model.BoxStreams
+	streams *client.BoxStreams
 }
 
-func NewDockerBox(template *schema.BoxV1) *LocalDockerBox {
+func NewDockerBox(template *client.BoxV1) *LocalDockerBox {
 	l := logger.With().Str("provider", "docker").Logger()
 
 	box, err := client.NewDockerBox(template)
@@ -30,7 +28,7 @@ func NewDockerBox(template *schema.BoxV1) *LocalDockerBox {
 		log:     l,
 		loader:  common.NewLoader(),
 		box:     box,
-		streams: model.NewDefaultStreams(true), // TODO tty
+		streams: client.NewDefaultStreams(true), // TODO tty
 	}
 }
 
@@ -52,7 +50,7 @@ func (local *LocalDockerBox) Open() {
 	containerName := local.box.Template.GenerateName()
 	local.loader.Refresh(fmt.Sprintf("creating %s", containerName))
 
-	local.box.OnCreateCallback = func(port schema.PortV1) {
+	local.box.OnCreateCallback = func(port client.PortV1) {
 		local.log.Info().Msgf("[%s][%s] exposing %s (local) -> %s (container)", containerName, port.Alias, port.Local, port.Remote)
 	}
 	containerId, err := local.box.Create(containerName)

@@ -3,35 +3,31 @@ package box
 import (
 	"fmt"
 	"github.com/hckops/hckctl/internal/client"
-	"github.com/hckops/hckctl/internal/model"
-	"github.com/hckops/hckctl/internal/schema"
 	"github.com/hckops/hckctl/pkg/command/common"
 	"k8s.io/apimachinery/pkg/util/runtime"
 
 	"github.com/rs/zerolog"
 	logger "github.com/rs/zerolog/log"
-
-	"github.com/hckops/hckctl/internal/config"
 )
 
 type LocalKubeBox struct {
 	log     zerolog.Logger
 	loader  *common.Loader
 	box     *client.KubeBox
-	streams *model.BoxStreams
+	streams *client.BoxStreams
 }
 
-func NewKubeBox(template *schema.BoxV1, config *config.KubeConfig) *LocalKubeBox {
+func NewKubeBox(template *client.BoxV1) *LocalKubeBox {
 	l := logger.With().Str("provider", "kube").Logger()
 
 	box, err := client.NewOutOfClusterKubeBox(
 		template,
 		&client.ResourceOptions{
-			Namespace: config.Namespace,
-			Memory:    config.Resources.Memory,
-			Cpu:       config.Resources.Cpu,
+			Namespace: "config.Namespace",
+			Memory:    "config.Resources.Memory",
+			Cpu:       "config.Resources.Cpu",
 		},
-		config.ConfigPath,
+		"config.ConfigPath",
 	)
 	if err != nil {
 		l.Fatal().Err(err).Msg("error kube box")
@@ -41,7 +37,7 @@ func NewKubeBox(template *schema.BoxV1, config *config.KubeConfig) *LocalKubeBox
 		log:     l,
 		loader:  common.NewLoader(),
 		box:     box,
-		streams: model.NewDefaultStreams(true), // TODO tty
+		streams: client.NewDefaultStreams(true), // TODO tty
 	}
 }
 
@@ -84,7 +80,7 @@ func (local *LocalKubeBox) Open() {
 
 	local.log.Info().Msgf("opening new box: image=%s, namespace=%s, podName=%s", local.box.Template.ImageName(), pod.Namespace, pod.Name)
 
-	local.box.OnTunnelCallback = func(port schema.PortV1) {
+	local.box.OnTunnelCallback = func(port client.PortV1) {
 		local.log.Info().Msgf("[%s][%s] forwarding %s (local) -> %s (remote)", pod.Name, port.Alias, port.Local, port.Remote)
 	}
 	local.box.OnTunnelErrorCallback = func(err error, message string) {

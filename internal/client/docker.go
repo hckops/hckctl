@@ -2,8 +2,6 @@ package client
 
 import (
 	"context"
-	"github.com/hckops/hckctl/internal/model"
-	"github.com/hckops/hckctl/internal/schema"
 	"github.com/hckops/hckctl/pkg/client/common"
 	"github.com/hckops/hckctl/pkg/util"
 	"io"
@@ -21,11 +19,11 @@ import (
 type DockerBox struct {
 	ctx      context.Context
 	docker   *client.Client
-	Template *schema.BoxV1
+	Template *BoxV1
 
 	// TODO look for better design than callbacks
 	OnSetupCallback       func()
-	OnCreateCallback      func(port schema.PortV1)
+	OnCreateCallback      func(port PortV1)
 	OnExecCallback        func()
 	OnCloseCallback       func()
 	OnCloseErrorCallback  func(error, string)
@@ -33,7 +31,7 @@ type DockerBox struct {
 }
 
 // don't forget to invoke "defer dockerClient.Close()"
-func NewDockerBox(template *schema.BoxV1) (*DockerBox, error) {
+func NewDockerBox(template *BoxV1) (*DockerBox, error) {
 
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -100,7 +98,7 @@ func (box *DockerBox) Create(containerName string) (string, error) {
 	return newContainer.ID, nil
 }
 
-func buildContainerConfig(imageName string, containerName string, ports []schema.PortV1) (*container.Config, error) {
+func buildContainerConfig(imageName string, containerName string, ports []PortV1) (*container.Config, error) {
 
 	exposedPorts := make(nat.PortSet)
 	for _, port := range ports {
@@ -124,7 +122,7 @@ func buildContainerConfig(imageName string, containerName string, ports []schema
 	}, nil
 }
 
-func buildHostConfig(ports []schema.PortV1, onPortBindCallback func(port schema.PortV1)) (*container.HostConfig, error) {
+func buildHostConfig(ports []PortV1, onPortBindCallback func(port PortV1)) (*container.HostConfig, error) {
 
 	portBindings := make(nat.PortMap)
 	for _, port := range ports {
@@ -140,7 +138,7 @@ func buildHostConfig(ports []schema.PortV1, onPortBindCallback func(port schema.
 		}
 
 		// actual binded port
-		onPortBindCallback(schema.PortV1{
+		onPortBindCallback(PortV1{
 			Alias:  port.Alias,
 			Local:  localPort,
 			Remote: port.Remote,
@@ -158,7 +156,7 @@ func buildHostConfig(ports []schema.PortV1, onPortBindCallback func(port schema.
 }
 
 // TODO command from template
-func (box *DockerBox) Exec(containerId string, streams *model.BoxStreams) error {
+func (box *DockerBox) Exec(containerId string, streams *BoxStreams) error {
 
 	if err := box.docker.ContainerStart(box.ctx, containerId, types.ContainerStartOptions{}); err != nil {
 		return errors.Wrap(err, "error container start")
@@ -215,7 +213,7 @@ func (box *DockerBox) Exec(containerId string, streams *model.BoxStreams) error 
 
 func handleStreams(
 	execAttachResponse *types.HijackedResponse,
-	streams *model.BoxStreams,
+	streams *BoxStreams,
 	onCloseCallback func(),
 	onStreamErrorCallback func(error, string),
 ) {
