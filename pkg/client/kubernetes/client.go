@@ -18,6 +18,8 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	applyv1 "k8s.io/client-go/applyconfigurations/core/v1"
 	"k8s.io/client-go/kubernetes"
+	app "k8s.io/client-go/kubernetes/typed/apps/v1"
+	core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/portforward"
@@ -88,11 +90,22 @@ func (client *KubeClient) Close() error {
 	return errors.New("not implemented")
 }
 
+func (client *KubeClient) RestApi() *rest.Config {
+	return client.kubeRestConfig
+}
+
+func (client *KubeClient) CoreApi() core.CoreV1Interface {
+	return client.kubeClientSet.CoreV1()
+}
+
+func (client *KubeClient) AppApi() app.AppsV1Interface {
+	return client.kubeClientSet.AppsV1()
+}
+
 func (client *KubeClient) NamespaceApply(name string) error {
-	coreClient := client.kubeClientSet.CoreV1()
 
 	// https://github.com/kubernetes/client-go/issues/1036
-	_, err := coreClient.Namespaces().Apply(client.ctx, applyv1.Namespace(name), metav1.ApplyOptions{FieldManager: "application/apply-patch"})
+	_, err := client.CoreApi().Namespaces().Apply(client.ctx, applyv1.Namespace(name), metav1.ApplyOptions{FieldManager: "application/apply-patch"})
 	if err != nil {
 		return errors.Wrapf(err, "error namespace apply: name=%s", name)
 	}
@@ -100,24 +113,22 @@ func (client *KubeClient) NamespaceApply(name string) error {
 }
 
 func (client *KubeClient) NamespaceDelete(name string) error {
-	coreClient := client.kubeClientSet.CoreV1()
 
-	if err := coreClient.Namespaces().Delete(client.ctx, name, metav1.DeleteOptions{}); err != nil {
+	if err := client.CoreApi().Namespaces().Delete(client.ctx, name, metav1.DeleteOptions{}); err != nil {
 		return errors.Wrapf(err, "error namespace delete: name=%s", name)
 	}
 	return nil
 }
 
 func (client *KubeClient) DeploymentCreate(opts *DeploymentCreateOpts) error {
-	appClient := client.kubeClientSet.AppsV1()
 
-	deployment, err := appClient.Deployments(opts.Namespace).Create(client.ctx, opts.Spec, metav1.CreateOptions{})
+	deployment, err := client.AppApi().Deployments(opts.Namespace).Create(client.ctx, opts.Spec, metav1.CreateOptions{})
 	if err != nil {
 		return errors.Wrapf(err, "error deployment create: namespace=%s name=%s", opts.Namespace, opts.Spec.Name)
 	}
 
 	// blocks until the deployment is available, then stop watching
-	watcher, err := appClient.Deployments(opts.Namespace).Watch(client.ctx, metav1.SingleObject(deployment.ObjectMeta))
+	watcher, err := client.AppApi().Deployments(opts.Namespace).Watch(client.ctx, metav1.SingleObject(deployment.ObjectMeta))
 	if err != nil {
 		return errors.Wrapf(err, "error deployment watch: namespace=%s name=%s", opts.Namespace, deployment.Name)
 	}
@@ -143,9 +154,8 @@ func (client *KubeClient) DeploymentCreate(opts *DeploymentCreateOpts) error {
 }
 
 func (client *KubeClient) DeploymentList(namespace string, namePrefix string, label string) ([]DeploymentInfo, error) {
-	appClient := client.kubeClientSet.AppsV1()
 
-	deployments, err := appClient.Deployments(namespace).List(client.ctx, metav1.ListOptions{
+	deployments, err := client.AppApi().Deployments(namespace).List(client.ctx, metav1.ListOptions{
 		// format <LABEL_KEY>=<SANITIZED_LABEL_VALUE>
 		LabelSelector: label,
 	})
@@ -197,9 +207,8 @@ func isDeploymentHealthy(status appsv1.DeploymentStatus) bool {
 }
 
 func (client *KubeClient) DeploymentDescribe(namespace string, name string) (*DeploymentDetails, error) {
-	appClient := client.kubeClientSet.AppsV1()
 
-	deployment, err := appClient.Deployments(namespace).Get(client.ctx, name, metav1.GetOptions{})
+	deployment, err := client.AppApi().Deployments(namespace).Get(client.ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "error deployment describe: namespace=%s name=%s", namespace, name)
 	}
@@ -222,9 +231,8 @@ func newDeploymentDetails(deployment *appsv1.Deployment, podInfo *PodInfo) *Depl
 }
 
 func (client *KubeClient) DeploymentDelete(namespace string, name string) error {
-	appClient := client.kubeClientSet.AppsV1()
 
-	err := appClient.Deployments(namespace).Delete(client.ctx, name, metav1.DeleteOptions{})
+	err := client.AppApi().Deployments(namespace).Delete(client.ctx, name, metav1.DeleteOptions{})
 	if err != nil {
 		return errors.Wrapf(err, "error deployment delete: namespace=%s name=%s", namespace, name)
 	}
@@ -232,9 +240,8 @@ func (client *KubeClient) DeploymentDelete(namespace string, name string) error 
 }
 
 func (client *KubeClient) ServiceCreate(namespace string, spec *corev1.Service) error {
-	coreClient := client.kubeClientSet.CoreV1()
 
-	_, err := coreClient.Services(namespace).Create(client.ctx, spec, metav1.CreateOptions{})
+	_, err := client.CoreApi().Services(namespace).Create(client.ctx, spec, metav1.CreateOptions{})
 	if err != nil {
 		return errors.Wrapf(err, "error service create: namespace=%s name=%s", namespace, spec.Name)
 	}
@@ -242,9 +249,8 @@ func (client *KubeClient) ServiceCreate(namespace string, spec *corev1.Service) 
 }
 
 func (client *KubeClient) ServiceDescribe(namespace string, name string) (*ServiceInfo, error) {
-	coreClient := client.kubeClientSet.CoreV1()
 
-	service, err := coreClient.Services(namespace).Get(client.ctx, name, metav1.GetOptions{})
+	service, err := client.CoreApi().Services(namespace).Get(client.ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "error service describe: namespace=%s name=%s", namespace, name)
 	}
@@ -266,21 +272,19 @@ func newServiceInfo(service *corev1.Service) *ServiceInfo {
 }
 
 func (client *KubeClient) ServiceDelete(namespace string, name string) error {
-	coreClient := client.kubeClientSet.CoreV1()
 
-	if err := coreClient.Services(namespace).Delete(client.ctx, name, metav1.DeleteOptions{}); err != nil {
+	if err := client.CoreApi().Services(namespace).Delete(client.ctx, name, metav1.DeleteOptions{}); err != nil {
 		return errors.Wrapf(err, "error service delete: namespace=%s name=%s", namespace, name)
 	}
 	return nil
 }
 
 func (client *KubeClient) PodDescribe(deployment *appsv1.Deployment) (*PodInfo, error) {
-	coreClient := client.kubeClientSet.CoreV1()
 
 	labelSet := labels.Set(deployment.Spec.Selector.MatchLabels)
 	listOptions := metav1.ListOptions{LabelSelector: labelSet.AsSelector().String()}
 
-	pods, err := coreClient.Pods(deployment.Namespace).List(client.ctx, listOptions)
+	pods, err := client.CoreApi().Pods(deployment.Namespace).List(client.ctx, listOptions)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error pod list: namespace=%s labels=%v", deployment.Namespace, labelSet)
 	}
@@ -316,16 +320,15 @@ func newPodInfo(namespace string, pods *corev1.PodList) (*PodInfo, error) {
 }
 
 func (client *KubeClient) PodPortForward(opts *PodPortForwardOpts) error {
-	coreClient := client.kubeClientSet.CoreV1()
 
-	restRequest := coreClient.RESTClient().
+	restRequest := client.CoreApi().RESTClient().
 		Post().
 		Resource("pods").
 		Namespace(opts.Namespace).
 		Name(opts.PodId).
 		SubResource("portforward")
 
-	transport, upgrader, err := spdy.RoundTripperFor(client.kubeRestConfig)
+	transport, upgrader, err := spdy.RoundTripperFor(client.RestApi())
 	if err != nil {
 		return errors.Wrap(err, "error kube round tripper")
 	}
@@ -366,7 +369,6 @@ func (client *KubeClient) PodPortForward(opts *PodPortForwardOpts) error {
 }
 
 func (client *KubeClient) PodExec(opts *PodExecOpts) error {
-	coreClient := client.kubeClientSet.CoreV1()
 
 	streamOptions := exec.StreamOptions{
 		Stdin: true,
@@ -386,7 +388,7 @@ func (client *KubeClient) PodExec(opts *PodExecOpts) error {
 	}
 
 	// exec remote shell
-	execUrl := coreClient.RESTClient().
+	execUrl := client.CoreApi().RESTClient().
 		Post().
 		Namespace(opts.Namespace).
 		Resource("pods").
@@ -408,7 +410,7 @@ func (client *KubeClient) PodExec(opts *PodExecOpts) error {
 
 	fn := func() error {
 		isTty := tty.Raw && opts.IsTty
-		return executor.Execute(http.MethodPost, execUrl, client.kubeRestConfig, streamOptions.In, streamOptions.Out, streamOptions.ErrOut, isTty, sizeQueue)
+		return executor.Execute(http.MethodPost, execUrl, client.RestApi(), streamOptions.In, streamOptions.Out, streamOptions.ErrOut, isTty, sizeQueue)
 	}
 	if err := tty.Safe(fn); err != nil {
 		return errors.Wrap(err, "terminal session closed")
