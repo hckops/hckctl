@@ -80,7 +80,9 @@ func (box *CloudBoxClient) execBox(template *model.BoxV1, tunnelOpts *model.Tunn
 	}
 
 	if !tunnelOpts.NoTunnel {
-		// TODO
+		if err := box.tunnelBox(template, name); err != nil {
+			return err
+		}
 	}
 
 	session := v1.NewBoxExecSession(box.clientOpts.Version, name)
@@ -118,10 +120,10 @@ func (box *CloudBoxClient) tunnelBox(template *model.BoxV1, name string) error {
 	networkPorts := template.NetworkPorts(true)
 	portPadding := model.PortFormatPadding(networkPorts)
 
-	for _, port := range networkPorts {
-		localPort, err := util.FindOpenPort(port.Local)
+	for _, p := range networkPorts {
+		port, err := bindPort(p)
 		if err != nil {
-			return errors.Wrapf(err, "error cloud tunnel port local=%s", port.Local)
+			return err
 		}
 
 		// TODO print remote url
@@ -129,7 +131,7 @@ func (box *CloudBoxClient) tunnelBox(template *model.BoxV1, name string) error {
 		box.eventBus.Publish(newApiTunnelBindingCloudConsoleEvent(name, port, portPadding))
 
 		sshTunnelOpts := &ssh.SshTunnelOpts{
-			LocalPort:  localPort,
+			LocalPort:  port.Local,
 			RemoteHost: name,
 			RemotePort: port.Remote,
 			OnTunnelErrorCallback: func(err error) {
@@ -139,6 +141,17 @@ func (box *CloudBoxClient) tunnelBox(template *model.BoxV1, name string) error {
 		go box.client.Tunnel(sshTunnelOpts)
 	}
 	return nil
+}
+
+func bindPort(port model.BoxPort) (model.BoxPort, error) {
+	localPort, err := util.FindOpenPort(port.Local)
+	if err != nil {
+		return model.BoxPort{}, errors.Wrapf(err, "error bind local port %s", port.Local)
+	}
+	// update actual port
+	port.Local = localPort
+
+	return port, nil
 }
 
 func (box *CloudBoxClient) describe(name string) (*model.BoxDetails, error) {

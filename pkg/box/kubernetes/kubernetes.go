@@ -353,7 +353,7 @@ func toPortBindings(ports []model.BoxPort, onPortBindCallback func(port model.Bo
 
 		localPort, err := util.FindOpenPort(port.Local)
 		if err != nil {
-			return nil, errors.Wrap(err, "error kube local port: portForward")
+			return nil, errors.Wrapf(err, "error kube local port %s", port.Local)
 		}
 
 		// actual bound port
