@@ -17,8 +17,10 @@ const (
 	LoaderStop
 )
 
+var events = []string{"debug", "info", "warning", "error", "console", "update", "stop"}
+
 func (e EventKind) String() string {
-	return []string{"debug", "info", "warning", "console", "update", "stop"}[e]
+	return events[e]
 }
 
 type Event interface {
