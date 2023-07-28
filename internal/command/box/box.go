@@ -77,11 +77,11 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 	// --tunnel-only or --no-tunnel
 	opts.tunnelFlag = boxFlag.AddTunnelFlag(command)
 
-	command.AddCommand(NewBoxConnectCmd(configRef))
-	command.AddCommand(NewBoxCreateCmd(configRef))
-	command.AddCommand(NewBoxDeleteCmd(configRef))
 	command.AddCommand(NewBoxInfoCmd(configRef))
 	command.AddCommand(NewBoxListCmd(configRef))
+	command.AddCommand(NewBoxOpenCmd(configRef))
+	command.AddCommand(NewBoxStartCmd(configRef))
+	command.AddCommand(NewBoxStopCmd(configRef))
 
 	return command
 }
@@ -99,19 +99,19 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 		} else if opts.sourceFlag.Local {
 			path := args[0]
-			log.Debug().Msgf("open box from local template: path=%s", path)
+			log.Debug().Msgf("temporary box from local template: path=%s", path)
 
 			sourceLoader := template.NewLocalCachedLoader[model.BoxV1](path, opts.configRef.Config.Template.CacheDir)
-			return opts.openBox(sourceLoader, provider, model.NewLocalLabels())
+			return opts.temporaryBox(sourceLoader, provider, model.NewLocalLabels())
 
 		} else {
 			name := args[0]
-			log.Debug().Msgf("open box from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
+			log.Debug().Msgf("temporary box from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
 			sourceOpts := newGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
 			sourceLoader := template.NewGitLoader[model.BoxV1](sourceOpts, name)
 			labels := model.NewGitLabels(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
-			return opts.openBox(sourceLoader, provider, labels)
+			return opts.temporaryBox(sourceLoader, provider, labels)
 		}
 
 	} else {
@@ -132,9 +132,9 @@ func (opts *boxCmdOptions) validateFlags(provider model.BoxProvider) error {
 	return nil
 }
 
-func (opts *boxCmdOptions) openBox(sourceLoader template.SourceLoader[model.BoxV1], provider model.BoxProvider, labels model.BoxLabels) error {
+func (opts *boxCmdOptions) temporaryBox(sourceLoader template.SourceLoader[model.BoxV1], provider model.BoxProvider, labels model.BoxLabels) error {
 
-	openClient := func(invokeOpts *invokeOptions) error {
+	temporaryClient := func(invokeOpts *invokeOptions) error {
 
 		templateOpts, err := newTemplateOptions(invokeOpts.template, labels, opts.configRef.Config.Box.Size)
 		if err != nil {
@@ -144,5 +144,5 @@ func (opts *boxCmdOptions) openBox(sourceLoader template.SourceLoader[model.BoxV
 
 		return invokeOpts.client.Open(templateOpts, tunnelOpts)
 	}
-	return runBoxClient(sourceLoader, provider, opts.configRef, openClient)
+	return runBoxClient(sourceLoader, provider, opts.configRef, temporaryClient)
 }

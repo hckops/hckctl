@@ -22,7 +22,7 @@ type invokeOptions struct {
 	loader   *common.Loader
 }
 
-// open and create
+// create
 func runBoxClient(sourceLoader template.SourceLoader[model.BoxV1], provider model.BoxProvider, configRef *config.ConfigRef, invokeClient func(*invokeOptions) error) error {
 
 	boxTemplate, err := sourceLoader.Read()
@@ -54,7 +54,7 @@ func runBoxClient(sourceLoader template.SourceLoader[model.BoxV1], provider mode
 	return nil
 }
 
-// connect, info and delete-one
+// open, info and delete-one
 func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeClient func(*invokeOptions, *model.BoxDetails) error) error {
 
 	loader := common.NewLoader()

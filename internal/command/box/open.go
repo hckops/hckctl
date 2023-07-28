@@ -10,19 +10,19 @@ import (
 	"github.com/hckops/hckctl/pkg/box/model"
 )
 
-type boxConnectCmdOptions struct {
+type boxOpenCmdOptions struct {
 	configRef  *config.ConfigRef
 	tunnelFlag *boxFlag.TunnelFlag
 }
 
-func NewBoxConnectCmd(configRef *config.ConfigRef) *cobra.Command {
+func NewBoxOpenCmd(configRef *config.ConfigRef) *cobra.Command {
 
-	opts := &boxConnectCmdOptions{
+	opts := &boxOpenCmdOptions{
 		configRef: configRef,
 	}
 
 	command := &cobra.Command{
-		Use:   "connect [name]",
+		Use:   "open [name]",
 		Short: "Access and tunnel a running box",
 		RunE:  opts.run,
 	}
@@ -33,13 +33,13 @@ func NewBoxConnectCmd(configRef *config.ConfigRef) *cobra.Command {
 	return command
 }
 
-func (opts *boxConnectCmdOptions) run(cmd *cobra.Command, args []string) error {
+func (opts *boxOpenCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	if len(args) == 1 {
 		boxName := args[0]
-		log.Debug().Msgf("connect box: boxName=%s", boxName)
+		log.Debug().Msgf("open box: boxName=%s", boxName)
 
-		execClient := func(invokeOpts *invokeOptions, _ *model.BoxDetails) error {
+		connectClient := func(invokeOpts *invokeOptions, _ *model.BoxDetails) error {
 
 			// log only and ignore invalid tunnel flags to avoid false positive during provider attempts
 			if err := boxFlag.ValidateTunnelFlag(invokeOpts.client.Provider(), opts.tunnelFlag); err != nil {
@@ -48,7 +48,7 @@ func (opts *boxConnectCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 			return invokeOpts.client.Connect(&invokeOpts.template.Value.Data, opts.tunnelFlag.ToTunnelOptions(), boxName)
 		}
-		return attemptRunBoxClients(opts.configRef, boxName, execClient)
+		return attemptRunBoxClients(opts.configRef, boxName, connectClient)
 	} else {
 		cmd.HelpFunc()(cmd, args)
 	}
