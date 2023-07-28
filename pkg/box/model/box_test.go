@@ -112,3 +112,35 @@ func TestPretty(t *testing.T) {
 }`
 	assert.Equal(t, json, testBox.Pretty())
 }
+
+func TestSortPorts(t *testing.T) {
+	ports := []BoxPort{
+		{Remote: "remote-d"},
+		{Remote: "remote-a"},
+		{Remote: "remote-c"},
+		{Remote: "remote-b"},
+	}
+	expected := []BoxPort{
+		{Remote: "remote-a"},
+		{Remote: "remote-b"},
+		{Remote: "remote-c"},
+		{Remote: "remote-d"},
+	}
+	assert.Equal(t, expected, SortPorts(ports))
+}
+
+func TestSortEnv(t *testing.T) {
+	env := []BoxEnv{
+		{Key: "MY_KEY_4"},
+		{Key: "MY_KEY_1"},
+		{Key: "MY_KEY_3"},
+		{Key: "MY_KEY_2"},
+	}
+	expected := []BoxEnv{
+		{Key: "MY_KEY_1"},
+		{Key: "MY_KEY_2"},
+		{Key: "MY_KEY_3"},
+		{Key: "MY_KEY_4"},
+	}
+	assert.Equal(t, expected, SortEnv(env))
+}

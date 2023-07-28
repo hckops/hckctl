@@ -447,8 +447,8 @@ func toBoxDetails(deployment *kubernetes.DeploymentDetails, serviceInfo *kuberne
 			},
 		},
 		Size:    size,
-		Env:     env,
-		Ports:   ports,
+		Env:     model.SortEnv(env),
+		Ports:   model.SortPorts(ports),
 		Created: deployment.Created,
 	}, nil
 }

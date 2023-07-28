@@ -232,8 +232,8 @@ func toBoxDetails(response *v1.Message[v1.BoxDescribeResponseBody]) (*model.BoxD
 			Provider: model.Cloud,
 		},
 		Size:    size,
-		Env:     env,
-		Ports:   ports,
+		Env:     model.SortEnv(env),
+		Ports:   model.SortPorts(ports),
 		Created: created,
 	}, nil
 }

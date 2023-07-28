@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/dchest/uniuri"
+	"golang.org/x/exp/slices"
 
 	"github.com/hckops/hckctl/pkg/util"
 )
@@ -38,9 +39,26 @@ type BoxPort struct {
 	Public bool   // TODO not used, always false
 }
 
+func SortPorts(ports []BoxPort) []BoxPort {
+	sorted := ports
+	// ascending order
+	slices.SortFunc(sorted, func(a, b BoxPort) bool {
+		return slices.IsSorted([]string{a.Remote, b.Remote})
+	})
+	return sorted
+}
+
 type BoxEnv struct {
 	Key   string
 	Value string
+}
+
+func SortEnv(env []BoxEnv) []BoxEnv {
+	sorted := env
+	slices.SortFunc(sorted, func(a, b BoxEnv) bool {
+		return slices.IsSorted([]string{a.Key, b.Key})
+	})
+	return sorted
 }
 
 func (box *BoxV1) GenerateName() string {
