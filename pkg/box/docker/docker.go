@@ -127,7 +127,6 @@ type containerConfigOptions struct {
 	labels        map[string]string
 }
 
-// TODO refactor in docker client
 func buildContainerConfig(opts *containerConfigOptions) (*container.Config, error) {
 
 	exposedPorts := make(nat.PortSet)
@@ -154,7 +153,6 @@ func buildContainerConfig(opts *containerConfigOptions) (*container.Config, erro
 	}, nil
 }
 
-// TODO refactor in docker client
 func buildHostConfig(ports []model.BoxPort, onPortBindCallback func(port model.BoxPort)) (*container.HostConfig, error) {
 
 	portBindings := make(nat.PortMap)
@@ -188,14 +186,13 @@ func buildHostConfig(ports []model.BoxPort, onPortBindCallback func(port model.B
 	}, nil
 }
 
-// TODO refactor in docker client
 func buildNetworkingConfig(networkName, networkId string) *network.NetworkingConfig {
 	return &network.NetworkingConfig{EndpointsConfig: map[string]*network.EndpointSettings{networkName: {NetworkID: networkId}}}
 }
 
 // TODO common
 func (box *DockerBoxClient) connectBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
-	if info, err := box.findBox(name); err != nil {
+	if info, err := box.searchBox(name); err != nil {
 		return err
 	} else {
 		return box.execBox(template, info, tunnelOpts, false)
@@ -211,8 +208,7 @@ func (box *DockerBoxClient) openBox(templateOpts *model.TemplateOptions, tunnelO
 	}
 }
 
-// TODO common
-func (box *DockerBoxClient) findBox(name string) (*model.BoxInfo, error) {
+func (box *DockerBoxClient) searchBox(name string) (*model.BoxInfo, error) {
 	boxes, err := box.listBoxes()
 	if err != nil {
 		return nil, err
@@ -225,11 +221,19 @@ func (box *DockerBoxClient) findBox(name string) (*model.BoxInfo, error) {
 	return nil, errors.New("box not found")
 }
 
-func (box *DockerBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, tunnelOpts *model.TunnelOptions, removeOnExit bool) error {
+func (box *DockerBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, tunnelOpts *model.TunnelOptions, deleteOnExit bool) error {
 	command := template.Shell
 	box.eventBus.Publish(newContainerExecDockerEvent(info.Id, info.Name, command))
 
-	// TODO if BoxInfo not Healthy attempt restart
+	restartsOpts := &docker.ContainerRestartOpts{
+		ContainerId: info.Id,
+		OnRestartCallback: func(status string) {
+			box.eventBus.Publish(newContainerRestartDockerEvent(info.Id, status))
+		},
+	}
+	if err := box.client.ContainerRestart(restartsOpts); err != nil {
+		return err
+	}
 
 	// TODO see command ValidateTunnelFlag ?!
 	// TODO TunnelOnly > skip exec
@@ -239,14 +243,14 @@ func (box *DockerBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, 
 	// box.publishBoxInfo(template, info)
 
 	if command == model.BoxShellNone {
-		if removeOnExit {
+		if deleteOnExit {
 			// stop loader
 			box.eventBus.Publish(newContainerExecDockerLoaderEvent())
 		}
 		return box.logsBox(info.Id, tunnelOpts)
 	}
 
-	containerOpts := &docker.ContainerExecOpts{
+	execOpts := &docker.ContainerExecOpts{
 		ContainerId: info.Id,
 		Shell:       command,
 		InStream:    tunnelOpts.Streams.In,
@@ -260,7 +264,7 @@ func (box *DockerBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, 
 		OnStreamCloseCallback: func() {
 			box.eventBus.Publish(newContainerExecExitDockerEvent(info.Id))
 
-			if removeOnExit {
+			if deleteOnExit {
 				if err := box.client.ContainerRemove(info.Id); err != nil {
 					box.eventBus.Publish(newContainerExecErrorDockerEvent(info.Id, errors.Wrap(err, "error container exec remove")))
 				}
@@ -271,7 +275,7 @@ func (box *DockerBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, 
 		},
 	}
 
-	return box.client.ContainerExec(containerOpts)
+	return box.client.ContainerExec(execOpts)
 }
 
 func (box *DockerBoxClient) publishBoxInfo(template *model.BoxV1, info *model.BoxInfo) {
@@ -301,7 +305,7 @@ func (box *DockerBoxClient) logsBox(containerId string, tunnelOpts *model.Tunnel
 }
 
 func (box *DockerBoxClient) describe(name string) (*model.BoxDetails, error) {
-	info, err := box.findBox(name)
+	info, err := box.searchBox(name)
 	if err != nil {
 		return nil, err
 	}
@@ -323,7 +327,6 @@ func toBoxDetails(container docker.ContainerDetails) (*model.BoxDetails, error) 
 		return nil, err
 	}
 
-	// TODO filter by prefix e.g. "HCK_"
 	var env []model.BoxEnv
 	for _, e := range container.Env {
 		items := strings.Split(e, "=")

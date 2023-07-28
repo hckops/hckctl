@@ -211,6 +211,7 @@ TODO
     - add `--remote` mutually exclusive flag
     - update directories to exclude in `resolvePath` e.g. charts
 * box
+    - move all native docker/kube imports inside client e.g. buildSpec
     - review command: `copy` vs `upload/download`
     - review tty resize
     - refactor common `BoxClient` methods (abstract)
@@ -227,7 +228,6 @@ TODO
     - docker: `ContainerCreate` add env var
     - docker: `execBox` retrieve actual bound ports from container
     - docker: `execBox` print ports and envs
-    - docker: `execBox` restart stopped/existed container
     - docker: `execBox` fix tunnelOnly (skip exec) and noTunnel (print warning ignored)
     - docker: COPY shared volume `XDG_DATA_HOME`
     - docker: support powershell `/usr/bin/pwsh` (attach with no tty and raw terminal) see `docker run --rm -it mcr.microsoft.com/powershell`

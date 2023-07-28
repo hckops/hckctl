@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	dockerApi "github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
@@ -93,6 +94,24 @@ func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, 
 	}
 
 	return newContainer.ID, nil
+}
+
+func (client *DockerClient) ContainerRestart(opts *ContainerRestartOpts) error {
+
+	containerJson, err := client.docker.ContainerInspect(client.ctx, opts.ContainerId)
+	if err != nil {
+		return errors.Wrap(err, "error container inspect")
+	}
+
+	// container state can be one of "created", "running", "paused", "restarting", "removing", "exited", or "dead"
+	if containerJson.State.Status != ContainerStatusRunning {
+		opts.OnRestartCallback(containerJson.State.Status)
+
+		if err := client.docker.ContainerRestart(client.ctx, opts.ContainerId, container.StopOptions{}); err != nil {
+			return errors.Wrap(err, "error docker restart")
+		}
+	}
+	return nil
 }
 
 func (client *DockerClient) ContainerExec(opts *ContainerExecOpts) error {
@@ -220,7 +239,7 @@ func (client *DockerClient) ContainerList(namePrefix string, label string) ([]Co
 		All: true, // include exited
 		Filters: filters.NewArgs(
 			filters.KeyValuePair{Key: "name", Value: namePrefix},
-			filters.KeyValuePair{Key: "label", Value: label},
+			filters.KeyValuePair{Key: "label", Value: label}, // format <LABEL_KEY>=<LABEL_VALUE>
 		),
 	})
 	if err != nil {
@@ -228,8 +247,8 @@ func (client *DockerClient) ContainerList(namePrefix string, label string) ([]Co
 	}
 
 	var result []ContainerInfo
-	for _, container := range containers {
-		result = append(result, newContainerInfo(container.ID, container.Names[0], container.State))
+	for _, c := range containers {
+		result = append(result, newContainerInfo(c.ID, c.Names[0], c.State))
 	}
 
 	return result, nil
@@ -240,7 +259,7 @@ func newContainerInfo(id, name, status string) ContainerInfo {
 	// name starts with slash
 	containerName := strings.TrimPrefix(name, "/")
 	// see types.ContainerState
-	healthy := status == "running"
+	healthy := status == ContainerStatusRunning
 
 	return ContainerInfo{
 		ContainerId:   id,

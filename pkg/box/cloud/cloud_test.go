@@ -53,8 +53,8 @@ func TestToBoxDetails(t *testing.T) {
 			{Key: "KEY_2", Value: "VALUE_2"},
 		},
 		Ports: []model.BoxPort{
-			{Alias: "alias-1", Local: "TODO", Remote: "123", Public: false},
-			{Alias: "alias-2", Local: "TODO", Remote: "456", Public: false},
+			{Alias: "alias-1", Local: "none", Remote: "123", Public: false},
+			{Alias: "alias-2", Local: "none", Remote: "456", Public: false},
 		},
 		Created: createdTime,
 	}

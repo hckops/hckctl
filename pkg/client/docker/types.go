@@ -10,6 +10,10 @@ import (
 	"github.com/docker/docker/client"
 )
 
+const (
+	ContainerStatusRunning = "running"
+)
+
 type DockerClient struct {
 	ctx    context.Context
 	docker *client.Client
@@ -49,6 +53,11 @@ type ContainerCreateOpts struct {
 	ContainerConfig  *container.Config
 	HostConfig       *container.HostConfig
 	NetworkingConfig *network.NetworkingConfig
+}
+
+type ContainerRestartOpts struct {
+	ContainerId       string
+	OnRestartCallback func(string)
 }
 
 type ContainerExecOpts struct {

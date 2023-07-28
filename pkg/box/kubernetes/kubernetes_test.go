@@ -174,9 +174,12 @@ func yamlToDeployment(data string) *appsv1.Deployment {
 	return object.(*appsv1.Deployment)
 }
 
-func TestBoxLabel(t *testing.T) {
-	expected := "com.hckops.schema.kind=box-v1"
-	assert.Equal(t, expected, boxLabel())
+func TestLabelSelector(t *testing.T) {
+	expectedBox := "com.hckops.schema.kind=box-v1"
+	assert.Equal(t, expectedBox, boxLabelSelector())
+
+	expectedBoxName := "com.hckops.schema.kind=box-v1,app.kubernetes.io/name=myName"
+	assert.Equal(t, expectedBoxName, boxNameLabelSelector("myName"))
 }
 
 // TODO flaky test due to order of map/string
@@ -242,7 +245,7 @@ func TestToBoxDetails(t *testing.T) {
 			{Key: "MY_KEY_2", Value: "MY_VALUE_2"},
 		},
 		Ports: []model.BoxPort{
-			{Alias: "portName", Local: "TODO", Remote: "remotePort", Public: false},
+			{Alias: "portName", Local: "none", Remote: "remotePort", Public: false},
 		},
 		Created: createdTime,
 	}

@@ -107,3 +107,7 @@ func newPodExecKubeLoaderEvent() *kubeEvent {
 func newDeploymentListKubeEvent(index int, namespace string, deploymentName string, podId string, healthy bool) *kubeEvent {
 	return &kubeEvent{kind: event.LogDebug, value: fmt.Sprintf("deployment list: (%d) namespace=%s deploymentName=%s podId=%s healthy=%v", index, namespace, deploymentName, podId, healthy)}
 }
+
+func newDeploymentSearchKubeEvent(namespace string, name string) *kubeEvent {
+	return &kubeEvent{kind: event.LogDebug, value: fmt.Sprintf("deployment search: namespace=%s name=%s", namespace, name)}
+}

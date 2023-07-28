@@ -116,11 +116,11 @@ func buildSpec(name string, namespace string, templateOpts *model.TemplateOption
 func buildLabels(name, instance, version string) model.BoxLabels {
 	// default
 	labels := map[string]string{
-		"app.kubernetes.io/name":       name,
-		"app.kubernetes.io/instance":   common.ToKebabCase(instance),
-		"app.kubernetes.io/version":    version,
-		"app.kubernetes.io/managed-by": "hckops", // TODO common?
-		model.LabelSchemaKind:          common.ToKebabCase(schema.KindBoxV1.String()),
+		kubernetes.LabelKubeName:      name,
+		kubernetes.LabelKubeInstance:  common.ToKebabCase(instance),
+		kubernetes.LabelKubeVersion:   version,
+		kubernetes.LabelKubeManagedBy: "hckops", // TODO common?
+		model.LabelSchemaKind:         common.ToKebabCase(schema.KindBoxV1.String()),
 	}
 	return labels
 }
@@ -239,7 +239,7 @@ func buildService(objectMeta metav1.ObjectMeta, template *model.BoxV1) (*corev1.
 
 // TODO common
 func (box *KubeBoxClient) connectBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
-	if info, err := box.findBox(name); err != nil {
+	if info, err := box.searchBox(name); err != nil {
 		return err
 	} else {
 		return box.execBox(template, info, tunnelOpts, false)
@@ -255,21 +255,37 @@ func (box *KubeBoxClient) openBox(templateOpts *model.TemplateOptions, tunnelOpt
 	}
 }
 
-// TODO common
-func (box *KubeBoxClient) findBox(name string) (*model.BoxInfo, error) {
-	boxes, err := box.listBoxes()
+func boxLabelSelector() string {
+	// value must be sanitized
+	return fmt.Sprintf("%s=%s", model.LabelSchemaKind, common.ToKebabCase(schema.KindBoxV1.String()))
+}
+
+func boxNameLabelSelector(name string) string {
+	return fmt.Sprintf("%s,%s=%s", boxLabelSelector(), kubernetes.LabelKubeName, name)
+}
+
+func (box *KubeBoxClient) searchBox(name string) (*model.BoxInfo, error) {
+	namespace := box.clientOpts.Namespace
+	box.eventBus.Publish(newDeploymentSearchKubeEvent(namespace, name))
+
+	deployments, err := box.client.DeploymentList(namespace, model.BoxPrefixName, boxNameLabelSelector(name))
 	if err != nil {
 		return nil, err
 	}
-	for _, boxInfo := range boxes {
-		if boxInfo.Name == name {
-			return &boxInfo, nil
-		}
+
+	switch len(deployments) {
+	case 0:
+		return nil, errors.New("box not found")
+	case 1:
+		info := newBoxInfo(deployments[0])
+		return &info, nil
+	default:
+		// this should never happen
+		return nil, errors.New("unexpected label selector match")
 	}
-	return nil, errors.New("box not found")
 }
 
-func (box *KubeBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, tunnelOpts *model.TunnelOptions, removeOnExit bool) error {
+func (box *KubeBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, tunnelOpts *model.TunnelOptions, deleteOnExit bool) error {
 	box.eventBus.Publish(newPodExecKubeEvent(template.Name, box.clientOpts.Namespace, info.Id, template.Shell))
 
 	if tunnelOpts.TunnelOnly {
@@ -304,7 +320,7 @@ func (box *KubeBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, tu
 		},
 	}
 
-	if removeOnExit {
+	if deleteOnExit {
 		defer box.deleteBox(info.Name)
 	}
 
@@ -371,7 +387,7 @@ func toPortBindings(ports []model.BoxPort, onPortBindCallback func(port model.Bo
 func (box *KubeBoxClient) describe(name string) (*model.BoxDetails, error) {
 	namespace := box.clientOpts.Namespace
 
-	info, err := box.findBox(name)
+	info, err := box.searchBox(name)
 	if err != nil {
 		return nil, err
 	}
@@ -398,7 +414,6 @@ func toBoxDetails(deployment *kubernetes.DeploymentDetails, serviceInfo *kuberne
 		return nil, err
 	}
 
-	// TODO filter by prefix e.g. "HCK_"
 	var env []model.BoxEnv
 	for key, value := range deployment.Info.PodInfo.Env {
 		env = append(env, model.BoxEnv{
@@ -411,7 +426,7 @@ func toBoxDetails(deployment *kubernetes.DeploymentDetails, serviceInfo *kuberne
 	for _, p := range serviceInfo.Ports {
 		ports = append(ports, model.BoxPort{
 			Alias:  p.Name,
-			Local:  "TODO", // TODO runtime only
+			Local:  model.BoxLocalPortNone,
 			Remote: p.Port,
 			Public: false,
 		})
@@ -436,15 +451,10 @@ func toBoxDetails(deployment *kubernetes.DeploymentDetails, serviceInfo *kuberne
 	}, nil
 }
 
-func boxLabel() string {
-	// value must be sanitized
-	return fmt.Sprintf("%s=%s", model.LabelSchemaKind, common.ToKebabCase(schema.KindBoxV1.String()))
-}
-
 func (box *KubeBoxClient) listBoxes() ([]model.BoxInfo, error) {
 	namespace := box.clientOpts.Namespace
 
-	deployments, err := box.client.DeploymentList(namespace, model.BoxPrefixName, boxLabel())
+	deployments, err := box.client.DeploymentList(namespace, model.BoxPrefixName, boxLabelSelector())
 	if err != nil {
 		return nil, err
 	}

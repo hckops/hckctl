@@ -58,10 +58,10 @@ func (box *CloudBoxClient) createBox(opts *model.TemplateOptions) (*model.BoxInf
 	boxName := response.Body.Name
 	box.eventBus.Publish(newApiCreateCloudEvent(opts.Template.Name, boxName, response.Body.Size))
 
+	// internal id not exposed
 	return &model.BoxInfo{Id: boxName, Name: boxName}, nil
 }
 
-// TODO common (no exec info)
 func (box *CloudBoxClient) openBox(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
 	if info, err := box.createBox(templateOpts); err != nil {
 		return err
@@ -70,7 +70,7 @@ func (box *CloudBoxClient) openBox(templateOpts *model.TemplateOptions, tunnelOp
 	}
 }
 
-func (box *CloudBoxClient) execBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string, removeOnExit bool) error {
+func (box *CloudBoxClient) execBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string, deleteOnExit bool) error {
 	box.eventBus.Publish(newApiExecCloudEvent(name))
 
 	// TODO print environment variables
@@ -102,7 +102,7 @@ func (box *CloudBoxClient) execBox(template *model.BoxV1, tunnelOpts *model.Tunn
 		},
 	}
 
-	if removeOnExit {
+	if deleteOnExit {
 		defer box.deleteBoxes([]string{name})
 	}
 
@@ -201,9 +201,9 @@ func toBoxDetails(response *v1.Message[v1.BoxDescribeResponseBody]) (*model.BoxD
 		if len(items) == 2 {
 			ports = append(ports, model.BoxPort{
 				Alias:  items[0],
-				Local:  "TODO", // TODO runtime only
+				Local:  model.BoxLocalPortNone,
 				Remote: items[1],
-				Public: false, // TODO
+				Public: false, // TODO url
 			})
 		}
 	}
@@ -220,7 +220,7 @@ func toBoxDetails(response *v1.Message[v1.BoxDescribeResponseBody]) (*model.BoxD
 			Healthy: response.Body.Healthy,
 		},
 		TemplateInfo: &model.BoxTemplateInfo{
-			// TODO only if response.Body.Template.Public
+			// TODO valid only if response.Body.Template.Public
 			GitTemplate: &model.GitTemplateInfo{
 				Url:      response.Body.Template.Url,
 				Revision: response.Body.Template.Revision,

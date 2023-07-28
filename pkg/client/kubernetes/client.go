@@ -153,11 +153,11 @@ func (client *KubeClient) DeploymentCreate(opts *DeploymentCreateOpts) error {
 	return nil
 }
 
-func (client *KubeClient) DeploymentList(namespace string, namePrefix string, label string) ([]DeploymentInfo, error) {
+func (client *KubeClient) DeploymentList(namespace string, namePrefix string, labelSelector string) ([]DeploymentInfo, error) {
 
 	deployments, err := client.AppApi().Deployments(namespace).List(client.ctx, metav1.ListOptions{
-		// format <LABEL_KEY>=<SANITIZED_LABEL_VALUE>
-		LabelSelector: label,
+		// comma separated values with format <LABEL_KEY>=<SANITIZED_LABEL_VALUE>
+		LabelSelector: labelSelector,
 	})
 	if err != nil {
 		return nil, errors.Wrapf(err, "error deployment list: namespace=%s", namespace)

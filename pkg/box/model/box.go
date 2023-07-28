@@ -13,6 +13,7 @@ import (
 const (
 	BoxPrefixName        = "box-"
 	BoxShellNone         = "none"     // distroless
+	BoxLocalPortNone     = "none"     // runtime only when tunnelling
 	boxPrefixVirtualPort = "virtual-" // experimental cloud feature only
 )
 

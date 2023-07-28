@@ -72,6 +72,10 @@ func newContainerCreateDockerEvent(templateName string, containerName string, co
 	return &dockerEvent{kind: event.LogDebug, value: fmt.Sprintf("container create: templateName=%s containerName=%s containerId=%s", templateName, containerName, containerId)}
 }
 
+func newContainerRestartDockerEvent(containerId string, status string) *dockerEvent {
+	return &dockerEvent{kind: event.LogDebug, value: fmt.Sprintf("container restart: containerId=%s status=%s", containerId, status)}
+}
+
 func newContainerExecDockerEvent(containerName string, containerId string, command string) *dockerEvent {
 	return &dockerEvent{kind: event.LogDebug, value: fmt.Sprintf("container exec: containerName=%s containerId=%s command=%s", containerName, containerId, command)}
 }

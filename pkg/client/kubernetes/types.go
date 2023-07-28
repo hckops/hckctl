@@ -11,7 +11,11 @@ import (
 )
 
 const (
-	SingleReplica = 1
+	SingleReplica      = 1
+	LabelKubeName      = "app.kubernetes.io/name"
+	LabelKubeInstance  = "app.kubernetes.io/instance"
+	LabelKubeVersion   = "app.kubernetes.io/version"
+	LabelKubeManagedBy = "app.kubernetes.io/managed-by"
 )
 
 type KubeClient struct {
