@@ -171,7 +171,7 @@ TODO
     - implement copy
     - mount vpn docker/kube
     - remove lab except for schema
-    - delete internal folder
+    - delete internal/old folder
     - RELEASE
     - brew
     - add task

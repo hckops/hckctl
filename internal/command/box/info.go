@@ -13,18 +13,18 @@ import (
 )
 
 // TODO output format yaml/json
-type boxDescribeCmdOptions struct {
+type boxInfoCmdOptions struct {
 	configRef *config.ConfigRef
 }
 
-func NewBoxDescribeCmd(configRef *config.ConfigRef) *cobra.Command {
+func NewBoxInfoCmd(configRef *config.ConfigRef) *cobra.Command {
 
-	opts := &boxDescribeCmdOptions{
+	opts := &boxInfoCmdOptions{
 		configRef: configRef,
 	}
 
 	command := &cobra.Command{
-		Use:   "describe [name]",
+		Use:   "info [name]",
 		Short: "Describe a running box",
 		RunE:  opts.run,
 	}
@@ -32,11 +32,11 @@ func NewBoxDescribeCmd(configRef *config.ConfigRef) *cobra.Command {
 	return command
 }
 
-func (opts *boxDescribeCmdOptions) run(cmd *cobra.Command, args []string) error {
+func (opts *boxInfoCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	if len(args) == 1 {
 		boxName := args[0]
-		log.Debug().Msgf("describe box: boxName=%s", boxName)
+		log.Debug().Msgf("info box: boxName=%s", boxName)
 
 		describeClient := func(invokeOpts *invokeOptions, boxDetails *model.BoxDetails) error {
 			if value, err := util.EncodeYaml(newBoxValue(boxDetails)); err != nil {
@@ -63,8 +63,8 @@ type BoxValue struct {
 	Provider      ProviderValue
 	CacheTemplate *model.CachedTemplateInfo `yaml:"cache,omitempty"`
 	GitTemplate   *model.GitTemplateInfo    `yaml:"git,omitempty"`
-	Env           []model.BoxEnv            `yaml:",omitempty"`
-	Ports         []model.BoxPort           `yaml:",omitempty"`
+	Env           []model.BoxEnv            `yaml:",omitempty"` // TODO []string KEY=VALUE
+	Ports         []model.BoxPort           `yaml:",omitempty"` // TODO []string tty/remote -> local (if not none)
 }
 type ProviderValue struct {
 	Name           string

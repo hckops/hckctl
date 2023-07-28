@@ -54,7 +54,7 @@ func runBoxClient(sourceLoader template.SourceLoader[model.BoxV1], provider mode
 	return nil
 }
 
-// connect, describe and delete-one
+// connect, info and delete-one
 func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeClient func(*invokeOptions, *model.BoxDetails) error) error {
 
 	loader := common.NewLoader()
