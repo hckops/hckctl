@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/docker/docker/api/types/container" // TODO remove
-	"github.com/docker/docker/api/types/network"   // TODO remove
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/slices"
@@ -49,10 +49,9 @@ func (box *DockerBoxClient) createBox(opts *model.TemplateOptions) (*model.BoxIn
 	}
 	box.eventBus.Publish(newImagePullDockerEvent(imageName))
 	if err := box.client.ImagePull(imagePullOpts); err != nil {
-		// TODO search existing image
 		// try to use existing images
 		if box.clientOpts.IgnoreImagePullError {
-			box.eventBus.Publish(newImagePullErrorDockerEvent(imageName))
+			box.eventBus.Publish(newImagePullIgnoreDockerEvent(imageName))
 		} else {
 			return nil, err
 		}
@@ -64,7 +63,7 @@ func (box *DockerBoxClient) createBox(opts *model.TemplateOptions) (*model.BoxIn
 			box.eventBus.Publish(newImageRemoveDockerEvent(imageId))
 		},
 		OnImageRemoveErrorCallback: func(imageId string, err error) {
-			box.eventBus.Publish(newImageRemoveErrorDockerEvent(imageId, err))
+			box.eventBus.Publish(newImageRemoveIgnoreDockerEvent(imageId, err))
 		},
 	}
 	if err := box.client.ImageRemoveDangling(imageRemoveOpts); err != nil {
@@ -239,9 +238,6 @@ func (box *DockerBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, 
 	// TODO TunnelOnly > skip exec
 	// TODO NoTunnel > print console warning: flag ignored
 
-	// TODO it should print the actual bound ports, not the template
-	// box.publishBoxInfo(template, info)
-
 	if command == model.BoxShellNone {
 		if deleteOnExit {
 			// stop loader
@@ -249,6 +245,9 @@ func (box *DockerBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, 
 		}
 		return box.logsBox(info.Id, tunnelOpts)
 	}
+
+	// TODO container inspect/describe to print the actual bound ports, not the template
+	// box.publishBoxInfo(template, info)
 
 	execOpts := &docker.ContainerExecOpts{
 		ContainerId: info.Id,
@@ -310,6 +309,7 @@ func (box *DockerBoxClient) describe(name string) (*model.BoxDetails, error) {
 		return nil, err
 	}
 
+	box.eventBus.Publish(newContainerInspectDockerEvent(info.Id))
 	containerInfo, err := box.client.ContainerInspect(info.Id)
 	if err != nil {
 		return nil, err
@@ -411,7 +411,7 @@ func (box *DockerBoxClient) deleteBoxes(names []string) ([]string, error) {
 				box.eventBus.Publish(newContainerRemoveDockerEvent(boxInfo.Id))
 			} else {
 				// silently ignore
-				box.eventBus.Publish(newContainerRemoveSkippedDockerEvent(boxInfo.Id))
+				box.eventBus.Publish(newContainerRemoveIgnoreDockerEvent(boxInfo.Id))
 			}
 		}
 	}

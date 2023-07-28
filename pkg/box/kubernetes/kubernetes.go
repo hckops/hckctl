@@ -62,7 +62,7 @@ func (box *KubeBoxClient) createBox(opts *model.TemplateOptions) (*model.BoxInfo
 		}
 		box.eventBus.Publish(newServiceCreateKubeEvent(namespace, service.Name))
 	} else {
-		box.eventBus.Publish(newServiceCreateSkippedKubeEvent(namespace, service.Name))
+		box.eventBus.Publish(newServiceCreateIgnoreKubeEvent(namespace, service.Name))
 	}
 
 	box.eventBus.Publish(newResourcesDeployKubeLoaderEvent(namespace, opts.Template.Name))
@@ -331,7 +331,7 @@ func (box *KubeBoxClient) podPortForward(template *model.BoxV1, boxInfo *model.B
 	namespace := box.clientOpts.Namespace
 
 	if !template.HasPorts() {
-		box.eventBus.Publish(newPodPortForwardSkippedKubeEvent(namespace, boxInfo.Id))
+		box.eventBus.Publish(newPodPortForwardIgnoreKubeEvent(namespace, boxInfo.Id))
 		// exit, no service/port available to bind
 		return nil
 	}
@@ -392,11 +392,13 @@ func (box *KubeBoxClient) describe(name string) (*model.BoxDetails, error) {
 		return nil, err
 	}
 
+	box.eventBus.Publish(newDeploymentDescribeKubeEvent(namespace, name))
 	deployment, err := box.client.DeploymentDescribe(namespace, info.Name)
 	if err != nil {
 		return nil, err
 	}
 
+	box.eventBus.Publish(newServiceDescribeKubeEvent(namespace, name))
 	service, err := box.client.ServiceDescribe(namespace, info.Name)
 	if err != nil {
 		return nil, err
@@ -492,7 +494,7 @@ func (box *KubeBoxClient) deleteBoxes(names []string) ([]string, error) {
 				deleted = append(deleted, boxInfo.Name)
 			} else {
 				// silently ignore
-				box.eventBus.Publish(newResourcesDeleteSkippedKubeEvent(namespace, boxInfo.Name))
+				box.eventBus.Publish(newResourcesDeleteIgnoreKubeEvent(namespace, boxInfo.Name))
 			}
 		}
 	}

@@ -1,7 +1,6 @@
 package cloud
 
 import (
-	"github.com/hckops/hckctl/pkg/util"
 	"strings"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	v1 "github.com/hckops/hckctl/pkg/api/v1"
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/ssh"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 func newCloudBoxClient(commonOpts *model.CommonBoxOptions, cloudOpts *model.CloudBoxOptions) (*CloudBoxClient, error) {
@@ -112,7 +112,7 @@ func (box *CloudBoxClient) execBox(template *model.BoxV1, tunnelOpts *model.Tunn
 func (box *CloudBoxClient) tunnelBox(template *model.BoxV1, name string) error {
 
 	if !template.HasPorts() {
-		box.eventBus.Publish(newApiTunnelSkippedCloudEvent(name))
+		box.eventBus.Publish(newApiTunnelIgnoreCloudEvent(name))
 		// exit, no service/port available to bind
 		return nil
 	}

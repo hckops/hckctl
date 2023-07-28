@@ -152,8 +152,12 @@ func newDefaultBoxClient(provider model.BoxProvider, configRef *config.ConfigRef
 			loader.Refresh(e.String())
 		case event.LoaderStop:
 			loader.Stop()
+		case event.LogInfo:
+			log.Info().Msgf("[%v] %s", e.Source(), e.String())
 		case event.LogWarning:
 			log.Warn().Msgf("[%v] %s", e.Source(), e.String())
+		case event.LogError:
+			log.Error().Msgf("[%v] %s", e.Source(), e.String())
 		default:
 			log.Debug().Msgf("[%v][%s] %s", e.Source(), e.Kind(), e.String())
 		}
