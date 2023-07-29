@@ -193,7 +193,7 @@ func (box *DockerBoxClient) connectBox(opts *model.ConnectOptions) error {
 	if info, err := box.searchBox(opts.Name); err != nil {
 		return err
 	} else {
-		if opts.EnableExec || opts.EnableTunnel {
+		if opts.DisableExec || opts.DisableTunnel {
 			box.eventBus.Publish(newContainerExecIgnoreDockerEvent(info.Id))
 		}
 

@@ -64,12 +64,12 @@ func (box *CloudBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo,
 
 func (box *CloudBoxClient) connectBox(opts *model.ConnectOptions) error {
 
-	if !opts.EnableTunnel && !opts.EnableExec {
+	if !opts.DisableTunnel && !opts.DisableExec {
 		return errors.New("invalid connection options")
 	}
 
 	// TODO issue not blocking
-	if !opts.EnableExec {
+	if !opts.DisableExec {
 		return box.tunnelBox(opts.Template, opts.Name)
 	}
 

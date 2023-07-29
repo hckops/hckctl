@@ -350,6 +350,8 @@ func (client *KubeClient) PodPortForward(opts *PodPortForwardOpts) error {
 		}
 	}()
 
+	opts.OnTunnelStartCallback()
+
 	if opts.IsWait {
 		// wait until interrupted
 		select {

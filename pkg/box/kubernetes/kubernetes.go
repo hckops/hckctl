@@ -241,20 +241,23 @@ func (box *KubeBoxClient) connectBox(opts *model.ConnectOptions) error {
 	if info, err := box.searchBox(opts.Name); err != nil {
 		return err
 	} else {
-		if !opts.EnableTunnel && !opts.EnableExec {
+		if opts.DisableExec && opts.DisableTunnel {
 			return errors.New("invalid connection options")
 		}
 
-		// only tunnel
-		if !opts.EnableExec {
+		// tunnel only
+		if opts.DisableExec {
 			// tunnel and block to exit, wait until killed
 			return box.podPortForward(opts.Template, info, true)
 		}
 
-		// tunnel and exec after, do not block
-		if err := box.podPortForward(opts.Template, info, false); err != nil {
-			return err
+		if !opts.DisableTunnel {
+			// tunnel and exec after, do not block
+			if err := box.podPortForward(opts.Template, info, false); err != nil {
+				return err
+			}
 		}
+
 		return box.execBox(opts.Template, info, opts.Streams, opts.DeleteOnExit)
 	}
 }
@@ -343,6 +346,10 @@ func (box *KubeBoxClient) podPortForward(template *model.BoxV1, boxInfo *model.B
 		PodId:     boxInfo.Id,
 		Ports:     ports,
 		IsWait:    isWait,
+		OnTunnelStartCallback: func() {
+			// stop loader
+			box.eventBus.Publish(newPodExecKubeLoaderEvent())
+		},
 		OnTunnelErrorCallback: func(err error) {
 			box.eventBus.Publish(newPodPortForwardErrorKubeEvent(namespace, boxInfo.Id, err))
 		},

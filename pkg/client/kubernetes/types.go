@@ -71,6 +71,7 @@ type PodPortForwardOpts struct {
 	PodId                 string
 	Ports                 []string // format "LOCAL:REMOTE"
 	IsWait                bool
+	OnTunnelStartCallback func()
 	OnTunnelErrorCallback func(error)
 }
 

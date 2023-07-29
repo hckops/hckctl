@@ -68,6 +68,9 @@ func (client *SshClient) Tunnel(opts *SshTunnelOpts) {
 	}
 	defer listener.Close()
 
+	channelDone := make(chan struct{})
+	//channelError := make(chan struct{})
+
 	copyStream := func(writer, reader net.Conn, label string) {
 		defer writer.Close()
 		defer reader.Close()
@@ -76,8 +79,12 @@ func (client *SshClient) Tunnel(opts *SshTunnelOpts) {
 		if err != nil {
 			opts.OnTunnelErrorCallback(errors.Wrapf(err, "error ssh copying stream: %s", label))
 		}
+
+		// TODO blocking ???
+		close(channelDone)
 	}
 
+	// TODO is for needed ?!
 	for {
 		localConnection, err := listener.Accept()
 		if err != nil {
@@ -93,6 +100,11 @@ func (client *SshClient) Tunnel(opts *SshTunnelOpts) {
 			go copyStream(localConnection, remoteConnection, "remote->local")
 			go copyStream(remoteConnection, localConnection, "local->remote")
 		}()
+
+		// TODO blocking ???
+		select {
+		case <-channelDone:
+		}
 	}
 }
 

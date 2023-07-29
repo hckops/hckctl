@@ -118,10 +118,10 @@ type CreateOptions struct {
 }
 
 type ConnectOptions struct {
-	Template     *BoxV1
-	Streams      *BoxStreams
-	Name         string
-	EnableExec   bool
-	EnableTunnel bool
-	DeleteOnExit bool
+	Template      *BoxV1
+	Streams       *BoxStreams
+	Name          string
+	DisableExec   bool
+	DisableTunnel bool
+	DeleteOnExit  bool
 }
