@@ -201,7 +201,7 @@ func toBoxDetails(response *v1.Message[v1.BoxDescribeResponseBody]) (*model.BoxD
 		if len(items) == 2 {
 			ports = append(ports, model.BoxPort{
 				Alias:  items[0],
-				Local:  model.BoxLocalPortNone,
+				Local:  model.BoxPortNone, // runtime only
 				Remote: items[1],
 				Public: false, // TODO url
 			})

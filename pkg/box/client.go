@@ -15,7 +15,7 @@ type BoxClient interface {
 	Events() *event.EventBus
 	Create(opts *model.CreateOptions) (*model.BoxInfo, error)
 	Connect(opts *model.ConnectOptions) error
-	Copy(name string, from string, to string) error
+	Copy(name string, from string, to string) error // TODO not implemented
 	Describe(name string) (*model.BoxDetails, error)
 	List() ([]model.BoxInfo, error)
 	Delete(names []string) ([]string, error) // empty "names" means all boxes

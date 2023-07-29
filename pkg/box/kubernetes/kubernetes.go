@@ -420,7 +420,7 @@ func toBoxDetails(deployment *kubernetes.DeploymentDetails, serviceInfo *kuberne
 	for _, p := range serviceInfo.Ports {
 		ports = append(ports, model.BoxPort{
 			Alias:  p.Name,
-			Local:  model.BoxLocalPortNone,
+			Local:  model.BoxPortNone, // runtime only
 			Remote: p.Port,
 			Public: false,
 		})

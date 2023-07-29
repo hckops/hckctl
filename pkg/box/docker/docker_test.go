@@ -95,11 +95,18 @@ func TestToBoxDetails(t *testing.T) {
 			"com.hckops.box.size":            "m",
 		},
 		Env: []string{
-			"MY_KEY_1=MY_VALUE_1",
 			"MY_KEY_2=MY_VALUE_2",
+			"MY_KEY_1=MY_VALUE_1",
+			"MY_KEY_3=MY_VALUE_3",
 		},
 		Ports: []docker.ContainerPort{
-			{Local: "123", Remote: "456"},
+			{Local: "local-x", Remote: "remote-2"},
+			{Local: "local-y", Remote: "remote-1"},
+			{Local: "local-z", Remote: "remote-3"},
+		},
+		Network: docker.NetworkInfo{
+			Name:      "myNetworkName",
+			IpAddress: "myNetworkIp",
 		},
 	}
 	expected := &model.BoxDetails{
@@ -116,16 +123,20 @@ func TestToBoxDetails(t *testing.T) {
 		ProviderInfo: &model.BoxProviderInfo{
 			Provider: model.Docker,
 			DockerProvider: &model.DockerProviderInfo{
-				Network: "TODO",
+				Network: "myNetworkName",
+				Ip:      "myNetworkIp",
 			},
 		},
 		Size: model.Medium,
 		Env: []model.BoxEnv{
 			{Key: "MY_KEY_1", Value: "MY_VALUE_1"},
 			{Key: "MY_KEY_2", Value: "MY_VALUE_2"},
+			{Key: "MY_KEY_3", Value: "MY_VALUE_3"},
 		},
 		Ports: []model.BoxPort{
-			{Alias: "TODO", Local: "123", Remote: "456", Public: false},
+			{Alias: "none", Local: "local-y", Remote: "remote-1", Public: false},
+			{Alias: "none", Local: "local-x", Remote: "remote-2", Public: false},
+			{Alias: "none", Local: "local-z", Remote: "remote-3", Public: false},
 		},
 		Created: createdTime,
 	}

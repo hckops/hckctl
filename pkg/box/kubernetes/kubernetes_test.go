@@ -195,8 +195,9 @@ func TestToBoxDetails(t *testing.T) {
 				PodName:       "myPodName",
 				ContainerName: "myContainerName",
 				Env: map[string]string{
-					"MY_KEY_1": "MY_VALUE_1",
 					"MY_KEY_2": "MY_VALUE_2",
+					"MY_KEY_1": "MY_VALUE_1",
+					"MY_KEY_3": "MY_VALUE_3",
 				},
 			},
 		},
@@ -215,7 +216,9 @@ func TestToBoxDetails(t *testing.T) {
 		Namespace: "myServiceNamespace",
 		Name:      "myServiceName",
 		Ports: []kubernetes.ServicePort{
-			{Name: "portName", Port: "remotePort"},
+			{Name: "name-x", Port: "remote-2"},
+			{Name: "name-y", Port: "remote-1"},
+			{Name: "name-z", Port: "remote-3"},
 		},
 	}
 	expected := &model.BoxDetails{
@@ -242,9 +245,12 @@ func TestToBoxDetails(t *testing.T) {
 		Env: []model.BoxEnv{
 			{Key: "MY_KEY_1", Value: "MY_VALUE_1"},
 			{Key: "MY_KEY_2", Value: "MY_VALUE_2"},
+			{Key: "MY_KEY_3", Value: "MY_VALUE_3"},
 		},
 		Ports: []model.BoxPort{
-			{Alias: "portName", Local: "none", Remote: "remotePort", Public: false},
+			{Alias: "name-y", Local: "none", Remote: "remote-1", Public: false},
+			{Alias: "name-x", Local: "none", Remote: "remote-2", Public: false},
+			{Alias: "name-z", Local: "none", Remote: "remote-3", Public: false},
 		},
 		Created: createdTime,
 	}

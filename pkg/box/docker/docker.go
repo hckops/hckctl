@@ -331,7 +331,7 @@ func toBoxDetails(container docker.ContainerDetails) (*model.BoxDetails, error) 
 	var ports []model.BoxPort
 	for _, p := range container.Ports {
 		ports = append(ports, model.BoxPort{
-			Alias:  "none", // TODO match with template
+			Alias:  model.BoxPortNone, // match with template
 			Local:  p.Local,
 			Remote: p.Remote,
 			Public: false,

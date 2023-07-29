@@ -8,6 +8,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
 )
 
@@ -52,6 +53,15 @@ func TestNewContainerDetails(t *testing.T) {
 				"MY_KEY=MY_VALUE",
 			},
 		},
+		NetworkSettings: &types.NetworkSettings{
+			Networks: map[string]*network.EndpointSettings{
+				"myNetworkName": {
+					NetworkID:  "myNetworkId",
+					IPAddress:  "myIpAddress",
+					MacAddress: "myMacAddress",
+				},
+			},
+		},
 	}
 
 	expected := ContainerDetails{
@@ -69,6 +79,12 @@ func TestNewContainerDetails(t *testing.T) {
 		},
 		Ports: []ContainerPort{
 			{Local: "7683", Remote: "7681"},
+		},
+		Network: NetworkInfo{
+			Id:         "myNetworkId",
+			Name:       "myNetworkName",
+			IpAddress:  "myIpAddress",
+			MacAddress: "myMacAddress",
 		},
 	}
 	containerDetails, err := newContainerDetails(containerJson)

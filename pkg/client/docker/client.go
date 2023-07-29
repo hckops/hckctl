@@ -225,6 +225,7 @@ func newContainerDetails(container types.ContainerJSON) (ContainerDetails, error
 		return ContainerDetails{}, errors.Wrapf(err, "error parsing container created time %s", container.Created)
 	}
 
+	// TODO fix tests
 	if len(container.NetworkSettings.Networks) != 1 {
 		return ContainerDetails{}, errors.Wrapf(err, "foudn %d container networks, expected only 1", len(container.NetworkSettings.Networks))
 	}
