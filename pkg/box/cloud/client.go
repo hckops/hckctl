@@ -26,19 +26,14 @@ func (box *CloudBoxClient) Events() *event.EventBus {
 	return box.eventBus
 }
 
-func (box *CloudBoxClient) Create(templateOpts *model.TemplateOptions) (*model.BoxInfo, error) {
+func (box *CloudBoxClient) Create(opts *model.CreateOptions) (*model.BoxInfo, error) {
 	defer box.close()
-	return box.createBox(templateOpts)
+	return box.createBox(opts)
 }
 
-func (box *CloudBoxClient) Connect(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
+func (box *CloudBoxClient) Connect(opts *model.ConnectOptions) error {
 	defer box.close()
-	return box.execBox(template, tunnelOpts, name, false)
-}
-
-func (box *CloudBoxClient) Open(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
-	defer box.close()
-	return box.openBox(templateOpts, tunnelOpts)
+	return box.connectBox(opts)
 }
 
 func (box *CloudBoxClient) Copy(string, string, string) error {

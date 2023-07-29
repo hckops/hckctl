@@ -26,19 +26,14 @@ func (box *KubeBoxClient) Events() *event.EventBus {
 	return box.eventBus
 }
 
-func (box *KubeBoxClient) Create(templateOpts *model.TemplateOptions) (*model.BoxInfo, error) {
+func (box *KubeBoxClient) Create(opts *model.CreateOptions) (*model.BoxInfo, error) {
 	defer box.close()
-	return box.createBox(templateOpts)
+	return box.createBox(opts)
 }
 
-func (box *KubeBoxClient) Connect(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
+func (box *KubeBoxClient) Connect(opts *model.ConnectOptions) error {
 	defer box.close()
-	return box.connectBox(template, tunnelOpts, name)
-}
-
-func (box *KubeBoxClient) Open(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
-	defer box.close()
-	return box.openBox(templateOpts, tunnelOpts)
+	return box.connectBox(opts)
 }
 
 func (box *KubeBoxClient) Copy(string, string, string) error {

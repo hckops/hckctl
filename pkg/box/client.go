@@ -13,9 +13,8 @@ import (
 type BoxClient interface {
 	Provider() model.BoxProvider
 	Events() *event.EventBus
-	Create(templateOpts *model.TemplateOptions) (*model.BoxInfo, error)
-	Connect(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error
-	Open(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error
+	Create(opts *model.CreateOptions) (*model.BoxInfo, error)
+	Connect(opts *model.ConnectOptions) error
 	Copy(name string, from string, to string) error
 	Describe(name string) (*model.BoxDetails, error)
 	List() ([]model.BoxInfo, error)

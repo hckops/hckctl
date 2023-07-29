@@ -40,7 +40,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 			  that when closed will automatically delete and cleanup all the resources.
 
 			  The main purpose of a Box is to provide a ready-to-go and always up-to-date
-			  hacking environment with an uniformed experience, abstracting the actual providers
+			  environment with an uniformed experience, abstracting the actual providers
 			  e.g. Docker, Kubernetes, etc.
 		`),
 		Example: heredoc.Doc(`
@@ -55,10 +55,10 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 			# opens a box deployed on kubernetes (docker|kube|cloud)
 			hckctl box kali --provider kube
 
-			# opens a box port-forwarding all ports, without spawning a shell (ignored by docker)
-			hckctl box arch --tunnel-only
+			# opens a box tunneling all ports, without spawning a shell (ignored by docker)
+			hckctl box arch --no-exec
 
-			# opens a box spawning a shell, without port-forwarding the ports (ignored by docker)
+			# opens a box spawning a shell, without tunneling the ports (ignored by docker)
 			hckctl box alpine --no-tunnel
 
 			# opens a box using a specific version (branch|tag|sha)
@@ -74,7 +74,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 	opts.sourceFlag = commonFlag.AddTemplateSourceFlag(command)
 	// --provider (enum)
 	opts.providerFlag = boxFlag.AddBoxProviderFlag(command)
-	// --tunnel-only or --no-tunnel
+	// --no-exec or --no-tunnel
 	opts.tunnelFlag = boxFlag.AddTunnelFlag(command)
 
 	command.AddCommand(NewBoxInfoCmd(configRef))
@@ -136,13 +136,17 @@ func (opts *boxCmdOptions) temporaryBox(sourceLoader template.SourceLoader[model
 
 	temporaryClient := func(invokeOpts *invokeOptions) error {
 
-		templateOpts, err := newTemplateOptions(invokeOpts.template, labels, opts.configRef.Config.Box.Size)
+		createOpts, err := newCreateOptions(invokeOpts.template, labels, opts.configRef.Config.Box.Size)
 		if err != nil {
 			return err
 		}
-		tunnelOpts := opts.tunnelFlag.ToTunnelOptions()
+		boxInfo, err := invokeOpts.client.Create(createOpts)
+		if err != nil {
+			return err
+		}
 
-		return invokeOpts.client.Open(templateOpts, tunnelOpts)
+		connectOpts := opts.tunnelFlag.ToConnectOptions(&invokeOpts.template.Value.Data, boxInfo.Name, true)
+		return invokeOpts.client.Connect(connectOpts)
 	}
 	return runBoxClient(sourceLoader, provider, opts.configRef, temporaryClient)
 }

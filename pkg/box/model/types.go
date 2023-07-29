@@ -110,14 +110,17 @@ func NewDefaultStreams(tty bool) *BoxStreams {
 	}
 }
 
-type TemplateOptions struct {
+type CreateOptions struct {
 	Template *BoxV1
 	Size     ResourceSize
 	Labels   BoxLabels
 }
 
-type TunnelOptions struct {
-	Streams    *BoxStreams
-	TunnelOnly bool
-	NoTunnel   bool
+type ConnectOptions struct {
+	Template     *BoxV1
+	Streams      *BoxStreams
+	Name         string
+	EnableExec   bool
+	EnableTunnel bool
+	DeleteOnExit bool
 }

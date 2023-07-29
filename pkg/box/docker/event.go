@@ -80,6 +80,10 @@ func newContainerExecDockerEvent(containerName string, containerId string, comma
 	return &dockerEvent{kind: event.LogInfo, value: fmt.Sprintf("container exec: containerName=%s containerId=%s command=%s", containerName, containerId, command)}
 }
 
+func newContainerExecIgnoreDockerEvent(containerId string) *dockerEvent {
+	return &dockerEvent{kind: event.LogWarning, value: fmt.Sprintf("container exec connection ignored: containerId=%s", containerId)}
+}
+
 func newContainerExecDockerLoaderEvent() *dockerEvent {
 	return &dockerEvent{kind: event.LoaderStop, value: "waiting"}
 }

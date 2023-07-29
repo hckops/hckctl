@@ -37,7 +37,7 @@ func TestBoxProviderIds(t *testing.T) {
 	assert.Equal(t, 3, len(boxProviderIds()))
 
 	assert.Equal(t, []string{"docker"}, boxProviderIds()[flag.DockerProviderFlag])
-	assert.Equal(t, []string{"kube", "k8s", "kubernetes"}, boxProviderIds()[flag.KubeProviderFlag])
+	assert.Equal(t, []string{"kube"}, boxProviderIds()[flag.KubeProviderFlag])
 	assert.Equal(t, []string{"cloud"}, boxProviderIds()[flag.CloudProviderFlag])
 }
 

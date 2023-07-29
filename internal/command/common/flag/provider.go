@@ -22,7 +22,7 @@ const (
 
 var allProviderIds = map[ProviderFlag][]string{
 	DockerProviderFlag: {"docker"},
-	KubeProviderFlag:   {"kube", "k8s", "kubernetes"},
+	KubeProviderFlag:   {"kube"}, // "k8s", "kubernetes"
 	CloudProviderFlag:  {"cloud"},
 }
 

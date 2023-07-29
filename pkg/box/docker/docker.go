@@ -38,7 +38,7 @@ func (box *DockerBoxClient) close() error {
 }
 
 // TODO limit resources by size?
-func (box *DockerBoxClient) createBox(opts *model.TemplateOptions) (*model.BoxInfo, error) {
+func (box *DockerBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo, error) {
 
 	imageName := opts.Template.ImageName()
 	imagePullOpts := &docker.ImagePullOpts{
@@ -189,21 +189,15 @@ func buildNetworkingConfig(networkName, networkId string) *network.NetworkingCon
 	return &network.NetworkingConfig{EndpointsConfig: map[string]*network.EndpointSettings{networkName: {NetworkID: networkId}}}
 }
 
-// TODO common
-func (box *DockerBoxClient) connectBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
-	if info, err := box.searchBox(name); err != nil {
+func (box *DockerBoxClient) connectBox(opts *model.ConnectOptions) error {
+	if info, err := box.searchBox(opts.Name); err != nil {
 		return err
 	} else {
-		return box.execBox(template, info, tunnelOpts, false)
-	}
-}
+		if opts.EnableExec || opts.EnableTunnel {
+			box.eventBus.Publish(newContainerExecIgnoreDockerEvent(info.Id))
+		}
 
-// TODO common
-func (box *DockerBoxClient) openBox(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
-	if info, err := box.createBox(templateOpts); err != nil {
-		return err
-	} else {
-		return box.execBox(templateOpts.Template, info, tunnelOpts, true)
+		return box.execBox(opts.Template, info, opts.Streams, opts.DeleteOnExit)
 	}
 }
 
@@ -220,7 +214,7 @@ func (box *DockerBoxClient) searchBox(name string) (*model.BoxInfo, error) {
 	return nil, errors.New("box not found")
 }
 
-func (box *DockerBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, tunnelOpts *model.TunnelOptions, deleteOnExit bool) error {
+func (box *DockerBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, streams *model.BoxStreams, deleteOnExit bool) error {
 	command := template.Shell
 	box.eventBus.Publish(newContainerExecDockerEvent(info.Id, info.Name, command))
 
@@ -234,16 +228,12 @@ func (box *DockerBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, 
 		return err
 	}
 
-	// TODO see command ValidateTunnelFlag ?!
-	// TODO TunnelOnly > skip exec
-	// TODO NoTunnel > print console warning: flag ignored
-
 	if command == model.BoxShellNone {
 		if deleteOnExit {
 			// stop loader
 			box.eventBus.Publish(newContainerExecDockerLoaderEvent())
 		}
-		return box.logsBox(info.Id, tunnelOpts)
+		return box.logsBox(info.Id, streams)
 	}
 
 	// TODO container inspect/describe to print the actual bound ports, not the template
@@ -252,10 +242,10 @@ func (box *DockerBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, 
 	execOpts := &docker.ContainerExecOpts{
 		ContainerId: info.Id,
 		Shell:       command,
-		InStream:    tunnelOpts.Streams.In,
-		OutStream:   tunnelOpts.Streams.Out,
-		ErrStream:   tunnelOpts.Streams.Err,
-		IsTty:       tunnelOpts.Streams.IsTty,
+		InStream:    streams.In,
+		OutStream:   streams.Out,
+		ErrStream:   streams.Err,
+		IsTty:       streams.IsTty,
 		OnContainerExecCallback: func() {
 			// stop loader
 			box.eventBus.Publish(newContainerExecDockerLoaderEvent())
@@ -288,11 +278,11 @@ func (box *DockerBoxClient) publishBoxInfo(template *model.BoxV1, info *model.Bo
 	// TODO print environment variables
 }
 
-func (box *DockerBoxClient) logsBox(containerId string, tunnelOpts *model.TunnelOptions) error {
+func (box *DockerBoxClient) logsBox(containerId string, streams *model.BoxStreams) error {
 	opts := &docker.ContainerLogsOpts{
 		ContainerId: containerId,
-		OutStream:   tunnelOpts.Streams.Out,
-		ErrStream:   tunnelOpts.Streams.Err,
+		OutStream:   streams.Out,
+		ErrStream:   streams.Err,
 		OnStreamCloseCallback: func() {
 			box.eventBus.Publish(newContainerExecExitDockerEvent(containerId))
 		},

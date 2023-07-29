@@ -214,7 +214,6 @@ TODO
     - move all native docker/kube imports inside client e.g. buildSpec
     - review command: `copy` vs `upload/download`
     - review tty resize
-    - refactor common `BoxClient` methods (abstract)
     - mount `/dev/tun` for vpn
     - implement copy ???
     - kube: add env var
@@ -258,3 +257,9 @@ TODO
 - boxClient refactor
     * https://stackoverflow.com/questions/30261032/how-to-implement-an-abstract-class-in-go
     * https://golangbyexample.com/go-abstract-class
+
+// IMPORTANT cloud block/wait if tunnel only
+// IMPORTANT env
+// IMPORTANT copy + vpn setup
+// TODO review output details
+// TODO issue zerolog: could not write event: write /home/ubuntu/.local/state/hck/hckctl-ubuntu.log: file already closed

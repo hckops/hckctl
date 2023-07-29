@@ -159,13 +159,13 @@ func newDefaultBoxClient(provider model.BoxProvider, configRef *config.ConfigRef
 		case event.LogError:
 			log.Error().Msgf("[%v] %s", e.Source(), e.String())
 		default:
-			log.Debug().Msgf("[%v][%s] %s", e.Source(), e.Kind(), e.String())
+			log.Debug().Msgf("[%v] %s", e.Source(), e.String())
 		}
 	})
 	return boxClient, nil
 }
 
-func newTemplateOptions(info *template.TemplateInfo[model.BoxV1], labels model.BoxLabels, sizeValue string) (*model.TemplateOptions, error) {
+func newCreateOptions(info *template.TemplateInfo[model.BoxV1], labels model.BoxLabels, sizeValue string) (*model.CreateOptions, error) {
 	size, err := model.ExistResourceSize(sizeValue)
 	if err != nil {
 		return nil, err
@@ -179,10 +179,9 @@ func newTemplateOptions(info *template.TemplateInfo[model.BoxV1], labels model.B
 		allLabels = labels.AddGitLabels(size, info.Path, info.Revision)
 	}
 
-	templateOpts := &model.TemplateOptions{
+	return &model.CreateOptions{
 		Template: &info.Value.Data,
 		Size:     size,
 		Labels:   allLabels,
-	}
-	return templateOpts, nil
+	}, nil
 }

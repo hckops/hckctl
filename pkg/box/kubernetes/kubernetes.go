@@ -40,7 +40,7 @@ func (box *KubeBoxClient) close() error {
 	return box.client.Close()
 }
 
-func (box *KubeBoxClient) createBox(opts *model.TemplateOptions) (*model.BoxInfo, error) {
+func (box *KubeBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo, error) {
 	namespace := box.clientOpts.Namespace
 
 	// TODO add env var container override
@@ -87,25 +87,25 @@ func (box *KubeBoxClient) createBox(opts *model.TemplateOptions) (*model.BoxInfo
 	return &model.BoxInfo{Id: podInfo.PodName, Name: boxName, Healthy: true}, nil
 }
 
-func buildSpec(name string, namespace string, templateOpts *model.TemplateOptions) (*appsv1.Deployment, *corev1.Service, error) {
+func buildSpec(name string, namespace string, opts *model.CreateOptions) (*appsv1.Deployment, *corev1.Service, error) {
 
-	labels := buildLabels(name, templateOpts.Template.Image.Repository, templateOpts.Template.ImageVersion())
+	labels := buildLabels(name, opts.Template.Image.Repository, opts.Template.ImageVersion())
 
 	objectMeta := metav1.ObjectMeta{
 		Name:        name,
 		Namespace:   namespace,
-		Annotations: templateOpts.Labels,
+		Annotations: opts.Labels,
 		Labels:      labels,
 	}
-	resourceOptions := templateOpts.Size.ToKubeResource()
-	pod, err := buildPod(objectMeta, templateOpts.Template, resourceOptions.Memory, resourceOptions.Cpu)
+	resourceOptions := opts.Size.ToKubeResource()
+	pod, err := buildPod(objectMeta, opts.Template, resourceOptions.Memory, resourceOptions.Cpu)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error kube pod spec")
 	}
 
 	deployment := buildDeployment(objectMeta, pod)
 
-	service, err := buildService(objectMeta, templateOpts.Template)
+	service, err := buildService(objectMeta, opts.Template)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error kube service spec")
 	}
@@ -237,21 +237,25 @@ func buildService(objectMeta metav1.ObjectMeta, template *model.BoxV1) (*corev1.
 	}, nil
 }
 
-// TODO common
-func (box *KubeBoxClient) connectBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
-	if info, err := box.searchBox(name); err != nil {
+func (box *KubeBoxClient) connectBox(opts *model.ConnectOptions) error {
+	if info, err := box.searchBox(opts.Name); err != nil {
 		return err
 	} else {
-		return box.execBox(template, info, tunnelOpts, false)
-	}
-}
+		if !opts.EnableTunnel && !opts.EnableExec {
+			return errors.New("invalid connection options")
+		}
 
-// TODO common
-func (box *KubeBoxClient) openBox(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
-	if info, err := box.createBox(templateOpts); err != nil {
-		return err
-	} else {
-		return box.execBox(templateOpts.Template, info, tunnelOpts, true)
+		// only tunnel
+		if !opts.EnableExec {
+			// tunnel and block to exit, wait until killed
+			return box.podPortForward(opts.Template, info, true)
+		}
+
+		// tunnel and exec after, do not block
+		if err := box.podPortForward(opts.Template, info, false); err != nil {
+			return err
+		}
+		return box.execBox(opts.Template, info, opts.Streams, opts.DeleteOnExit)
 	}
 }
 
@@ -285,20 +289,8 @@ func (box *KubeBoxClient) searchBox(name string) (*model.BoxInfo, error) {
 	}
 }
 
-func (box *KubeBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, tunnelOpts *model.TunnelOptions, deleteOnExit bool) error {
+func (box *KubeBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, streams *model.BoxStreams, deleteOnExit bool) error {
 	box.eventBus.Publish(newPodExecKubeEvent(template.Name, box.clientOpts.Namespace, info.Id, template.Shell))
-
-	if tunnelOpts.TunnelOnly {
-		// tunnel and block to exit, wait until killed
-		return box.podPortForward(template, info, true)
-	}
-
-	if !tunnelOpts.NoTunnel {
-		// tunnel and exec after, do not block
-		if err := box.podPortForward(template, info, false); err != nil {
-			return err
-		}
-	}
 
 	// TODO if BoxInfo not Healthy attempt scale 1
 	// TODO model.BoxShellNone
@@ -310,10 +302,10 @@ func (box *KubeBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, tu
 		PodName:   common.ToKebabCase(template.Image.Repository), // pod.Spec.Containers[0].Name
 		PodId:     info.Id,
 		Shell:     template.Shell,
-		InStream:  tunnelOpts.Streams.In,
-		OutStream: tunnelOpts.Streams.Out,
-		ErrStream: tunnelOpts.Streams.Err,
-		IsTty:     tunnelOpts.Streams.IsTty,
+		InStream:  streams.In,
+		OutStream: streams.Out,
+		ErrStream: streams.Err,
+		IsTty:     streams.IsTty,
 		OnExecCallback: func() {
 			// stop loader
 			box.eventBus.Publish(newPodExecKubeLoaderEvent())

@@ -26,19 +26,14 @@ func (box *DockerBoxClient) Events() *event.EventBus {
 	return box.eventBus
 }
 
-func (box *DockerBoxClient) Create(templateOpts *model.TemplateOptions) (*model.BoxInfo, error) {
+func (box *DockerBoxClient) Create(opts *model.CreateOptions) (*model.BoxInfo, error) {
 	defer box.close()
-	return box.createBox(templateOpts)
+	return box.createBox(opts)
 }
 
-func (box *DockerBoxClient) Connect(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string) error {
+func (box *DockerBoxClient) Connect(opts *model.ConnectOptions) error {
 	defer box.close()
-	return box.connectBox(template, tunnelOpts, name)
-}
-
-func (box *DockerBoxClient) Open(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
-	defer box.close()
-	return box.openBox(templateOpts, tunnelOpts)
+	return box.connectBox(opts)
 }
 
 func (box *DockerBoxClient) Copy(string, string, string) error {

@@ -136,7 +136,7 @@ spec:
 status:
   loadBalancer: {}
 `
-	templateOpts := &model.TemplateOptions{
+	templateOpts := &model.CreateOptions{
 		Template: template,
 		Size:     model.ExtraSmall,
 		Labels: map[string]string{

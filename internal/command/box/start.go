@@ -77,12 +77,11 @@ func startBox(sourceLoader template.SourceLoader[model.BoxV1], provider model.Bo
 
 	createClient := func(invokeOpts *invokeOptions) error {
 
-		templateOpts, err := newTemplateOptions(invokeOpts.template, labels, configRef.Config.Box.Size)
+		createOpts, err := newCreateOptions(invokeOpts.template, labels, configRef.Config.Box.Size)
 		if err != nil {
 			return err
 		}
-
-		if boxInfo, err := invokeOpts.client.Create(templateOpts); err != nil {
+		if boxInfo, err := invokeOpts.client.Create(createOpts); err != nil {
 			return err
 		} else {
 			invokeOpts.loader.Stop()

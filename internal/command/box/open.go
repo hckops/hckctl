@@ -27,7 +27,7 @@ func NewBoxOpenCmd(configRef *config.ConfigRef) *cobra.Command {
 		RunE:  opts.run,
 	}
 
-	// --tunnel-only or --no-tunnel
+	// --no-exec or --no-tunnel
 	opts.tunnelFlag = boxFlag.AddTunnelFlag(command)
 
 	return command
@@ -46,7 +46,8 @@ func (opts *boxOpenCmdOptions) run(cmd *cobra.Command, args []string) error {
 				log.Warn().Err(err).Msgf("ignore validation %s", commonFlag.ErrorFlagNotSupported)
 			}
 
-			return invokeOpts.client.Connect(&invokeOpts.template.Value.Data, opts.tunnelFlag.ToTunnelOptions(), boxName)
+			connectOpts := opts.tunnelFlag.ToConnectOptions(&invokeOpts.template.Value.Data, boxName, false)
+			return invokeOpts.client.Connect(connectOpts)
 		}
 		return attemptRunBoxClients(opts.configRef, boxName, connectClient)
 	} else {

@@ -38,7 +38,7 @@ func (box *CloudBoxClient) close() error {
 	return box.client.Close()
 }
 
-func (box *CloudBoxClient) createBox(opts *model.TemplateOptions) (*model.BoxInfo, error) {
+func (box *CloudBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo, error) {
 	box.eventBus.Publish(newApiCreateCloudLoaderEvent(box.clientOpts.Address, opts.Template.Name))
 
 	request := v1.NewBoxCreateRequest(box.clientOpts.Version, opts.Template.Name, opts.Size.String())
@@ -62,28 +62,28 @@ func (box *CloudBoxClient) createBox(opts *model.TemplateOptions) (*model.BoxInf
 	return &model.BoxInfo{Id: boxName, Name: boxName}, nil
 }
 
-func (box *CloudBoxClient) openBox(templateOpts *model.TemplateOptions, tunnelOpts *model.TunnelOptions) error {
-	if info, err := box.createBox(templateOpts); err != nil {
-		return err
-	} else {
-		return box.execBox(templateOpts.Template, tunnelOpts, info.Name, true)
+func (box *CloudBoxClient) connectBox(opts *model.ConnectOptions) error {
+
+	if !opts.EnableTunnel && !opts.EnableExec {
+		return errors.New("invalid connection options")
 	}
+
+	// TODO issue not blocking
+	if !opts.EnableExec {
+		return box.tunnelBox(opts.Template, opts.Name)
+	}
+
+	if err := box.tunnelBox(opts.Template, opts.Name); err != nil {
+		return err
+	}
+
+	return box.execBox(opts.Name, opts.DeleteOnExit)
 }
 
-func (box *CloudBoxClient) execBox(template *model.BoxV1, tunnelOpts *model.TunnelOptions, name string, deleteOnExit bool) error {
+func (box *CloudBoxClient) execBox(name string, deleteOnExit bool) error {
 	box.eventBus.Publish(newApiExecCloudEvent(name))
 
 	// TODO print environment variables
-
-	if tunnelOpts.TunnelOnly {
-		return box.tunnelBox(template, name)
-	}
-
-	if !tunnelOpts.NoTunnel {
-		if err := box.tunnelBox(template, name); err != nil {
-			return err
-		}
-	}
 
 	session := v1.NewBoxExecSession(box.clientOpts.Version, name)
 	payload, err := session.Encode()

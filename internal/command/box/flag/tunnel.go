@@ -8,34 +8,37 @@ import (
 )
 
 const (
-	tunnelOnlyFlagName = "tunnel-only"
-	noTunnelFlagName   = "no-tunnel"
+	noExecFlagName   = "no-exec"
+	noTunnelFlagName = "no-tunnel"
 )
 
 type TunnelFlag struct {
-	TunnelOnly bool
-	NoTunnel   bool
+	NoExec   bool
+	NoTunnel bool
 }
 
-func (f *TunnelFlag) ToTunnelOptions() *model.TunnelOptions {
-	return &model.TunnelOptions{
-		Streams:    model.NewDefaultStreams(true),
-		TunnelOnly: f.TunnelOnly,
-		NoTunnel:   f.NoTunnel,
+func (f *TunnelFlag) ToConnectOptions(template *model.BoxV1, name string, temporary bool) *model.ConnectOptions {
+	return &model.ConnectOptions{
+		Template:     template,
+		Streams:      model.NewDefaultStreams(true),
+		Name:         name,
+		EnableExec:   !f.NoExec,
+		EnableTunnel: !f.NoTunnel,
+		DeleteOnExit: temporary,
 	}
 }
 
-func addTunnelOnlyFlag(command *cobra.Command, value *bool) string {
+func addNoExecFlag(command *cobra.Command, value *bool) string {
 	const (
-		flagUsage = "port-forward all ports without spawning a shell"
+		flagUsage = "tunnel all ports without spawning a shell"
 	)
-	command.Flags().BoolVarP(value, tunnelOnlyFlagName, commonFlag.NoneFlagShortHand, false, flagUsage)
-	return tunnelOnlyFlagName
+	command.Flags().BoolVarP(value, noExecFlagName, commonFlag.NoneFlagShortHand, false, flagUsage)
+	return noExecFlagName
 }
 
 func addNoTunnelFlag(command *cobra.Command, value *bool) string {
 	const (
-		flagUsage = "spawn a shell without port-forwarding the ports"
+		flagUsage = "spawn a shell without tunneling the ports"
 	)
 	command.Flags().BoolVarP(value, noTunnelFlagName, commonFlag.NoneFlagShortHand, false, flagUsage)
 	return noTunnelFlagName
@@ -43,8 +46,8 @@ func addNoTunnelFlag(command *cobra.Command, value *bool) string {
 
 func AddTunnelFlag(command *cobra.Command) *TunnelFlag {
 	tunnelFlag := &TunnelFlag{}
-	tunnelOnlyFlag := addTunnelOnlyFlag(command, &tunnelFlag.TunnelOnly)
+	noExecFlag := addNoExecFlag(command, &tunnelFlag.NoExec)
 	noTunnelFlag := addNoTunnelFlag(command, &tunnelFlag.NoTunnel)
-	command.MarkFlagsMutuallyExclusive(tunnelOnlyFlag, noTunnelFlag)
+	command.MarkFlagsMutuallyExclusive(noExecFlag, noTunnelFlag)
 	return tunnelFlag
 }

@@ -28,9 +28,9 @@ func ValidateTunnelFlag(provider model.BoxProvider, tunnelFlag *TunnelFlag) erro
 	switch provider {
 	// docker exposes automatically all ports
 	case model.Docker:
-		if tunnelFlag.TunnelOnly || tunnelFlag.NoTunnel {
+		if tunnelFlag.NoExec || tunnelFlag.NoTunnel {
 			return fmt.Errorf("flag not supported: provider=%s %s=%v %s=%v",
-				model.Docker.String(), tunnelOnlyFlagName, tunnelFlag.TunnelOnly, noTunnelFlagName, tunnelFlag.NoTunnel)
+				model.Docker.String(), noExecFlagName, tunnelFlag.NoExec, noTunnelFlagName, tunnelFlag.NoTunnel)
 		}
 	}
 	return nil
