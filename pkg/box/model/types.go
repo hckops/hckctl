@@ -52,6 +52,7 @@ type BoxProviderInfo struct {
 
 type DockerProviderInfo struct {
 	Network string
+	Ip      string
 }
 
 type KubeProviderInfo struct {

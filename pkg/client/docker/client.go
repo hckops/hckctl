@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+	"golang.org/x/exp/maps"
 	"io"
 	"strings"
 	"sync"
@@ -224,12 +225,24 @@ func newContainerDetails(container types.ContainerJSON) (ContainerDetails, error
 		return ContainerDetails{}, errors.Wrapf(err, "error parsing container created time %s", container.Created)
 	}
 
+	if len(container.NetworkSettings.Networks) != 1 {
+		return ContainerDetails{}, errors.Wrapf(err, "foudn %d container networks, expected only 1", len(container.NetworkSettings.Networks))
+	}
+	networkName := maps.Keys(container.NetworkSettings.Networks)[0]
+	network := container.NetworkSettings.Networks[networkName]
+
 	return ContainerDetails{
 		Info:    newContainerInfo(container.ID, container.Name, container.State.Status),
 		Created: created.UTC(),
 		Labels:  container.Config.Labels,
 		Env:     container.Config.Env,
 		Ports:   ports,
+		Network: NetworkInfo{
+			Id:         network.NetworkID,
+			Name:       networkName,
+			IpAddress:  network.IPAddress,
+			MacAddress: network.MacAddress,
+		},
 	}, nil
 }
 

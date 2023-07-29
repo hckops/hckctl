@@ -31,6 +31,14 @@ type ContainerDetails struct {
 	Labels  map[string]string
 	Env     []string
 	Ports   []ContainerPort
+	Network NetworkInfo
+}
+
+type NetworkInfo struct {
+	Id         string
+	Name       string
+	IpAddress  string
+	MacAddress string
 }
 
 type ContainerPort struct {

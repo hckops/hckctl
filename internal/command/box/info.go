@@ -39,7 +39,8 @@ func (opts *boxInfoCmdOptions) run(cmd *cobra.Command, args []string) error {
 		log.Debug().Msgf("info box: boxName=%s", boxName)
 
 		describeClient := func(invokeOpts *invokeOptions, boxDetails *model.BoxDetails) error {
-			if value, err := util.EncodeYaml(newBoxValue(boxDetails)); err != nil {
+
+			if value, err := util.EncodeYaml(newBoxValue(&invokeOpts.template.Value.Data, boxDetails)); err != nil {
 				return err
 			} else {
 				invokeOpts.loader.Stop()
@@ -63,8 +64,8 @@ type BoxValue struct {
 	Provider      ProviderValue
 	CacheTemplate *model.CachedTemplateInfo `yaml:"cache,omitempty"`
 	GitTemplate   *model.GitTemplateInfo    `yaml:"git,omitempty"`
-	Env           []model.BoxEnv            `yaml:",omitempty"` // TODO []string KEY=VALUE
-	Ports         []model.BoxPort           `yaml:",omitempty"` // TODO []string tty/remote -> local (if not none)
+	Env           []string                  `yaml:",omitempty"`
+	Ports         []string                  `yaml:",omitempty"`
 }
 type ProviderValue struct {
 	Name           string
@@ -72,9 +73,19 @@ type ProviderValue struct {
 	KubeProvider   *model.KubeProviderInfo   `yaml:"kubernetes,omitempty"`
 }
 
-// TODO match port alias and local
-// TODO filter env from template
-func newBoxValue(details *model.BoxDetails) *BoxValue {
+func newBoxValue(template *model.BoxV1, details *model.BoxDetails) *BoxValue {
+
+	// TODO filter runtime env from template
+	var env []string
+	for _, e := range details.Env {
+		env = append(env, fmt.Sprintf("%s=%s", e.Key, e.Value))
+	}
+	// TODO not used: match runtime port alias and local port (bound) from template
+	var ports []string
+	for _, p := range details.Ports {
+		ports = append(ports, fmt.Sprintf("%s/%s -> %s", p.Alias, p.Remote, p.Local))
+	}
+
 	return &BoxValue{
 		Name:    details.Info.Name,
 		Created: details.Created.Format(time.RFC3339),
@@ -87,7 +98,7 @@ func newBoxValue(details *model.BoxDetails) *BoxValue {
 		},
 		CacheTemplate: details.TemplateInfo.CachedTemplate,
 		GitTemplate:   details.TemplateInfo.GitTemplate,
-		Env:           details.Env,
-		Ports:         details.Ports,
+		Env:           env,
+		Ports:         template.Network.Ports,
 	}
 }
