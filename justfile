@@ -17,7 +17,7 @@ vet:
   go vet {{GO_FILES}}
 
 test:
-  go test {{GO_FILES}} -cover
+  go test {{GO_FILES}} -v -timeout 30s -cover
 
 build output $VERSION_COMMIT="$(git rev-parse HEAD)" $VERSION_TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)": install format vet test
   rm -frv {{output}}

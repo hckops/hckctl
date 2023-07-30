@@ -158,10 +158,9 @@ just
 TODO
 * priority
     - implement env
-    - implement copy
-    - mount vpn docker/kube
-    - remove lab except for schema
-    - delete internal/old folder
+    - implement copy + mount vpn docker/kube
+    - cloud size comparison
+    - remove lab except for schema (?)
     - RELEASE
     - brew
     - add task
@@ -225,6 +224,7 @@ TODO
     - cloud: remove body from empty request `omitempty to remove "body":{}`
     - remove lab ??? are envs + copy enough?
     - list boxes in table with padding see `tabwriter` https://gosamples.dev/string-padding
+    - flaky issue zerolog `could not write event: write /home/ubuntu/.local/state/hck/hckctl-ubuntu.log: file already closed`
 * task
     - TODO ???
 * version
@@ -239,13 +239,3 @@ TODO
     - man (plugin)
     - kube-inject (plugin) mount sidecar pod at runtime with debugging tools
     - pro (bundle) e.g. flow
-* docs
-- https://jogendra.dev/import-cycles-in-golang-and-how-to-deal-with-them
-- https://benjiv.com/golang-generics-introduction
-- boxClient refactor
-    * https://stackoverflow.com/questions/30261032/how-to-implement-an-abstract-class-in-go
-    * https://golangbyexample.com/go-abstract-class
-
-// IMPORTANT env
-// IMPORTANT copy + vpn setup
-// TODO issue zerolog: could not write event: write /home/ubuntu/.local/state/hck/hckctl-ubuntu.log: file already closed
