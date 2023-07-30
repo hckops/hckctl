@@ -249,4 +249,3 @@ TODO
 // IMPORTANT env
 // IMPORTANT copy + vpn setup
 // TODO issue zerolog: could not write event: write /home/ubuntu/.local/state/hck/hckctl-ubuntu.log: file already closed
-// TODO remove license/readme from distro tgz
