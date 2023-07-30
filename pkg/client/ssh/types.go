@@ -22,6 +22,8 @@ type SshTunnelOpts struct {
 	LocalPort             string
 	RemoteHost            string
 	RemotePort            string
+	OnTunnelStartCallback func(string)
+	OnTunnelStopCallback  func(string)
 	OnTunnelErrorCallback func(error)
 }
 

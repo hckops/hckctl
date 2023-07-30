@@ -165,8 +165,6 @@ just
 
 TODO
 * priority
-    - cloud tunnel
-    - finish cloud e.g. loader/event
     - implement env
     - implement copy
     - mount vpn docker/kube
@@ -222,12 +220,10 @@ TODO
     - kube: `execBox` deployment always check/scale replica to 1 before exec (test with replica=0)
     - kube: `execBox` print envs
     - kube: verify `GetPodInfo` sidecar pod count
-    - kube: verify `PodPortForward` callback vs channel
-    - kube: update resources sizes
+    - kube: update resources sizes + comparison
     - docker: `ContainerCreate` add env var
     - docker: `execBox` retrieve actual bound ports from container
     - docker: `execBox` print ports and envs
-    - docker: `execBox` fix tunnelOnly (skip exec) and noTunnel (print warning ignored)
     - docker: COPY shared volume `XDG_DATA_HOME`
     - docker: support powershell `/usr/bin/pwsh` (attach with no tty and raw terminal) see `docker run --rm -it mcr.microsoft.com/powershell`
     - docker: add support for remote docker daemon with `DOCKER_HOST`
@@ -258,9 +254,7 @@ TODO
     * https://stackoverflow.com/questions/30261032/how-to-implement-an-abstract-class-in-go
     * https://golangbyexample.com/go-abstract-class
 
-// IMPORTANT cloud block/wait if tunnel only
 // IMPORTANT env
 // IMPORTANT copy + vpn setup
-// TODO review output details
 // TODO issue zerolog: could not write event: write /home/ubuntu/.local/state/hck/hckctl-ubuntu.log: file already closed
 // TODO remove license/readme from distro tgz

@@ -59,55 +59,6 @@ func (client *SshClient) SendRequest(protocol string, payload string) (string, e
 	return string(response), nil
 }
 
-// Tunnel starts a local server and forwards traffic to a remote connection
-func (client *SshClient) Tunnel(opts *SshTunnelOpts) {
-
-	listener, err := net.Listen(opts.Network(), opts.LocalAddress())
-	if err != nil {
-		opts.OnTunnelErrorCallback(errors.Wrapf(err, "error ssh creating local tunnel: address=%s", opts.LocalAddress()))
-	}
-	defer listener.Close()
-
-	channelDone := make(chan struct{})
-	//channelError := make(chan struct{})
-
-	copyStream := func(writer, reader net.Conn, label string) {
-		defer writer.Close()
-		defer reader.Close()
-
-		_, err := io.Copy(writer, reader)
-		if err != nil {
-			opts.OnTunnelErrorCallback(errors.Wrapf(err, "error ssh copying stream: %s", label))
-		}
-
-		// TODO blocking ???
-		close(channelDone)
-	}
-
-	// TODO is for needed ?!
-	for {
-		localConnection, err := listener.Accept()
-		if err != nil {
-			opts.OnTunnelErrorCallback(errors.Wrapf(err, "error ssh opening local tunnel: address=%s", opts.LocalAddress()))
-		}
-		// forward connections
-		go func() {
-			remoteConnection, err := client.ssh.Dial(opts.Network(), opts.RemoteAddress())
-			if err != nil {
-				opts.OnTunnelErrorCallback(errors.Wrapf(err, "error ssh opening remote tunnel: address=%s", opts.RemoteAddress()))
-			}
-
-			go copyStream(localConnection, remoteConnection, "remote->local")
-			go copyStream(remoteConnection, localConnection, "local->remote")
-		}()
-
-		// TODO blocking ???
-		select {
-		case <-channelDone:
-		}
-	}
-}
-
 func (client *SshClient) Exec(opts *SshExecOpts) error {
 
 	session, err := client.ssh.NewSession()
@@ -167,4 +118,45 @@ func handleStreams(session *gossh.Session, onStreamErrorCallback func(error)) er
 	}()
 
 	return nil
+}
+
+func (client *SshClient) Tunnel(opts *SshTunnelOpts) {
+
+	// starts a local server and forwards traffic to a remote connection
+	listener, err := net.Listen(opts.Network(), opts.LocalAddress())
+	if err != nil {
+		opts.OnTunnelErrorCallback(errors.Wrapf(err, "error ssh creating local tunnel: address=%s", opts.LocalAddress()))
+	}
+	defer listener.Close()
+
+	copyStream := func(writer, reader net.Conn, label string) {
+		defer writer.Close()
+		defer reader.Close()
+
+		opts.OnTunnelStartCallback(label)
+		_, err := io.Copy(writer, reader)
+		if err != nil {
+			opts.OnTunnelErrorCallback(errors.Wrapf(err, "error ssh copying stream: %s", label))
+		}
+		opts.OnTunnelStopCallback(label)
+	}
+
+	for {
+		// blocks until a connection is opened
+		localConnection, err := listener.Accept()
+		if err != nil {
+			opts.OnTunnelErrorCallback(errors.Wrapf(err, "error ssh opening local tunnel: address=%s", opts.LocalAddress()))
+		}
+
+		// forward connections
+		go func() {
+			remoteConnection, err := client.ssh.Dial(opts.Network(), opts.RemoteAddress())
+			if err != nil {
+				opts.OnTunnelErrorCallback(errors.Wrapf(err, "error ssh opening remote tunnel: address=%s", opts.RemoteAddress()))
+			}
+
+			go copyStream(localConnection, remoteConnection, "remote->local")
+			go copyStream(remoteConnection, localConnection, "local->remote")
+		}()
+	}
 }

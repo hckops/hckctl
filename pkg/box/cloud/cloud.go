@@ -32,6 +32,7 @@ func newCloudBoxClient(commonOpts *model.CommonBoxOptions, cloudOpts *model.Clou
 	}, nil
 }
 
+// TODO issue "use of closed network connection" after multiple invocation e.g. info + open
 func (box *CloudBoxClient) close() error {
 	box.eventBus.Publish(newClientCloseCloudEvent())
 	box.eventBus.Close()
@@ -64,17 +65,19 @@ func (box *CloudBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo,
 
 func (box *CloudBoxClient) connectBox(opts *model.ConnectOptions) error {
 
-	if !opts.DisableTunnel && !opts.DisableExec {
+	if opts.DisableExec && opts.DisableTunnel {
 		return errors.New("invalid connection options")
 	}
 
-	// TODO issue not blocking
-	if !opts.DisableExec {
-		return box.tunnelBox(opts.Template, opts.Name)
+	// tunnel only
+	if opts.DisableExec {
+		return box.tunnelBox(opts.Template, opts.Name, true)
 	}
 
-	if err := box.tunnelBox(opts.Template, opts.Name); err != nil {
-		return err
+	if !opts.DisableTunnel {
+		if err := box.tunnelBox(opts.Template, opts.Name, false); err != nil {
+			return err
+		}
 	}
 
 	return box.execBox(opts.Name, opts.DeleteOnExit)
@@ -95,7 +98,7 @@ func (box *CloudBoxClient) execBox(name string, deleteOnExit bool) error {
 		Payload: payload,
 		OnStreamStartCallback: func() {
 			// stop loader
-			box.eventBus.Publish(newApiExecCloudLoaderEvent())
+			box.eventBus.Publish(newApiStopCloudLoaderEvent())
 		},
 		OnStreamErrorCallback: func(err error) {
 			box.eventBus.Publish(newApiExecErrorCloudEvent(name, err))
@@ -109,7 +112,7 @@ func (box *CloudBoxClient) execBox(name string, deleteOnExit bool) error {
 	return box.client.Exec(opts)
 }
 
-func (box *CloudBoxClient) tunnelBox(template *model.BoxV1, name string) error {
+func (box *CloudBoxClient) tunnelBox(template *model.BoxV1, name string, isWait bool) error {
 
 	if !template.HasPorts() {
 		box.eventBus.Publish(newApiTunnelIgnoreCloudEvent(name))
@@ -120,6 +123,8 @@ func (box *CloudBoxClient) tunnelBox(template *model.BoxV1, name string) error {
 	networkPorts := template.NetworkPorts(true)
 	portPadding := model.PortFormatPadding(networkPorts)
 
+	errorChannel := make(chan struct{})
+
 	for _, p := range networkPorts {
 		port, err := bindPort(p)
 		if err != nil {
@@ -129,17 +134,35 @@ func (box *CloudBoxClient) tunnelBox(template *model.BoxV1, name string) error {
 		// TODO print remote url
 		box.eventBus.Publish(newApiTunnelBindingCloudEvent(name, port))
 		box.eventBus.Publish(newApiTunnelBindingCloudConsoleEvent(name, port, portPadding))
+		box.eventBus.Publish(newApiTunnelListenCloudLoaderEvent())
 
 		sshTunnelOpts := &ssh.SshTunnelOpts{
 			LocalPort:  port.Local,
 			RemoteHost: name,
 			RemotePort: port.Remote,
+			OnTunnelStartCallback: func(connection string) {
+				box.eventBus.Publish(newApiTunnelStartCloudEvent(name, port, connection))
+				// stop loader
+				box.eventBus.Publish(newApiStopCloudLoaderEvent())
+			},
+			OnTunnelStopCallback: func(connection string) {
+				box.eventBus.Publish(newApiTunnelStopCloudEvent(name, port, connection))
+			},
 			OnTunnelErrorCallback: func(err error) {
 				box.eventBus.Publish(newApiTunnelErrorCloudEvent(name, err))
+				close(errorChannel)
 			},
 		}
 		go box.client.Tunnel(sshTunnelOpts)
 	}
+
+	if isWait {
+		// waits until it's interrupted
+		select {
+		case <-errorChannel:
+		}
+	}
+
 	return nil
 }
 

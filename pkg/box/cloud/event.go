@@ -52,7 +52,7 @@ func newApiExecErrorCloudEvent(boxName string, err error) *cloudEvent {
 	return &cloudEvent{kind: event.LogError, value: fmt.Sprintf("api exec error: boxName=%s error=%v", boxName, err)}
 }
 
-func newApiExecCloudLoaderEvent() *cloudEvent {
+func newApiStopCloudLoaderEvent() *cloudEvent {
 	return &cloudEvent{kind: event.LoaderStop, value: "waiting"}
 }
 
@@ -72,12 +72,24 @@ func newApiTunnelBindingCloudConsoleEvent(boxName string, port model.BoxPort, pa
 		boxName, padding, port.Alias, port.Remote, port.Local)}
 }
 
+func newApiTunnelStartCloudEvent(boxName string, port model.BoxPort, connection string) *cloudEvent {
+	return &cloudEvent{kind: event.LogDebug, value: fmt.Sprintf("api tunnel start: boxName=%s portRemote=%s portLocal=%s connection=%s", boxName, port.Remote, port.Local, connection)}
+}
+
+func newApiTunnelStopCloudEvent(boxName string, port model.BoxPort, connection string) *cloudEvent {
+	return &cloudEvent{kind: event.LogDebug, value: fmt.Sprintf("api tunnel stop: boxName=%s portRemote=%s portLocal=%s connection=%s", boxName, port.Remote, port.Local, connection)}
+}
+
 func newApiTunnelErrorCloudEvent(boxName string, err error) *cloudEvent {
 	return &cloudEvent{kind: event.LogError, value: fmt.Sprintf("api tunnel error: boxName=%s error=%v", boxName, err)}
 }
 
+func newApiTunnelListenCloudLoaderEvent() *cloudEvent {
+	return &cloudEvent{kind: event.LoaderUpdate, value: "listening"}
+}
+
 func newApiDescribeCloudEvent(boxName string) *cloudEvent {
-	return &cloudEvent{kind: event.LogDebug, value: fmt.Sprintf("api describe: boxName=%s", boxName)}
+	return &cloudEvent{kind: event.LogInfo, value: fmt.Sprintf("api describe: boxName=%s", boxName)}
 }
 
 func newApiListCloudEvent(index int, boxName string) *cloudEvent {

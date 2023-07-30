@@ -27,12 +27,12 @@ func (box *CloudBoxClient) Events() *event.EventBus {
 }
 
 func (box *CloudBoxClient) Create(opts *model.CreateOptions) (*model.BoxInfo, error) {
-	defer box.close()
+	//defer box.close()
 	return box.createBox(opts)
 }
 
 func (box *CloudBoxClient) Connect(opts *model.ConnectOptions) error {
-	defer box.close()
+	//defer box.close()
 	return box.connectBox(opts)
 }
 
@@ -42,7 +42,6 @@ func (box *CloudBoxClient) Copy(string, string, string) error {
 }
 
 func (box *CloudBoxClient) Describe(name string) (*model.BoxDetails, error) {
-	// TODO refactor client close: issue "use of closed network connection" when describing before connect/list
 	//defer box.close()
 	return box.describe(name)
 }
