@@ -31,10 +31,10 @@ Designed to transparently run locally, remotely or integrated in pipelines and t
 
 Create an [`alpine`](https://github.com/hckops/megalopolis/blob/main/box/base/alpine.yml) box to see how it works
 ```bash
-# spawns a docker box locally on a shared network
+# spawns a temporary docker box locally
 hckctl box alpine
 
-# deploys a box to your kubernetes cluster
+# deploys an ephemeral box to your kubernetes cluster
 hckctl box alpine --provider kube
 
 # TODO add env credentials: alpine|changeme
@@ -54,17 +54,9 @@ vncviewer localhost:5900
 [open|xdg-open] http://localhost:6080
 ```
 
-Attack your vulnerable [`dvwa`](https://github.com/hckops/megalopolis/blob/main/box/vulnerable/dvwa.yml) box or create your own
+Attack a vulnerable [`dvwa`](https://github.com/hckops/megalopolis/blob/main/box/vulnerable/dvwa.yml) box
 ```bash
-# TODO
-hckctl box create dvwa
 hckctl box start dvwa
-hckctl box up dvwa # <<<
-
-# TODO
-hckctl box remove/delete dvwa
-hckctl box stop dvwa
-hckctl box down dvwa # <<<
 
 # (mac|linux) web
 [open|xdg-open] http://localhost:8080
