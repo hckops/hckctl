@@ -395,6 +395,7 @@ func (box *DockerBoxClient) deleteBoxes(names []string) ([]string, error) {
 	var deleted []string
 	for _, boxInfo := range boxes {
 
+		// all or filter
 		if len(names) == 0 || slices.Contains(names, boxInfo.Name) {
 
 			if err := box.client.ContainerRemove(boxInfo.Id); err == nil {

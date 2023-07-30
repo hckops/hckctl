@@ -386,19 +386,19 @@ func toPortBindings(ports []model.BoxPort, onPortBindCallback func(port model.Bo
 func (box *KubeBoxClient) describe(name string) (*model.BoxDetails, error) {
 	namespace := box.clientOpts.Namespace
 
-	info, err := box.searchBox(name)
+	boxInfo, err := box.searchBox(name)
 	if err != nil {
 		return nil, err
 	}
 
 	box.eventBus.Publish(newDeploymentDescribeKubeEvent(namespace, name))
-	deployment, err := box.client.DeploymentDescribe(namespace, info.Name)
+	deployment, err := box.client.DeploymentDescribe(namespace, boxInfo.Name)
 	if err != nil {
 		return nil, err
 	}
 
 	box.eventBus.Publish(newServiceDescribeKubeEvent(namespace, name))
-	service, err := box.client.ServiceDescribe(namespace, info.Name)
+	service, err := box.client.ServiceDescribe(namespace, boxInfo.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -479,6 +479,15 @@ func newBoxInfo(deployment kubernetes.DeploymentInfo) model.BoxInfo {
 func (box *KubeBoxClient) deleteBoxes(names []string) ([]string, error) {
 	namespace := box.clientOpts.Namespace
 
+	// optimize delete
+	if len(names) == 1 {
+		boxInfo, err := box.searchBox(names[0])
+		if err != nil {
+			return nil, err
+		}
+		return []string{boxInfo.Name}, box.deleteBox(boxInfo.Name)
+	}
+
 	boxes, err := box.listBoxes()
 	if err != nil {
 		return nil, err
@@ -487,6 +496,7 @@ func (box *KubeBoxClient) deleteBoxes(names []string) ([]string, error) {
 	var deleted []string
 	for _, boxInfo := range boxes {
 
+		// all or filter
 		if len(names) == 0 || slices.Contains(names, boxInfo.Name) {
 
 			if err := box.deleteBox(boxInfo.Name); err == nil {
