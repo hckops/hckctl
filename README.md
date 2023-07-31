@@ -155,6 +155,7 @@ just
 ./build/hckctl
 ```
 
+<!--
 TODO
 * priority
     - implement env
@@ -239,3 +240,4 @@ TODO
     - man (plugin)
     - kube-inject (plugin) mount sidecar pod at runtime with debugging tools
     - pro (bundle) e.g. flow
+-->
