@@ -33,14 +33,27 @@ import (
 )
 
 func NewKubeClient(inCluster bool, configPath string) (*KubeClient, error) {
+	ctx := context.Background()
 	if inCluster {
-		return NewInClusterKubeClient()
+		return newInClusterKubeClient(ctx)
 	} else {
-		return NewOutOfClusterKubeClient(configPath)
+		return newOutOfClusterKubeClient(ctx, configPath)
 	}
 }
 
-func NewOutOfClusterKubeClient(configPath string) (*KubeClient, error) {
+func newOutOfClusterKubeClient(ctx context.Context, configPath string) (*KubeClient, error) {
+	restConfig, clientSet, err := NewOutOfClusterKubeConfig(configPath)
+	if err != nil {
+		return nil, err
+	}
+	return &KubeClient{
+		ctx:            ctx,
+		kubeRestConfig: restConfig,
+		kubeClientSet:  clientSet,
+	}, nil
+}
+
+func NewOutOfClusterKubeConfig(configPath string) (*rest.Config, *kubernetes.Clientset, error) {
 
 	var kubeConfig string
 	if strings.TrimSpace(configPath) == "" {
@@ -52,38 +65,42 @@ func NewOutOfClusterKubeClient(configPath string) (*KubeClient, error) {
 
 	restConfig, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	if err != nil {
-		return nil, errors.Wrap(err, "error out-of-cluster restConfig")
+		return nil, nil, errors.Wrap(err, "error out-of-cluster restConfig")
 	}
 
 	clientSet, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
-		return nil, errors.Wrap(err, "error out-of-cluster clientSet")
+		return nil, nil, errors.Wrap(err, "error out-of-cluster clientSet")
 	}
 
+	return restConfig, clientSet, nil
+}
+
+func newInClusterKubeClient(ctx context.Context) (*KubeClient, error) {
+	restConfig, clientSet, err := NewInClusterKubeConfig()
+	if err != nil {
+		return nil, err
+	}
 	return &KubeClient{
-		ctx:            context.Background(),
+		ctx:            ctx,
 		kubeRestConfig: restConfig,
 		kubeClientSet:  clientSet,
 	}, nil
 }
 
-func NewInClusterKubeClient() (*KubeClient, error) {
+func NewInClusterKubeConfig() (*rest.Config, *kubernetes.Clientset, error) {
 
 	restConfig, err := rest.InClusterConfig()
 	if err != nil {
-		return nil, errors.Wrap(err, "error in-cluster restConfig")
+		return nil, nil, errors.Wrap(err, "error in-cluster restConfig")
 	}
 
 	clientSet, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
-		return nil, errors.Wrap(err, "error in-cluster clientSet")
+		return nil, nil, errors.Wrap(err, "error in-cluster clientSet")
 	}
 
-	return &KubeClient{
-		ctx:            context.Background(),
-		kubeRestConfig: restConfig,
-		kubeClientSet:  clientSet,
-	}, nil
+	return restConfig, clientSet, nil
 }
 
 func (client *KubeClient) Close() error {

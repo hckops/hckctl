@@ -214,7 +214,7 @@ TODO
     - kube: verify `GetPodInfo` sidecar pod count
     - kube: update resources sizes + comparison
     - docker: `ContainerCreate` add env var
-    - docker: `execBox` retrieve actual bound ports from container
+    - docker: `execBox` and `describe` retrieve actual bound ports from container
     - docker: `execBox` print ports and envs
     - docker: COPY shared volume `XDG_DATA_HOME`
     - docker: support powershell `/usr/bin/pwsh` (attach with no tty and raw terminal) see `docker run --rm -it mcr.microsoft.com/powershell`
@@ -229,6 +229,7 @@ TODO
 * task
     - TODO ???
 * version
+    - ISSUE in binary release prints `dev`
     - print if new version available
     - implement server `version` in json format docker/kube/cloud
 * release
