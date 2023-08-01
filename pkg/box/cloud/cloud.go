@@ -120,7 +120,7 @@ func (box *CloudBoxClient) tunnelBox(template *model.BoxV1, name string, isWait 
 		return nil
 	}
 
-	networkPorts := template.NetworkPorts(true)
+	networkPorts := template.NetworkPortValues(true)
 	portPadding := model.PortFormatPadding(networkPorts)
 
 	errorChannel := make(chan struct{})

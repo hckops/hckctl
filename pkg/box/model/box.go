@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/dchest/uniuri"
+	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
 	"github.com/hckops/hckctl/pkg/util"
@@ -107,9 +108,9 @@ func (box *BoxV1) HasPorts() bool {
 	return len(box.Network.Ports) > 0
 }
 
-func (box *BoxV1) NetworkPorts(includeVirtual bool) []BoxPort {
+func (box *BoxV1) NetworkPorts(includeVirtual bool) map[string]BoxPort {
 
-	ports := make([]BoxPort, 0)
+	ports := map[string]BoxPort{}
 	for _, portString := range box.Network.Ports {
 
 		// name:local[:remote]
@@ -133,11 +134,16 @@ func (box *BoxV1) NetworkPorts(includeVirtual bool) []BoxPort {
 
 		// by default ignore virtual-* ports
 		if !strings.HasPrefix(port.Alias, boxPrefixVirtualPort) || includeVirtual {
-			ports = append(ports, port)
+			// remote is always unique
+			ports[port.Remote] = port
 		}
 	}
 
 	return ports
+}
+
+func (box *BoxV1) NetworkPortValues(includeVirtual bool) []BoxPort {
+	return maps.Values(box.NetworkPorts(includeVirtual))
 }
 
 func PortFormatPadding(ports []BoxPort) int {

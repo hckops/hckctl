@@ -65,20 +65,28 @@ func TestHasPorts(t *testing.T) {
 }
 
 func TestNetworkPorts(t *testing.T) {
-	ports := []BoxPort{
-		{Alias: "aaa", Local: "123", Remote: "123", Public: false},
-		{Alias: "bbb", Local: "456", Remote: "789", Public: false},
+	ports := map[string]BoxPort{
+		"123": {Alias: "aaa", Local: "123", Remote: "123", Public: false},
+		"789": {Alias: "bbb", Local: "456", Remote: "789", Public: false},
 	}
 	assert.Equal(t, ports, testBox.NetworkPorts(false))
 }
 
 func TestNetworkPortsIncludeVirtual(t *testing.T) {
+	ports := map[string]BoxPort{
+		"123": {Alias: "aaa", Local: "123", Remote: "123", Public: false},
+		"789": {Alias: "bbb", Local: "456", Remote: "789", Public: false},
+		"321": {Alias: "virtual-ccc", Local: "321", Remote: "321", Public: false},
+	}
+	assert.Equal(t, ports, testBox.NetworkPorts(true))
+}
+
+func TestNetworkPortValues(t *testing.T) {
 	ports := []BoxPort{
 		{Alias: "aaa", Local: "123", Remote: "123", Public: false},
 		{Alias: "bbb", Local: "456", Remote: "789", Public: false},
-		{Alias: "virtual-ccc", Local: "321", Remote: "321", Public: false},
 	}
-	assert.Equal(t, ports, testBox.NetworkPorts(true))
+	assert.Equal(t, ports, testBox.NetworkPortValues(false))
 }
 
 func TestPortFormatPadding(t *testing.T) {
