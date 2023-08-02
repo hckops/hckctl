@@ -140,6 +140,7 @@ func newDefaultBoxClient(provider model.BoxProvider, configRef *config.ConfigRef
 	boxClientOpts := newBoxClientOpts(provider, configRef)
 	boxClient, err := box.NewBoxClient(boxClientOpts)
 	if err != nil {
+		log.Error().Err(err).Msgf("error box client provider=%s", provider)
 		return nil, fmt.Errorf("error %s client", provider)
 	}
 
