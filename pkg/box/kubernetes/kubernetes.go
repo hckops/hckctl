@@ -2,15 +2,9 @@ package kubernetes
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/pkg/errors"
 	"golang.org/x/exp/slices"
-	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/common"
@@ -44,18 +38,19 @@ func (box *KubeBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo, 
 	namespace := box.clientOpts.Namespace
 
 	// TODO add env var container override
-
 	boxName := opts.Template.GenerateName()
-	deployment, service, err := buildSpec(boxName, namespace, opts)
+	deployment, service, err := kubernetes.BuildResourceSpec(newResourceSpec(namespace, boxName, opts))
 	if err != nil {
 		return nil, err
 	}
 
+	// create namespace
 	if err := box.client.NamespaceApply(namespace); err != nil {
 		return nil, err
 	}
 	box.eventBus.Publish(newNamespaceApplyKubeEvent(namespace))
 
+	// create service
 	if opts.Template.HasPorts() {
 		if err := box.client.ServiceCreate(namespace, service); err != nil {
 			return nil, err
@@ -65,6 +60,7 @@ func (box *KubeBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo, 
 		box.eventBus.Publish(newServiceCreateIgnoreKubeEvent(namespace, service.Name))
 	}
 
+	// create deployment
 	box.eventBus.Publish(newResourcesDeployKubeLoaderEvent(namespace, opts.Template.Name))
 	deploymentOpts := &kubernetes.DeploymentCreateOpts{
 		Namespace: namespace,
@@ -84,157 +80,33 @@ func (box *KubeBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo, 
 	}
 	box.eventBus.Publish(newPodNameKubeEvent(namespace, podInfo.PodName, podInfo.ContainerName))
 
+	// TODO always healthy unused? otherwise use DeploymentDescribe instead of PodDescribe
 	return &model.BoxInfo{Id: podInfo.PodName, Name: boxName, Healthy: true}, nil
 }
 
-func buildSpec(name string, namespace string, opts *model.CreateOptions) (*appsv1.Deployment, *corev1.Service, error) {
+func newResourceSpec(namespace string, name string, opts *model.CreateOptions) *kubernetes.ResourceSpecOpts {
 
-	labels := buildLabels(name, opts.Template.Image.Repository, opts.Template.ImageVersion())
+	var ports []kubernetes.KubePort
+	for _, p := range opts.Template.NetworkPortValues(false) {
+		ports = append(ports, kubernetes.KubePort{Name: p.Alias, Port: p.Remote})
+	}
 
-	objectMeta := metav1.ObjectMeta{
-		Name:        name,
+	return &kubernetes.ResourceSpecOpts{
 		Namespace:   namespace,
+		Name:        name,
 		Annotations: opts.Labels,
-		Labels:      labels,
-	}
-	resourceOptions := opts.Size.ToKubeResource()
-	pod, err := buildPod(objectMeta, opts.Template, resourceOptions.Memory, resourceOptions.Cpu)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "error kube pod spec")
-	}
-
-	deployment := buildDeployment(objectMeta, pod)
-
-	service, err := buildService(objectMeta, opts.Template)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "error kube service spec")
-	}
-
-	return deployment, service, nil
-}
-
-func buildLabels(name, instance, version string) model.BoxLabels {
-	// default
-	labels := map[string]string{
-		kubernetes.LabelKubeName:      name,
-		kubernetes.LabelKubeInstance:  common.ToKebabCase(instance),
-		kubernetes.LabelKubeVersion:   version,
-		kubernetes.LabelKubeManagedBy: "hckops", // TODO common?
-		model.LabelSchemaKind:         common.ToKebabCase(schema.KindBoxV1.String()),
-	}
-	return labels
-}
-
-func buildContainerPorts(ports []model.BoxPort) ([]corev1.ContainerPort, error) {
-
-	containerPorts := make([]corev1.ContainerPort, 0)
-	for _, port := range ports {
-
-		portNumber, err := strconv.Atoi(port.Remote)
-		if err != nil {
-			return nil, errors.Wrap(err, "error kube container port")
-		}
-
-		containerPort := corev1.ContainerPort{
-			Name:          fmt.Sprintf("%s-svc", port.Alias),
-			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: int32(portNumber),
-		}
-		containerPorts = append(containerPorts, containerPort)
-	}
-	return containerPorts, nil
-}
-
-func buildPod(objectMeta metav1.ObjectMeta, template *model.BoxV1, memory string, cpu string) (*corev1.Pod, error) {
-
-	networkPorts := template.NetworkPortValues(false)
-	containerPorts, err := buildContainerPorts(networkPorts)
-	if err != nil {
-		return nil, err
-	}
-
-	return &corev1.Pod{
-		ObjectMeta: objectMeta,
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:            common.ToKebabCase(template.Image.Repository),
-					Image:           template.ImageName(),
-					ImagePullPolicy: corev1.PullIfNotPresent,
-					TTY:             true,
-					Stdin:           true,
-					Ports:           containerPorts,
-					Resources: corev1.ResourceRequirements{
-						Limits: corev1.ResourceList{
-							"memory": resource.MustParse(memory),
-						},
-						Requests: corev1.ResourceList{
-							"cpu":    resource.MustParse(cpu),
-							"memory": resource.MustParse(memory),
-						},
-					},
-				},
-			},
-		},
-	}, nil
-}
-
-func int32Ptr(i int32) *int32 { return &i }
-
-func buildDeployment(objectMeta metav1.ObjectMeta, pod *corev1.Pod) *appsv1.Deployment {
-
-	return &appsv1.Deployment{
-		ObjectMeta: objectMeta,
-		Spec: appsv1.DeploymentSpec{
-			Replicas: int32Ptr(kubernetes.SingleReplica), // only 1 replica
-			Selector: &metav1.LabelSelector{
-				MatchLabels: objectMeta.Labels,
-			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: pod.ObjectMeta,
-				Spec:       pod.Spec,
-			},
+		Labels: kubernetes.BuildLabels(name, opts.Template.Image.Repository, opts.Template.ImageVersion(),
+			map[string]string{model.LabelSchemaKind: common.ToKebabCase(schema.KindBoxV1.String())}),
+		Ports: ports,
+		PodInfo: &kubernetes.PodInfo{
+			Namespace:     namespace,
+			PodName:       "INVALID_POD_NAME", // not used, generated suffix by kube
+			ContainerName: opts.Template.Image.Repository,
+			ImageName:     opts.Template.ImageName(),
+			Env:           nil, // TODO not used
+			Resource:      opts.Size.ToKubeResource(),
 		},
 	}
-}
-
-func buildServicePorts(ports []model.BoxPort) ([]corev1.ServicePort, error) {
-
-	servicePorts := make([]corev1.ServicePort, 0)
-	for _, port := range ports {
-
-		portNumber, err := strconv.Atoi(port.Remote)
-		if err != nil {
-			return nil, errors.Wrap(err, "error kube service port")
-		}
-
-		containerPort := corev1.ServicePort{
-			Name:       port.Alias,
-			Protocol:   corev1.ProtocolTCP,
-			Port:       int32(portNumber),
-			TargetPort: intstr.FromString(fmt.Sprintf("%s-svc", port.Alias)),
-		}
-		servicePorts = append(servicePorts, containerPort)
-	}
-	return servicePorts, nil
-}
-
-func buildService(objectMeta metav1.ObjectMeta, template *model.BoxV1) (*corev1.Service, error) {
-
-	networkPorts := template.NetworkPortValues(false)
-	servicePorts, err := buildServicePorts(networkPorts)
-	if err != nil {
-		return nil, err
-	}
-
-	return &corev1.Service{
-		ObjectMeta: objectMeta,
-		Spec: corev1.ServiceSpec{
-			Selector: objectMeta.Labels,
-			Type:     corev1.ServiceTypeClusterIP,
-			Ports:    servicePorts,
-		},
-	}, nil
 }
 
 func (box *KubeBoxClient) connectBox(opts *model.ConnectOptions) error {

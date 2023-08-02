@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"k8s.io/apimachinery/pkg/api/resource"
 	"testing"
 	"time"
 
@@ -113,10 +114,17 @@ func TestNewPodInfo(t *testing.T) {
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name: "myContainerName",
+							Name:  "myContainerName",
+							Image: "myImageName",
 							Env: []corev1.EnvVar{
 								{Name: "MY_KEY_1", Value: "MY_VALUE_1"},
 								{Name: "MY_KEY_2", Value: "MY_VALUE_2"},
+							},
+							Resources: corev1.ResourceRequirements{
+								Requests: corev1.ResourceList{
+									corev1.ResourceMemory: resource.MustParse("512Mi"),
+									corev1.ResourceCPU:    resource.MustParse("500m"),
+								},
 							},
 						},
 					},
@@ -129,9 +137,14 @@ func TestNewPodInfo(t *testing.T) {
 		Namespace:     "myPodNamespace",
 		PodName:       "myPodName",
 		ContainerName: "myContainerName",
+		ImageName:     "myImageName",
 		Env: map[string]string{
 			"MY_KEY_1": "MY_VALUE_1",
 			"MY_KEY_2": "MY_VALUE_2",
+		},
+		Resource: &KubeResource{
+			Memory: "512Mi",
+			Cpu:    "500m",
 		},
 	}
 
@@ -190,7 +203,7 @@ func TestNewServiceInfo(t *testing.T) {
 	serviceInfo := &ServiceInfo{
 		Namespace: "myServiceNamespace",
 		Name:      "myServiceName",
-		Ports: []ServicePort{
+		Ports: []KubePort{
 			{Name: "alias-1", Port: "123"},
 			{Name: "alias-2", Port: "456"},
 		},

@@ -276,9 +276,9 @@ func (client *KubeClient) ServiceDescribe(namespace string, name string) (*Servi
 }
 
 func newServiceInfo(service *corev1.Service) *ServiceInfo {
-	var ports []ServicePort
+	var ports []KubePort
 	for _, port := range service.Spec.Ports {
-		ports = append(ports, ServicePort{Name: port.Name, Port: strconv.Itoa(int(port.Port))})
+		ports = append(ports, KubePort{Name: port.Name, Port: strconv.Itoa(int(port.Port))})
 	}
 
 	return &ServiceInfo{
@@ -332,7 +332,12 @@ func newPodInfo(namespace string, pods *corev1.PodList) (*PodInfo, error) {
 		Namespace:     podItem.Namespace,
 		PodName:       podItem.Name, // pod.Name + unique generated suffix
 		ContainerName: containerItem.Name,
+		ImageName:     containerItem.Image, // <REPOSITORY>/<NAME>:<VERSION>
 		Env:           env,
+		Resource: &KubeResource{
+			Memory: containerItem.Resources.Requests.Memory().String(),
+			Cpu:    containerItem.Resources.Requests.Cpu().String(),
+		},
 	}, nil
 }
 
