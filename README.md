@@ -214,8 +214,7 @@ TODO
     - kube: verify `GetPodInfo` sidecar pod count
     - kube: update resources sizes + comparison
     - docker: `ContainerCreate` add env var
-    - docker: `execBox` and `describe` retrieve actual bound ports from container
-    - docker: `execBox` print ports and envs
+    - docker: `execBox` print envs
     - docker: COPY shared volume `XDG_DATA_HOME`
     - docker: support powershell `/usr/bin/pwsh` (attach with no tty and raw terminal) see `docker run --rm -it mcr.microsoft.com/powershell`
     - docker: add support for remote docker daemon with `DOCKER_HOST`

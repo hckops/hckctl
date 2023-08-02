@@ -10,7 +10,7 @@ import (
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
 )
 
-func TestNewResourceSpec(t *testing.T) {
+func TestNewResources(t *testing.T) {
 	namespace := "my-namespace"
 	boxName := "my-box-name"
 	template := &model.BoxV1{
@@ -37,7 +37,7 @@ func TestNewResourceSpec(t *testing.T) {
 			"x.y.z": "world",
 		},
 	}
-	expected := &kubernetes.ResourceSpecOpts{
+	expected := &kubernetes.ResourcesOpts{
 		Namespace:   namespace,
 		Name:        boxName,
 		Annotations: opts.Labels,
@@ -65,7 +65,7 @@ func TestNewResourceSpec(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, expected, newResourceSpec(namespace, boxName, opts))
+	assert.Equal(t, expected, newResources(namespace, boxName, opts))
 }
 
 func TestLabelSelector(t *testing.T) {

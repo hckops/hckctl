@@ -6,7 +6,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 )
 
-type ResourceSpecOpts struct {
+type ResourcesOpts struct {
 	Namespace   string
 	Name        string
 	Annotations map[string]string

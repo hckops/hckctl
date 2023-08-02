@@ -69,7 +69,7 @@ func (box *DockerBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo
 		return nil, err
 	}
 
-	// TODO add env var container override
+	// TODO add container environment variables
 	// TODO print environment variables
 
 	// boxName
@@ -92,11 +92,8 @@ func (box *DockerBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo
 		return nil, err
 	}
 
-	portPadding := model.PortFormatPadding(networkPorts)
 	onPortBindCallback := func(port docker.ContainerPort) {
-		networkPort := networkMap[port.Remote]
-		box.eventBus.Publish(newContainerCreatePortBindDockerEvent(containerName, networkPort))
-		box.eventBus.Publish(newContainerCreatePortBindDockerConsoleEvent(containerName, networkPort, portPadding))
+		box.publishPortInfo(networkMap, containerName, port)
 	}
 	hostConfig, err := docker.BuildHostConfig(containerPorts, onPortBindCallback)
 	if err != nil {
@@ -172,11 +169,18 @@ func (box *DockerBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, 
 		return box.logsBox(info.Id, streams)
 	}
 
-	containerInfo, err := box.client.ContainerInspect(info.Id)
-	if err != nil {
-		return err
+	// already printed for temporary box
+	if !deleteOnExit {
+		containerDetails, err := box.client.ContainerInspect(info.Id)
+		if err != nil {
+			return err
+		}
+		// print open ports
+		for _, port := range containerDetails.Ports {
+			box.publishPortInfo(template.NetworkPorts(false), containerDetails.Info.ContainerName, port)
+		}
+		// TODO print environment variables
 	}
-	box.publishBoxInfo(template, containerInfo)
 
 	execOpts := &docker.ContainerExecOpts{
 		ContainerId: info.Id,
@@ -206,17 +210,15 @@ func (box *DockerBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, 
 	return box.client.ContainerExec(execOpts)
 }
 
-func (box *DockerBoxClient) publishBoxInfo(template *model.BoxV1, details docker.ContainerDetails) {
-	// print open ports
-	networkMap := template.NetworkPorts(false)
+func (box *DockerBoxClient) publishPortInfo(networkMap map[string]model.BoxPort, containerName string, containerPort docker.ContainerPort) {
 	portPadding := model.PortFormatPadding(maps.Values(networkMap))
-	for _, port := range details.Ports {
-		// actual bound port
-		networkPort := networkMap[port.Remote]
-		box.eventBus.Publish(newContainerCreatePortBindDockerEvent(details.Info.ContainerName, networkPort))
-		box.eventBus.Publish(newContainerCreatePortBindDockerConsoleEvent(details.Info.ContainerName, networkPort, portPadding))
-	}
-	// TODO print environment variables
+
+	// actual bound port
+	networkPort := networkMap[containerPort.Remote]
+	networkPort.Local = containerPort.Local
+
+	box.eventBus.Publish(newContainerCreatePortBindDockerEvent(containerName, networkPort))
+	box.eventBus.Publish(newContainerCreatePortBindDockerConsoleEvent(containerName, networkPort, portPadding))
 }
 
 func (box *DockerBoxClient) logsBox(containerId string, streams *model.BoxStreams) error {

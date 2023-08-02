@@ -17,7 +17,7 @@ import (
 
 // TODO add env
 
-func BuildResourceSpec(opts *ResourceSpecOpts) (*appsv1.Deployment, *corev1.Service, error) {
+func BuildResources(opts *ResourcesOpts) (*appsv1.Deployment, *corev1.Service, error) {
 
 	objectMeta := metav1.ObjectMeta{
 		Name:        opts.Name,

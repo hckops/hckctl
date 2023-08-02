@@ -13,7 +13,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
-func TestBuildResourceSpec(t *testing.T) {
+func TestBuildResources(t *testing.T) {
 	expectedDeployment := `
 apiVersion: apps/v1
 kind: Deployment
@@ -124,7 +124,7 @@ status:
 		"com.hckops.schema.kind": "box-v1",
 	}
 	labels := BuildLabels(boxName, "hckops-my-image", "latest", extra)
-	specOpts := &ResourceSpecOpts{
+	specOpts := &ResourcesOpts{
 		Namespace:   namespace,
 		Name:        boxName,
 		Annotations: annotations,
@@ -145,7 +145,7 @@ status:
 			},
 		},
 	}
-	actualDeployment, actualService, err := BuildResourceSpec(specOpts)
+	actualDeployment, actualService, err := BuildResources(specOpts)
 	// fix models
 	actualDeployment.TypeMeta = metav1.TypeMeta{Kind: "Deployment", APIVersion: "apps/v1"}
 	actualService.TypeMeta = metav1.TypeMeta{Kind: "Service", APIVersion: "v1"}

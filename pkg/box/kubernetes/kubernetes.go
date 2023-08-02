@@ -39,7 +39,7 @@ func (box *KubeBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo, 
 
 	// TODO add env var container override
 	boxName := opts.Template.GenerateName()
-	deployment, service, err := kubernetes.BuildResourceSpec(newResourceSpec(namespace, boxName, opts))
+	deployment, service, err := kubernetes.BuildResources(newResources(namespace, boxName, opts))
 	if err != nil {
 		return nil, err
 	}
@@ -84,14 +84,14 @@ func (box *KubeBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo, 
 	return &model.BoxInfo{Id: podInfo.PodName, Name: boxName, Healthy: true}, nil
 }
 
-func newResourceSpec(namespace string, name string, opts *model.CreateOptions) *kubernetes.ResourceSpecOpts {
+func newResources(namespace string, name string, opts *model.CreateOptions) *kubernetes.ResourcesOpts {
 
 	var ports []kubernetes.KubePort
 	for _, p := range opts.Template.NetworkPortValues(false) {
 		ports = append(ports, kubernetes.KubePort{Name: p.Alias, Port: p.Remote})
 	}
 
-	return &kubernetes.ResourceSpecOpts{
+	return &kubernetes.ResourcesOpts{
 		Namespace:   namespace,
 		Name:        name,
 		Annotations: opts.Labels,

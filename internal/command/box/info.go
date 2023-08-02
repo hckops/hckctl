@@ -81,6 +81,7 @@ func newBoxValue(template *model.BoxV1, details *model.BoxDetails) *BoxValue {
 		env = append(env, fmt.Sprintf("%s=%s", e.Key, e.Value))
 	}
 	// TODO not used: match runtime port alias and local port (bound) from template
+	// TODO change return type of details.Ports to map[string]BoxPort
 	var ports []string
 	for _, p := range details.Ports {
 		ports = append(ports, fmt.Sprintf("%s/%s -> %s", p.Alias, p.Remote, p.Local))

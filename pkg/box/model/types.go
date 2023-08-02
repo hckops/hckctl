@@ -20,7 +20,7 @@ type BoxDetails struct {
 	ProviderInfo *BoxProviderInfo
 	Size         ResourceSize
 	Env          []BoxEnv
-	Ports        []BoxPort
+	Ports        []BoxPort // TODO map[string]BoxPort
 	Created      time.Time
 }
 
