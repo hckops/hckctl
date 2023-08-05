@@ -14,7 +14,7 @@ import (
 )
 
 func newDockerBoxClient(commonOpts *model.CommonBoxOptions, dockerOpts *model.DockerBoxOptions) (*DockerBoxClient, error) {
-	commonOpts.EventBus.Publish(newClientInitDockerEvent())
+	commonOpts.EventBus.Publish(newInitDockerClientEvent())
 
 	dockerClient, err := docker.NewDockerClient()
 	if err != nil {
@@ -29,7 +29,7 @@ func newDockerBoxClient(commonOpts *model.CommonBoxOptions, dockerOpts *model.Do
 }
 
 func (box *DockerBoxClient) close() error {
-	box.eventBus.Publish(newClientCloseDockerEvent())
+	box.eventBus.Publish(newCloseDockerClientEvent())
 	box.eventBus.Close()
 	return box.client.Close()
 }

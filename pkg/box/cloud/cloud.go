@@ -13,7 +13,7 @@ import (
 )
 
 func newCloudBoxClient(commonOpts *model.CommonBoxOptions, cloudOpts *model.CloudBoxOptions) (*CloudBoxClient, error) {
-	commonOpts.EventBus.Publish(newClientInitCloudEvent())
+	commonOpts.EventBus.Publish(newInitCloudClientEvent())
 
 	clientConfig := &ssh.SshClientConfig{
 		Address:  cloudOpts.Address,
@@ -34,7 +34,7 @@ func newCloudBoxClient(commonOpts *model.CommonBoxOptions, cloudOpts *model.Clou
 
 // TODO issue "use of closed network connection" after multiple invocation e.g. info + open
 func (box *CloudBoxClient) close() error {
-	box.eventBus.Publish(newClientCloseCloudEvent())
+	box.eventBus.Publish(newCloseCloudClientEvent())
 	box.eventBus.Close()
 	return box.client.Close()
 }

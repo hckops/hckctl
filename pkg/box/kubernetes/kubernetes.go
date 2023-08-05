@@ -14,7 +14,7 @@ import (
 )
 
 func newKubeBoxClient(commonOpts *model.CommonBoxOptions, kubeOpts *model.KubeBoxOptions) (*KubeBoxClient, error) {
-	commonOpts.EventBus.Publish(newClientInitKubeEvent())
+	commonOpts.EventBus.Publish(newInitKubeClientEvent())
 
 	kubeClient, err := kubernetes.NewKubeClient(kubeOpts.InCluster, kubeOpts.ConfigPath)
 	if err != nil {
@@ -29,7 +29,7 @@ func newKubeBoxClient(commonOpts *model.CommonBoxOptions, kubeOpts *model.KubeBo
 }
 
 func (box *KubeBoxClient) close() error {
-	box.eventBus.Publish(newClientCloseKubeEvent())
+	box.eventBus.Publish(newCloseKubeClientEvent())
 	box.eventBus.Close()
 	return box.client.Close()
 }

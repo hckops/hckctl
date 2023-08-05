@@ -24,11 +24,11 @@ func (e *cloudEvent) String() string {
 	return e.value
 }
 
-func newClientInitCloudEvent() *cloudEvent {
+func newInitCloudClientEvent() *cloudEvent {
 	return &cloudEvent{kind: event.LogDebug, value: "init cloud client"}
 }
 
-func newClientCloseCloudEvent() *cloudEvent {
+func newCloseCloudClientEvent() *cloudEvent {
 	return &cloudEvent{kind: event.LogDebug, value: "close cloud client"}
 }
 

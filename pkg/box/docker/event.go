@@ -24,11 +24,11 @@ func (e *dockerEvent) String() string {
 	return e.value
 }
 
-func newClientInitDockerEvent() *dockerEvent {
+func newInitDockerClientEvent() *dockerEvent {
 	return &dockerEvent{kind: event.LogDebug, value: "init docker client"}
 }
 
-func newClientCloseDockerEvent() *dockerEvent {
+func newCloseDockerClientEvent() *dockerEvent {
 	return &dockerEvent{kind: event.LogDebug, value: "close docker client"}
 }
 

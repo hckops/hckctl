@@ -201,7 +201,7 @@ TODO
     - add `--remote` mutually exclusive flag
     - update directories to exclude in `resolvePath` e.g. charts
 * box
-    - move all native docker/kube imports inside client e.g. buildSpec
+    - add box name alias
     - review command: `copy` vs `upload/download`
     - review tty resize
     - mount `/dev/tun` for vpn

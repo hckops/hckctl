@@ -24,11 +24,11 @@ func (e *kubeEvent) String() string {
 	return e.value
 }
 
-func newClientInitKubeEvent() *kubeEvent {
+func newInitKubeClientEvent() *kubeEvent {
 	return &kubeEvent{kind: event.LogDebug, value: "init kube client"}
 }
 
-func newClientCloseKubeEvent() *kubeEvent {
+func newCloseKubeClientEvent() *kubeEvent {
 	return &kubeEvent{kind: event.LogDebug, value: "close kube client"}
 }
 
