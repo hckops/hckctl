@@ -11,7 +11,7 @@ import (
 )
 
 type BoxClient interface {
-	Provider() model.BoxProvider
+	Provider() model.BoxProvider // TODO replace with generics
 	Events() *event.EventBus
 	Create(opts *model.CreateOptions) (*model.BoxInfo, error)
 	Connect(opts *model.ConnectOptions) error

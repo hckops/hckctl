@@ -1,15 +1,13 @@
 package model
 
-type BoxProvider uint
+type BoxProvider string
 
 const (
-	Docker BoxProvider = iota
-	Kubernetes
-	Cloud
+	Docker     BoxProvider = "docker"
+	Kubernetes BoxProvider = "kube"
+	Cloud      BoxProvider = "cloud"
 )
 
-var providerValue = []string{"docker", "kube", "cloud"}
-
 func (p BoxProvider) String() string {
-	return providerValue[p]
+	return string(p)
 }
