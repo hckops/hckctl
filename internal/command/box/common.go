@@ -128,7 +128,6 @@ func newGitSourceOptions(cacheDir string, revision string) *template.GitSourceOp
 func newBoxClientOpts(provider model.BoxProvider, configRef *config.ConfigRef) *model.BoxClientOptions {
 	return &model.BoxClientOptions{
 		Provider:   provider,
-		CommonOpts: model.NewCommonBoxOpts(),
 		DockerOpts: configRef.Config.Provider.Docker.ToDockerBoxOptions(),
 		KubeOpts:   configRef.Config.Provider.Kube.ToKubeBoxOptions(),
 		CloudOpts:  configRef.Config.Provider.Cloud.ToCloudBoxOptions(version.ClientVersion()),

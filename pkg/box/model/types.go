@@ -61,7 +61,6 @@ type KubeProviderInfo struct {
 
 type BoxClientOptions struct {
 	Provider   BoxProvider
-	CommonOpts *CommonBoxOptions
 	DockerOpts *DockerBoxOptions
 	KubeOpts   *KubeBoxOptions
 	CloudOpts  *CloudBoxOptions
