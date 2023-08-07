@@ -138,3 +138,9 @@ func TestToBoxTemplateInfo(t *testing.T) {
 
 	assert.Equal(t, expected, info)
 }
+
+func TestLabelSelector(t *testing.T) {
+	expected := "com.hckops.schema.kind=box-v1"
+
+	assert.Equal(t, expected, BoxLabelSelector())
+}

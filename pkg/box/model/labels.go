@@ -7,6 +7,7 @@ import (
 
 	"golang.org/x/exp/maps"
 
+	"github.com/hckops/hckctl/pkg/client/common"
 	"github.com/hckops/hckctl/pkg/schema"
 )
 
@@ -110,4 +111,9 @@ func (l BoxLabels) ToGitTemplateInfo() *GitTemplateInfo {
 		Commit:   l[LabelTemplateGitCommit],
 		Name:     l[LabelTemplateGitName],
 	}
+}
+
+func BoxLabelSelector() string {
+	// value must be sanitized
+	return fmt.Sprintf("%s=%s", LabelSchemaKind, common.ToKebabCase(schema.KindBoxV1.String()))
 }

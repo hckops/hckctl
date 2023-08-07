@@ -69,11 +69,9 @@ func TestNewResources(t *testing.T) {
 }
 
 func TestLabelSelector(t *testing.T) {
-	expectedBox := "com.hckops.schema.kind=box-v1"
-	assert.Equal(t, expectedBox, boxLabelSelector())
+	expected := "com.hckops.schema.kind=box-v1,app.kubernetes.io/name=myName"
 
-	expectedBoxName := "com.hckops.schema.kind=box-v1,app.kubernetes.io/name=myName"
-	assert.Equal(t, expectedBoxName, boxNameLabelSelector("myName"))
+	assert.Equal(t, expected, boxNameLabelSelector("myName"))
 }
 
 func TestToBoxDetails(t *testing.T) {
