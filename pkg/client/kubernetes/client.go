@@ -55,13 +55,7 @@ func newOutOfClusterKubeClient(ctx context.Context, configPath string) (*KubeCli
 
 func NewOutOfClusterKubeConfig(configPath string) (*rest.Config, *kubernetes.Clientset, error) {
 
-	var kubeConfig string
-	if strings.TrimSpace(configPath) == "" {
-		kubeConfig = filepath.Join(homedir.HomeDir(), ".kube", "config")
-	} else {
-		// absolute path
-		kubeConfig = configPath
-	}
+	kubeConfig := NormalizeKubeConfig(configPath)
 
 	restConfig, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	if err != nil {
@@ -74,6 +68,15 @@ func NewOutOfClusterKubeConfig(configPath string) (*rest.Config, *kubernetes.Cli
 	}
 
 	return restConfig, clientSet, nil
+}
+
+func NormalizeKubeConfig(configPath string) string {
+	if strings.TrimSpace(configPath) == "" {
+		return filepath.Join(homedir.HomeDir(), ".kube", "config")
+	} else {
+		// absolute path
+		return configPath
+	}
 }
 
 func newInClusterKubeClient(ctx context.Context) (*KubeClient, error) {

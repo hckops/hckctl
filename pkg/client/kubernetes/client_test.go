@@ -1,15 +1,21 @@
 package kubernetes
 
 import (
-	"k8s.io/apimachinery/pkg/api/resource"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+func TestNormalizeKubeConfig(t *testing.T) {
+	assert.True(t, strings.HasSuffix(NormalizeKubeConfig(""), "/.kube/config"))
+	assert.Equal(t, "/foo/bar", NormalizeKubeConfig("/foo/bar"))
+}
 
 func TestNewDeploymentInfo(t *testing.T) {
 	deployment := &appsv1.Deployment{
