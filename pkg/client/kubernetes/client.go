@@ -306,13 +306,13 @@ func (client *KubeClient) PodDescribe(deployment *appsv1.Deployment) (*PodInfo, 
 
 	pods, err := client.CoreApi().Pods(deployment.Namespace).List(client.ctx, listOptions)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error pod list: namespace=%s labels=%v", deployment.Namespace, labelSet)
+		return nil, errors.Wrapf(err, "error pod describe: namespace=%s labels=%v", deployment.Namespace, labelSet)
 	}
 
-	return newPodInfo(deployment.Namespace, pods)
+	return NewPodInfo(deployment.Namespace, pods)
 }
 
-func newPodInfo(namespace string, pods *corev1.PodList) (*PodInfo, error) {
+func NewPodInfo(namespace string, pods *corev1.PodList) (*PodInfo, error) {
 	if len(pods.Items) != SingleReplica {
 		return nil, fmt.Errorf("found %d pods, expected only 1 pod for deployment: namespace=%s", len(pods.Items), namespace)
 	}

@@ -27,6 +27,7 @@ func TestNewResources(t *testing.T) {
 		Network: struct{ Ports []string }{Ports: []string{
 			"aaa:123",
 			"bbb:456:789",
+			"virtual-tty:7681",
 		}},
 	}
 	opts := &model.CreateOptions{
