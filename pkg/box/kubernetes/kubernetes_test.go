@@ -129,7 +129,7 @@ func TestToBoxDetails(t *testing.T) {
 			},
 		},
 		ProviderInfo: &model.BoxProviderInfo{
-			Provider: model.Kubernetes,
+			Provider: model.BoxProvider("kube"),
 			KubeProvider: &model.KubeProviderInfo{
 				Namespace: "myDeploymentNamespace",
 			},
@@ -147,7 +147,7 @@ func TestToBoxDetails(t *testing.T) {
 		},
 		Created: createdTime,
 	}
-	result, err := toBoxDetails(deployment, serviceInfo)
+	result, err := ToBoxDetails(deployment, serviceInfo, model.Kubernetes)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)

@@ -43,7 +43,7 @@ func (box *KubeBoxClient) Copy(string, string, string) error {
 
 func (box *KubeBoxClient) Describe(name string) (*model.BoxDetails, error) {
 	defer box.close()
-	return box.describe(name)
+	return box.describeBox(name)
 }
 
 func (box *KubeBoxClient) List() ([]model.BoxInfo, error) {

@@ -250,7 +250,7 @@ func toPortBindings(ports []model.BoxPort, onPortBindCallback func(port model.Bo
 	return portBindings, nil
 }
 
-func (box *KubeBoxClient) describe(name string) (*model.BoxDetails, error) {
+func (box *KubeBoxClient) describeBox(name string) (*model.BoxDetails, error) {
 	namespace := box.clientOpts.Namespace
 
 	boxInfo, err := box.searchBox(name)
@@ -270,10 +270,10 @@ func (box *KubeBoxClient) describe(name string) (*model.BoxDetails, error) {
 		return nil, err
 	}
 
-	return toBoxDetails(deployment, service)
+	return ToBoxDetails(deployment, service, box.Provider())
 }
 
-func toBoxDetails(deployment *kubernetes.DeploymentDetails, serviceInfo *kubernetes.ServiceInfo) (*model.BoxDetails, error) {
+func ToBoxDetails(deployment *kubernetes.DeploymentDetails, serviceInfo *kubernetes.ServiceInfo, provider model.BoxProvider) (*model.BoxDetails, error) {
 
 	labels := model.BoxLabels(deployment.Annotations)
 
@@ -307,7 +307,7 @@ func toBoxDetails(deployment *kubernetes.DeploymentDetails, serviceInfo *kuberne
 			GitTemplate:    labels.ToGitTemplateInfo(),
 		},
 		ProviderInfo: &model.BoxProviderInfo{
-			Provider: model.Kubernetes,
+			Provider: provider,
 			KubeProvider: &model.KubeProviderInfo{
 				Namespace: deployment.Info.Namespace,
 			},

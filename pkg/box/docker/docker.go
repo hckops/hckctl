@@ -236,7 +236,7 @@ func (box *DockerBoxClient) logsBox(containerId string, streams *model.BoxStream
 	return box.client.ContainerLogs(opts)
 }
 
-func (box *DockerBoxClient) describe(name string) (*model.BoxDetails, error) {
+func (box *DockerBoxClient) describeBox(name string) (*model.BoxDetails, error) {
 	info, err := box.searchBox(name)
 	if err != nil {
 		return nil, err

@@ -43,7 +43,7 @@ func (box *CloudBoxClient) Copy(string, string, string) error {
 
 func (box *CloudBoxClient) Describe(name string) (*model.BoxDetails, error) {
 	//defer box.close()
-	return box.describe(name)
+	return box.describeBox(name)
 }
 
 func (box *CloudBoxClient) List() ([]model.BoxInfo, error) {

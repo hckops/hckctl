@@ -177,7 +177,7 @@ func bindPort(port model.BoxPort) (model.BoxPort, error) {
 	return port, nil
 }
 
-func (box *CloudBoxClient) describe(name string) (*model.BoxDetails, error) {
+func (box *CloudBoxClient) describeBox(name string) (*model.BoxDetails, error) {
 	box.eventBus.Publish(newApiDescribeCloudEvent(name))
 
 	request := v1.NewBoxDescribeRequest(box.clientOpts.Version, name)

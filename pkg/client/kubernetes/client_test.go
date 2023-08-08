@@ -138,7 +138,7 @@ func TestNewPodInfo(t *testing.T) {
 			},
 		},
 	}
-	result, err := NewPodInfo("myNamespace", pods)
+	result, err := newPodInfo("myNamespace", pods)
 	expected := &PodInfo{
 		Namespace:     "myPodNamespace",
 		PodName:       "myPodName",
@@ -165,7 +165,7 @@ func TestNewPodInfoErrorReplica(t *testing.T) {
 			{ObjectMeta: metav1.ObjectMeta{Name: "pod-2"}},
 		},
 	}
-	result, err := NewPodInfo("myPodNamespace", pods)
+	result, err := newPodInfo("myPodNamespace", pods)
 
 	assert.EqualError(t, err, "found 2 pods, expected only 1 pod for deployment: namespace=myPodNamespace")
 	assert.Nil(t, result)
@@ -187,7 +187,7 @@ func TestNewPodInfoErrorContainer(t *testing.T) {
 			},
 		},
 	}
-	result, err := NewPodInfo("myPodNamespace", pods)
+	result, err := newPodInfo("myPodNamespace", pods)
 
 	assert.EqualError(t, err, "found 2 containers, expected only 1 container for pod: namespace=myPodNamespace")
 	assert.Nil(t, result)
