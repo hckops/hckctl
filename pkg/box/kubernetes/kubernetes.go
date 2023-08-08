@@ -200,7 +200,7 @@ func (box *KubeBoxClient) podPortForward(template *model.BoxV1, boxInfo *model.B
 
 	networkPorts := template.NetworkPortValues(false)
 	portPadding := model.PortFormatPadding(networkPorts)
-	ports, err := toPortBindings(networkPorts, func(port model.BoxPort) {
+	ports, err := ToPortBindings(networkPorts, func(port model.BoxPort) {
 		box.eventBus.Publish(newPodPortForwardBindingKubeEvent(namespace, boxInfo.Id, port))
 		box.eventBus.Publish(newPodPortForwardBindingKubeConsoleEvent(namespace, boxInfo.Name, port, portPadding))
 	})
@@ -228,7 +228,7 @@ func (box *KubeBoxClient) podPortForward(template *model.BoxV1, boxInfo *model.B
 	return nil
 }
 
-func toPortBindings(ports []model.BoxPort, onPortBindCallback func(port model.BoxPort)) ([]string, error) {
+func ToPortBindings(ports []model.BoxPort, onPortBindCallback func(port model.BoxPort)) ([]string, error) {
 
 	var portBindings []string
 	for _, port := range ports {
