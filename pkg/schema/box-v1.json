@@ -43,18 +43,30 @@
       "description": "The default shell of the box",
       "type": "string"
     },
+    "env": {
+      "description": "List of environment variables",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
     "network": {
       "description": "The network configuration of the box",
       "type": "object",
       "ports": {
-        "description": "Ports available from the box",
+        "description": "List of exposed ports",
         "type": "array",
         "items": {
           "type": "string"
         },
         "minItems": 1,
         "uniqueItems": true
-      }
+      },
+      "required": [
+        "ports"
+      ]
     }
   },
   "required": [
