@@ -326,9 +326,9 @@ func newPodInfo(namespace string, pods *corev1.PodList) (*PodInfo, error) {
 
 	containerItem := podItem.Spec.Containers[0]
 
-	env := make(map[string]string)
+	var envs []KubeEnv
 	for _, e := range containerItem.Env {
-		env[e.Name] = e.Value
+		envs = append(envs, KubeEnv{Key: e.Name, Value: e.Value})
 	}
 
 	return &PodInfo{
@@ -336,7 +336,7 @@ func newPodInfo(namespace string, pods *corev1.PodList) (*PodInfo, error) {
 		PodName:       podItem.Name, // pod.Name + unique generated suffix
 		ContainerName: containerItem.Name,
 		ImageName:     containerItem.Image, // <REPOSITORY>/<NAME>:<VERSION>
-		Env:           env,
+		Env:           envs,
 		Resource: &KubeResource{
 			Memory: containerItem.Resources.Requests.Memory().String(),
 			Cpu:    containerItem.Resources.Requests.Cpu().String(),

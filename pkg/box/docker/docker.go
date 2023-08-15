@@ -181,17 +181,18 @@ func (box *DockerBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, 
 		if err != nil {
 			return err
 		}
-		// print open ports
-		for _, port := range containerDetails.Ports {
-			box.publishPortInfo(template.NetworkPorts(false), containerDetails.Info.ContainerName, port)
-		}
 		// print environment variables
 		for _, e := range containerDetails.Env {
+			// ignore internal variables e.g. PATH
 			if _, exists := template.EnvironmentVariables()[e.Key]; exists {
 				env := model.BoxEnv{Key: e.Key, Value: e.Value}
 				box.eventBus.Publish(newContainerCreateEnvDockerEvent(containerDetails.Info.ContainerName, env))
 				box.eventBus.Publish(newContainerCreateEnvDockerConsoleEvent(containerDetails.Info.ContainerName, env))
 			}
+		}
+		// print open ports
+		for _, port := range containerDetails.Ports {
+			box.publishPortInfo(template.NetworkPorts(false), containerDetails.Info.ContainerName, port)
 		}
 	}
 

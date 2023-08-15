@@ -51,10 +51,10 @@ func TestNewContainerDetails(t *testing.T) {
 			},
 			Env: []string{
 				"MY_KEY=first",
-				"MY_KEY=last", // allow duplicates
-				"MY_EMPTY=",   // allow empty
-				"foo",         // ignore invalids
-				"MY_EQUAL==?=",
+				"MY_KEY=last",  // allow duplicates
+				"MY_EMPTY=",    // allow empty
+				"foo",          // allow invalids
+				"MY_EQUAL==?=", // split on first equal
 			},
 		},
 		NetworkSettings: &types.NetworkSettings{
@@ -82,6 +82,7 @@ func TestNewContainerDetails(t *testing.T) {
 			{Key: "MY_KEY", Value: "first"},
 			{Key: "MY_KEY", Value: "last"},
 			{Key: "MY_EMPTY", Value: ""},
+			{Key: "foo", Value: "foo"},
 			{Key: "MY_EQUAL", Value: "=?="},
 		},
 		Ports: []ContainerPort{

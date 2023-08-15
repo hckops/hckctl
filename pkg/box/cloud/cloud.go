@@ -205,22 +205,21 @@ func toBoxDetails(response *v1.Message[v1.BoxDescribeResponseBody]) (*model.BoxD
 		return nil, errors.Wrap(err, "error cloud box details size")
 	}
 
-	var env []model.BoxEnv
-	for _, e := range response.Body.Env {
-		items := strings.Split(e, "=")
-		// silently ignore invalid
-		if len(items) == 2 {
-			env = append(env, model.BoxEnv{
-				Key:   items[0],
-				Value: items[1],
+	var envs []model.BoxEnv
+	for _, env := range response.Body.Env {
+		// silently ignore invalid envs
+		if key, value, err := model.SplitEnvironmentVariable(env); err == nil {
+			envs = append(envs, model.BoxEnv{
+				Key:   key,
+				Value: value,
 			})
 		}
 	}
 
 	var ports []model.BoxPort
-	for _, p := range response.Body.Ports {
-		items := strings.Split(p, "/")
-		// silently ignore invalid
+	for _, port := range response.Body.Ports {
+		items := strings.Split(port, "/")
+		// silently ignore invalid ports
 		if len(items) == 2 {
 			ports = append(ports, model.BoxPort{
 				Alias:  items[0],
@@ -255,7 +254,7 @@ func toBoxDetails(response *v1.Message[v1.BoxDescribeResponseBody]) (*model.BoxD
 			Provider: model.Cloud,
 		},
 		Size:    size,
-		Env:     model.SortEnv(env),
+		Env:     model.SortEnv(envs),
 		Ports:   model.SortPorts(ports),
 		Created: created,
 	}, nil

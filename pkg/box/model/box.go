@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -162,26 +163,41 @@ func PortFormatPadding(ports []BoxPort) int {
 // TODO return error validation?
 func (box *BoxV1) EnvironmentVariables() map[string]BoxEnv {
 
-	// silently ignore errors
 	envs := map[string]BoxEnv{}
 	for _, e := range box.Env {
-		// split on first equal
-		values := strings.Split(e, "=")
-		if len(values) >= 2 {
-			// value might contains equals
-			value := strings.TrimSpace(strings.TrimPrefix(e, fmt.Sprintf("%s=", values[0])))
 
-			// skip empty
-			if value != "" {
-				env := BoxEnv{
-					Key:   values[0],
-					Value: value,
-				}
-				envs[values[0]] = env
+		// silently ignore errors
+		if key, value, err := SplitEnvironmentVariable(e); err == nil {
+			envs[key] = BoxEnv{
+				Key:   key,
+				Value: value,
 			}
 		}
 	}
 	return envs
+}
+
+// TODO test
+func SplitEnvironmentVariable(keyValue string) (string, string, error) {
+	// split on first equal
+	values := strings.Split(keyValue, "=")
+	if len(values) >= 2 {
+		// value might contains equals
+		v := strings.TrimPrefix(keyValue, fmt.Sprintf("%s=", values[0]))
+
+		key := strings.TrimSpace(values[0])
+		if key == "" {
+			return "", "", errors.New("empty key")
+		}
+
+		value := strings.TrimSpace(v)
+		if value == "" {
+			return "", "", errors.New("empty value")
+		}
+
+		return key, value, nil
+	}
+	return "", "", errors.New("invalid key-value pair")
 }
 
 func (box *BoxV1) EnvironmentVariableValues() []BoxEnv {

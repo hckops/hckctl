@@ -59,6 +59,11 @@ spec:
       - image: hckops/my-image:latest
         imagePullPolicy: IfNotPresent
         name: hckops-my-image
+        env:
+        - name: TTYD_USERNAME
+          value: username
+        - name: TTYD_PASSWORD
+          value: password
         ports:
         - containerPort: 123
           name: aaa-svc
@@ -138,7 +143,10 @@ status:
 			PodName:       "INVALID_POD_NAME",
 			ContainerName: "hckops/my-image",
 			ImageName:     "hckops/my-image:latest",
-			Env:           nil,
+			Env: []KubeEnv{
+				{Key: "TTYD_USERNAME", Value: "username"},
+				{Key: "TTYD_PASSWORD", Value: "password"},
+			},
 			Resource: &KubeResource{
 				Memory: "512Mi",
 				Cpu:    "500m",

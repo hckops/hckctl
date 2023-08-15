@@ -37,7 +37,6 @@ func (box *KubeBoxClient) close() error {
 func (box *KubeBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo, error) {
 	namespace := box.clientOpts.Namespace
 
-	// TODO add env var container override
 	boxName := opts.Template.GenerateName()
 	deployment, service, err := kubernetes.BuildResources(newResources(namespace, boxName, opts))
 	if err != nil {
@@ -86,6 +85,10 @@ func (box *KubeBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo, 
 
 func newResources(namespace string, name string, opts *model.CreateOptions) *kubernetes.ResourcesOpts {
 
+	var envs []kubernetes.KubeEnv
+	for _, e := range opts.Template.EnvironmentVariables() {
+		envs = append(envs, kubernetes.KubeEnv{Key: e.Key, Value: e.Value})
+	}
 	var ports []kubernetes.KubePort
 	for _, p := range opts.Template.NetworkPortValues(false) {
 		ports = append(ports, kubernetes.KubePort{Name: p.Alias, Port: p.Remote})
@@ -103,7 +106,7 @@ func newResources(namespace string, name string, opts *model.CreateOptions) *kub
 			PodName:       "INVALID_POD_NAME", // not used, generated suffix by kube
 			ContainerName: opts.Template.Image.Repository,
 			ImageName:     opts.Template.ImageName(),
-			Env:           nil, // TODO not used
+			Env:           envs,
 			Resource:      opts.Size.ToKubeResource(),
 		},
 	}
@@ -115,6 +118,12 @@ func (box *KubeBoxClient) connectBox(opts *model.ConnectOptions) error {
 	} else {
 		if opts.DisableExec && opts.DisableTunnel {
 			return errors.New("invalid connection options")
+		}
+
+		namespace := box.clientOpts.Namespace
+		for _, e := range opts.Template.EnvironmentVariables() {
+			box.eventBus.Publish(newPodEnvKubeEvent(namespace, info.Name, e))
+			box.eventBus.Publish(newPodEnvKubeConsoleEvent(namespace, info.Name, e))
 		}
 
 		// tunnel only
@@ -164,7 +173,6 @@ func (box *KubeBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, st
 
 	// TODO if BoxInfo not Healthy attempt scale 1
 	// TODO model.BoxShellNone
-	// TODO print environment variables
 
 	// exec
 	opts := &kubernetes.PodExecOpts{
@@ -282,11 +290,11 @@ func ToBoxDetails(deployment *kubernetes.DeploymentDetails, serviceInfo *kuberne
 		return nil, err
 	}
 
-	var env []model.BoxEnv
-	for key, value := range deployment.Info.PodInfo.Env {
-		env = append(env, model.BoxEnv{
-			Key:   key,
-			Value: value,
+	var envs []model.BoxEnv
+	for _, env := range deployment.Info.PodInfo.Env {
+		envs = append(envs, model.BoxEnv{
+			Key:   env.Key,
+			Value: env.Value,
 		})
 	}
 
@@ -313,7 +321,7 @@ func ToBoxDetails(deployment *kubernetes.DeploymentDetails, serviceInfo *kuberne
 			},
 		},
 		Size:    size,
-		Env:     model.SortEnv(env),
+		Env:     model.SortEnv(envs),
 		Ports:   model.SortPorts(ports),
 		Created: deployment.Created,
 	}, nil

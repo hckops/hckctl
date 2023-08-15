@@ -33,9 +33,9 @@ func TestNewDeploymentInfo(t *testing.T) {
 		Namespace:     "myPodNamespace",
 		PodName:       "myPodName",
 		ContainerName: "myContainerName",
-		Env: map[string]string{
-			"MY_KEY_1": "MY_VALUE_1",
-			"MY_KEY_2": "MY_VALUE_2",
+		Env: []KubeEnv{
+			{Key: "MY_KEY_1", Value: "MY_VALUE_1"},
+			{Key: "MY_KEY_2", Value: "MY_VALUE_2"},
 		},
 	}
 	expected := DeploymentInfo{
@@ -88,9 +88,9 @@ func TestNewDeploymentDetails(t *testing.T) {
 		Namespace:     "myPodNamespace",
 		PodName:       "myPodName",
 		ContainerName: "myContainerName",
-		Env: map[string]string{
-			"MY_KEY_1": "MY_VALUE_1",
-			"MY_KEY_2": "MY_VALUE_2",
+		Env: []KubeEnv{
+			{Key: "MY_KEY_1", Value: "MY_VALUE_1"},
+			{Key: "MY_KEY_2", Value: "MY_VALUE_2"},
 		},
 	}
 	expected := &DeploymentDetails{
@@ -144,9 +144,9 @@ func TestNewPodInfo(t *testing.T) {
 		PodName:       "myPodName",
 		ContainerName: "myContainerName",
 		ImageName:     "myImageName",
-		Env: map[string]string{
-			"MY_KEY_1": "MY_VALUE_1",
-			"MY_KEY_2": "MY_VALUE_2",
+		Env: []KubeEnv{
+			{Key: "MY_KEY_1", Value: "MY_VALUE_1"},
+			{Key: "MY_KEY_2", Value: "MY_VALUE_2"},
 		},
 		Resource: &KubeResource{
 			Memory: "512Mi",

@@ -87,10 +87,10 @@ func TestToBoxDetails(t *testing.T) {
 				Namespace:     "myPodNamespace",
 				PodName:       "myPodName",
 				ContainerName: "myContainerName",
-				Env: map[string]string{
-					"MY_KEY_2": "MY_VALUE_2",
-					"MY_KEY_1": "MY_VALUE_1",
-					"MY_KEY_3": "MY_VALUE_3",
+				Env: []kubernetes.KubeEnv{
+					{Key: "MY_KEY_2", Value: "MY_VALUE_2"},
+					{Key: "MY_KEY_1", Value: "MY_VALUE_1"},
+					{Key: "MY_KEY_3", Value: "MY_VALUE_3"},
 				},
 			},
 		},

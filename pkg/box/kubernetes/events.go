@@ -119,3 +119,11 @@ func newPodPortForwardBindingKubeConsoleEvent(namespace string, podName string, 
 func newPodPortForwardErrorKubeEvent(namespace string, podId string, err error) *kubeEvent {
 	return &kubeEvent{kind: event.LogError, value: fmt.Sprintf("pod port-forward error: namespace=%s podId=%s error=%v", namespace, podId, err)}
 }
+
+func newPodEnvKubeEvent(namespace string, podId string, env model.BoxEnv) *kubeEvent {
+	return &kubeEvent{kind: event.LogInfo, value: fmt.Sprintf("pod env: namespace=%s podId=%s key=%s value=%s", namespace, podId, env.Key, env.Value)}
+}
+
+func newPodEnvKubeConsoleEvent(namespace string, podId string, env model.BoxEnv) *kubeEvent {
+	return &kubeEvent{kind: event.PrintConsole, value: fmt.Sprintf("[%s/%s] %s=%s", namespace, podId, env.Key, env.Value)}
+}

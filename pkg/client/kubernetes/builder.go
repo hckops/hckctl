@@ -2,10 +2,10 @@ package kubernetes
 
 import (
 	"fmt"
-	"golang.org/x/exp/maps"
 	"strconv"
 
 	"github.com/pkg/errors"
+	"golang.org/x/exp/maps"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -14,8 +14,6 @@ import (
 
 	"github.com/hckops/hckctl/pkg/client/common"
 )
-
-// TODO add env
 
 func BuildResources(opts *ResourcesOpts) (*appsv1.Deployment, *corev1.Service, error) {
 
@@ -70,6 +68,7 @@ func buildPod(objectMeta metav1.ObjectMeta, podInfo *PodInfo, ports []KubePort) 
 					TTY:             true,
 					Stdin:           true,
 					Ports:           containerPorts,
+					Env:             buildEnvVars(podInfo.Env),
 					Resources: corev1.ResourceRequirements{
 						Limits: corev1.ResourceList{
 							corev1.ResourceMemory: resource.MustParse(podInfo.Resource.Memory),
@@ -83,6 +82,14 @@ func buildPod(objectMeta metav1.ObjectMeta, podInfo *PodInfo, ports []KubePort) 
 			},
 		},
 	}, nil
+}
+
+func buildEnvVars(envs []KubeEnv) []corev1.EnvVar {
+	var envVars []corev1.EnvVar
+	for _, env := range envs {
+		envVars = append(envVars, corev1.EnvVar{Name: env.Key, Value: env.Value})
+	}
+	return envVars
 }
 
 func buildContainerPorts(ports []KubePort) ([]corev1.ContainerPort, error) {

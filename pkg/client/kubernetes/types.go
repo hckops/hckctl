@@ -45,8 +45,13 @@ type PodInfo struct {
 	PodName       string
 	ContainerName string
 	ImageName     string
-	Env           map[string]string
+	Env           []KubeEnv
 	Resource      *KubeResource
+}
+
+type KubeEnv struct {
+	Key   string
+	Value string
 }
 
 type ServiceInfo struct {

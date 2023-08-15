@@ -217,14 +217,12 @@ func newContainerDetails(container types.ContainerJSON) (ContainerDetails, error
 
 	var envs []ContainerEnv
 	for _, env := range container.Config.Env {
+		// no validation
 		items := strings.Split(env, "=")
-		if len(items) >= 2 {
-			value := strings.TrimPrefix(env, fmt.Sprintf("%s=", items[0]))
-			envs = append(envs, ContainerEnv{
-				Key:   items[0],
-				Value: value,
-			})
-		}
+		envs = append(envs, ContainerEnv{
+			Key:   items[0],
+			Value: strings.TrimPrefix(env, fmt.Sprintf("%s=", items[0])),
+		})
 	}
 	var ports []ContainerPort
 	for remotePort, port := range container.HostConfig.PortBindings {

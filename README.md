@@ -158,7 +158,6 @@ just
 <!--
 TODO
 * priority
-    - implement env
     - implement copy + mount vpn docker/kube
     - cloud size comparison
     - distroless support
@@ -209,15 +208,11 @@ TODO
     - review tty resize
     - mount `/dev/tun` for vpn
     - implement copy ???
-    - kube: add env var
     - kube: add distroless support
     - kube: verify if close is needed or `return nil`
     - kube: `execBox` deployment always check/scale replica to 1 before exec (test with replica=0)
-    - kube: `execBox` print envs
     - kube: verify `GetPodInfo` sidecar pod count
     - kube: update resources sizes + comparison
-    - docker: `ContainerCreate` add env var
-    - docker: `execBox` print envs
     - docker: COPY shared volume `XDG_DATA_HOME`
     - docker: support powershell `/usr/bin/pwsh` (attach with no tty and raw terminal) see `docker run --rm -it mcr.microsoft.com/powershell`
     - docker: add support for remote docker daemon with `DOCKER_HOST`
@@ -259,6 +254,8 @@ kompose convert -f docker-compose.yml
 
 # password gen
 https://gist.github.com/earthgecko/3089509
+# shell expansion
+https://stackoverflow.com/questions/49001114/shell-expansion-command-substitution-in-golang
 
 ---
 
