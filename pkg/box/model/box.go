@@ -28,6 +28,7 @@ type BoxV1 struct {
 		Version    string
 	}
 	Shell   string
+	Env     []string
 	Network struct {
 		Ports []string
 	}
@@ -35,8 +36,8 @@ type BoxV1 struct {
 
 type BoxPort struct {
 	Alias  string
-	Local  string // TODO int ?
 	Remote string // TODO int ?
+	Local  string // TODO int ?
 	Public bool   // TODO not used, always false
 }
 
@@ -113,22 +114,26 @@ func (box *BoxV1) NetworkPorts(includeVirtual bool) map[string]BoxPort {
 	ports := map[string]BoxPort{}
 	for _, portString := range box.Network.Ports {
 
-		// name:local[:remote]
+		// name:remote[:local]
 		values := strings.Split(portString, ":")
 
-		var remote string
+		var local string
 		if len(values) == 2 {
 			// local == remote
-			remote = values[1]
+			local = values[1]
+		} else if len(values) == 3 {
+			local = values[2]
 		} else {
-			remote = values[2]
+			// TODO return error? if yes validate port numbers too
+			// silently ignore
+			continue
 		}
 
 		// ports are not validated i.e. valid number and range
 		port := BoxPort{
 			Alias:  values[0],
-			Local:  values[1],
-			Remote: remote,
+			Remote: values[1],
+			Local:  local,
 			Public: false,
 		}
 

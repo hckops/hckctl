@@ -161,10 +161,11 @@ TODO
     - implement env
     - implement copy + mount vpn docker/kube
     - cloud size comparison
+    - distroless support
+    - add task
     - remove lab except for schema (?)
     - RELEASE
     - brew
-    - add task
     - client timeouts
 * general
     - update readme
@@ -186,6 +187,8 @@ TODO
         * owasp/dvwa
         * https://github.com/vulhub/vulhub
         * https://houdini.secsi.io
+    - flaky tests
+        * kubernetes_test.go:68:TestNewResources
 * cli
     - autocomplete commands and values
         * e.g. `box connect <list of boxes>` with `ValidArgsFunction`
@@ -240,4 +243,54 @@ TODO
     - man (plugin)
     - kube-inject (plugin) mount sidecar pod at runtime with debugging tools
     - pro (bundle) e.g. flow
+
+* lab
+    - https://github.com/SpecterOps/BloodHound/blob/main/examples/docker-compose/docker-compose.yml
+    - https://kompose.io
+
+curl -L https://github.com/kubernetes/kompose/releases/download/v1.30.0/kompose-linux-amd64 -o kompose
+chmod +x kompose
+sudo mv ./kompose /usr/local/bin/kompose
+
+https://raw.githubusercontent.com/SpecterOps/BloodHound/main/examples/docker-compose/docker-compose.yml
+https://github.com/vulhub/vulhub
+
+kompose convert -f docker-compose.yml
+
+---
+
+namespace: hckops
+nameOverride: box-alpine-12345
+fullnameOverride: box-alpine-12345
+
+image:
+  repository: hckops/my-alpine
+  version: latest
+
+annotations:
+  com.hckops.example: true
+
+labels:
+  app.kubernetes.io/managed-by: example
+  com.hckops.schema.kind: box-v1
+
+ports:
+  vnc:
+    port: 5900
+  novnc:
+    port: 6080
+  tty:
+    port: 7681
+
+env:
+  - name: PASSWORD
+    value: "changeme"
+
+resources:
+  requests:
+    memory: 512Mi
+    cpu: 500m
+  limits:
+    memory: 512Mi
+
 -->

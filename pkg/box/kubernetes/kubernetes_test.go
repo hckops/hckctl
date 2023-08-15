@@ -51,7 +51,7 @@ func TestNewResources(t *testing.T) {
 		},
 		Ports: []kubernetes.KubePort{
 			{Name: "aaa", Port: "123"},
-			{Name: "bbb", Port: "789"},
+			{Name: "bbb", Port: "456"},
 		},
 		PodInfo: &kubernetes.PodInfo{
 			Namespace:     namespace,

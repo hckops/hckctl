@@ -18,7 +18,12 @@ var testBox = &BoxV1{
 		Repository: "hckops/my-image",
 	},
 	Shell: "/bin/bash",
+	Env: []string{
+		"TTYD_USERNAME=username",
+		"TTYD_PASSWORD=password",
+	},
 	Network: struct{ Ports []string }{Ports: []string{
+		"foo",
 		"aaa:123",
 		"bbb:456:789",
 		"virtual-ccc:321",
@@ -66,25 +71,47 @@ func TestHasPorts(t *testing.T) {
 
 func TestNetworkPorts(t *testing.T) {
 	ports := map[string]BoxPort{
-		"123": {Alias: "aaa", Local: "123", Remote: "123", Public: false},
-		"789": {Alias: "bbb", Local: "456", Remote: "789", Public: false},
+		"123": {Alias: "aaa", Remote: "123", Local: "123", Public: false},
+		"456": {Alias: "bbb", Remote: "456", Local: "789", Public: false},
+	}
+	assert.Equal(t, ports, testBox.NetworkPorts(false))
+}
+
+func TestNetworkPortsInvalid(t *testing.T) {
+	var testBox = &BoxV1{
+		Network: struct{ Ports []string }{Ports: []string{
+			"foo",
+		}},
+	}
+	assert.Equal(t, map[string]BoxPort{}, testBox.NetworkPorts(false))
+}
+
+func TestNetworkPortsUnique(t *testing.T) {
+	var testBox = &BoxV1{
+		Network: struct{ Ports []string }{Ports: []string{
+			"foo:123",
+			"bar:123:456",
+		}},
+	}
+	ports := map[string]BoxPort{
+		"123": {Alias: "bar", Remote: "123", Local: "456", Public: false},
 	}
 	assert.Equal(t, ports, testBox.NetworkPorts(false))
 }
 
 func TestNetworkPortsIncludeVirtual(t *testing.T) {
 	ports := map[string]BoxPort{
-		"123": {Alias: "aaa", Local: "123", Remote: "123", Public: false},
-		"789": {Alias: "bbb", Local: "456", Remote: "789", Public: false},
-		"321": {Alias: "virtual-ccc", Local: "321", Remote: "321", Public: false},
+		"123": {Alias: "aaa", Remote: "123", Local: "123", Public: false},
+		"456": {Alias: "bbb", Remote: "456", Local: "789", Public: false},
+		"321": {Alias: "virtual-ccc", Remote: "321", Local: "321", Public: false},
 	}
 	assert.Equal(t, ports, testBox.NetworkPorts(true))
 }
 
 func TestNetworkPortValues(t *testing.T) {
 	ports := []BoxPort{
-		{Alias: "aaa", Local: "123", Remote: "123", Public: false},
-		{Alias: "bbb", Local: "456", Remote: "789", Public: false},
+		{Alias: "aaa", Remote: "123", Local: "123", Public: false},
+		{Alias: "bbb", Remote: "456", Local: "789", Public: false},
 	}
 	assert.Equal(t, ports, testBox.NetworkPortValues(false))
 }
@@ -110,8 +137,13 @@ func TestPretty(t *testing.T) {
     "Version": ""
   },
   "Shell": "/bin/bash",
+  "Env": [
+    "TTYD_USERNAME=username",
+    "TTYD_PASSWORD=password"
+  ],
   "Network": {
     "Ports": [
+      "foo",
       "aaa:123",
       "bbb:456:789",
       "virtual-ccc:321"

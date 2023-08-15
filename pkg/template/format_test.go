@@ -21,6 +21,9 @@ var exampleYaml = heredoc.Doc(`
 	  repository: "hckops/my-image"
 	  # sha or tag
 	  version: latest
+	env:
+	  - TTYD_USERNAME=username
+	  - TTYD_PASSWORD=password
 	network:
 	  # name:local[:remote]
 	  ports:
@@ -37,6 +40,7 @@ func TestConvertFromYamlToYamlEmpty(t *testing.T) {
 		  repository: ""
 		  version: ""
 		shell: ""
+		env: []
 		network:
 		  ports: []
 	`)
@@ -57,6 +61,9 @@ func TestConvertFromYamlToYaml(t *testing.T) {
 		  repository: hckops/my-image
 		  version: latest
 		shell: ""
+		env:
+		- TTYD_USERNAME=username
+		- TTYD_PASSWORD=password
 		network:
 		  ports:
 		  - aaa:123
@@ -78,6 +85,7 @@ func TestConvertFromYamlToJsonEmpty(t *testing.T) {
         "Version": ""
       },
       "Shell": "",
+      "Env": null,
       "Network": {
         "Ports": null
       }
@@ -101,6 +109,10 @@ func TestConvertFromYamlToJson(t *testing.T) {
         "Version": "latest"
       },
       "Shell": "",
+      "Env": [
+        "TTYD_USERNAME=username",
+        "TTYD_PASSWORD=password"
+      ],
       "Network": {
         "Ports": [
           "aaa:123",
@@ -127,6 +139,10 @@ func TestDecodeFromYaml(t *testing.T) {
 			Version:    "latest",
 		},
 		Shell: "",
+		Env: []string{
+			"TTYD_USERNAME=username",
+			"TTYD_PASSWORD=password",
+		},
 		Network: struct{ Ports []string }{Ports: []string{
 			"aaa:123",
 			"bbb:456:789",
