@@ -81,6 +81,7 @@ func TestNetworkPortsInvalid(t *testing.T) {
 	var testBox = &BoxV1{
 		Network: struct{ Ports []string }{Ports: []string{
 			"foo",
+			"foo:bar:bizz:buzz",
 		}},
 	}
 	assert.Equal(t, map[string]BoxPort{}, testBox.NetworkPorts(false))
@@ -123,6 +124,48 @@ func TestPortFormatPadding(t *testing.T) {
 		{Alias: "cccccc"},
 	}
 	assert.Equal(t, 10, PortFormatPadding(ports))
+}
+
+func TestEnvironmentVariables(t *testing.T) {
+	env := map[string]BoxEnv{
+		"TTYD_USERNAME": {Key: "TTYD_USERNAME", Value: "username"},
+		"TTYD_PASSWORD": {Key: "TTYD_PASSWORD", Value: "password"},
+	}
+	assert.Equal(t, env, testBox.EnvironmentVariables())
+}
+
+func TestEnvironmentVariablesInvalid(t *testing.T) {
+	var testBox = &BoxV1{
+		Env: []string{
+			"foo",
+			"bar=\\M/\"y'&${(})P@ss=0rd",
+		},
+	}
+	env := map[string]BoxEnv{
+		"bar": {Key: "bar", Value: "\\M/\"y'&${(})P@ss=0rd"},
+	}
+	assert.Equal(t, env, testBox.EnvironmentVariables())
+}
+
+func TestEnvironmentVariablesUnique(t *testing.T) {
+	var testBox = &BoxV1{
+		Env: []string{
+			"TTYD_USERNAME=first",
+			"TTYD_USERNAME=last",
+		},
+	}
+	env := map[string]BoxEnv{
+		"TTYD_USERNAME": {Key: "TTYD_USERNAME", Value: "last"},
+	}
+	assert.Equal(t, env, testBox.EnvironmentVariables())
+}
+
+func TestEnvironmentVariableValues(t *testing.T) {
+	ports := []BoxEnv{
+		{Key: "TTYD_PASSWORD", Value: "password"},
+		{Key: "TTYD_USERNAME", Value: "username"},
+	}
+	assert.Equal(t, ports, testBox.EnvironmentVariableValues())
 }
 
 func TestPretty(t *testing.T) {

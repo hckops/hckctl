@@ -109,6 +109,7 @@ func (box *BoxV1) HasPorts() bool {
 	return len(box.Network.Ports) > 0
 }
 
+// TODO return error validation?
 func (box *BoxV1) NetworkPorts(includeVirtual bool) map[string]BoxPort {
 
 	ports := map[string]BoxPort{}
@@ -124,7 +125,6 @@ func (box *BoxV1) NetworkPorts(includeVirtual bool) map[string]BoxPort {
 		} else if len(values) == 3 {
 			local = values[2]
 		} else {
-			// TODO return error? if yes validate port numbers too
 			// silently ignore
 			continue
 		}
@@ -148,7 +148,7 @@ func (box *BoxV1) NetworkPorts(includeVirtual bool) map[string]BoxPort {
 }
 
 func (box *BoxV1) NetworkPortValues(includeVirtual bool) []BoxPort {
-	return maps.Values(box.NetworkPorts(includeVirtual))
+	return SortPorts(maps.Values(box.NetworkPorts(includeVirtual)))
 }
 
 func PortFormatPadding(ports []BoxPort) int {
@@ -157,6 +157,36 @@ func PortFormatPadding(ports []BoxPort) int {
 		max = math.Max(max, float64(len(port.Alias)))
 	}
 	return int(max)
+}
+
+// TODO return error validation?
+// TODO test https://stackoverflow.com/questions/49001114/shell-expansion-command-substitution-in-golang
+func (box *BoxV1) EnvironmentVariables() map[string]BoxEnv {
+
+	envs := map[string]BoxEnv{}
+	for _, e := range box.Env {
+		// split first
+		values := strings.Split(e, "=")
+		if len(values) >= 2 {
+			// value might contains equals
+			value := strings.TrimPrefix(e, fmt.Sprintf("%s=", values[0]))
+
+			env := BoxEnv{
+				Key:   values[0],
+				Value: value,
+			}
+			envs[values[0]] = env
+		} else {
+			// silently ignore
+			continue
+		}
+	}
+
+	return envs
+}
+
+func (box *BoxV1) EnvironmentVariableValues() []BoxEnv {
+	return SortEnv(maps.Values(box.EnvironmentVariables()))
 }
 
 func (box *BoxV1) Pretty() string {

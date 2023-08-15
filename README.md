@@ -188,7 +188,7 @@ TODO
         * https://github.com/vulhub/vulhub
         * https://houdini.secsi.io
     - flaky tests
-        * kubernetes_test.go:68:TestNewResources
+        * kubernetes_test.go:TestNewResources
 * cli
     - autocomplete commands and values
         * e.g. `box connect <list of boxes>` with `ValidArgsFunction`
