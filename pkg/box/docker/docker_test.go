@@ -30,10 +30,10 @@ func TestToBoxDetails(t *testing.T) {
 			"com.hckops.template.cache.path": "/tmp/cache/myUuid",
 			"com.hckops.box.size":            "m",
 		},
-		Env: []string{
-			"MY_KEY_2=MY_VALUE_2",
-			"MY_KEY_1=MY_VALUE_1",
-			"MY_KEY_3=MY_VALUE_3",
+		Env: []docker.ContainerEnv{
+			{Key: "MY_KEY_2", Value: "MY_VALUE_2"},
+			{Key: "MY_KEY_1", Value: "MY_VALUE_1"},
+			{Key: "MY_KEY_3", Value: "MY_VALUE_3"},
 		},
 		Ports: []docker.ContainerPort{
 			{Local: "local-x", Remote: "remote-2"},

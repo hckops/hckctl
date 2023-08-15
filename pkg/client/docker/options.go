@@ -18,10 +18,11 @@ type ImageRemoveOpts struct {
 }
 
 type ContainerCreateOpts struct {
-	ContainerName    string
-	ContainerConfig  *container.Config
-	HostConfig       *container.HostConfig
-	NetworkingConfig *network.NetworkingConfig
+	ContainerName            string
+	ContainerConfig          *container.Config
+	HostConfig               *container.HostConfig
+	NetworkingConfig         *network.NetworkingConfig
+	OnContainerStartCallback func()
 }
 
 type ContainerRestartOpts struct {

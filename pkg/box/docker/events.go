@@ -68,6 +68,14 @@ func newContainerCreatePortBindDockerConsoleEvent(containerName string, port mod
 		containerName, padding, port.Alias, port.Remote, port.Local)}
 }
 
+func newContainerCreateEnvDockerEvent(containerName string, env model.BoxEnv) *dockerEvent {
+	return &dockerEvent{kind: event.LogInfo, value: fmt.Sprintf("container create env: containerName=%s key=%s value=%s", containerName, env.Key, env.Value)}
+}
+
+func newContainerCreateEnvDockerConsoleEvent(containerName string, env model.BoxEnv) *dockerEvent {
+	return &dockerEvent{kind: event.PrintConsole, value: fmt.Sprintf("[%s] %s=%s", containerName, env.Key, env.Value)}
+}
+
 func newContainerCreateDockerEvent(templateName string, containerName string, containerId string) *dockerEvent {
 	return &dockerEvent{kind: event.LogInfo, value: fmt.Sprintf("container create: templateName=%s containerName=%s containerId=%s", templateName, containerName, containerId)}
 }

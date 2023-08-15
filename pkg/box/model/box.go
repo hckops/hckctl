@@ -160,28 +160,27 @@ func PortFormatPadding(ports []BoxPort) int {
 }
 
 // TODO return error validation?
-// TODO test https://stackoverflow.com/questions/49001114/shell-expansion-command-substitution-in-golang
 func (box *BoxV1) EnvironmentVariables() map[string]BoxEnv {
 
+	// silently ignore errors
 	envs := map[string]BoxEnv{}
 	for _, e := range box.Env {
-		// split first
+		// split on first equal
 		values := strings.Split(e, "=")
 		if len(values) >= 2 {
 			// value might contains equals
-			value := strings.TrimPrefix(e, fmt.Sprintf("%s=", values[0]))
+			value := strings.TrimSpace(strings.TrimPrefix(e, fmt.Sprintf("%s=", values[0])))
 
-			env := BoxEnv{
-				Key:   values[0],
-				Value: value,
+			// skip empty
+			if value != "" {
+				env := BoxEnv{
+					Key:   values[0],
+					Value: value,
+				}
+				envs[values[0]] = env
 			}
-			envs[values[0]] = env
-		} else {
-			// silently ignore
-			continue
 		}
 	}
-
 	return envs
 }
 

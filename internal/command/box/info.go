@@ -75,10 +75,11 @@ type ProviderValue struct {
 
 func newBoxValue(template *model.BoxV1, details *model.BoxDetails) *BoxValue {
 
-	// TODO filter runtime env from template
-	var env []string
+	var envs []string
 	for _, e := range details.Env {
-		env = append(env, fmt.Sprintf("%s=%s", e.Key, e.Value))
+		if _, exists := template.EnvironmentVariables()[e.Key]; exists {
+			envs = append(envs, fmt.Sprintf("%s=%s", e.Key, e.Value))
+		}
 	}
 	// TODO not used: match runtime port alias and local port (bound) from template
 	// TODO change return type of details.Ports to map[string]BoxPort
@@ -99,7 +100,7 @@ func newBoxValue(template *model.BoxV1, details *model.BoxDetails) *BoxValue {
 		},
 		CacheTemplate: details.TemplateInfo.CachedTemplate,
 		GitTemplate:   details.TemplateInfo.GitTemplate,
-		Env:           env,
+		Env:           envs,
 		Ports:         template.Network.Ports,
 	}
 }

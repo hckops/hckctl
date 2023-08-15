@@ -26,7 +26,7 @@ type ContainerDetails struct {
 	Info    ContainerInfo
 	Created time.Time
 	Labels  map[string]string
-	Env     []string
+	Env     []ContainerEnv
 	Ports   []ContainerPort
 	Network NetworkInfo
 }
@@ -36,6 +36,11 @@ type NetworkInfo struct {
 	Name       string
 	IpAddress  string
 	MacAddress string
+}
+
+type ContainerEnv struct {
+	Key   string
+	Value string
 }
 
 type ContainerPort struct {

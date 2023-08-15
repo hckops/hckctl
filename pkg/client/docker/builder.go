@@ -1,6 +1,8 @@
 package docker
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 
 	"github.com/docker/docker/api/types/container"
@@ -13,12 +15,17 @@ import (
 type ContainerConfigOptions struct {
 	ImageName     string
 	ContainerName string
+	Env           []ContainerEnv
 	Ports         []ContainerPort
 	Labels        map[string]string
 }
 
 func BuildContainerConfig(opts *ContainerConfigOptions) (*container.Config, error) {
 
+	var envs []string
+	for _, env := range opts.Env {
+		envs = append(envs, fmt.Sprintf("%s=%s", env.Key, env.Value))
+	}
 	exposedPorts := make(nat.PortSet)
 	for _, port := range opts.Ports {
 		p, err := nat.NewPort("tcp", port.Remote)
@@ -28,7 +35,6 @@ func BuildContainerConfig(opts *ContainerConfigOptions) (*container.Config, erro
 		exposedPorts[p] = struct{}{}
 	}
 
-	// TODO add Env
 	return &container.Config{
 		Hostname:     opts.ContainerName,
 		Image:        opts.ImageName,
@@ -38,6 +44,7 @@ func BuildContainerConfig(opts *ContainerConfigOptions) (*container.Config, erro
 		OpenStdin:    true,
 		StdinOnce:    true,
 		Tty:          true,
+		Env:          envs,
 		ExposedPorts: exposedPorts,
 		Labels:       opts.Labels,
 	}, nil

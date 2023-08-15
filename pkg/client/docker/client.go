@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+	"fmt"
 	"golang.org/x/exp/maps"
 	"io"
 	"strings"
@@ -93,6 +94,8 @@ func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, 
 	if err := client.docker.ContainerStart(client.ctx, newContainer.ID, types.ContainerStartOptions{}); err != nil {
 		return "", errors.Wrap(err, "error container start")
 	}
+
+	opts.OnContainerStartCallback()
 
 	return newContainer.ID, nil
 }
@@ -212,6 +215,17 @@ func (client *DockerClient) ContainerInspect(containerId string) (ContainerDetai
 
 func newContainerDetails(container types.ContainerJSON) (ContainerDetails, error) {
 
+	var envs []ContainerEnv
+	for _, env := range container.Config.Env {
+		items := strings.Split(env, "=")
+		if len(items) >= 2 {
+			value := strings.TrimPrefix(env, fmt.Sprintf("%s=", items[0]))
+			envs = append(envs, ContainerEnv{
+				Key:   items[0],
+				Value: value,
+			})
+		}
+	}
 	var ports []ContainerPort
 	for remotePort, port := range container.HostConfig.PortBindings {
 		ports = append(ports, ContainerPort{
@@ -225,9 +239,8 @@ func newContainerDetails(container types.ContainerJSON) (ContainerDetails, error
 		return ContainerDetails{}, errors.Wrapf(err, "error parsing container created time %s", container.Created)
 	}
 
-	// TODO fix tests
 	if len(container.NetworkSettings.Networks) != 1 {
-		return ContainerDetails{}, errors.Wrapf(err, "foudn %d container networks, expected only 1", len(container.NetworkSettings.Networks))
+		return ContainerDetails{}, errors.Wrapf(err, "found %d container networks, expected only 1", len(container.NetworkSettings.Networks))
 	}
 	networkName := maps.Keys(container.NetworkSettings.Networks)[0]
 	network := container.NetworkSettings.Networks[networkName]
@@ -236,7 +249,7 @@ func newContainerDetails(container types.ContainerJSON) (ContainerDetails, error
 		Info:    newContainerInfo(container.ID, container.Name, container.State.Status),
 		Created: created.UTC(),
 		Labels:  container.Config.Labels,
-		Env:     container.Config.Env,
+		Env:     envs,
 		Ports:   ports,
 		Network: NetworkInfo{
 			Id:         network.NetworkID,

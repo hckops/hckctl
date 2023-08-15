@@ -2,7 +2,6 @@ package docker
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
@@ -69,22 +68,23 @@ func (box *DockerBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo
 		return nil, err
 	}
 
-	// TODO add container environment variables
-	// TODO print environment variables
-
 	// boxName
 	containerName := opts.Template.GenerateName()
 
+	var containerEnv []docker.ContainerEnv
+	for _, e := range opts.Template.EnvironmentVariables() {
+		containerEnv = append(containerEnv, docker.ContainerEnv{Key: e.Key, Value: e.Value})
+	}
 	networkMap := opts.Template.NetworkPorts(false)
-	networkPorts := maps.Values(networkMap)
 	var containerPorts []docker.ContainerPort
-	for _, p := range networkPorts {
+	for _, p := range networkMap {
 		containerPorts = append(containerPorts, docker.ContainerPort{Local: p.Local, Remote: p.Remote})
 	}
 
 	containerConfig, err := docker.BuildContainerConfig(&docker.ContainerConfigOptions{
 		ImageName:     opts.Template.ImageName(),
 		ContainerName: containerName,
+		Env:           containerEnv,
 		Ports:         containerPorts,
 		Labels:        opts.Labels,
 	})
@@ -112,6 +112,12 @@ func (box *DockerBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo
 		ContainerConfig:  containerConfig,
 		HostConfig:       hostConfig,
 		NetworkingConfig: docker.BuildNetworkingConfig(networkName, networkId), // all on the same network
+		OnContainerStartCallback: func() {
+			for _, e := range opts.Template.EnvironmentVariables() {
+				box.eventBus.Publish(newContainerCreateEnvDockerEvent(containerName, e))
+				box.eventBus.Publish(newContainerCreateEnvDockerConsoleEvent(containerName, e))
+			}
+		},
 	}
 	// boxId
 	containerId, err := box.client.ContainerCreate(containerOpts)
@@ -179,7 +185,14 @@ func (box *DockerBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, 
 		for _, port := range containerDetails.Ports {
 			box.publishPortInfo(template.NetworkPorts(false), containerDetails.Info.ContainerName, port)
 		}
-		// TODO print environment variables
+		// print environment variables
+		for _, e := range containerDetails.Env {
+			if _, exists := template.EnvironmentVariables()[e.Key]; exists {
+				env := model.BoxEnv{Key: e.Key, Value: e.Value}
+				box.eventBus.Publish(newContainerCreateEnvDockerEvent(containerDetails.Info.ContainerName, env))
+				box.eventBus.Publish(newContainerCreateEnvDockerConsoleEvent(containerDetails.Info.ContainerName, env))
+			}
+		}
 	}
 
 	execOpts := &docker.ContainerExecOpts{
@@ -260,15 +273,12 @@ func toBoxDetails(container docker.ContainerDetails) (*model.BoxDetails, error) 
 		return nil, err
 	}
 
-	var env []model.BoxEnv
+	var envs []model.BoxEnv
 	for _, e := range container.Env {
-		items := strings.Split(e, "=")
-		if len(items) == 2 {
-			env = append(env, model.BoxEnv{
-				Key:   items[0],
-				Value: items[1],
-			})
-		}
+		envs = append(envs, model.BoxEnv{
+			Key:   e.Key,
+			Value: e.Value,
+		})
 	}
 
 	var ports []model.BoxPort
@@ -295,7 +305,7 @@ func toBoxDetails(container docker.ContainerDetails) (*model.BoxDetails, error) 
 			},
 		},
 		Size:    size,
-		Env:     model.SortEnv(env),
+		Env:     model.SortEnv(envs),
 		Ports:   model.SortPorts(ports),
 		Created: container.Created,
 	}, nil

@@ -11,6 +11,10 @@ import (
 )
 
 func TestBuildContainerConfig(t *testing.T) {
+	envs := []ContainerEnv{
+		{Key: "TTYD_USERNAME", Value: "username"},
+		{Key: "TTYD_PASSWORD", Value: "password"},
+	}
 	ports := []ContainerPort{
 		{Local: "123", Remote: "123"},
 		{Local: "456", Remote: "789"},
@@ -24,6 +28,10 @@ func TestBuildContainerConfig(t *testing.T) {
 		OpenStdin:    true,
 		StdinOnce:    true,
 		Tty:          true,
+		Env: []string{
+			"TTYD_USERNAME=username",
+			"TTYD_PASSWORD=password",
+		},
 		ExposedPorts: nat.PortSet{
 			"123/tcp": struct{}{},
 			"789/tcp": struct{}{},
@@ -36,6 +44,7 @@ func TestBuildContainerConfig(t *testing.T) {
 	opts := &ContainerConfigOptions{
 		ImageName:     "myImageName",
 		ContainerName: "myContainerName",
+		Env:           envs,
 		Ports:         ports,
 		Labels: map[string]string{
 			"a.b.c": "hello",

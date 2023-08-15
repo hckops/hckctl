@@ -257,6 +257,9 @@ https://github.com/vulhub/vulhub
 
 kompose convert -f docker-compose.yml
 
+# password gen
+https://gist.github.com/earthgecko/3089509
+
 ---
 
 namespace: hckops

@@ -50,7 +50,11 @@ func TestNewContainerDetails(t *testing.T) {
 				"com.hckops.test": "true",
 			},
 			Env: []string{
-				"MY_KEY=MY_VALUE",
+				"MY_KEY=first",
+				"MY_KEY=last", // allow duplicates
+				"MY_EMPTY=",   // allow empty
+				"foo",         // ignore invalids
+				"MY_EQUAL==?=",
 			},
 		},
 		NetworkSettings: &types.NetworkSettings{
@@ -74,8 +78,11 @@ func TestNewContainerDetails(t *testing.T) {
 		Labels: map[string]string{
 			"com.hckops.test": "true",
 		},
-		Env: []string{
-			"MY_KEY=MY_VALUE",
+		Env: []ContainerEnv{
+			{Key: "MY_KEY", Value: "first"},
+			{Key: "MY_KEY", Value: "last"},
+			{Key: "MY_EMPTY", Value: ""},
+			{Key: "MY_EQUAL", Value: "=?="},
 		},
 		Ports: []ContainerPort{
 			{Local: "7683", Remote: "7681"},

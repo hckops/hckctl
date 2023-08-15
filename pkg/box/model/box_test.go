@@ -138,6 +138,7 @@ func TestEnvironmentVariablesInvalid(t *testing.T) {
 	var testBox = &BoxV1{
 		Env: []string{
 			"foo",
+			"empty=",
 			"bar=\\M/\"y'&${(})P@ss=0rd",
 		},
 	}
