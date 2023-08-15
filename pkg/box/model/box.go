@@ -177,7 +177,6 @@ func (box *BoxV1) EnvironmentVariables() map[string]BoxEnv {
 	return envs
 }
 
-// TODO test
 func SplitEnvironmentVariable(keyValue string) (string, string, error) {
 	// split on first equal
 	values := strings.Split(keyValue, "=")

@@ -138,12 +138,13 @@ func TestEnvironmentVariablesInvalid(t *testing.T) {
 	var testBox = &BoxV1{
 		Env: []string{
 			"foo",
-			"empty=",
-			"bar=\\M/\"y'&${(})P@ss=0rd",
+			"=no_key",
+			"no_value=",
+			"ok==?=",
 		},
 	}
 	env := map[string]BoxEnv{
-		"bar": {Key: "bar", Value: "\\M/\"y'&${(})P@ss=0rd"},
+		"ok": {Key: "ok", Value: "=?="},
 	}
 	assert.Equal(t, env, testBox.EnvironmentVariables())
 }
