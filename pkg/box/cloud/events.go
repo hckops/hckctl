@@ -56,6 +56,14 @@ func newApiStopCloudLoaderEvent() *cloudEvent {
 	return &cloudEvent{kind: event.LoaderStop, value: "waiting"}
 }
 
+func newApiEnvCloudEvent(boxName string, env model.BoxEnv) *cloudEvent {
+	return &cloudEvent{kind: event.LogInfo, value: fmt.Sprintf("api env: boxName=%s key=%s value=%s", boxName, env.Key, env.Value)}
+}
+
+func newApiEnvCloudConsoleEvent(boxName string, env model.BoxEnv) *cloudEvent {
+	return &cloudEvent{kind: event.PrintConsole, value: fmt.Sprintf("[%s] %s=%s", boxName, env.Key, env.Value)}
+}
+
 func newApiTunnelIgnoreCloudEvent(boxName string) *cloudEvent {
 	return &cloudEvent{kind: event.LogWarning, value: fmt.Sprintf("api tunnel ignored: boxName=%s", boxName)}
 }

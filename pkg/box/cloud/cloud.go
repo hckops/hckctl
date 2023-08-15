@@ -69,6 +69,11 @@ func (box *CloudBoxClient) connectBox(opts *model.ConnectOptions) error {
 		return errors.New("invalid connection options")
 	}
 
+	for _, e := range opts.Template.EnvironmentVariables() {
+		box.eventBus.Publish(newApiEnvCloudEvent(opts.Name, e))
+		box.eventBus.Publish(newApiEnvCloudConsoleEvent(opts.Name, e))
+	}
+
 	// tunnel only
 	if opts.DisableExec {
 		return box.tunnelBox(opts.Template, opts.Name, true)
