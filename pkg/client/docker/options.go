@@ -7,6 +7,14 @@ import (
 	"github.com/docker/docker/api/types/network"
 )
 
+type ContainerConfigOpts struct {
+	ImageName     string
+	ContainerName string
+	Env           []ContainerEnv
+	Ports         []ContainerPort
+	Labels        map[string]string
+}
+
 type ImagePullOpts struct {
 	ImageName           string
 	OnImagePullCallback func()

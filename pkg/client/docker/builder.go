@@ -12,15 +12,7 @@ import (
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-type ContainerConfigOptions struct {
-	ImageName     string
-	ContainerName string
-	Env           []ContainerEnv
-	Ports         []ContainerPort
-	Labels        map[string]string
-}
-
-func BuildContainerConfig(opts *ContainerConfigOptions) (*container.Config, error) {
+func BuildContainerConfig(opts *ContainerConfigOpts) (*container.Config, error) {
 
 	var envs []string
 	for _, env := range opts.Env {

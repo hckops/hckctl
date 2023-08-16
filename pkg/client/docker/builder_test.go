@@ -41,7 +41,7 @@ func TestBuildContainerConfig(t *testing.T) {
 			"x.y.z": "world",
 		},
 	}
-	opts := &ContainerConfigOptions{
+	opts := &ContainerConfigOpts{
 		ImageName:     "myImageName",
 		ContainerName: "myContainerName",
 		Env:           envs,

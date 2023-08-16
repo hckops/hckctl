@@ -91,8 +91,6 @@ func (box *CloudBoxClient) connectBox(opts *model.ConnectOptions) error {
 func (box *CloudBoxClient) execBox(name string, deleteOnExit bool) error {
 	box.eventBus.Publish(newApiExecCloudEvent(name))
 
-	// TODO print environment variables
-
 	session := v1.NewBoxExecSession(box.clientOpts.Version, name)
 	payload, err := session.Encode()
 	if err != nil {

@@ -3,7 +3,6 @@ package docker
 import (
 	"context"
 	"fmt"
-	"golang.org/x/exp/maps"
 	"io"
 	"strings"
 	"sync"
@@ -15,6 +14,7 @@ import (
 	dockerApi "github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/maps"
 
 	"github.com/hckops/hckctl/pkg/client/common"
 )

@@ -15,8 +15,8 @@ type BoxDetails struct {
 	TemplateInfo *BoxTemplateInfo
 	ProviderInfo *BoxProviderInfo
 	Size         ResourceSize
-	Env          []BoxEnv  // TODO >>> map[string]BoxEnv
-	Ports        []BoxPort // TODO >>> map[string]BoxPort
+	Env          []BoxEnv  // TODO map[string]BoxEnv
+	Ports        []BoxPort // TODO map[string]BoxPort
 	Created      time.Time
 }
 

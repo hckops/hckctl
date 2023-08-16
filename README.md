@@ -204,6 +204,7 @@ TODO
     - update directories to exclude in `resolvePath` e.g. charts
 * box
     - add box --name alias/override
+    - add box --env override e.g. PWD gen
     - review command: `copy` vs `upload/download`
     - review tty resize
     - mount `/dev/tun` for vpn
@@ -292,5 +293,20 @@ resources:
     cpu: 500m
   limits:
     memory: 512Mi
+
+hckctl box cp --from $(pwd)/README.md box-arch-u5qy6:/home/arch
+hckclt lab pwn/parrot --name my-box-name --env HTB_TARGET=10.10.10.10
+
+/home/ubuntu/.cache/hck/local/e934ac36-7c28-4477-8073-1cb4a27c76d2
+
+https://stackoverflow.com/questions/34913840/best-practice-for-connecting-to-a-vpn-though-docker
+vpn:
+  image: myvpn_image
+app1:
+  image: app1_image
+  net: container:vpn
+
+# (DOCKER/KUBE) hckctl lab ctf-vpn --input vpn.default.ref=/my/local/path/config.ovpn
+# (CLOUD) hckctl lab ctf-vpn --input password=CHANGEME --input vpn.default.ref=SECRET_REF
 
 -->

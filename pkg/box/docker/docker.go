@@ -81,7 +81,7 @@ func (box *DockerBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo
 		containerPorts = append(containerPorts, docker.ContainerPort{Local: p.Local, Remote: p.Remote})
 	}
 
-	containerConfig, err := docker.BuildContainerConfig(&docker.ContainerConfigOptions{
+	containerConfig, err := docker.BuildContainerConfig(&docker.ContainerConfigOpts{
 		ImageName:     opts.Template.ImageName(),
 		ContainerName: containerName,
 		Env:           containerEnv,
