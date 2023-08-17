@@ -227,7 +227,6 @@ TODO
 * task
     - TODO ???
 * version
-    - ISSUE in binary release prints `dev`
     - print if new version available
     - implement server `version` in json format docker/kube/cloud
 * release
