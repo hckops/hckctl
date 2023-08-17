@@ -260,40 +260,6 @@ https://stackoverflow.com/questions/49001114/shell-expansion-command-substitutio
 
 ---
 
-namespace: hckops
-nameOverride: box-alpine-12345
-fullnameOverride: box-alpine-12345
-
-image:
-  repository: hckops/my-alpine
-  version: latest
-
-annotations:
-  com.hckops.example: true
-
-labels:
-  app.kubernetes.io/managed-by: example
-  com.hckops.schema.kind: box-v1
-
-ports:
-  vnc:
-    port: 5900
-  novnc:
-    port: 6080
-  tty:
-    port: 7681
-
-env:
-  - name: PASSWORD
-    value: "changeme"
-
-resources:
-  requests:
-    memory: 512Mi
-    cpu: 500m
-  limits:
-    memory: 512Mi
-
 hckctl box cp --from $(pwd)/README.md box-arch-u5qy6:/home/arch
 hckclt lab pwn/parrot --name my-box-name --env HTB_TARGET=10.10.10.10
 

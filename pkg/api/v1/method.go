@@ -13,6 +13,7 @@ const (
 	MethodBoxDescribe
 	MethodBoxExec
 	MethodBoxList
+	MethodLabCreate
 )
 
 var methods = map[MethodName]string{
@@ -22,6 +23,7 @@ var methods = map[MethodName]string{
 	MethodBoxDescribe: "hck-box-describe",
 	MethodBoxExec:     "hck-box-exec",
 	MethodBoxList:     "hck-box-list",
+	MethodLabCreate:   "hck-lab-create",
 }
 
 func (c MethodName) String() string {

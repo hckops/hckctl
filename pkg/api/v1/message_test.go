@@ -15,13 +15,14 @@ const (
 var testBoxes = []string{"box-alpine-123", "box-alpine-456"}
 
 func TestMethods(t *testing.T) {
-	assert.Equal(t, 6, len(methods))
-	assert.Equal(t, "hck-ping", MethodPing.String())
-	assert.Equal(t, "hck-box-create", MethodBoxCreate.String())
-	assert.Equal(t, "hck-box-delete", MethodBoxDelete.String())
-	assert.Equal(t, "hck-box-describe", MethodBoxDescribe.String())
-	assert.Equal(t, "hck-box-exec", MethodBoxExec.String())
-	assert.Equal(t, "hck-box-list", MethodBoxList.String())
+	assert.Equal(t, 7, len(methods))
+	assert.Equal(t, "hck-ping", methods[MethodPing])
+	assert.Equal(t, "hck-box-create", methods[MethodBoxCreate])
+	assert.Equal(t, "hck-box-delete", methods[MethodBoxDelete])
+	assert.Equal(t, "hck-box-describe", methods[MethodBoxDescribe])
+	assert.Equal(t, "hck-box-exec", methods[MethodBoxExec])
+	assert.Equal(t, "hck-box-list", methods[MethodBoxList])
+	assert.Equal(t, "hck-lab-create", methods[MethodLabCreate])
 }
 
 func TestIsValidProtocol(t *testing.T) {
@@ -108,10 +109,10 @@ func TestBoxDescribeResponse(t *testing.T) {
 }
 
 func TestBoxListRequest(t *testing.T) {
-	request := NewBoxListRequest(clientOrigin)
+	message := NewBoxListRequest(clientOrigin)
 	value := `{"kind":"api/v1","origin":"hckctl-0.0.0-os","method":"hck-box-list","body":{}}`
 
-	testMessage[BoxListRequestBody](t, request, value)
+	testMessage[BoxListRequestBody](t, message, value)
 }
 
 func TestBoxListResponse(t *testing.T) {
@@ -119,10 +120,10 @@ func TestBoxListResponse(t *testing.T) {
 		{Id: "123", Name: testBoxes[0], Healthy: true},
 		{Id: "456", Name: testBoxes[1], Healthy: false},
 	}
-	request := NewBoxListResponse(serverOrigin, items)
+	message := NewBoxListResponse(serverOrigin, items)
 	value := `{"kind":"api/v1","origin":"hckadm-0.0.0-info","method":"hck-box-list","body":{"items":[{"Id":"123","Name":"box-alpine-123","Healthy":true},{"Id":"456","Name":"box-alpine-456","Healthy":false}]}}`
 
-	testMessage[BoxListResponseBody](t, request, value)
+	testMessage[BoxListResponseBody](t, message, value)
 }
 
 func TestBoxExecSession(t *testing.T) {
@@ -130,6 +131,24 @@ func TestBoxExecSession(t *testing.T) {
 	value := `{"kind":"api/v1","origin":"hckctl-0.0.0-os","method":"hck-box-exec","body":{"name":"alpine"}}`
 
 	testMessage[BoxExecSessionBody](t, message, value)
+}
+
+func TestLabCreateRequest(t *testing.T) {
+	parameters := map[string]string{
+		"password":        "changeme",
+		"vpn.default.ref": "OPENVPN_REMOTE_REF",
+	}
+	message := NewLabCreateRequest(clientOrigin, "ctf-vpn", parameters)
+	value := `{"kind":"api/v1","origin":"hckctl-0.0.0-os","method":"hck-lab-create","body":{"templateName":"ctf-vpn","params":{"password":"changeme","vpn.default.ref":"OPENVPN_REMOTE_REF"}}}`
+
+	testMessage[LabCreateRequestBody](t, message, value)
+}
+
+func TestLabCreateResponse(t *testing.T) {
+	message := NewLabCreateResponse(serverOrigin, "lab-ctf-vpn-123")
+	value := `{"kind":"api/v1","origin":"hckadm-0.0.0-info","method":"hck-lab-create","body":{"name":"lab-ctf-vpn-123"}}`
+
+	testMessage[LabCreateResponseBody](t, message, value)
 }
 
 func testMessage[T body](t *testing.T, message *Message[T], value string) {
