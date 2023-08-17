@@ -1,33 +1,47 @@
 package model
 
-// TODO out-of-scope for initial release
-
 type LabV1 struct {
-	Kind  string
-	Name  string
-	Tags  []string
-	Boxes []LabBox
+	Kind    string
+	Name    string
+	Tags    []string
+	Boxes   []LabBox
+	Network LabNetwork
+	Dump    LabDump
 }
 
 type LabBox struct {
-	Name     string
+	Alias    string
 	Template struct {
 		Name string
+		Env  []string
 	}
-	Size    string
-	Vpn     bool
-	Envs    []LabEnv
-	Secrets []LabSecret
+	Size  string
+	Vpn   string
+	Ports []LabPort
+	Dumps []string
 }
 
-type LabEnv struct {
-	Name  string
-	Value string
+type LabPort struct {
+	Name   string
+	Public bool
 }
 
-type LabSecret struct {
-	Name      string
-	LocalRef  string
-	RemoteRef string
-	Alias     string
+type LabNetwork struct {
+	Vpn []LabVpn
+}
+
+type LabVpn struct {
+	Name string
+	Ref  string
+}
+
+type LabDump struct {
+	Git []GitDump
+}
+
+type GitDump struct {
+	Name     string
+	Category string
+	Url      string
+	Branch   string
 }
