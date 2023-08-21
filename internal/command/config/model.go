@@ -36,7 +36,6 @@ type TemplateConfig struct {
 	CacheDir string `yaml:"cacheDir"`
 }
 
-// TODO add restart flag
 type BoxConfig struct {
 	Provider string `yaml:"provider"`
 	Size     string `yaml:"size"`

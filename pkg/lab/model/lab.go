@@ -1,5 +1,9 @@
 package model
 
+import (
+	"github.com/hckops/hckctl/pkg/util"
+)
+
 type LabV1 struct {
 	Kind    string
 	Name    string
@@ -46,4 +50,9 @@ type LabInfra struct {
 	RepositoryUrl  string
 	TargetRevision string
 	Path           string
+}
+
+func (box *LabV1) Pretty() string {
+	value, _ := util.EncodeJsonIndent(box)
+	return value
 }

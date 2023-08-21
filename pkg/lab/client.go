@@ -14,6 +14,7 @@ type LabClient interface {
 	Create(opts *model.CreateOptions) (*model.LabInfo, error)
 }
 
+// TODO generics Box/Lab
 func NewLabClient(opts *model.LabClientOptions) (LabClient, error) {
 	commonOpts := model.NewCommonLabOpts()
 	switch opts.Provider {
