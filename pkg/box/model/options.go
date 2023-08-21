@@ -5,13 +5,14 @@ import (
 	"os"
 
 	"github.com/hckops/hckctl/pkg/event"
+	"github.com/hckops/hckctl/pkg/provider"
 )
 
 type BoxClientOptions struct {
 	Provider   BoxProvider
-	DockerOpts *DockerBoxOptions
-	KubeOpts   *KubeBoxOptions
-	CloudOpts  *CloudBoxOptions
+	DockerOpts *provider.DockerOptions
+	KubeOpts   *provider.KubeOptions
+	CloudOpts  *provider.CloudOptions
 }
 
 type CommonBoxOptions struct {
@@ -22,24 +23,6 @@ func NewCommonBoxOpts() *CommonBoxOptions {
 	return &CommonBoxOptions{
 		EventBus: event.NewEventBus(),
 	}
-}
-
-type DockerBoxOptions struct {
-	NetworkName          string
-	IgnoreImagePullError bool
-}
-
-type KubeBoxOptions struct {
-	InCluster  bool
-	ConfigPath string
-	Namespace  string
-}
-
-type CloudBoxOptions struct {
-	Version  string
-	Address  string
-	Username string
-	Token    string
 }
 
 type BoxStreams struct {

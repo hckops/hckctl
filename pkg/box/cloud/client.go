@@ -6,15 +6,16 @@ import (
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/ssh"
 	"github.com/hckops/hckctl/pkg/event"
+	"github.com/hckops/hckctl/pkg/provider"
 )
 
 type CloudBoxClient struct {
 	client     *ssh.SshClient
-	clientOpts *model.CloudBoxOptions
+	clientOpts *provider.CloudOptions
 	eventBus   *event.EventBus
 }
 
-func NewCloudBoxClient(commonOpts *model.CommonBoxOptions, cloudOpts *model.CloudBoxOptions) (*CloudBoxClient, error) {
+func NewCloudBoxClient(commonOpts *model.CommonBoxOptions, cloudOpts *provider.CloudOptions) (*CloudBoxClient, error) {
 	return newCloudBoxClient(commonOpts, cloudOpts)
 }
 

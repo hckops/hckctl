@@ -7,6 +7,7 @@ import (
 	"github.com/hckops/hckctl/internal/command/common"
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/logger"
+	"github.com/hckops/hckctl/pkg/provider"
 	"github.com/hckops/hckctl/pkg/schema"
 )
 
@@ -51,8 +52,8 @@ type DockerConfig struct {
 	NetworkName string `yaml:"networkName"`
 }
 
-func (c *DockerConfig) ToDockerBoxOptions() *model.DockerBoxOptions {
-	return &model.DockerBoxOptions{
+func (c *DockerConfig) ToDockerOptions() *provider.DockerOptions {
+	return &provider.DockerOptions{
 		NetworkName:          c.NetworkName,
 		IgnoreImagePullError: true, // always allow to start offline/obsolete images
 	}
@@ -63,8 +64,8 @@ type KubeConfig struct {
 	Namespace  string `yaml:"namespace"`
 }
 
-func (c *KubeConfig) ToKubeBoxOptions() *model.KubeBoxOptions {
-	return &model.KubeBoxOptions{
+func (c *KubeConfig) ToKubeOptions() *provider.KubeOptions {
+	return &provider.KubeOptions{
 		InCluster:  false,
 		ConfigPath: c.ConfigPath,
 		Namespace:  c.Namespace,
@@ -82,8 +83,8 @@ func (c *CloudConfig) address() string {
 	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
 }
 
-func (c *CloudConfig) ToCloudBoxOptions(version string) *model.CloudBoxOptions {
-	return &model.CloudBoxOptions{
+func (c *CloudConfig) ToCloudOptions(version string) *provider.CloudOptions {
+	return &provider.CloudOptions{
 		Version:  version,
 		Address:  c.address(),
 		Username: c.Username,

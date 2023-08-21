@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/hckops/hckctl/pkg/box/model"
+	"github.com/hckops/hckctl/pkg/provider"
 )
 
 func TestNewConfig(t *testing.T) {
@@ -47,42 +47,42 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(t, expected, result)
 }
 
-func TestToDockerBoxOptions(t *testing.T) {
+func TestToDockerOptions(t *testing.T) {
 	dockerConfig := &DockerConfig{
 		NetworkName: "myNetwork",
 	}
-	expected := &model.DockerBoxOptions{
+	expected := &provider.DockerOptions{
 		NetworkName:          "myNetwork",
 		IgnoreImagePullError: true,
 	}
-	assert.Equal(t, expected, dockerConfig.ToDockerBoxOptions())
+	assert.Equal(t, expected, dockerConfig.ToDockerOptions())
 }
 
-func TestToKubeBoxOptions(t *testing.T) {
+func TestToKubeOptions(t *testing.T) {
 	kubeConfig := &KubeConfig{
 		ConfigPath: "/tmp/config.yml",
 		Namespace:  "namespace",
 	}
-	expected := &model.KubeBoxOptions{
+	expected := &provider.KubeOptions{
 		InCluster:  false,
 		ConfigPath: "/tmp/config.yml",
 		Namespace:  "namespace",
 	}
-	assert.Equal(t, expected, kubeConfig.ToKubeBoxOptions())
+	assert.Equal(t, expected, kubeConfig.ToKubeOptions())
 }
 
-func TestToCloudBoxOptions(t *testing.T) {
+func TestToCloudOptions(t *testing.T) {
 	cloudConfig := &CloudConfig{
 		Host:     "0.0.0.0",
 		Port:     2222,
 		Username: "myUsername",
 		Token:    "myToken",
 	}
-	expected := &model.CloudBoxOptions{
+	expected := &provider.CloudOptions{
 		Version:  "hckctl-dev",
 		Address:  "0.0.0.0:2222",
 		Username: "myUsername",
 		Token:    "myToken",
 	}
-	assert.Equal(t, expected, cloudConfig.ToCloudBoxOptions("hckctl-dev"))
+	assert.Equal(t, expected, cloudConfig.ToCloudOptions("hckctl-dev"))
 }

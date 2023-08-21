@@ -9,11 +9,12 @@ import (
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/common"
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
+	"github.com/hckops/hckctl/pkg/provider"
 	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-func newKubeBoxClient(commonOpts *model.CommonBoxOptions, kubeOpts *model.KubeBoxOptions) (*KubeBoxClient, error) {
+func newKubeBoxClient(commonOpts *model.CommonBoxOptions, kubeOpts *provider.KubeOptions) (*KubeBoxClient, error) {
 	commonOpts.EventBus.Publish(newInitKubeClientEvent())
 
 	kubeClient, err := kubernetes.NewKubeClient(kubeOpts.InCluster, kubeOpts.ConfigPath)

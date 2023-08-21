@@ -9,10 +9,11 @@ import (
 	v1 "github.com/hckops/hckctl/pkg/api/v1"
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/ssh"
+	"github.com/hckops/hckctl/pkg/provider"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-func newCloudBoxClient(commonOpts *model.CommonBoxOptions, cloudOpts *model.CloudBoxOptions) (*CloudBoxClient, error) {
+func newCloudBoxClient(commonOpts *model.CommonBoxOptions, cloudOpts *provider.CloudOptions) (*CloudBoxClient, error) {
 	commonOpts.EventBus.Publish(newInitCloudClientEvent())
 
 	clientConfig := &ssh.SshClientConfig{

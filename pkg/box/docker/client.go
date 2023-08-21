@@ -6,15 +6,16 @@ import (
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/docker"
 	"github.com/hckops/hckctl/pkg/event"
+	"github.com/hckops/hckctl/pkg/provider"
 )
 
 type DockerBoxClient struct {
 	client     *docker.DockerClient
-	clientOpts *model.DockerBoxOptions
+	clientOpts *provider.DockerOptions
 	eventBus   *event.EventBus
 }
 
-func NewDockerBoxClient(commonOpts *model.CommonBoxOptions, dockerOpts *model.DockerBoxOptions) (*DockerBoxClient, error) {
+func NewDockerBoxClient(commonOpts *model.CommonBoxOptions, dockerOpts *provider.DockerOptions) (*DockerBoxClient, error) {
 	return newDockerBoxClient(commonOpts, dockerOpts)
 }
 

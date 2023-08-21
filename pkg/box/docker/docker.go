@@ -9,10 +9,11 @@ import (
 
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/docker"
+	"github.com/hckops/hckctl/pkg/provider"
 	"github.com/hckops/hckctl/pkg/schema"
 )
 
-func newDockerBoxClient(commonOpts *model.CommonBoxOptions, dockerOpts *model.DockerBoxOptions) (*DockerBoxClient, error) {
+func newDockerBoxClient(commonOpts *model.CommonBoxOptions, dockerOpts *provider.DockerOptions) (*DockerBoxClient, error) {
 	commonOpts.EventBus.Publish(newInitDockerClientEvent())
 
 	dockerClient, err := docker.NewDockerClient()

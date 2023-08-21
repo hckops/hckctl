@@ -6,15 +6,16 @@ import (
 	"github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
 	"github.com/hckops/hckctl/pkg/event"
+	"github.com/hckops/hckctl/pkg/provider"
 )
 
 type KubeBoxClient struct {
 	client     *kubernetes.KubeClient
-	clientOpts *model.KubeBoxOptions
+	clientOpts *provider.KubeOptions
 	eventBus   *event.EventBus
 }
 
-func NewKubeBoxClient(commonOpts *model.CommonBoxOptions, kubeOpts *model.KubeBoxOptions) (*KubeBoxClient, error) {
+func NewKubeBoxClient(commonOpts *model.CommonBoxOptions, kubeOpts *provider.KubeOptions) (*KubeBoxClient, error) {
 	return newKubeBoxClient(commonOpts, kubeOpts)
 }
 
