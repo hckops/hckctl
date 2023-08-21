@@ -39,7 +39,7 @@ type BoxPort struct {
 	Alias  string
 	Remote string // TODO int ?
 	Local  string // TODO int ?
-	Public bool   // TODO not used, always false
+	Public bool   // TODO
 }
 
 func SortPorts(ports []BoxPort) []BoxPort {

@@ -5,25 +5,19 @@ type LabV1 struct {
 	Name    string
 	Tags    []string
 	Boxes   []LabBox
+	Infra   []LabInfra
 	Network LabNetwork
 	Dump    LabDump
 }
 
 type LabBox struct {
 	Alias    string
-	Template struct {
-		Name string
-		Env  []string
-	}
-	Size  string
-	Vpn   string
-	Ports []LabPort
-	Dumps []string
-}
-
-type LabPort struct {
-	Name   string
-	Public bool
+	Template string
+	Env      []string
+	Size     string
+	Vpn      string
+	Ports    []string
+	Dumps    []string
 }
 
 type LabNetwork struct {
@@ -31,8 +25,8 @@ type LabNetwork struct {
 }
 
 type LabVpn struct {
-	Name string
-	Ref  string
+	Name   string
+	Config string
 }
 
 type LabDump struct {
@@ -40,8 +34,16 @@ type LabDump struct {
 }
 
 type GitDump struct {
-	Name     string
-	Category string
-	Url      string
-	Branch   string
+	Name   string
+	Group  string
+	Url    string
+	Branch string
+}
+
+type LabInfra struct {
+	Alias          string
+	Source         string // helm|compose
+	RepositoryUrl  string
+	TargetRevision string
+	Path           string
 }
