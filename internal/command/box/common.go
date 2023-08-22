@@ -12,7 +12,6 @@ import (
 	"github.com/hckops/hckctl/internal/command/version"
 	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/box/model"
-	"github.com/hckops/hckctl/pkg/event"
 	"github.com/hckops/hckctl/pkg/template"
 )
 
@@ -143,25 +142,7 @@ func newDefaultBoxClient(provider model.BoxProvider, configRef *config.ConfigRef
 		return nil, fmt.Errorf("error %s client", provider)
 	}
 
-	boxClient.Events().Subscribe(func(e event.Event) {
-		switch e.Kind() {
-		case event.PrintConsole:
-			loader.Refresh("loading")
-			fmt.Println(e.String())
-		case event.LoaderUpdate:
-			loader.Refresh(e.String())
-		case event.LoaderStop:
-			loader.Stop()
-		case event.LogInfo:
-			log.Info().Msgf("[%v] %s", e.Source(), e.String())
-		case event.LogWarning:
-			log.Warn().Msgf("[%v] %s", e.Source(), e.String())
-		case event.LogError:
-			log.Error().Msgf("[%v] %s", e.Source(), e.String())
-		default:
-			log.Debug().Msgf("[%v] %s", e.Source(), e.String())
-		}
-	})
+	boxClient.Events().Subscribe(common.EventCallback(loader))
 	return boxClient, nil
 }
 

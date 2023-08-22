@@ -10,7 +10,6 @@ import (
 	"github.com/hckops/hckctl/internal/command/common"
 	"github.com/hckops/hckctl/internal/command/config"
 	"github.com/hckops/hckctl/internal/command/version"
-	"github.com/hckops/hckctl/pkg/event"
 	"github.com/hckops/hckctl/pkg/lab"
 	"github.com/hckops/hckctl/pkg/lab/model"
 	"github.com/hckops/hckctl/pkg/template"
@@ -102,26 +101,6 @@ func newDefaultLabClient(provider model.LabProvider, configRef *config.ConfigRef
 		log.Error().Err(err).Msgf("error lab client")
 		return nil, errors.New("error client")
 	}
-
-	// TODO common/generics
-	labClient.Events().Subscribe(func(e event.Event) {
-		switch e.Kind() {
-		case event.PrintConsole:
-			loader.Refresh("loading")
-			fmt.Println(e.String())
-		case event.LoaderUpdate:
-			loader.Refresh(e.String())
-		case event.LoaderStop:
-			loader.Stop()
-		case event.LogInfo:
-			log.Info().Msgf("[%v] %s", e.Source(), e.String())
-		case event.LogWarning:
-			log.Warn().Msgf("[%v] %s", e.Source(), e.String())
-		case event.LogError:
-			log.Error().Msgf("[%v] %s", e.Source(), e.String())
-		default:
-			log.Debug().Msgf("[%v] %s", e.Source(), e.String())
-		}
-	})
+	labClient.Events().Subscribe(common.EventCallback(loader))
 	return labClient, nil
 }
