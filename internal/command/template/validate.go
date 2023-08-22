@@ -24,12 +24,13 @@ func NewTemplateValidateCmd() *cobra.Command {
 		Example: heredoc.Doc(`
 
 			# validates a local template
-			hckctl template validate ../megalopolis/box/official/alpine.yml
+			hckctl template validate ../megalopolis/box/base/alpine.yml
 
 			# validates all templates in the given path (supports wildcards)
 			hckctl template validate "../megalopolis/**/*.{yml,yaml}"
 			hckctl template validate "../megalopolis/**/*alpine*"
 		`),
+		Args: cobra.ExactArgs(1),
 		RunE: opts.run,
 	}
 
@@ -37,12 +38,7 @@ func NewTemplateValidateCmd() *cobra.Command {
 }
 
 func (opts *templateValidateCmdOptions) run(cmd *cobra.Command, args []string) error {
-	if len(args) == 1 {
-		return templateValidate(args[0])
-	} else {
-		cmd.HelpFunc()(cmd, args)
-	}
-	return nil
+	return templateValidate(args[0])
 }
 
 // TODO color output

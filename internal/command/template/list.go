@@ -44,6 +44,7 @@ func NewTemplateListCmd(configRef *config.ConfigRef) *cobra.Command {
 			# list templates cached
 			hckctl template list --offline
 		`),
+		Args: cobra.NoArgs,
 		RunE: opts.run,
 	}
 
@@ -56,12 +57,7 @@ func NewTemplateListCmd(configRef *config.ConfigRef) *cobra.Command {
 }
 
 func (opts *templateListCmdOptions) run(cmd *cobra.Command, args []string) error {
-	if len(args) == 0 {
-		return templateList(opts.configRef.Config.Template.CacheDir, opts.revision, opts.offline)
-	} else {
-		cmd.HelpFunc()(cmd, args)
-	}
-	return nil
+	return templateList(opts.configRef.Config.Template.CacheDir, opts.revision, opts.offline)
 }
 
 func templateList(cacheDir string, revision string, offline bool) error {

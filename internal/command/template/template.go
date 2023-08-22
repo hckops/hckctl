@@ -52,6 +52,7 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 			# validates and prints a local template
 			hckctl template ../megalopolis/box/base/alpine.yml --local
 		`),
+		Args: cobra.ExactArgs(1),
 		RunE: opts.run,
 	}
 
@@ -80,13 +81,12 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 	format := opts.formatFlag.String()
 
 	// TODO add remote url
-	if len(args) == 1 && opts.sourceFlag.Local {
+	if opts.sourceFlag.Local {
 		path := args[0]
 		log.Debug().Msgf("print local template: path=%s", path)
 
 		return printTemplate(NewLocalValidator(path), format)
-
-	} else if len(args) == 1 {
+	} else {
 		name := args[0]
 		sourceOpts := &GitSourceOptions{
 			CacheBaseDir:    opts.configRef.Config.Template.CacheDir,
@@ -98,11 +98,7 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 		log.Debug().Msgf("print git template: name=%s revision=%s offline=%v", name, opts.sourceFlag.Revision, opts.offline)
 
 		return printTemplate(NewGitValidator(sourceOpts, name), format)
-
-	} else {
-		cmd.HelpFunc()(cmd, args)
 	}
-	return nil
 }
 
 func printTemplate(src SourceValidator, format string) error {

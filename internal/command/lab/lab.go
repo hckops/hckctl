@@ -31,6 +31,7 @@ func NewLabCmd(configRef *config.ConfigRef) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "lab [name]",
 		Short: "TODO",
+		Args:  cobra.ExactArgs(1),
 		RunE:  opts.run,
 	}
 
@@ -38,19 +39,12 @@ func NewLabCmd(configRef *config.ConfigRef) *cobra.Command {
 }
 
 func (opts *labCmdOptions) run(cmd *cobra.Command, args []string) error {
+	name := args[0]
+	log.Debug().Msgf("start lab from git template: name=%s", name)
 
-	if len(args) == 1 {
-		name := args[0]
-		log.Debug().Msgf("start lab from git template: name=%s", name)
-
-		sourceOpts := newGitSourceOptions(opts.configRef.Config.Template.CacheDir)
-		sourceLoader := template.NewGitLoader[model.LabV1](sourceOpts, name)
-		return startLab(sourceLoader, model.Cloud, opts.configRef)
-
-	} else {
-		cmd.HelpFunc()(cmd, args)
-	}
-	return nil
+	sourceOpts := newGitSourceOptions(opts.configRef.Config.Template.CacheDir)
+	sourceLoader := template.NewGitLoader[model.LabV1](sourceOpts, name)
+	return startLab(sourceLoader, model.Cloud, opts.configRef)
 }
 
 func startLab(sourceLoader template.SourceLoader[model.LabV1], provider model.LabProvider, configRef *config.ConfigRef) error {
