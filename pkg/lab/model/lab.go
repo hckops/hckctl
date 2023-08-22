@@ -5,11 +5,12 @@ import (
 )
 
 type LabV1 struct {
-	Kind    string
-	Name    string
-	Tags    []string
-	Boxes   []LabBox
-	Infra   []LabInfra
+	Kind string
+	Name string
+	Tags []string
+	Box  LabBox
+	//Boxes   []LabBox
+	//Infra   []LabInfra
 	Network LabNetwork
 	Dump    LabDump
 }
