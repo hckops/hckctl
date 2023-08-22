@@ -29,6 +29,7 @@ func NewBoxStartCmd(configRef *config.ConfigRef) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "start [name]",
 		Short: "Start a long running detached box",
+		Args:  cobra.ExactArgs(1),
 		RunE:  opts.run,
 	}
 
@@ -45,32 +46,26 @@ func (opts *boxStartCmdOptions) run(cmd *cobra.Command, args []string) error {
 	provider, err := boxFlag.ValidateBoxProvider(opts.configRef.Config.Box.Provider, opts.providerFlag)
 	if err != nil {
 		return err
-	} else if len(args) == 1 {
+	} else if err := boxFlag.ValidateSourceFlag(provider, opts.sourceFlag); err != nil {
+		log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
+		return errors.New(commonFlag.ErrorFlagNotSupported)
 
-		if err := boxFlag.ValidateSourceFlag(provider, opts.sourceFlag); err != nil {
-			log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
-			return errors.New(commonFlag.ErrorFlagNotSupported)
+	} else if opts.sourceFlag.Local {
+		path := args[0]
+		log.Debug().Msgf("start box from local template: path=%s", path)
 
-		} else if opts.sourceFlag.Local {
-			path := args[0]
-			log.Debug().Msgf("start box from local template: path=%s", path)
+		sourceLoader := template.NewLocalCachedLoader[model.BoxV1](path, opts.configRef.Config.Template.CacheDir)
+		return startBox(sourceLoader, provider, opts.configRef, model.NewLocalLabels())
 
-			sourceLoader := template.NewLocalCachedLoader[model.BoxV1](path, opts.configRef.Config.Template.CacheDir)
-			return startBox(sourceLoader, provider, opts.configRef, model.NewLocalLabels())
-
-		} else {
-			name := args[0]
-			log.Debug().Msgf("start box from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
-
-			sourceOpts := newGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
-			sourceLoader := template.NewGitLoader[model.BoxV1](sourceOpts, name)
-			labels := model.NewGitLabels(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
-			return startBox(sourceLoader, provider, opts.configRef, labels)
-		}
 	} else {
-		cmd.HelpFunc()(cmd, args)
+		name := args[0]
+		log.Debug().Msgf("start box from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
+
+		sourceOpts := newGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
+		sourceLoader := template.NewGitLoader[model.BoxV1](sourceOpts, name)
+		labels := model.NewGitLabels(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
+		return startBox(sourceLoader, provider, opts.configRef, labels)
 	}
-	return nil
 }
 
 func startBox(sourceLoader template.SourceLoader[model.BoxV1], provider model.BoxProvider, configRef *config.ConfigRef, labels model.BoxLabels) error {

@@ -28,6 +28,7 @@ func NewBoxStopCmd(configRef *config.ConfigRef) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "stop [name]",
 		Short: "Stop one or more running boxes",
+		Args:  cobra.MaximumNArgs(1),
 		RunE:  opts.run,
 	}
 
@@ -87,9 +88,8 @@ func (opts *boxStopCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	} else {
 		cmd.HelpFunc()(cmd, args)
+		return nil
 	}
-
-	return nil
 }
 
 func stopByProvider(providerFlag commonFlag.ProviderFlag, configRef *config.ConfigRef, loader *common.Loader) error {

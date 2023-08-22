@@ -24,6 +24,7 @@ func NewBoxOpenCmd(configRef *config.ConfigRef) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "open [name]",
 		Short: "Access and tunnel a running box",
+		Args:  cobra.ExactArgs(1),
 		RunE:  opts.run,
 	}
 
@@ -34,25 +35,18 @@ func NewBoxOpenCmd(configRef *config.ConfigRef) *cobra.Command {
 }
 
 func (opts *boxOpenCmdOptions) run(cmd *cobra.Command, args []string) error {
+	boxName := args[0]
+	log.Debug().Msgf("open box: boxName=%s", boxName)
 
-	if len(args) == 1 {
-		boxName := args[0]
-		log.Debug().Msgf("open box: boxName=%s", boxName)
+	connectClient := func(invokeOpts *invokeOptions, _ *model.BoxDetails) error {
 
-		connectClient := func(invokeOpts *invokeOptions, _ *model.BoxDetails) error {
-
-			// log only and ignore invalid tunnel flags to avoid false positive during provider attempts
-			if err := boxFlag.ValidateTunnelFlag(invokeOpts.client.Provider(), opts.tunnelFlag); err != nil {
-				log.Warn().Err(err).Msgf("ignore validation %s", commonFlag.ErrorFlagNotSupported)
-			}
-
-			connectOpts := opts.tunnelFlag.ToConnectOptions(&invokeOpts.template.Value.Data, boxName, false)
-			return invokeOpts.client.Connect(connectOpts)
+		// log only and ignore invalid tunnel flags to avoid false positive during provider attempts
+		if err := boxFlag.ValidateTunnelFlag(invokeOpts.client.Provider(), opts.tunnelFlag); err != nil {
+			log.Warn().Err(err).Msgf("ignore validation %s", commonFlag.ErrorFlagNotSupported)
 		}
-		return attemptRunBoxClients(opts.configRef, boxName, connectClient)
-	} else {
-		cmd.HelpFunc()(cmd, args)
-	}
 
-	return nil
+		connectOpts := opts.tunnelFlag.ToConnectOptions(&invokeOpts.template.Value.Data, boxName, false)
+		return invokeOpts.client.Connect(connectOpts)
+	}
+	return attemptRunBoxClients(opts.configRef, boxName, connectClient)
 }

@@ -67,6 +67,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 			# opens a box defined locally
 			hckctl box ../megalopolis/box/base/alpine.yml --local
 		`),
+		Args: cobra.ExactArgs(1),
 		RunE: opts.run,
 	}
 
@@ -91,33 +92,26 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 	provider, err := boxFlag.ValidateBoxProvider(opts.configRef.Config.Box.Provider, opts.providerFlag)
 	if err != nil {
 		return err
-	} else if len(args) == 1 {
+	} else if err := opts.validateFlags(provider); err != nil {
+		log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
+		return errors.New(commonFlag.ErrorFlagNotSupported)
 
-		if err := opts.validateFlags(provider); err != nil {
-			log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
-			return errors.New(commonFlag.ErrorFlagNotSupported)
+	} else if opts.sourceFlag.Local {
+		path := args[0]
+		log.Debug().Msgf("temporary box from local template: path=%s", path)
 
-		} else if opts.sourceFlag.Local {
-			path := args[0]
-			log.Debug().Msgf("temporary box from local template: path=%s", path)
-
-			sourceLoader := template.NewLocalCachedLoader[model.BoxV1](path, opts.configRef.Config.Template.CacheDir)
-			return opts.temporaryBox(sourceLoader, provider, model.NewLocalLabels())
-
-		} else {
-			name := args[0]
-			log.Debug().Msgf("temporary box from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
-
-			sourceOpts := newGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
-			sourceLoader := template.NewGitLoader[model.BoxV1](sourceOpts, name)
-			labels := model.NewGitLabels(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
-			return opts.temporaryBox(sourceLoader, provider, labels)
-		}
+		sourceLoader := template.NewLocalCachedLoader[model.BoxV1](path, opts.configRef.Config.Template.CacheDir)
+		return opts.temporaryBox(sourceLoader, provider, model.NewLocalLabels())
 
 	} else {
-		cmd.HelpFunc()(cmd, args)
+		name := args[0]
+		log.Debug().Msgf("temporary box from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
+
+		sourceOpts := newGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
+		sourceLoader := template.NewGitLoader[model.BoxV1](sourceOpts, name)
+		labels := model.NewGitLabels(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
+		return opts.temporaryBox(sourceLoader, provider, labels)
 	}
-	return nil
 }
 
 func (opts *boxCmdOptions) validateFlags(provider model.BoxProvider) error {

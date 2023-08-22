@@ -26,6 +26,7 @@ func NewBoxListCmd(configRef *config.ConfigRef) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "list",
 		Short: "List all running boxes",
+		Args:  cobra.NoArgs,
 		RunE:  opts.run,
 	}
 
@@ -33,19 +34,15 @@ func NewBoxListCmd(configRef *config.ConfigRef) *cobra.Command {
 }
 
 func (opts *boxListCmdOptions) run(cmd *cobra.Command, args []string) error {
-	if len(args) == 0 {
-		loader := common.NewLoader()
-		loader.Start("loading boxes")
-		defer loader.Stop()
+	loader := common.NewLoader()
+	loader.Start("loading boxes")
+	defer loader.Stop()
 
-		// silently fail attempting all the providers
-		for _, providerFlag := range boxFlag.BoxProviders() {
-			if err := listByProvider(providerFlag, opts.configRef, loader); err != nil {
-				log.Warn().Err(err).Msgf("ignoring error list boxes: providerFlag=%v", providerFlag)
-			}
+	// silently fail attempting all the providers
+	for _, providerFlag := range boxFlag.BoxProviders() {
+		if err := listByProvider(providerFlag, opts.configRef, loader); err != nil {
+			log.Warn().Err(err).Msgf("ignoring error list boxes: providerFlag=%v", providerFlag)
 		}
-	} else {
-		cmd.HelpFunc()(cmd, args)
 	}
 	return nil
 }

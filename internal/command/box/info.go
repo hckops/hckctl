@@ -26,6 +26,7 @@ func NewBoxInfoCmd(configRef *config.ConfigRef) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "info [name]",
 		Short: "Describe a running box",
+		Args:  cobra.ExactArgs(1),
 		RunE:  opts.run,
 	}
 
@@ -33,27 +34,20 @@ func NewBoxInfoCmd(configRef *config.ConfigRef) *cobra.Command {
 }
 
 func (opts *boxInfoCmdOptions) run(cmd *cobra.Command, args []string) error {
+	boxName := args[0]
+	log.Debug().Msgf("info box: boxName=%s", boxName)
 
-	if len(args) == 1 {
-		boxName := args[0]
-		log.Debug().Msgf("info box: boxName=%s", boxName)
+	describeClient := func(invokeOpts *invokeOptions, boxDetails *model.BoxDetails) error {
 
-		describeClient := func(invokeOpts *invokeOptions, boxDetails *model.BoxDetails) error {
-
-			if value, err := util.EncodeYaml(newBoxValue(&invokeOpts.template.Value.Data, boxDetails)); err != nil {
-				return err
-			} else {
-				invokeOpts.loader.Stop()
-				fmt.Print(value)
-			}
-			return nil
+		if value, err := util.EncodeYaml(newBoxValue(&invokeOpts.template.Value.Data, boxDetails)); err != nil {
+			return err
+		} else {
+			invokeOpts.loader.Stop()
+			fmt.Print(value)
 		}
-		return attemptRunBoxClients(opts.configRef, boxName, describeClient)
-	} else {
-		cmd.HelpFunc()(cmd, args)
+		return nil
 	}
-
-	return nil
+	return attemptRunBoxClients(opts.configRef, boxName, describeClient)
 }
 
 type BoxValue struct {

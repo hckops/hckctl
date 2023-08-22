@@ -37,19 +37,16 @@ func NewConfigCmd(configRef *ConfigRef) *cobra.Command {
 			# config value override precedence (add "env" prefix to use dot notation): flag > env > config
 			env HCK_CONFIG_LOG.LEVEL=error hckctl config --log-level debug
 		`),
+		Args: cobra.NoArgs,
 		RunE: opts.run,
 	}
 
 	resetCommand := &cobra.Command{
 		Use:   "reset",
 		Short: "Restore default configurations",
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 {
-				return InitConfig(true)
-			} else {
-				cmd.HelpFunc()(cmd, args)
-			}
-			return nil
+			return InitConfig(true)
 		},
 	}
 
@@ -59,15 +56,11 @@ func NewConfigCmd(configRef *ConfigRef) *cobra.Command {
 }
 
 func (opts *configCmdOptions) run(cmd *cobra.Command, args []string) error {
-	if len(args) == 0 {
-		if value, err := util.EncodeYaml(opts.configRef.Config); err != nil {
-			return errors.Wrap(err, "error encoding config")
-		} else {
-			fmt.Println(fmt.Sprintf("# %s", viper.ConfigFileUsed()))
-			fmt.Print(value)
-		}
+	if value, err := util.EncodeYaml(opts.configRef.Config); err != nil {
+		return errors.Wrap(err, "error encoding config")
 	} else {
-		cmd.HelpFunc()(cmd, args)
+		fmt.Println(fmt.Sprintf("# %s", viper.ConfigFileUsed()))
+		fmt.Print(value)
 	}
 	return nil
 }
