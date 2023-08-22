@@ -166,6 +166,7 @@ TODO
     - RELEASE
     - brew
     - client timeouts
+    - TODO replace kube impl with helm chart?
 * general
     - update readme
         * remove comments

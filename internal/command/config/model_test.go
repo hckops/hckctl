@@ -18,14 +18,6 @@ func TestNewConfig(t *testing.T) {
 			Level:    "info",
 			FilePath: logFile,
 		},
-		Template: TemplateConfig{
-			Revision: "main",
-			CacheDir: cacheDir,
-		},
-		Box: BoxConfig{
-			Provider: "docker",
-			Size:     "S",
-		},
 		Provider: ProviderConfig{
 			Docker: DockerConfig{
 				NetworkName: "hckops",
@@ -40,6 +32,22 @@ func TestNewConfig(t *testing.T) {
 				Username: "",
 				Token:    "",
 			},
+		},
+		Network: NetworkConfig{
+			Vpn: []VpnConfig{
+				{Name: "default", Path: "/path/to/client.ovpn"},
+			},
+		},
+		Template: TemplateConfig{
+			Revision: "main",
+			CacheDir: cacheDir,
+		},
+		Box: BoxConfig{
+			Provider: "docker",
+			Size:     "S",
+		},
+		Lab: LabConfig{
+			Vpn: "default",
 		},
 	}
 

@@ -7,4 +7,6 @@ const (
 
 	TemplateSourceUrl      = "https://github.com/hckops/megalopolis"
 	TemplateSourceRevision = "main"
+
+	DefaultVpnName = "default"
 )

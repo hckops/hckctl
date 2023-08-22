@@ -21,24 +21,16 @@ type ConfigRef struct {
 type ConfigV1 struct {
 	Kind     string         `yaml:"kind"`
 	Log      LogConfig      `yaml:"log"`
+	Provider ProviderConfig `yaml:"provider"`
+	Network  NetworkConfig  `yaml:"network"`
 	Template TemplateConfig `yaml:"template"`
 	Box      BoxConfig      `yaml:"box"`
-	Provider ProviderConfig `yaml:"provider"`
+	Lab      LabConfig      `yaml:"lab"`
 }
 
 type LogConfig struct {
 	Level    string `yaml:"level"`
 	FilePath string `yaml:"filePath"`
-}
-
-type TemplateConfig struct {
-	Revision string `yaml:"revision"`
-	CacheDir string `yaml:"cacheDir"`
-}
-
-type BoxConfig struct {
-	Provider string `yaml:"provider"`
-	Size     string `yaml:"size"`
 }
 
 type ProviderConfig struct {
@@ -91,20 +83,35 @@ func (c *CloudConfig) ToCloudOptions(version string) *provider.CloudOptions {
 	}
 }
 
+type NetworkConfig struct {
+	Vpn []VpnConfig `yaml:"vpn"`
+}
+
+type VpnConfig struct {
+	Name string `yaml:"name"`
+	Path string `yaml:"path"`
+}
+
+type TemplateConfig struct {
+	Revision string `yaml:"revision"`
+	CacheDir string `yaml:"cacheDir"`
+}
+
+type BoxConfig struct {
+	Provider string `yaml:"provider"`
+	Size     string `yaml:"size"`
+}
+
+type LabConfig struct {
+	Vpn string `yaml:"vpn"`
+}
+
 func newConfig(logFile, cacheDir string) *ConfigV1 {
 	return &ConfigV1{
 		Kind: schema.KindConfigV1.String(),
 		Log: LogConfig{
 			Level:    logger.InfoLogLevel.String(),
 			FilePath: logFile,
-		},
-		Template: TemplateConfig{
-			Revision: common.TemplateSourceRevision,
-			CacheDir: cacheDir,
-		},
-		Box: BoxConfig{
-			Provider: model.Docker.String(),
-			Size:     model.Small.String(),
 		},
 		Provider: ProviderConfig{
 			Docker: DockerConfig{
@@ -120,6 +127,22 @@ func newConfig(logFile, cacheDir string) *ConfigV1 {
 				Username: "",
 				Token:    "",
 			},
+		},
+		Network: NetworkConfig{
+			Vpn: []VpnConfig{
+				{Name: common.DefaultVpnName, Path: "/path/to/client.ovpn"},
+			},
+		},
+		Template: TemplateConfig{
+			Revision: common.TemplateSourceRevision,
+			CacheDir: cacheDir,
+		},
+		Box: BoxConfig{
+			Provider: model.Docker.String(),
+			Size:     model.Small.String(),
+		},
+		Lab: LabConfig{
+			Vpn: common.DefaultVpnName,
 		},
 	}
 }
