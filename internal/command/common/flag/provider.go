@@ -1,9 +1,12 @@
 package flag
 
 import (
+	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag/v2"
 )
 
@@ -66,4 +69,16 @@ func ExistProvider(providerIds map[ProviderFlag][]string, value string) (Provide
 		}
 	}
 	return UnknownProviderFlag, errors.New("invalid provider")
+}
+
+func AddProviderFlag(command *cobra.Command, providerIds map[ProviderFlag][]string) *ProviderFlag {
+	const (
+		flagName = "provider"
+	)
+	var providerFlag ProviderFlag
+	providerValue := enumflag.NewWithoutDefault(&providerFlag, flagName, providerIds, enumflag.EnumCaseInsensitive)
+	providerUsageValues := strings.Join(ProviderValues(providerIds), "|")
+	providerUsage := fmt.Sprintf("switch provider, one of %s", providerUsageValues)
+	command.Flags().Var(providerValue, flagName, providerUsage)
+	return &providerFlag
 }

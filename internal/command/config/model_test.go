@@ -47,7 +47,8 @@ func TestNewConfig(t *testing.T) {
 			Size:     "S",
 		},
 		Lab: LabConfig{
-			Vpn: "default",
+			Provider: "cloud",
+			Vpn:      "default",
 		},
 	}
 

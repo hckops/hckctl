@@ -7,7 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	boxFlag "github.com/hckops/hckctl/internal/command/box/flag"
-	"github.com/hckops/hckctl/internal/command/common"
+	commonCmd "github.com/hckops/hckctl/internal/command/common"
 	"github.com/hckops/hckctl/internal/command/config"
 	"github.com/hckops/hckctl/internal/command/version"
 	"github.com/hckops/hckctl/pkg/box"
@@ -18,10 +18,10 @@ import (
 type invokeOptions struct {
 	client   box.BoxClient
 	template *template.TemplateInfo[model.BoxV1]
-	loader   *common.Loader
+	loader   *commonCmd.Loader
 }
 
-// create and temporary
+// start and temporary
 func runBoxClient(sourceLoader template.SourceLoader[model.BoxV1], provider model.BoxProvider, configRef *config.ConfigRef, invokeClient func(*invokeOptions) error) error {
 
 	boxTemplate, err := sourceLoader.Read()
@@ -30,7 +30,7 @@ func runBoxClient(sourceLoader template.SourceLoader[model.BoxV1], provider mode
 		return errors.New("invalid template")
 	}
 
-	loader := common.NewLoader()
+	loader := commonCmd.NewLoader()
 	loader.Start("loading template %s", boxTemplate.Value.Data.Name)
 	defer loader.Stop()
 
@@ -53,10 +53,10 @@ func runBoxClient(sourceLoader template.SourceLoader[model.BoxV1], provider mode
 	return nil
 }
 
-// open, info and delete-one
+// open, info and stop-one
 func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeClient func(*invokeOptions, *model.BoxDetails) error) error {
 
-	loader := common.NewLoader()
+	loader := commonCmd.NewLoader()
 	loader.Start("loading %s", boxName)
 	defer loader.Stop()
 
@@ -109,18 +109,8 @@ func newSourceLoader(boxDetails *model.BoxDetails, cacheDir string) template.Sou
 	if boxDetails.TemplateInfo.IsCached() {
 		return template.NewLocalLoader[model.BoxV1](boxDetails.TemplateInfo.CachedTemplate.Path)
 	} else {
-		sourceOpts := newGitSourceOptions(cacheDir, boxDetails.TemplateInfo.GitTemplate.Commit)
+		sourceOpts := commonCmd.NewGitSourceOptions(cacheDir, boxDetails.TemplateInfo.GitTemplate.Commit)
 		return template.NewGitLoader[model.BoxV1](sourceOpts, boxDetails.TemplateInfo.GitTemplate.Name)
-	}
-}
-
-func newGitSourceOptions(cacheDir string, revision string) *template.GitSourceOptions {
-	return &template.GitSourceOptions{
-		CacheBaseDir:    cacheDir,
-		RepositoryUrl:   common.TemplateSourceUrl,
-		DefaultRevision: common.TemplateSourceRevision,
-		Revision:        revision,
-		AllowOffline:    true,
 	}
 }
 
@@ -133,7 +123,7 @@ func newBoxClientOpts(provider model.BoxProvider, configRef *config.ConfigRef) *
 	}
 }
 
-func newDefaultBoxClient(provider model.BoxProvider, configRef *config.ConfigRef, loader *common.Loader) (box.BoxClient, error) {
+func newDefaultBoxClient(provider model.BoxProvider, configRef *config.ConfigRef, loader *commonCmd.Loader) (box.BoxClient, error) {
 
 	boxClientOpts := newBoxClientOpts(provider, configRef)
 	boxClient, err := box.NewBoxClient(boxClientOpts)
@@ -142,7 +132,7 @@ func newDefaultBoxClient(provider model.BoxProvider, configRef *config.ConfigRef
 		return nil, fmt.Errorf("error %s client", provider)
 	}
 
-	boxClient.Events().Subscribe(common.EventCallback(loader))
+	boxClient.Events().Subscribe(commonCmd.EventCallback(loader))
 	return boxClient, nil
 }
 

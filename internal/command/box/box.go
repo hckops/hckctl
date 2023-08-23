@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	boxFlag "github.com/hckops/hckctl/internal/command/box/flag"
+	commonCmd "github.com/hckops/hckctl/internal/command/common"
 	commonFlag "github.com/hckops/hckctl/internal/command/common/flag"
 	"github.com/hckops/hckctl/internal/command/config"
 	"github.com/hckops/hckctl/pkg/box/model"
@@ -17,6 +18,7 @@ type boxCmdOptions struct {
 	configRef    *config.ConfigRef
 	sourceFlag   *commonFlag.SourceFlag
 	providerFlag *commonFlag.ProviderFlag
+	provider     model.BoxProvider
 	tunnelFlag   *boxFlag.TunnelFlag
 }
 
@@ -67,8 +69,9 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 			# opens a box defined locally
 			hckctl box ../megalopolis/box/base/alpine.yml --local
 		`),
-		Args: cobra.ExactArgs(1),
-		RunE: opts.run,
+		Args:    cobra.ExactArgs(1),
+		PreRunE: opts.validate,
+		RunE:    opts.run,
 	}
 
 	// --revision or --local
@@ -87,43 +90,45 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 	return command
 }
 
-func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
+func (opts *boxCmdOptions) validate(cmd *cobra.Command, args []string) error {
 
-	provider, err := boxFlag.ValidateBoxProvider(opts.configRef.Config.Box.Provider, opts.providerFlag)
+	validProvider, err := boxFlag.ValidateBoxProvider(opts.configRef.Config.Box.Provider, opts.providerFlag)
 	if err != nil {
 		return err
-	} else if err := opts.validateFlags(provider); err != nil {
+	}
+	opts.provider = validProvider
+
+	if err := commonFlag.ValidateSourceFlag(opts.providerFlag, opts.sourceFlag); err != nil {
 		log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
 		return errors.New(commonFlag.ErrorFlagNotSupported)
+	}
 
-	} else if opts.sourceFlag.Local {
+	if err := boxFlag.ValidateTunnelFlag(opts.provider, opts.tunnelFlag); err != nil {
+		log.Warn().Err(err).Msgf("ignore validation %s", commonFlag.ErrorFlagNotSupported)
+		// ignore validation
+		return nil
+	}
+	return nil
+}
+
+func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
+
+	if opts.sourceFlag.Local {
 		path := args[0]
 		log.Debug().Msgf("temporary box from local template: path=%s", path)
 
 		sourceLoader := template.NewLocalCachedLoader[model.BoxV1](path, opts.configRef.Config.Template.CacheDir)
-		return opts.temporaryBox(sourceLoader, provider, model.NewLocalLabels())
+		return opts.temporaryBox(sourceLoader, opts.provider, model.NewLocalLabels())
 
 	} else {
 		name := args[0]
 		log.Debug().Msgf("temporary box from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
-		sourceOpts := newGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
+		sourceOpts := commonCmd.NewGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
 		sourceLoader := template.NewGitLoader[model.BoxV1](sourceOpts, name)
 		labels := model.NewGitLabels(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
-		return opts.temporaryBox(sourceLoader, provider, labels)
+		return opts.temporaryBox(sourceLoader, opts.provider, labels)
 	}
-}
-
-func (opts *boxCmdOptions) validateFlags(provider model.BoxProvider) error {
-	if err := boxFlag.ValidateSourceFlag(provider, opts.sourceFlag); err != nil {
-		log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
-		return err
-	}
-	if err := boxFlag.ValidateTunnelFlag(provider, opts.tunnelFlag); err != nil {
-		log.Warn().Err(err).Msgf("ignore validation %s", commonFlag.ErrorFlagNotSupported)
-		return nil
-	}
-	return nil
 }
 
 func (opts *boxCmdOptions) temporaryBox(sourceLoader template.SourceLoader[model.BoxV1], provider model.BoxProvider, labels model.BoxLabels) error {

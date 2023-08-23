@@ -7,18 +7,21 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/hckops/hckctl/internal/command/common"
+	commonCmd "github.com/hckops/hckctl/internal/command/common"
+	commonFlag "github.com/hckops/hckctl/internal/command/common/flag"
 	"github.com/hckops/hckctl/internal/command/config"
+	labFlag "github.com/hckops/hckctl/internal/command/lab/flag"
 	"github.com/hckops/hckctl/internal/command/version"
 	"github.com/hckops/hckctl/pkg/lab"
 	"github.com/hckops/hckctl/pkg/lab/model"
 	"github.com/hckops/hckctl/pkg/template"
 )
 
-// TODO command create, list, describe, delete
-
 type labCmdOptions struct {
-	configRef *config.ConfigRef
+	configRef    *config.ConfigRef
+	sourceFlag   *commonFlag.SourceFlag
+	providerFlag *commonFlag.ProviderFlag
+	provider     model.LabProvider
 }
 
 func NewLabCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -28,22 +31,55 @@ func NewLabCmd(configRef *config.ConfigRef) *cobra.Command {
 	}
 
 	command := &cobra.Command{
-		Use:   "lab [name]",
-		Short: "TODO",
-		Args:  cobra.ExactArgs(1),
-		RunE:  opts.run,
+		Use:     "lab [name]",
+		Short:   "Create a lab",
+		Args:    cobra.ExactArgs(1),
+		PreRunE: opts.validate,
+		RunE:    opts.run,
 	}
+
+	// --revision or --local
+	opts.sourceFlag = commonFlag.AddTemplateSourceFlag(command)
+	// --provider (enum)
+	opts.providerFlag = labFlag.AddLabProviderFlag(command)
 
 	return command
 }
 
-func (opts *labCmdOptions) run(cmd *cobra.Command, args []string) error {
-	name := args[0]
-	log.Debug().Msgf("start lab from git template: name=%s", name)
+func (opts *labCmdOptions) validate(cmd *cobra.Command, args []string) error {
 
-	sourceOpts := newGitSourceOptions(opts.configRef.Config.Template.CacheDir)
-	sourceLoader := template.NewGitLoader[model.LabV1](sourceOpts, name)
-	return startLab(sourceLoader, model.Cloud, opts.configRef)
+	validProvider, err := labFlag.ValidateLabProvider(opts.configRef.Config.Lab.Provider, opts.providerFlag)
+	if err != nil {
+		return err
+	}
+	opts.provider = validProvider
+
+	if err := commonFlag.ValidateSourceFlag(opts.providerFlag, opts.sourceFlag); err != nil {
+		log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
+		return errors.New(commonFlag.ErrorFlagNotSupported)
+	}
+	return nil
+}
+
+func (opts *labCmdOptions) run(cmd *cobra.Command, args []string) error {
+
+	if opts.sourceFlag.Local {
+		path := args[0]
+		log.Debug().Msgf("create lab from local template: path=%s", path)
+
+		sourceLoader := template.NewLocalCachedLoader[model.LabV1](path, opts.configRef.Config.Template.CacheDir)
+		// TODO labels
+		return startLab(sourceLoader, opts.provider, opts.configRef)
+
+	} else {
+		name := args[0]
+		log.Debug().Msgf("create lab from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
+
+		sourceOpts := commonCmd.NewGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
+		sourceLoader := template.NewGitLoader[model.LabV1](sourceOpts, name)
+		// TODO labels
+		return startLab(sourceLoader, opts.provider, opts.configRef)
+	}
 }
 
 func startLab(sourceLoader template.SourceLoader[model.LabV1], provider model.LabProvider, configRef *config.ConfigRef) error {
@@ -54,7 +90,7 @@ func startLab(sourceLoader template.SourceLoader[model.LabV1], provider model.La
 		return errors.New("invalid template")
 	}
 
-	loader := common.NewLoader()
+	loader := commonCmd.NewLoader()
 	loader.Start("loading template %s", labTemplate.Value.Data.Name)
 	defer loader.Stop()
 
@@ -67,7 +103,7 @@ func startLab(sourceLoader template.SourceLoader[model.LabV1], provider model.La
 
 	createOpts := &model.CreateOptions{
 		Template:   &labTemplate.Value.Data,
-		Parameters: map[string]string{},
+		Parameters: map[string]string{}, // TODO
 		Labels:     map[string]string{}, // TODO
 	}
 
@@ -80,17 +116,7 @@ func startLab(sourceLoader template.SourceLoader[model.LabV1], provider model.La
 	return nil
 }
 
-func newGitSourceOptions(cacheDir string) *template.GitSourceOptions {
-	return &template.GitSourceOptions{
-		CacheBaseDir:    cacheDir,
-		RepositoryUrl:   common.TemplateSourceUrl,
-		DefaultRevision: common.TemplateSourceRevision,
-		Revision:        common.TemplateSourceRevision,
-		AllowOffline:    true,
-	}
-}
-
-func newDefaultLabClient(provider model.LabProvider, configRef *config.ConfigRef, loader *common.Loader) (lab.LabClient, error) {
+func newDefaultLabClient(provider model.LabProvider, configRef *config.ConfigRef, loader *commonCmd.Loader) (lab.LabClient, error) {
 	labClientOpts := &model.LabClientOptions{
 		Provider:  provider,
 		CloudOpts: configRef.Config.Provider.Cloud.ToCloudOptions(version.ClientVersion()),
@@ -98,9 +124,10 @@ func newDefaultLabClient(provider model.LabProvider, configRef *config.ConfigRef
 
 	labClient, err := lab.NewLabClient(labClientOpts)
 	if err != nil {
-		log.Error().Err(err).Msgf("error lab client")
-		return nil, errors.New("error client")
+		log.Error().Err(err).Msgf("error lab client provider=%s", provider)
+		return nil, fmt.Errorf("error %s client", provider)
 	}
-	labClient.Events().Subscribe(common.EventCallback(loader))
+
+	labClient.Events().Subscribe(commonCmd.EventCallback(loader))
 	return labClient, nil
 }

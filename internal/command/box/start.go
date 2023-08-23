@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	boxFlag "github.com/hckops/hckctl/internal/command/box/flag"
+	commonCmd "github.com/hckops/hckctl/internal/command/common"
 	commonFlag "github.com/hckops/hckctl/internal/command/common/flag"
 	"github.com/hckops/hckctl/internal/command/config"
 	"github.com/hckops/hckctl/pkg/box/model"
@@ -18,6 +19,7 @@ type boxStartCmdOptions struct {
 	configRef    *config.ConfigRef
 	sourceFlag   *commonFlag.SourceFlag
 	providerFlag *commonFlag.ProviderFlag
+	provider     model.BoxProvider
 }
 
 func NewBoxStartCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -27,44 +29,53 @@ func NewBoxStartCmd(configRef *config.ConfigRef) *cobra.Command {
 	}
 
 	command := &cobra.Command{
-		Use:   "start [name]",
-		Short: "Start a long running detached box",
-		Args:  cobra.ExactArgs(1),
-		RunE:  opts.run,
+		Use:     "start [name]",
+		Short:   "Start a long running detached box",
+		Args:    cobra.ExactArgs(1),
+		PreRunE: opts.validate,
+		RunE:    opts.run,
 	}
 
-	// --provider (enum)
-	opts.providerFlag = boxFlag.AddBoxProviderFlag(command)
 	// --revision or --local
 	opts.sourceFlag = commonFlag.AddTemplateSourceFlag(command)
+	// --provider (enum)
+	opts.providerFlag = boxFlag.AddBoxProviderFlag(command)
 
 	return command
 }
 
-func (opts *boxStartCmdOptions) run(cmd *cobra.Command, args []string) error {
+func (opts *boxStartCmdOptions) validate(cmd *cobra.Command, args []string) error {
 
-	provider, err := boxFlag.ValidateBoxProvider(opts.configRef.Config.Box.Provider, opts.providerFlag)
+	validProvider, err := boxFlag.ValidateBoxProvider(opts.configRef.Config.Box.Provider, opts.providerFlag)
 	if err != nil {
 		return err
-	} else if err := boxFlag.ValidateSourceFlag(provider, opts.sourceFlag); err != nil {
+	}
+	opts.provider = validProvider
+
+	if err := commonFlag.ValidateSourceFlag(opts.providerFlag, opts.sourceFlag); err != nil {
 		log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
 		return errors.New(commonFlag.ErrorFlagNotSupported)
+	}
+	return nil
+}
 
-	} else if opts.sourceFlag.Local {
+func (opts *boxStartCmdOptions) run(cmd *cobra.Command, args []string) error {
+
+	if opts.sourceFlag.Local {
 		path := args[0]
 		log.Debug().Msgf("start box from local template: path=%s", path)
 
 		sourceLoader := template.NewLocalCachedLoader[model.BoxV1](path, opts.configRef.Config.Template.CacheDir)
-		return startBox(sourceLoader, provider, opts.configRef, model.NewLocalLabels())
+		return startBox(sourceLoader, opts.provider, opts.configRef, model.NewLocalLabels())
 
 	} else {
 		name := args[0]
 		log.Debug().Msgf("start box from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
-		sourceOpts := newGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
+		sourceOpts := commonCmd.NewGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
 		sourceLoader := template.NewGitLoader[model.BoxV1](sourceOpts, name)
 		labels := model.NewGitLabels(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
-		return startBox(sourceLoader, provider, opts.configRef, labels)
+		return startBox(sourceLoader, opts.provider, opts.configRef, labels)
 	}
 }
 

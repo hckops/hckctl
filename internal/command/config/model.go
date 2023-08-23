@@ -5,7 +5,8 @@ import (
 	"strconv"
 
 	"github.com/hckops/hckctl/internal/command/common"
-	"github.com/hckops/hckctl/pkg/box/model"
+	boxModel "github.com/hckops/hckctl/pkg/box/model"
+	labModel "github.com/hckops/hckctl/pkg/lab/model"
 	"github.com/hckops/hckctl/pkg/logger"
 	"github.com/hckops/hckctl/pkg/provider"
 	"github.com/hckops/hckctl/pkg/schema"
@@ -103,7 +104,8 @@ type BoxConfig struct {
 }
 
 type LabConfig struct {
-	Vpn string `yaml:"vpn"`
+	Provider string `yaml:"provider"`
+	Vpn      string `yaml:"vpn"`
 }
 
 func newConfig(logFile, cacheDir string) *ConfigV1 {
@@ -138,11 +140,12 @@ func newConfig(logFile, cacheDir string) *ConfigV1 {
 			CacheDir: cacheDir,
 		},
 		Box: BoxConfig{
-			Provider: model.Docker.String(),
-			Size:     model.Small.String(),
+			Provider: boxModel.Docker.String(),
+			Size:     boxModel.Small.String(),
 		},
 		Lab: LabConfig{
-			Vpn: common.DefaultVpnName,
+			Provider: labModel.Cloud.String(),
+			Vpn:      common.DefaultVpnName,
 		},
 	}
 }
