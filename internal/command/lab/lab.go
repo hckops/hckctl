@@ -14,6 +14,7 @@ import (
 	"github.com/hckops/hckctl/internal/command/version"
 	"github.com/hckops/hckctl/pkg/lab"
 	"github.com/hckops/hckctl/pkg/lab/model"
+	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/template"
 )
 
@@ -36,6 +37,7 @@ func NewLabCmd(configRef *config.ConfigRef) *cobra.Command {
 		Args:    cobra.ExactArgs(1),
 		PreRunE: opts.validate,
 		RunE:    opts.run,
+		Hidden:  true, // TODO WIP
 	}
 
 	// --revision or --local
@@ -85,7 +87,7 @@ func (opts *labCmdOptions) run(cmd *cobra.Command, args []string) error {
 func startLab(sourceLoader template.SourceLoader[model.LabV1], provider model.LabProvider, configRef *config.ConfigRef) error {
 
 	labTemplate, err := sourceLoader.Read()
-	if err != nil {
+	if err != nil || labTemplate.Value.Kind != schema.KindLabV1 {
 		log.Warn().Err(err).Msg("error reading template")
 		return errors.New("invalid template")
 	}

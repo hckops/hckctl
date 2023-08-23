@@ -12,6 +12,7 @@ import (
 	"github.com/hckops/hckctl/internal/command/version"
 	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/box/model"
+	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/template"
 )
 
@@ -25,7 +26,7 @@ type invokeOptions struct {
 func runBoxClient(sourceLoader template.SourceLoader[model.BoxV1], provider model.BoxProvider, configRef *config.ConfigRef, invokeClient func(*invokeOptions) error) error {
 
 	boxTemplate, err := sourceLoader.Read()
-	if err != nil {
+	if err != nil || boxTemplate.Value.Kind != schema.KindBoxV1 {
 		log.Warn().Err(err).Msg("error reading template")
 		return errors.New("invalid template")
 	}
@@ -84,7 +85,7 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 		}
 
 		templateInfo, err := newSourceLoader(boxDetails, configRef.Config.Template.CacheDir).Read()
-		if err != nil {
+		if err != nil || templateInfo.Value.Kind != schema.KindBoxV1 {
 			log.Warn().Err(err).Msgf("ignoring error reading source: provider=%s boxName=%s", provider, boxName)
 			continue
 		}
