@@ -6,7 +6,6 @@ import (
 	"math"
 	"strings"
 
-	"github.com/dchest/uniuri"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
@@ -65,7 +64,7 @@ func SortEnv(env []BoxEnv) []BoxEnv {
 }
 
 func (box *BoxV1) GenerateName() string {
-	return fmt.Sprintf("%s%s-%s", BoxPrefixName, box.Name, strings.ToLower(uniuri.NewLen(5)))
+	return fmt.Sprintf("%s%s-%s", BoxPrefixName, box.Name, util.Random(5))
 }
 
 // ToBoxTemplateName returns the strictly validated template name, or the original trimmed name

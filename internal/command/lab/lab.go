@@ -105,7 +105,7 @@ func startLab(sourceLoader template.SourceLoader[model.LabV1], provider model.La
 
 	createOpts := &model.CreateOptions{
 		Template:   &labTemplate.Value.Data,
-		Parameters: map[string]string{}, // TODO
+		Parameters: map[string]string{}, // TODO add override --input alias=parrot --input password=changeme --input vpn=htb-eu
 		Labels:     map[string]string{}, // TODO
 	}
 

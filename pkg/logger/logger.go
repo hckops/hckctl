@@ -3,10 +3,8 @@ package logger
 import (
 	"io"
 	"os"
-	"strings"
 	"time"
 
-	"github.com/dchest/uniuri"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -78,7 +76,7 @@ func SetContext(source string) {
 
 func SetSessionId() {
 	log.Logger = log.With().
-		Str("sessionId", strings.ToLower(uniuri.NewLen(5))).
+		Str("sessionId", util.Random(5)).
 		Logger()
 }
 
