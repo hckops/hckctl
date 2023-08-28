@@ -39,6 +39,22 @@ func (lab *LabV1) ExpandBox(inputs map[string]string) (*LabV1, error) {
 		lab.Box.Alias = alias
 	}
 
+	if vpn, err := expand(lab.Box.Vpn, inputs); err != nil {
+		return nil, err
+	} else {
+		lab.Box.Vpn = vpn
+	}
+
+	for i, e := range lab.Box.Env {
+		items := strings.Split(e, "=")
+		if len(items) == 2 {
+			// ignore errors
+			if env, err := expand(items[1], inputs); err == nil {
+				lab.Box.Env[i] = fmt.Sprintf("%s=%s", items[0], env)
+			}
+		}
+	}
+
 	return lab, nil
 }
 

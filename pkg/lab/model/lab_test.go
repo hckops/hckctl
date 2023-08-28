@@ -1,13 +1,70 @@
 package model
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
+func TestExpandBox(t *testing.T) {
+	testLab := &LabV1{
+		Kind: "lab/v1",
+		Name: "my-name",
+		Tags: []string{"my-tag"},
+		Box: LabBox{
+			Alias:    "${alias:myName}",
+			Template: "myTemplate",
+			Env:      []string{"MY_KEY=MY_VALUE"},
+			Size:     "xs",
+			Vpn:      "${vpn:default}",
+			Ports:    []string{"port-1", "port-2", "port-3"},
+			Dumps:    []string{"dump-1", "dump-2", "dump-3"},
+		},
+	}
+	input := map[string]string{
+		"alias": "myAlias",
+		"vpn":   "myVpn",
+	}
+	expected := &LabV1{
+		Kind: "lab/v1",
+		Name: "my-name",
+		Tags: []string{"my-tag"},
+		Box: LabBox{
+			Alias:    "myAlias",
+			Template: "myTemplate",
+			Env:      []string{"MY_KEY=MY_VALUE"},
+			Size:     "xs",
+			Vpn:      "myVpn",
+			Ports:    []string{"port-1", "port-2", "port-3"},
+			Dumps:    []string{"dump-1", "dump-2", "dump-3"},
+		},
+	}
+	result, err := testLab.ExpandBox(input)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+}
+
+func TestExpandEnv(t *testing.T) {
+	testLabEnv := &LabV1{
+		Box: LabBox{
+			Env: []string{
+				"MY_KEY=${value:myValue}",
+				"PASSWORD=${password:random}",
+			},
+		},
+	}
+	result, err := testLabEnv.ExpandBox(map[string]string{})
+
+	assert.NoError(t, err)
+	assert.Equal(t, result.Box.Env[0], "MY_KEY=myValue")
+	assert.True(t, strings.HasPrefix(result.Box.Env[1], "PASSWORD="))
+	assert.Len(t, result.Box.Env[1], 19)
+}
+
 func TestExpandAliasEmpty(t *testing.T) {
-	var testLabAlias = &LabV1{
+	testLabAlias := &LabV1{
 		Box: LabBox{
 			Alias: "${ \n\t\r  }",
 		},
@@ -24,7 +81,7 @@ func TestExpandAliasEmpty(t *testing.T) {
 }
 
 func TestExpandAliasNone(t *testing.T) {
-	var testLabAlias = &LabV1{
+	testLabAlias := &LabV1{
 		Box: LabBox{
 			Alias: "{alias:myName}",
 		},
@@ -41,7 +98,7 @@ func TestExpandAliasNone(t *testing.T) {
 }
 
 func TestExpandAliasRequiredSimpleFormat(t *testing.T) {
-	var testLabAlias = &LabV1{
+	testLabAlias := &LabV1{
 		Box: LabBox{
 			Alias: "$alias",
 		},
@@ -52,7 +109,7 @@ func TestExpandAliasRequiredSimpleFormat(t *testing.T) {
 }
 
 func TestExpandAliasRequiredTemplateFormat(t *testing.T) {
-	var testLabAlias = &LabV1{
+	testLabAlias := &LabV1{
 		Box: LabBox{
 			Alias: "${alias}",
 		},
@@ -63,7 +120,7 @@ func TestExpandAliasRequiredTemplateFormat(t *testing.T) {
 }
 
 func TestExpandAliasInput(t *testing.T) {
-	var testLabAlias = &LabV1{
+	testLabAlias := &LabV1{
 		Box: LabBox{
 			Alias: "${alias:myName}",
 		},
@@ -83,7 +140,7 @@ func TestExpandAliasInput(t *testing.T) {
 }
 
 func TestExpandAliasDefault(t *testing.T) {
-	var testLabAlias = &LabV1{
+	testLabAlias := &LabV1{
 		Box: LabBox{
 			Alias: "${alias:myName}",
 		},
@@ -100,7 +157,7 @@ func TestExpandAliasDefault(t *testing.T) {
 }
 
 func TestExpandAliasRandom(t *testing.T) {
-	var testLabAlias = &LabV1{
+	testLabAlias := &LabV1{
 		Box: LabBox{
 			Alias: "${alias:random}",
 		},
