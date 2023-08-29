@@ -75,7 +75,7 @@ func expand(raw string, inputs map[string]string) (string, error) {
 			// handle keywords
 			switch items[1] {
 			case "random":
-				return util.Random(10)
+				return util.RandomAlphanumeric(10)
 			}
 
 			key := items[0]

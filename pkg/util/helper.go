@@ -14,6 +14,6 @@ func IotaToValues[T comparable](kv map[T]string) []string {
 	return values
 }
 
-func Random(size int) string {
+func RandomAlphanumeric(size int) string {
 	return strings.ToLower(uniuri.NewLen(size))
 }

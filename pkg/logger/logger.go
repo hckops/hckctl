@@ -76,7 +76,7 @@ func SetContext(source string) {
 
 func SetSessionId() {
 	log.Logger = log.With().
-		Str("sessionId", util.Random(5)).
+		Str("sessionId", util.RandomAlphanumeric(5)).
 		Logger()
 }
 
