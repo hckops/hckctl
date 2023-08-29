@@ -12,6 +12,7 @@ import (
 	"github.com/hckops/hckctl/internal/command/config"
 	labFlag "github.com/hckops/hckctl/internal/command/lab/flag"
 	"github.com/hckops/hckctl/internal/command/version"
+	boxModel "github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/lab"
 	"github.com/hckops/hckctl/pkg/lab/model"
 	"github.com/hckops/hckctl/pkg/schema"
@@ -104,9 +105,10 @@ func startLab(sourceLoader template.SourceLoader[model.LabV1], provider model.La
 	}
 
 	createOpts := &model.CreateOptions{
-		Template:   &labTemplate.Value.Data,
-		Parameters: map[string]string{}, // TODO add override --input alias=parrot --input password=changeme --input vpn=htb-eu
-		Labels:     map[string]string{}, // TODO
+		LabTemplate:  &labTemplate.Value.Data,
+		BoxTemplates: map[string]*boxModel.BoxV1{}, // TODO load box template
+		Parameters:   map[string]string{},          // TODO add override --input alias=parrot --input password=changeme --input vpn=htb-eu
+		Labels:       map[string]string{},          // TODO box+lab labels
 	}
 
 	if labInfo, err := labClient.Create(createOpts); err != nil {

@@ -30,9 +30,9 @@ func newCloudLabClient(commonOpts *model.CommonLabOptions, cloudOpts *provider.C
 }
 
 func (lab *CloudLabClient) createLab(opts *model.CreateOptions) (*model.LabInfo, error) {
-	lab.eventBus.Publish(newApiCreateCloudLoaderEvent(lab.clientOpts.Address, opts.Template.Name))
+	lab.eventBus.Publish(newApiCreateCloudLoaderEvent(lab.clientOpts.Address, opts.LabTemplate.Name))
 
-	request := v1.NewLabCreateRequest(lab.clientOpts.Version, opts.Template.Name, opts.Parameters)
+	request := v1.NewLabCreateRequest(lab.clientOpts.Version, opts.LabTemplate.Name, opts.Parameters)
 	payload, err := request.Encode()
 	if err != nil {
 		return nil, errors.Wrap(err, "error cloud lab create request")
@@ -47,7 +47,7 @@ func (lab *CloudLabClient) createLab(opts *model.CreateOptions) (*model.LabInfo,
 		return nil, errors.Wrap(err, "error cloud lab create response")
 	}
 	labName := response.Body.Name
-	lab.eventBus.Publish(newApiCreateCloudEvent(opts.Template.Name, labName))
+	lab.eventBus.Publish(newApiCreateCloudEvent(opts.LabTemplate.Name, labName))
 
 	return &model.LabInfo{Id: labName, Name: labName}, nil
 }

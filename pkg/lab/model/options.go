@@ -1,6 +1,7 @@
 package model
 
 import (
+	boxModel "github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/event"
 	"github.com/hckops/hckctl/pkg/provider"
 )
@@ -21,7 +22,8 @@ func NewCommonLabOpts() *CommonLabOptions {
 }
 
 type CreateOptions struct {
-	Template   *LabV1
-	Parameters map[string]string // TODO
-	Labels     map[string]string // TODO refactor BoxLabels
+	LabTemplate  *LabV1
+	BoxTemplates map[string]*boxModel.BoxV1
+	Parameters   map[string]string
+	Labels       map[string]string
 }
