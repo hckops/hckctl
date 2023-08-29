@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	boxModel "github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
@@ -17,12 +18,33 @@ type LabV1 struct {
 
 type LabBox struct {
 	Alias    string
-	Template string
-	Env      []string
+	Template BoxTemplate
 	Size     string
 	Vpn      string
 	Ports    []string // cloud only
 	Dumps    []string // cloud only
+}
+
+type BoxTemplate struct {
+	Name string
+	Env  []string
+}
+
+func (t *BoxTemplate) Merge(original *boxModel.BoxV1) *boxModel.BoxV1 {
+
+	override := boxModel.ToEnvironmentVariables(t.Env)
+
+	var envs []string
+	for key, originalEnv := range original.EnvironmentVariables() {
+		if overrideEnv, ok := override[key]; ok {
+			envs = append(envs, fmt.Sprintf("%s=%s", key, overrideEnv.Value))
+		} else {
+			envs = append(envs, fmt.Sprintf("%s=%s", key, originalEnv.Value))
+		}
+	}
+
+	original.Env = envs
+	return original
 }
 
 func (lab *LabV1) Pretty() string {
@@ -31,31 +53,30 @@ func (lab *LabV1) Pretty() string {
 }
 
 // TODO use reflection to expand all fields
-func (lab *LabV1) ExpandBox(inputs map[string]string) (*LabV1, error) {
+func (box *LabBox) Expand(inputs map[string]string) (*LabBox, error) {
 
-	if alias, err := expand(lab.Box.Alias, inputs); err != nil {
+	if alias, err := expand(box.Alias, inputs); err != nil {
 		return nil, err
 	} else {
-		lab.Box.Alias = alias
+		box.Alias = alias
 	}
 
-	if vpn, err := expand(lab.Box.Vpn, inputs); err != nil {
+	if vpn, err := expand(box.Vpn, inputs); err != nil {
 		return nil, err
 	} else {
-		lab.Box.Vpn = vpn
+		box.Vpn = vpn
 	}
 
-	for i, e := range lab.Box.Env {
-		items := strings.Split(e, "=")
-		if len(items) == 2 {
+	for i, e := range box.Template.Env {
+		if key, value, err := util.SplitKeyValue(e); err == nil {
 			// ignore errors
-			if env, err := expand(items[1], inputs); err == nil {
-				lab.Box.Env[i] = fmt.Sprintf("%s=%s", items[0], env)
+			if env, err := expand(value, inputs); err == nil {
+				box.Template.Env[i] = fmt.Sprintf("%s=%s", key, env)
 			}
 		}
 	}
 
-	return lab, nil
+	return box, nil
 }
 
 func expand(raw string, inputs map[string]string) (string, error) {

@@ -5,42 +5,65 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	boxModel "github.com/hckops/hckctl/pkg/box/model"
 )
 
-func TestExpandBox(t *testing.T) {
-	testLab := &LabV1{
-		Kind: "lab/v1",
-		Name: "my-name",
-		Tags: []string{"my-tag"},
-		Box: LabBox{
-			Alias:    "${alias:myName}",
-			Template: "myTemplate",
-			Env:      []string{"MY_KEY=MY_VALUE"},
-			Size:     "xs",
-			Vpn:      "${vpn:default}",
-			Ports:    []string{"port-1", "port-2", "port-3"},
-			Dumps:    []string{"dump-1", "dump-2", "dump-3"},
+func TestMerge(t *testing.T) {
+	testBox := &boxModel.BoxV1{
+		Env: []string{
+			"TTYD_USERNAME=username",
+			"TTYD_PASSWORD=password",
 		},
+	}
+	testLab := &LabV1{
+		Box: LabBox{
+			Template: BoxTemplate{
+				Env: []string{
+					"TTYD_PASSWORD=${password:random}",
+				},
+			},
+		},
+	}
+	expected := &boxModel.BoxV1{
+		Env: []string{
+			"TTYD_USERNAME=username",
+			"TTYD_PASSWORD=${password:random}", // merge
+		},
+	}
+	result := testLab.Box.Template.Merge(testBox)
+
+	assert.Equal(t, expected, result)
+}
+
+func TestExpand(t *testing.T) {
+	testLabBox := &LabBox{
+		Alias: "${alias:myName}", // expand
+		Template: BoxTemplate{
+			Name: "myTemplate",
+			Env:  []string{"MY_KEY=MY_VALUE"},
+		},
+		Size:  "xs",
+		Vpn:   "${vpn:default}", // expand
+		Ports: []string{"port-1", "port-2", "port-3"},
+		Dumps: []string{"dump-1", "dump-2", "dump-3"},
 	}
 	input := map[string]string{
 		"alias": "myAlias",
 		"vpn":   "myVpn",
 	}
-	expected := &LabV1{
-		Kind: "lab/v1",
-		Name: "my-name",
-		Tags: []string{"my-tag"},
-		Box: LabBox{
-			Alias:    "myAlias",
-			Template: "myTemplate",
-			Env:      []string{"MY_KEY=MY_VALUE"},
-			Size:     "xs",
-			Vpn:      "myVpn",
-			Ports:    []string{"port-1", "port-2", "port-3"},
-			Dumps:    []string{"dump-1", "dump-2", "dump-3"},
+	expected := &LabBox{
+		Alias: "myAlias",
+		Template: BoxTemplate{
+			Name: "myTemplate",
+			Env:  []string{"MY_KEY=MY_VALUE"},
 		},
+		Size:  "xs",
+		Vpn:   "myVpn",
+		Ports: []string{"port-1", "port-2", "port-3"},
+		Dumps: []string{"dump-1", "dump-2", "dump-3"},
 	}
-	result, err := testLab.ExpandBox(input)
+	result, err := testLabBox.Expand(input)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
@@ -49,49 +72,43 @@ func TestExpandBox(t *testing.T) {
 func TestExpandEnv(t *testing.T) {
 	testLabEnv := &LabV1{
 		Box: LabBox{
-			Env: []string{
-				"MY_KEY=${value:myValue}",
-				"PASSWORD=${password:random}",
+			Template: BoxTemplate{
+				Env: []string{
+					"MY_KEY=${value:myValue}",
+					"PASSWORD=${password:random}",
+				},
 			},
 		},
 	}
-	result, err := testLabEnv.ExpandBox(map[string]string{})
+	result, err := testLabEnv.Box.Expand(map[string]string{})
 
 	assert.NoError(t, err)
-	assert.Equal(t, result.Box.Env[0], "MY_KEY=myValue")
-	assert.True(t, strings.HasPrefix(result.Box.Env[1], "PASSWORD="))
-	assert.Len(t, result.Box.Env[1], 19)
+	assert.Equal(t, result.Template.Env[0], "MY_KEY=myValue")
+	assert.True(t, strings.HasPrefix(result.Template.Env[1], "PASSWORD="))
+	assert.Len(t, result.Template.Env[1], 19)
 }
 
 func TestExpandAliasEmpty(t *testing.T) {
-	testLabAlias := &LabV1{
-		Box: LabBox{
-			Alias: "${ \n\t\r  }",
-		},
+	testLabAlias := &LabBox{
+		Alias: "${ \n\t\r  }",
 	}
-	expected := &LabV1{
-		Box: LabBox{
-			Alias: "",
-		},
+	expected := &LabBox{
+		Alias: "",
 	}
-	result, err := testLabAlias.ExpandBox(map[string]string{})
+	result, err := testLabAlias.Expand(map[string]string{})
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 }
 
 func TestExpandAliasNone(t *testing.T) {
-	testLabAlias := &LabV1{
-		Box: LabBox{
-			Alias: "{alias:myName}",
-		},
+	testLabAlias := &LabBox{
+		Alias: "{alias:myName}",
 	}
-	expected := &LabV1{
-		Box: LabBox{
-			Alias: "{alias:myName}",
-		},
+	expected := &LabBox{
+		Alias: "{alias:myName}",
 	}
-	result, err := testLabAlias.ExpandBox(map[string]string{})
+	result, err := testLabAlias.Expand(map[string]string{})
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
@@ -103,7 +120,7 @@ func TestExpandAliasRequiredSimpleFormat(t *testing.T) {
 			Alias: "$alias",
 		},
 	}
-	_, err := testLabAlias.ExpandBox(map[string]string{})
+	_, err := testLabAlias.Box.Expand(map[string]string{})
 
 	assert.EqualError(t, err, "alias required")
 }
@@ -114,67 +131,55 @@ func TestExpandAliasRequiredTemplateFormat(t *testing.T) {
 			Alias: "${alias}",
 		},
 	}
-	_, err := testLabAlias.ExpandBox(map[string]string{})
+	_, err := testLabAlias.Box.Expand(map[string]string{})
 
 	assert.EqualError(t, err, "alias required")
 }
 
 func TestExpandAliasInput(t *testing.T) {
-	testLabAlias := &LabV1{
-		Box: LabBox{
-			Alias: "${alias:myName}",
-		},
+	testLabAlias := &LabBox{
+		Alias: "${alias:myName}",
 	}
 	input := map[string]string{
 		"alias": "myAlias",
 	}
-	expected := &LabV1{
-		Box: LabBox{
-			Alias: "myAlias",
-		},
+	expected := &LabBox{
+		Alias: "myAlias",
 	}
-	result, err := testLabAlias.ExpandBox(input)
+	result, err := testLabAlias.Expand(input)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 }
 
 func TestExpandAliasDefault(t *testing.T) {
-	testLabAlias := &LabV1{
-		Box: LabBox{
-			Alias: "${alias:myName}",
-		},
+	testLabAlias := &LabBox{
+		Alias: "${alias:myName}",
 	}
-	expected := &LabV1{
-		Box: LabBox{
-			Alias: "myName",
-		},
+	expected := &LabBox{
+		Alias: "myName",
 	}
-	result, err := testLabAlias.ExpandBox(map[string]string{})
+	result, err := testLabAlias.Expand(map[string]string{})
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 }
 
 func TestExpandAliasRandom(t *testing.T) {
-	testLabAlias := &LabV1{
-		Box: LabBox{
-			Alias: "${alias:random}",
-		},
+	testLabAlias := &LabBox{
+		Alias: "${alias:random}",
 	}
-	result, err := testLabAlias.ExpandBox(map[string]string{})
+	result, err := testLabAlias.Expand(map[string]string{})
 
 	assert.NoError(t, err)
-	assert.Len(t, result.Box.Alias, 10)
+	assert.Len(t, result.Alias, 10)
 }
 
 func TestExpandAliasMissing(t *testing.T) {
-	expected := &LabV1{
-		Box: LabBox{
-			Alias: "",
-		},
+	expected := &LabBox{
+		Alias: "",
 	}
-	result, err := (&LabV1{Box: LabBox{}}).ExpandBox(map[string]string{})
+	result, err := (&LabBox{}).Expand(map[string]string{})
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)

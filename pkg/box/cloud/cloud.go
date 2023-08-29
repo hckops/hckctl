@@ -212,7 +212,7 @@ func toBoxDetails(response *v1.Message[v1.BoxDescribeResponseBody]) (*model.BoxD
 	var envs []model.BoxEnv
 	for _, env := range response.Body.Env {
 		// silently ignore invalid envs
-		if key, value, err := model.SplitEnvironmentVariable(env); err == nil {
+		if key, value, err := util.SplitKeyValue(env); err == nil {
 			envs = append(envs, model.BoxEnv{
 				Key:   key,
 				Value: value,
