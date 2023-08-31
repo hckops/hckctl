@@ -4,15 +4,15 @@ import (
 	"io"
 	"os"
 
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/event"
-	"github.com/hckops/hckctl/pkg/provider"
 )
 
 type BoxClientOptions struct {
 	Provider   BoxProvider
-	DockerOpts *provider.DockerOptions
-	KubeOpts   *provider.KubeOptions
-	CloudOpts  *provider.CloudOptions
+	DockerOpts *commonModel.DockerOptions
+	KubeOpts   *commonModel.KubeOptions
+	CloudOpts  *commonModel.CloudOptions
 }
 
 type CommonBoxOptions struct {

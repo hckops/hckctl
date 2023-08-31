@@ -1,15 +1,15 @@
 package cloud
 
 import (
+	model2 "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/pkg/errors"
 
 	v1 "github.com/hckops/hckctl/pkg/api/v1"
 	"github.com/hckops/hckctl/pkg/client/ssh"
 	"github.com/hckops/hckctl/pkg/lab/model"
-	"github.com/hckops/hckctl/pkg/provider"
 )
 
-func newCloudLabClient(commonOpts *model.CommonLabOptions, cloudOpts *provider.CloudOptions) (*CloudLabClient, error) {
+func newCloudLabClient(commonOpts *model.CommonLabOptions, cloudOpts *model2.CloudOptions) (*CloudLabClient, error) {
 	commonOpts.EventBus.Publish(newInitCloudClientEvent())
 
 	clientConfig := &ssh.SshClientConfig{

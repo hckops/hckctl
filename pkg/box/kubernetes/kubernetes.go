@@ -2,19 +2,18 @@ package kubernetes
 
 import (
 	"fmt"
-
 	"github.com/pkg/errors"
 	"golang.org/x/exp/slices"
 
-	"github.com/hckops/hckctl/pkg/box/model"
+	boxModel "github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/common"
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
-	"github.com/hckops/hckctl/pkg/provider"
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-func newKubeBoxClient(commonOpts *model.CommonBoxOptions, kubeOpts *provider.KubeOptions) (*KubeBoxClient, error) {
+func newKubeBoxClient(commonOpts *boxModel.CommonBoxOptions, kubeOpts *commonModel.KubeOptions) (*KubeBoxClient, error) {
 	commonOpts.EventBus.Publish(newInitKubeClientEvent())
 
 	kubeClient, err := kubernetes.NewKubeClient(kubeOpts.InCluster, kubeOpts.ConfigPath)
@@ -35,7 +34,7 @@ func (box *KubeBoxClient) close() error {
 	return box.client.Close()
 }
 
-func (box *KubeBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo, error) {
+func (box *KubeBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.BoxInfo, error) {
 	namespace := box.clientOpts.Namespace
 
 	boxName := opts.Template.GenerateName()
@@ -81,10 +80,10 @@ func (box *KubeBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo, 
 	box.eventBus.Publish(newPodNameKubeEvent(namespace, podInfo.PodName, podInfo.ContainerName))
 
 	// TODO always healthy unused? otherwise use DeploymentDescribe instead of PodDescribe
-	return &model.BoxInfo{Id: podInfo.PodName, Name: boxName, Healthy: true}, nil
+	return &boxModel.BoxInfo{Id: podInfo.PodName, Name: boxName, Healthy: true}, nil
 }
 
-func newResources(namespace string, name string, opts *model.CreateOptions) *kubernetes.ResourcesOpts {
+func newResources(namespace string, name string, opts *boxModel.CreateOptions) *kubernetes.ResourcesOpts {
 
 	var envs []kubernetes.KubeEnv
 	for _, e := range opts.Template.EnvironmentVariables() {
@@ -100,7 +99,7 @@ func newResources(namespace string, name string, opts *model.CreateOptions) *kub
 		Name:        name,
 		Annotations: opts.Labels,
 		Labels: kubernetes.BuildLabels(name, opts.Template.Image.Repository, opts.Template.ImageVersion(),
-			map[string]string{model.LabelSchemaKind: common.ToKebabCase(schema.KindBoxV1.String())}),
+			map[string]string{boxModel.LabelSchemaKind: common.ToKebabCase(schema.KindBoxV1.String())}),
 		Ports: ports,
 		PodInfo: &kubernetes.PodInfo{
 			Namespace:     namespace,
@@ -113,7 +112,7 @@ func newResources(namespace string, name string, opts *model.CreateOptions) *kub
 	}
 }
 
-func (box *KubeBoxClient) connectBox(opts *model.ConnectOptions) error {
+func (box *KubeBoxClient) connectBox(opts *boxModel.ConnectOptions) error {
 	if info, err := box.searchBox(opts.Name); err != nil {
 		return err
 	} else {
@@ -145,14 +144,14 @@ func (box *KubeBoxClient) connectBox(opts *model.ConnectOptions) error {
 }
 
 func boxNameLabelSelector(name string) string {
-	return fmt.Sprintf("%s,%s=%s", model.BoxLabelSelector(), kubernetes.LabelKubeName, name)
+	return fmt.Sprintf("%s,%s=%s", boxModel.BoxLabelSelector(), kubernetes.LabelKubeName, name)
 }
 
-func (box *KubeBoxClient) searchBox(name string) (*model.BoxInfo, error) {
+func (box *KubeBoxClient) searchBox(name string) (*boxModel.BoxInfo, error) {
 	namespace := box.clientOpts.Namespace
 	box.eventBus.Publish(newDeploymentSearchKubeEvent(namespace, name))
 
-	deployments, err := box.client.DeploymentList(namespace, model.BoxPrefixName, boxNameLabelSelector(name))
+	deployments, err := box.client.DeploymentList(namespace, boxModel.BoxPrefixName, boxNameLabelSelector(name))
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +168,7 @@ func (box *KubeBoxClient) searchBox(name string) (*model.BoxInfo, error) {
 	}
 }
 
-func (box *KubeBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, streams *model.BoxStreams, deleteOnExit bool) error {
+func (box *KubeBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.BoxInfo, streams *boxModel.BoxStreams, deleteOnExit bool) error {
 	box.eventBus.Publish(newPodExecKubeEvent(template.Name, box.clientOpts.Namespace, info.Id, template.Shell))
 
 	// TODO if BoxInfo not Healthy attempt scale 1
@@ -198,7 +197,7 @@ func (box *KubeBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, st
 	return box.client.PodExec(opts)
 }
 
-func (box *KubeBoxClient) podPortForward(template *model.BoxV1, boxInfo *model.BoxInfo, isWait bool) error {
+func (box *KubeBoxClient) podPortForward(template *boxModel.BoxV1, boxInfo *boxModel.BoxInfo, isWait bool) error {
 	namespace := box.clientOpts.Namespace
 
 	if !template.HasPorts() {
@@ -208,8 +207,8 @@ func (box *KubeBoxClient) podPortForward(template *model.BoxV1, boxInfo *model.B
 	}
 
 	networkPorts := template.NetworkPortValues(false)
-	portPadding := model.PortFormatPadding(networkPorts)
-	ports, err := ToPortBindings(networkPorts, func(port model.BoxPort) {
+	portPadding := boxModel.PortFormatPadding(networkPorts)
+	ports, err := ToPortBindings(networkPorts, func(port boxModel.BoxPort) {
 		box.eventBus.Publish(newPodPortForwardBindingKubeEvent(namespace, boxInfo.Id, port))
 		box.eventBus.Publish(newPodPortForwardBindingKubeConsoleEvent(namespace, boxInfo.Name, port, portPadding))
 	})
@@ -237,7 +236,7 @@ func (box *KubeBoxClient) podPortForward(template *model.BoxV1, boxInfo *model.B
 	return nil
 }
 
-func ToPortBindings(ports []model.BoxPort, onPortBindCallback func(port model.BoxPort)) ([]string, error) {
+func ToPortBindings(ports []boxModel.BoxPort, onPortBindCallback func(port boxModel.BoxPort)) ([]string, error) {
 
 	var portBindings []string
 	for _, port := range ports {
@@ -248,7 +247,7 @@ func ToPortBindings(ports []model.BoxPort, onPortBindCallback func(port model.Bo
 		}
 
 		// actual bound port
-		onPortBindCallback(model.BoxPort{
+		onPortBindCallback(boxModel.BoxPort{
 			Alias:  port.Alias,
 			Local:  localPort,
 			Remote: port.Remote,
@@ -259,7 +258,7 @@ func ToPortBindings(ports []model.BoxPort, onPortBindCallback func(port model.Bo
 	return portBindings, nil
 }
 
-func (box *KubeBoxClient) describeBox(name string) (*model.BoxDetails, error) {
+func (box *KubeBoxClient) describeBox(name string) (*boxModel.BoxDetails, error) {
 	namespace := box.clientOpts.Namespace
 
 	boxInfo, err := box.searchBox(name)
@@ -282,60 +281,60 @@ func (box *KubeBoxClient) describeBox(name string) (*model.BoxDetails, error) {
 	return ToBoxDetails(deployment, service, box.Provider())
 }
 
-func ToBoxDetails(deployment *kubernetes.DeploymentDetails, serviceInfo *kubernetes.ServiceInfo, provider model.BoxProvider) (*model.BoxDetails, error) {
+func ToBoxDetails(deployment *kubernetes.DeploymentDetails, serviceInfo *kubernetes.ServiceInfo, provider boxModel.BoxProvider) (*boxModel.BoxDetails, error) {
 
-	labels := model.BoxLabels(deployment.Annotations)
+	labels := boxModel.BoxLabels(deployment.Annotations)
 
 	size, err := labels.ToSize()
 	if err != nil {
 		return nil, err
 	}
 
-	var envs []model.BoxEnv
+	var envs []boxModel.BoxEnv
 	for _, env := range deployment.Info.PodInfo.Env {
-		envs = append(envs, model.BoxEnv{
+		envs = append(envs, boxModel.BoxEnv{
 			Key:   env.Key,
 			Value: env.Value,
 		})
 	}
 
-	var ports []model.BoxPort
+	var ports []boxModel.BoxPort
 	for _, p := range serviceInfo.Ports {
-		ports = append(ports, model.BoxPort{
+		ports = append(ports, boxModel.BoxPort{
 			Alias:  p.Name,
-			Local:  model.BoxPortNone, // runtime only
+			Local:  boxModel.BoxPortNone, // runtime only
 			Remote: p.Port,
 			Public: false,
 		})
 	}
 
-	return &model.BoxDetails{
+	return &boxModel.BoxDetails{
 		Info: newBoxInfo(*deployment.Info),
-		TemplateInfo: &model.BoxTemplateInfo{
+		TemplateInfo: &boxModel.BoxTemplateInfo{
 			CachedTemplate: labels.ToCachedTemplateInfo(),
 			GitTemplate:    labels.ToGitTemplateInfo(),
 		},
-		ProviderInfo: &model.BoxProviderInfo{
+		ProviderInfo: &boxModel.BoxProviderInfo{
 			Provider: provider,
-			KubeProvider: &model.KubeProviderInfo{
+			KubeProvider: &boxModel.KubeProviderInfo{
 				Namespace: deployment.Info.Namespace,
 			},
 		},
 		Size:    size,
-		Env:     model.SortEnv(envs),
-		Ports:   model.SortPorts(ports),
+		Env:     boxModel.SortEnv(envs),
+		Ports:   boxModel.SortPorts(ports),
 		Created: deployment.Created,
 	}, nil
 }
 
-func (box *KubeBoxClient) listBoxes() ([]model.BoxInfo, error) {
+func (box *KubeBoxClient) listBoxes() ([]boxModel.BoxInfo, error) {
 	namespace := box.clientOpts.Namespace
 
-	deployments, err := box.client.DeploymentList(namespace, model.BoxPrefixName, model.BoxLabelSelector())
+	deployments, err := box.client.DeploymentList(namespace, boxModel.BoxPrefixName, boxModel.BoxLabelSelector())
 	if err != nil {
 		return nil, err
 	}
-	var result []model.BoxInfo
+	var result []boxModel.BoxInfo
 	for index, d := range deployments {
 		result = append(result, newBoxInfo(d))
 		box.eventBus.Publish(newDeploymentListKubeEvent(index, namespace, d.Name, d.PodInfo.PodName, d.Healthy))
@@ -344,8 +343,8 @@ func (box *KubeBoxClient) listBoxes() ([]model.BoxInfo, error) {
 	return result, nil
 }
 
-func newBoxInfo(deployment kubernetes.DeploymentInfo) model.BoxInfo {
-	return model.BoxInfo{
+func newBoxInfo(deployment kubernetes.DeploymentInfo) boxModel.BoxInfo {
+	return boxModel.BoxInfo{
 		Id:      deployment.PodInfo.PodName,
 		Name:    deployment.Name,
 		Healthy: deployment.Healthy,

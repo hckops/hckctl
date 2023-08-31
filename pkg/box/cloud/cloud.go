@@ -7,13 +7,13 @@ import (
 	"github.com/pkg/errors"
 
 	v1 "github.com/hckops/hckctl/pkg/api/v1"
-	"github.com/hckops/hckctl/pkg/box/model"
+	boxModel "github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/ssh"
-	"github.com/hckops/hckctl/pkg/provider"
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-func newCloudBoxClient(commonOpts *model.CommonBoxOptions, cloudOpts *provider.CloudOptions) (*CloudBoxClient, error) {
+func newCloudBoxClient(commonOpts *boxModel.CommonBoxOptions, cloudOpts *commonModel.CloudOptions) (*CloudBoxClient, error) {
 	commonOpts.EventBus.Publish(newInitCloudClientEvent())
 
 	clientConfig := &ssh.SshClientConfig{
@@ -40,7 +40,7 @@ func (box *CloudBoxClient) close() error {
 	return box.client.Close()
 }
 
-func (box *CloudBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo, error) {
+func (box *CloudBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.BoxInfo, error) {
 	box.eventBus.Publish(newApiCreateCloudLoaderEvent(box.clientOpts.Address, opts.Template.Name))
 
 	request := v1.NewBoxCreateRequest(box.clientOpts.Version, opts.Template.Name, opts.Size.String())
@@ -61,10 +61,10 @@ func (box *CloudBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo,
 	box.eventBus.Publish(newApiCreateCloudEvent(opts.Template.Name, boxName, response.Body.Size))
 
 	// internal id not exposed
-	return &model.BoxInfo{Id: boxName, Name: boxName}, nil
+	return &boxModel.BoxInfo{Id: boxName, Name: boxName}, nil
 }
 
-func (box *CloudBoxClient) connectBox(opts *model.ConnectOptions) error {
+func (box *CloudBoxClient) connectBox(opts *boxModel.ConnectOptions) error {
 
 	if opts.DisableExec && opts.DisableTunnel {
 		return errors.New("invalid connection options")
@@ -116,7 +116,7 @@ func (box *CloudBoxClient) execBox(name string, deleteOnExit bool) error {
 	return box.client.Exec(opts)
 }
 
-func (box *CloudBoxClient) tunnelBox(template *model.BoxV1, name string, isWait bool) error {
+func (box *CloudBoxClient) tunnelBox(template *boxModel.BoxV1, name string, isWait bool) error {
 
 	if !template.HasPorts() {
 		box.eventBus.Publish(newApiTunnelIgnoreCloudEvent(name))
@@ -125,7 +125,7 @@ func (box *CloudBoxClient) tunnelBox(template *model.BoxV1, name string, isWait 
 	}
 
 	networkPorts := template.NetworkPortValues(true)
-	portPadding := model.PortFormatPadding(networkPorts)
+	portPadding := boxModel.PortFormatPadding(networkPorts)
 
 	errorChannel := make(chan struct{})
 
@@ -170,10 +170,10 @@ func (box *CloudBoxClient) tunnelBox(template *model.BoxV1, name string, isWait 
 	return nil
 }
 
-func bindPort(port model.BoxPort) (model.BoxPort, error) {
+func bindPort(port boxModel.BoxPort) (boxModel.BoxPort, error) {
 	localPort, err := util.FindOpenPort(port.Local)
 	if err != nil {
-		return model.BoxPort{}, errors.Wrapf(err, "error bind local port %s", port.Local)
+		return boxModel.BoxPort{}, errors.Wrapf(err, "error bind local port %s", port.Local)
 	}
 	// update actual port
 	port.Local = localPort
@@ -181,7 +181,7 @@ func bindPort(port model.BoxPort) (model.BoxPort, error) {
 	return port, nil
 }
 
-func (box *CloudBoxClient) describeBox(name string) (*model.BoxDetails, error) {
+func (box *CloudBoxClient) describeBox(name string) (*boxModel.BoxDetails, error) {
 	box.eventBus.Publish(newApiDescribeCloudEvent(name))
 
 	request := v1.NewBoxDescribeRequest(box.clientOpts.Version, name)
@@ -202,32 +202,32 @@ func (box *CloudBoxClient) describeBox(name string) (*model.BoxDetails, error) {
 	return toBoxDetails(response)
 }
 
-func toBoxDetails(response *v1.Message[v1.BoxDescribeResponseBody]) (*model.BoxDetails, error) {
+func toBoxDetails(response *v1.Message[v1.BoxDescribeResponseBody]) (*boxModel.BoxDetails, error) {
 
-	size, err := model.ExistResourceSize(response.Body.Size)
+	size, err := boxModel.ExistResourceSize(response.Body.Size)
 	if err != nil {
 		return nil, errors.Wrap(err, "error cloud box details size")
 	}
 
-	var envs []model.BoxEnv
+	var envs []boxModel.BoxEnv
 	for _, env := range response.Body.Env {
 		// silently ignore invalid envs
 		if key, value, err := util.SplitKeyValue(env); err == nil {
-			envs = append(envs, model.BoxEnv{
+			envs = append(envs, boxModel.BoxEnv{
 				Key:   key,
 				Value: value,
 			})
 		}
 	}
 
-	var ports []model.BoxPort
+	var ports []boxModel.BoxPort
 	for _, port := range response.Body.Ports {
 		items := strings.Split(port, "/")
 		// silently ignore invalid ports
 		if len(items) == 2 {
-			ports = append(ports, model.BoxPort{
+			ports = append(ports, boxModel.BoxPort{
 				Alias:  items[0],
-				Local:  model.BoxPortNone, // runtime only
+				Local:  boxModel.BoxPortNone, // runtime only
 				Remote: items[1],
 				Public: false, // TODO url
 			})
@@ -239,32 +239,32 @@ func toBoxDetails(response *v1.Message[v1.BoxDescribeResponseBody]) (*model.BoxD
 		return nil, errors.Wrap(err, "error cloud box details created")
 	}
 
-	return &model.BoxDetails{
-		Info: model.BoxInfo{
+	return &boxModel.BoxDetails{
+		Info: boxModel.BoxInfo{
 			Id:      response.Body.Id,
 			Name:    response.Body.Name,
 			Healthy: response.Body.Healthy,
 		},
-		TemplateInfo: &model.BoxTemplateInfo{
+		TemplateInfo: &boxModel.BoxTemplateInfo{
 			// TODO valid only if response.Body.Template.Public
-			GitTemplate: &model.GitTemplateInfo{
+			GitTemplate: &boxModel.GitTemplateInfo{
 				Url:      response.Body.Template.Url,
 				Revision: response.Body.Template.Revision,
 				Commit:   response.Body.Template.Commit,
 				Name:     response.Body.Template.Name,
 			},
 		},
-		ProviderInfo: &model.BoxProviderInfo{
-			Provider: model.Cloud,
+		ProviderInfo: &boxModel.BoxProviderInfo{
+			Provider: boxModel.Cloud,
 		},
 		Size:    size,
-		Env:     model.SortEnv(envs),
-		Ports:   model.SortPorts(ports),
+		Env:     boxModel.SortEnv(envs),
+		Ports:   boxModel.SortPorts(ports),
 		Created: created,
 	}, nil
 }
 
-func (box *CloudBoxClient) listBoxes() ([]model.BoxInfo, error) {
+func (box *CloudBoxClient) listBoxes() ([]boxModel.BoxInfo, error) {
 
 	request := v1.NewBoxListRequest(box.clientOpts.Version)
 	payload, err := request.Encode()
@@ -281,9 +281,9 @@ func (box *CloudBoxClient) listBoxes() ([]model.BoxInfo, error) {
 		return nil, errors.Wrap(err, "error cloud list response")
 	}
 
-	var result []model.BoxInfo
+	var result []boxModel.BoxInfo
 	for index, item := range response.Body.Items {
-		result = append(result, model.BoxInfo{Id: item.Id, Name: item.Name, Healthy: item.Healthy})
+		result = append(result, boxModel.BoxInfo{Id: item.Id, Name: item.Name, Healthy: item.Healthy})
 		box.eventBus.Publish(newApiListCloudEvent(index, item.Name))
 	}
 	return result, nil

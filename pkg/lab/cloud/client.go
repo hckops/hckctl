@@ -2,18 +2,18 @@ package cloud
 
 import (
 	"github.com/hckops/hckctl/pkg/client/ssh"
+	model2 "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/event"
 	"github.com/hckops/hckctl/pkg/lab/model"
-	"github.com/hckops/hckctl/pkg/provider"
 )
 
 type CloudLabClient struct {
 	client     *ssh.SshClient
-	clientOpts *provider.CloudOptions
+	clientOpts *model2.CloudOptions
 	eventBus   *event.EventBus
 }
 
-func NewCloudLabClient(commonOpts *model.CommonLabOptions, cloudOpts *provider.CloudOptions) (*CloudLabClient, error) {
+func NewCloudLabClient(commonOpts *model.CommonLabOptions, cloudOpts *model2.CloudOptions) (*CloudLabClient, error) {
 	return newCloudLabClient(commonOpts, cloudOpts)
 }
 

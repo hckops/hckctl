@@ -2,13 +2,13 @@ package model
 
 import (
 	boxModel "github.com/hckops/hckctl/pkg/box/model"
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/event"
-	"github.com/hckops/hckctl/pkg/provider"
 )
 
 type LabClientOptions struct {
 	Provider  LabProvider
-	CloudOpts *provider.CloudOptions
+	CloudOpts *commonModel.CloudOptions
 }
 
 type CommonLabOptions struct {

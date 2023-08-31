@@ -167,6 +167,7 @@ TODO
     - brew
     - client timeouts
     - TODO replace kube impl with helm chart?
+    - review `lab` schema
 * general
     - update readme
         * remove comments

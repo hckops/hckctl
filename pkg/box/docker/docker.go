@@ -7,13 +7,13 @@ import (
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
-	"github.com/hckops/hckctl/pkg/box/model"
+	boxModel "github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/docker"
-	"github.com/hckops/hckctl/pkg/provider"
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/schema"
 )
 
-func newDockerBoxClient(commonOpts *model.CommonBoxOptions, dockerOpts *provider.DockerOptions) (*DockerBoxClient, error) {
+func newDockerBoxClient(commonOpts *boxModel.CommonBoxOptions, dockerOpts *commonModel.DockerOptions) (*DockerBoxClient, error) {
 	commonOpts.EventBus.Publish(newInitDockerClientEvent())
 
 	dockerClient, err := docker.NewDockerClient()
@@ -35,7 +35,7 @@ func (box *DockerBoxClient) close() error {
 }
 
 // TODO limit resources by size?
-func (box *DockerBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo, error) {
+func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.BoxInfo, error) {
 
 	imageName := opts.Template.ImageName()
 	imagePullOpts := &docker.ImagePullOpts{
@@ -127,10 +127,10 @@ func (box *DockerBoxClient) createBox(opts *model.CreateOptions) (*model.BoxInfo
 	}
 	box.eventBus.Publish(newContainerCreateDockerEvent(opts.Template.Name, containerName, containerId))
 
-	return &model.BoxInfo{Id: containerId, Name: containerName, Healthy: true}, nil
+	return &boxModel.BoxInfo{Id: containerId, Name: containerName, Healthy: true}, nil
 }
 
-func (box *DockerBoxClient) connectBox(opts *model.ConnectOptions) error {
+func (box *DockerBoxClient) connectBox(opts *boxModel.ConnectOptions) error {
 	if info, err := box.searchBox(opts.Name); err != nil {
 		return err
 	} else {
@@ -141,7 +141,7 @@ func (box *DockerBoxClient) connectBox(opts *model.ConnectOptions) error {
 	}
 }
 
-func (box *DockerBoxClient) searchBox(name string) (*model.BoxInfo, error) {
+func (box *DockerBoxClient) searchBox(name string) (*boxModel.BoxInfo, error) {
 	boxes, err := box.listBoxes()
 	if err != nil {
 		return nil, err
@@ -154,7 +154,7 @@ func (box *DockerBoxClient) searchBox(name string) (*model.BoxInfo, error) {
 	return nil, errors.New("box not found")
 }
 
-func (box *DockerBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, streams *model.BoxStreams, deleteOnExit bool) error {
+func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.BoxInfo, streams *boxModel.BoxStreams, deleteOnExit bool) error {
 	command := template.Shell
 	box.eventBus.Publish(newContainerExecDockerEvent(info.Id, info.Name, command))
 
@@ -168,7 +168,7 @@ func (box *DockerBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, 
 		return err
 	}
 
-	if command == model.BoxShellNone {
+	if command == boxModel.BoxShellNone {
 		if deleteOnExit {
 			// stop loader
 			box.eventBus.Publish(newContainerExecDockerLoaderEvent())
@@ -186,7 +186,7 @@ func (box *DockerBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, 
 		for _, e := range containerDetails.Env {
 			// ignore internal variables e.g. PATH
 			if _, exists := template.EnvironmentVariables()[e.Key]; exists {
-				env := model.BoxEnv{Key: e.Key, Value: e.Value}
+				env := boxModel.BoxEnv{Key: e.Key, Value: e.Value}
 				box.eventBus.Publish(newContainerCreateEnvDockerEvent(containerDetails.Info.ContainerName, env))
 				box.eventBus.Publish(newContainerCreateEnvDockerConsoleEvent(containerDetails.Info.ContainerName, env))
 			}
@@ -225,8 +225,8 @@ func (box *DockerBoxClient) execBox(template *model.BoxV1, info *model.BoxInfo, 
 	return box.client.ContainerExec(execOpts)
 }
 
-func (box *DockerBoxClient) publishPortInfo(networkMap map[string]model.BoxPort, containerName string, containerPort docker.ContainerPort) {
-	portPadding := model.PortFormatPadding(maps.Values(networkMap))
+func (box *DockerBoxClient) publishPortInfo(networkMap map[string]boxModel.BoxPort, containerName string, containerPort docker.ContainerPort) {
+	portPadding := boxModel.PortFormatPadding(maps.Values(networkMap))
 
 	// actual bound port
 	networkPort := networkMap[containerPort.Remote]
@@ -236,7 +236,7 @@ func (box *DockerBoxClient) publishPortInfo(networkMap map[string]model.BoxPort,
 	box.eventBus.Publish(newContainerCreatePortBindDockerConsoleEvent(containerName, networkPort, portPadding))
 }
 
-func (box *DockerBoxClient) logsBox(containerId string, streams *model.BoxStreams) error {
+func (box *DockerBoxClient) logsBox(containerId string, streams *boxModel.BoxStreams) error {
 	opts := &docker.ContainerLogsOpts{
 		ContainerId: containerId,
 		OutStream:   streams.Out,
@@ -251,7 +251,7 @@ func (box *DockerBoxClient) logsBox(containerId string, streams *model.BoxStream
 	return box.client.ContainerLogs(opts)
 }
 
-func (box *DockerBoxClient) describeBox(name string) (*model.BoxDetails, error) {
+func (box *DockerBoxClient) describeBox(name string) (*boxModel.BoxDetails, error) {
 	info, err := box.searchBox(name)
 	if err != nil {
 		return nil, err
@@ -266,55 +266,55 @@ func (box *DockerBoxClient) describeBox(name string) (*model.BoxDetails, error) 
 	return toBoxDetails(containerInfo)
 }
 
-func toBoxDetails(container docker.ContainerDetails) (*model.BoxDetails, error) {
+func toBoxDetails(container docker.ContainerDetails) (*boxModel.BoxDetails, error) {
 
-	labels := model.BoxLabels(container.Labels)
+	labels := boxModel.BoxLabels(container.Labels)
 
 	size, err := labels.ToSize()
 	if err != nil {
 		return nil, err
 	}
 
-	var envs []model.BoxEnv
+	var envs []boxModel.BoxEnv
 	for _, e := range container.Env {
-		envs = append(envs, model.BoxEnv{
+		envs = append(envs, boxModel.BoxEnv{
 			Key:   e.Key,
 			Value: e.Value,
 		})
 	}
 
-	var ports []model.BoxPort
+	var ports []boxModel.BoxPort
 	for _, p := range container.Ports {
-		ports = append(ports, model.BoxPort{
-			Alias:  model.BoxPortNone, // match with template
+		ports = append(ports, boxModel.BoxPort{
+			Alias:  boxModel.BoxPortNone, // match with template
 			Local:  p.Local,
 			Remote: p.Remote,
 			Public: false,
 		})
 	}
 
-	return &model.BoxDetails{
+	return &boxModel.BoxDetails{
 		Info: newBoxInfo(container.Info),
-		TemplateInfo: &model.BoxTemplateInfo{
+		TemplateInfo: &boxModel.BoxTemplateInfo{
 			CachedTemplate: labels.ToCachedTemplateInfo(),
 			GitTemplate:    labels.ToGitTemplateInfo(),
 		},
-		ProviderInfo: &model.BoxProviderInfo{
-			Provider: model.Docker,
-			DockerProvider: &model.DockerProviderInfo{
+		ProviderInfo: &boxModel.BoxProviderInfo{
+			Provider: boxModel.Docker,
+			DockerProvider: &boxModel.DockerProviderInfo{
 				Network: container.Network.Name,
 				Ip:      container.Network.IpAddress,
 			},
 		},
 		Size:    size,
-		Env:     model.SortEnv(envs),
-		Ports:   model.SortPorts(ports),
+		Env:     boxModel.SortEnv(envs),
+		Ports:   boxModel.SortPorts(ports),
 		Created: container.Created,
 	}, nil
 }
 
-func newBoxInfo(container docker.ContainerInfo) model.BoxInfo {
-	return model.BoxInfo{
+func newBoxInfo(container docker.ContainerInfo) boxModel.BoxInfo {
+	return boxModel.BoxInfo{
 		Id:      container.ContainerId,
 		Name:    container.ContainerName,
 		Healthy: container.Healthy,
@@ -322,17 +322,17 @@ func newBoxInfo(container docker.ContainerInfo) model.BoxInfo {
 }
 
 func boxLabel() string {
-	return fmt.Sprintf("%s=%s", model.LabelSchemaKind, schema.KindBoxV1.String())
+	return fmt.Sprintf("%s=%s", boxModel.LabelSchemaKind, schema.KindBoxV1.String())
 }
 
-func (box *DockerBoxClient) listBoxes() ([]model.BoxInfo, error) {
+func (box *DockerBoxClient) listBoxes() ([]boxModel.BoxInfo, error) {
 
-	containers, err := box.client.ContainerList(model.BoxPrefixName, boxLabel())
+	containers, err := box.client.ContainerList(boxModel.BoxPrefixName, boxLabel())
 	if err != nil {
 		return nil, err
 	}
 
-	var result []model.BoxInfo
+	var result []boxModel.BoxInfo
 	for index, c := range containers {
 		result = append(result, newBoxInfo(c))
 		box.eventBus.Publish(newContainerListDockerEvent(index, c.ContainerName, c.ContainerId, c.Healthy))

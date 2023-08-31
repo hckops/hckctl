@@ -11,6 +11,8 @@ import (
 	"github.com/hckops/hckctl/pkg/schema"
 )
 
+// TODO refactor PROVIDER + LABEL
+
 type BoxLabels map[string]string
 
 const (
@@ -42,14 +44,20 @@ func NewGitLabels(url, revision, dir string) BoxLabels {
 		LabelTemplateGitDir:      dir,
 	}
 }
-func (l BoxLabels) AddLocalLabels(size ResourceSize, path string) BoxLabels {
+
+func (l BoxLabels) AddSizeLabel(size ResourceSize) BoxLabels {
+	l[LabelBoxSize] = strings.ToLower(size.String())
+	return l
+}
+
+func (l BoxLabels) AddLocalLabels(path string) BoxLabels {
 	if _, err := l.exist(LabelTemplateLocal); err != nil {
 		return l
 	}
-	return mergeWithCommonLabels(l, size, path)
+	return mergeWithCommonLabels(l, path)
 }
 
-func (l BoxLabels) AddGitLabels(size ResourceSize, path string, commit string) BoxLabels {
+func (l BoxLabels) AddGitLabels(path string, commit string) BoxLabels {
 	if _, err := l.exist(LabelTemplateGit); err != nil {
 		return l
 	}
@@ -61,13 +69,12 @@ func (l BoxLabels) AddGitLabels(size ResourceSize, path string, commit string) B
 	name := strings.TrimSuffix(strings.TrimPrefix(templatePath[1], "/"), filepath.Ext(path))
 	l[LabelTemplateGitName] = name
 
-	return mergeWithCommonLabels(l, size, path)
+	return mergeWithCommonLabels(l, path)
 }
 
-func mergeWithCommonLabels(labels BoxLabels, size ResourceSize, path string) BoxLabels {
+func mergeWithCommonLabels(labels BoxLabels, path string) BoxLabels {
 	l := map[string]string{
 		LabelTemplateCachePath: path, // absolute path
-		LabelBoxSize:           strings.ToLower(size.String()),
 	}
 
 	// merge labels

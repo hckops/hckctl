@@ -3,36 +3,36 @@ package kubernetes
 import (
 	"github.com/pkg/errors"
 
-	"github.com/hckops/hckctl/pkg/box/model"
+	boxModel "github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/event"
-	"github.com/hckops/hckctl/pkg/provider"
 )
 
 type KubeBoxClient struct {
 	client     *kubernetes.KubeClient
-	clientOpts *provider.KubeOptions
+	clientOpts *commonModel.KubeOptions
 	eventBus   *event.EventBus
 }
 
-func NewKubeBoxClient(commonOpts *model.CommonBoxOptions, kubeOpts *provider.KubeOptions) (*KubeBoxClient, error) {
+func NewKubeBoxClient(commonOpts *boxModel.CommonBoxOptions, kubeOpts *commonModel.KubeOptions) (*KubeBoxClient, error) {
 	return newKubeBoxClient(commonOpts, kubeOpts)
 }
 
-func (box *KubeBoxClient) Provider() model.BoxProvider {
-	return model.Kubernetes
+func (box *KubeBoxClient) Provider() boxModel.BoxProvider {
+	return boxModel.Kubernetes
 }
 
 func (box *KubeBoxClient) Events() *event.EventBus {
 	return box.eventBus
 }
 
-func (box *KubeBoxClient) Create(opts *model.CreateOptions) (*model.BoxInfo, error) {
+func (box *KubeBoxClient) Create(opts *boxModel.CreateOptions) (*boxModel.BoxInfo, error) {
 	defer box.close()
 	return box.createBox(opts)
 }
 
-func (box *KubeBoxClient) Connect(opts *model.ConnectOptions) error {
+func (box *KubeBoxClient) Connect(opts *boxModel.ConnectOptions) error {
 	defer box.close()
 	return box.connectBox(opts)
 }
@@ -42,12 +42,12 @@ func (box *KubeBoxClient) Copy(string, string, string) error {
 	return errors.New("not implemented")
 }
 
-func (box *KubeBoxClient) Describe(name string) (*model.BoxDetails, error) {
+func (box *KubeBoxClient) Describe(name string) (*boxModel.BoxDetails, error) {
 	defer box.close()
 	return box.describeBox(name)
 }
 
-func (box *KubeBoxClient) List() ([]model.BoxInfo, error) {
+func (box *KubeBoxClient) List() ([]boxModel.BoxInfo, error) {
 	defer box.close()
 	return box.listBoxes()
 }

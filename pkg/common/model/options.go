@@ -1,4 +1,4 @@
-package provider
+package model
 
 type DockerOptions struct {
 	NetworkName          string

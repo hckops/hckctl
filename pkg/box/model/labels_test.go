@@ -32,7 +32,7 @@ func TestGitLabels(t *testing.T) {
 }
 
 func TestAddLocalLabels(t *testing.T) {
-	labels := NewLocalLabels().AddLocalLabels(Small, "/tmp/cache")
+	labels := NewLocalLabels().AddSizeLabel(Small).AddLocalLabels("/tmp/cache")
 	expected := BoxLabels{
 		"com.hckops.schema.kind":         "box/v1",
 		"com.hckops.template.local":      "true",
@@ -46,7 +46,7 @@ func TestAddLocalLabels(t *testing.T) {
 
 func TestAddLocalLabelsInvalid(t *testing.T) {
 	initial := NewLocalLabels()
-	labels := initial.AddGitLabels(ExtraLarge, "myPath", "myCommit")
+	labels := initial.AddGitLabels("myPath", "myCommit")
 
 	assert.Equal(t, len(initial), len(labels))
 }
@@ -55,7 +55,7 @@ func TestAddGitLabels(t *testing.T) {
 	gitLabels := NewGitLabels("https://github.com/hckops/megalopolis", "main", "megalopolis")
 
 	path := "/home/test/.cache/hck/megalopolis/box/base/arch.yml"
-	labels := gitLabels.AddGitLabels(Medium, path, "myCommit")
+	labels := gitLabels.AddSizeLabel(Medium).AddGitLabels(path, "myCommit")
 	expected := BoxLabels{
 		"com.hckops.schema.kind":           "box/v1",
 		"com.hckops.template.git":          "true",
@@ -74,7 +74,7 @@ func TestAddGitLabels(t *testing.T) {
 
 func TestAddGitLabelsInvalid(t *testing.T) {
 	initial := NewGitLabels("https://github.com/hckops/megalopolis", "main", "megalopolis")
-	labels := initial.AddLocalLabels(ExtraLarge, "/tmp/cache")
+	labels := initial.AddLocalLabels("/tmp/cache")
 
 	assert.Equal(t, len(initial), len(labels))
 }
@@ -114,7 +114,8 @@ func TestToSizeError(t *testing.T) {
 
 func TestToCachedTemplateInfo(t *testing.T) {
 	info := NewLocalLabels().
-		AddLocalLabels(Small, "/tmp/cache").
+		AddSizeLabel(Small).
+		AddLocalLabels("/tmp/cache").
 		ToCachedTemplateInfo()
 
 	expected := &CachedTemplateInfo{
@@ -126,7 +127,8 @@ func TestToCachedTemplateInfo(t *testing.T) {
 
 func TestToBoxTemplateInfo(t *testing.T) {
 	info := NewGitLabels("myUrl", "myRevision", "myDir").
-		AddGitLabels(Medium, "myDir/myName", "myCommit").
+		AddSizeLabel(Medium).
+		AddGitLabels("myDir/myName", "myCommit").
 		ToGitTemplateInfo()
 
 	expected := &GitTemplateInfo{

@@ -3,36 +3,36 @@ package docker
 import (
 	"github.com/pkg/errors"
 
-	"github.com/hckops/hckctl/pkg/box/model"
+	boxModel "github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/docker"
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/event"
-	"github.com/hckops/hckctl/pkg/provider"
 )
 
 type DockerBoxClient struct {
 	client     *docker.DockerClient
-	clientOpts *provider.DockerOptions
+	clientOpts *commonModel.DockerOptions
 	eventBus   *event.EventBus
 }
 
-func NewDockerBoxClient(commonOpts *model.CommonBoxOptions, dockerOpts *provider.DockerOptions) (*DockerBoxClient, error) {
+func NewDockerBoxClient(commonOpts *boxModel.CommonBoxOptions, dockerOpts *commonModel.DockerOptions) (*DockerBoxClient, error) {
 	return newDockerBoxClient(commonOpts, dockerOpts)
 }
 
-func (box *DockerBoxClient) Provider() model.BoxProvider {
-	return model.Docker
+func (box *DockerBoxClient) Provider() boxModel.BoxProvider {
+	return boxModel.Docker
 }
 
 func (box *DockerBoxClient) Events() *event.EventBus {
 	return box.eventBus
 }
 
-func (box *DockerBoxClient) Create(opts *model.CreateOptions) (*model.BoxInfo, error) {
+func (box *DockerBoxClient) Create(opts *boxModel.CreateOptions) (*boxModel.BoxInfo, error) {
 	defer box.close()
 	return box.createBox(opts)
 }
 
-func (box *DockerBoxClient) Connect(opts *model.ConnectOptions) error {
+func (box *DockerBoxClient) Connect(opts *boxModel.ConnectOptions) error {
 	defer box.close()
 	return box.connectBox(opts)
 }
@@ -42,12 +42,12 @@ func (box *DockerBoxClient) Copy(string, string, string) error {
 	return errors.New("not implemented")
 }
 
-func (box *DockerBoxClient) Describe(name string) (*model.BoxDetails, error) {
+func (box *DockerBoxClient) Describe(name string) (*boxModel.BoxDetails, error) {
 	defer box.close()
 	return box.describeBox(name)
 }
 
-func (box *DockerBoxClient) List() ([]model.BoxInfo, error) {
+func (box *DockerBoxClient) List() ([]boxModel.BoxInfo, error) {
 	defer box.close()
 	return box.listBoxes()
 }

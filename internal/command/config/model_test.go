@@ -1,11 +1,10 @@
 package config
 
 import (
+	"github.com/hckops/hckctl/pkg/common/model"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/hckops/hckctl/pkg/provider"
 )
 
 func TestNewConfig(t *testing.T) {
@@ -60,7 +59,7 @@ func TestToDockerOptions(t *testing.T) {
 	dockerConfig := &DockerConfig{
 		NetworkName: "myNetwork",
 	}
-	expected := &provider.DockerOptions{
+	expected := &model.DockerOptions{
 		NetworkName:          "myNetwork",
 		IgnoreImagePullError: true,
 	}
@@ -72,7 +71,7 @@ func TestToKubeOptions(t *testing.T) {
 		ConfigPath: "/tmp/config.yml",
 		Namespace:  "namespace",
 	}
-	expected := &provider.KubeOptions{
+	expected := &model.KubeOptions{
 		InCluster:  false,
 		ConfigPath: "/tmp/config.yml",
 		Namespace:  "namespace",
@@ -87,7 +86,7 @@ func TestToCloudOptions(t *testing.T) {
 		Username: "myUsername",
 		Token:    "myToken",
 	}
-	expected := &provider.CloudOptions{
+	expected := &model.CloudOptions{
 		Version:  "hckctl-dev",
 		Address:  "0.0.0.0:2222",
 		Username: "myUsername",

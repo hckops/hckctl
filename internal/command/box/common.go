@@ -146,9 +146,9 @@ func newCreateOptions(info *template.TemplateInfo[model.BoxV1], labels model.Box
 	var allLabels model.BoxLabels
 	switch info.SourceType {
 	case template.Local:
-		allLabels = labels.AddLocalLabels(size, info.Path)
+		allLabels = labels.AddSizeLabel(size).AddLocalLabels(info.Path)
 	case template.Git:
-		allLabels = labels.AddGitLabels(size, info.Path, info.Revision)
+		allLabels = labels.AddSizeLabel(size).AddGitLabels(info.Path, info.Revision)
 	}
 
 	return &model.CreateOptions{
