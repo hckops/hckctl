@@ -67,7 +67,7 @@ func (opts *boxStartCmdOptions) run(cmd *cobra.Command, args []string) error {
 		log.Debug().Msgf("start box from local template: path=%s", path)
 
 		sourceLoader := template.NewLocalCachedLoader[boxModel.BoxV1](path, opts.configRef.Config.Template.CacheDir)
-		return startBox(sourceLoader, opts.provider, opts.configRef, commonModel.NewBoxLabels().AddDefaultLocal())
+		return startBox(sourceLoader, opts.provider, opts.configRef, boxModel.NewBoxLabels().AddDefaultLocal())
 
 	} else {
 		name := args[0]
@@ -75,7 +75,7 @@ func (opts *boxStartCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 		sourceOpts := commonCmd.NewGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
 		sourceLoader := template.NewGitLoader[boxModel.BoxV1](sourceOpts, name)
-		labels := commonModel.NewBoxLabels().AddDefaultGit(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
+		labels := boxModel.NewBoxLabels().AddDefaultGit(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
 		return startBox(sourceLoader, opts.provider, opts.configRef, labels)
 	}
 }

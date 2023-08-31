@@ -247,7 +247,7 @@ func toBoxDetails(response *v1.Message[v1.BoxDescribeResponseBody]) (*boxModel.B
 		},
 		TemplateInfo: &boxModel.BoxTemplateInfo{
 			// TODO valid only if response.Body.Template.Public
-			GitTemplate: &boxModel.GitTemplateInfo{
+			GitTemplate: &commonModel.GitTemplateInfo{
 				Url:      response.Body.Template.Url,
 				Revision: response.Body.Template.Revision,
 				Commit:   response.Body.Template.Commit,

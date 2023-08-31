@@ -7,7 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	v1 "github.com/hckops/hckctl/pkg/api/v1"
-	"github.com/hckops/hckctl/pkg/box/model"
+	boxModel "github.com/hckops/hckctl/pkg/box/model"
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 )
 
 func TestToBoxDetails(t *testing.T) {
@@ -30,29 +31,29 @@ func TestToBoxDetails(t *testing.T) {
 		Env:   []string{"KEY_1=VALUE_1", "KEY_2=VALUE_2", "INVALID", "=INVALID="},
 		Ports: []string{"alias-1/123", "alias-2/456", "INVALID", "/INVALID/"},
 	})
-	expected := &model.BoxDetails{
-		Info: model.BoxInfo{
+	expected := &boxModel.BoxDetails{
+		Info: boxModel.BoxInfo{
 			Id:      "myId",
 			Name:    "myName",
 			Healthy: true,
 		},
-		TemplateInfo: &model.BoxTemplateInfo{
-			GitTemplate: &model.GitTemplateInfo{
+		TemplateInfo: &boxModel.BoxTemplateInfo{
+			GitTemplate: &commonModel.GitTemplateInfo{
 				Url:      "infoUrl",
 				Revision: "infoRevision",
 				Commit:   "infoCommit",
 				Name:     "infoName",
 			},
 		},
-		ProviderInfo: &model.BoxProviderInfo{
-			Provider: model.Cloud,
+		ProviderInfo: &boxModel.BoxProviderInfo{
+			Provider: boxModel.Cloud,
 		},
-		Size: model.Medium,
-		Env: []model.BoxEnv{
+		Size: boxModel.Medium,
+		Env: []boxModel.BoxEnv{
 			{Key: "KEY_1", Value: "VALUE_1"},
 			{Key: "KEY_2", Value: "VALUE_2"},
 		},
-		Ports: []model.BoxPort{
+		Ports: []boxModel.BoxPort{
 			{Alias: "alias-1", Local: "none", Remote: "123", Public: false},
 			{Alias: "alias-2", Local: "none", Remote: "456", Public: false},
 		},

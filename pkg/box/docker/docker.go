@@ -270,7 +270,7 @@ func toBoxDetails(container docker.ContainerDetails) (*boxModel.BoxDetails, erro
 
 	labels := commonModel.Labels(container.Labels)
 
-	size, err := labels.ToBoxSize()
+	size, err := boxModel.ToBoxSize(labels)
 	if err != nil {
 		return nil, err
 	}

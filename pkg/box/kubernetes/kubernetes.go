@@ -144,13 +144,8 @@ func (box *KubeBoxClient) connectBox(opts *boxModel.ConnectOptions) error {
 	}
 }
 
-func BoxLabelSelector() string {
-	// value must be sanitized
-	return fmt.Sprintf("%s=%s", commonModel.LabelSchemaKind, common.ToKebabCase(schema.KindBoxV1.String()))
-}
-
 func boxNameLabelSelector(name string) string {
-	return fmt.Sprintf("%s,%s=%s", BoxLabelSelector(), kubernetes.LabelKubeName, name)
+	return fmt.Sprintf("%s,%s=%s", boxModel.BoxLabelSelector(), kubernetes.LabelKubeName, name)
 }
 
 func (box *KubeBoxClient) searchBox(name string) (*boxModel.BoxInfo, error) {
@@ -291,7 +286,7 @@ func ToBoxDetails(deployment *kubernetes.DeploymentDetails, serviceInfo *kuberne
 
 	labels := commonModel.Labels(deployment.Annotations)
 
-	size, err := labels.ToBoxSize()
+	size, err := boxModel.ToBoxSize(labels)
 	if err != nil {
 		return nil, err
 	}
@@ -336,7 +331,7 @@ func ToBoxDetails(deployment *kubernetes.DeploymentDetails, serviceInfo *kuberne
 func (box *KubeBoxClient) listBoxes() ([]boxModel.BoxInfo, error) {
 	namespace := box.clientOpts.Namespace
 
-	deployments, err := box.client.DeploymentList(namespace, boxModel.BoxPrefixName, BoxLabelSelector())
+	deployments, err := box.client.DeploymentList(namespace, boxModel.BoxPrefixName, boxModel.BoxLabelSelector())
 	if err != nil {
 		return nil, err
 	}

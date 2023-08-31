@@ -4,11 +4,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 )
 
 func TestIsCached(t *testing.T) {
 	info := &BoxTemplateInfo{
-		CachedTemplate: &CachedTemplateInfo{
+		CachedTemplate: &commonModel.CachedTemplateInfo{
 			Path: "/tmp/cache",
 		},
 	}

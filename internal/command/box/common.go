@@ -11,7 +11,7 @@ import (
 	"github.com/hckops/hckctl/internal/command/config"
 	"github.com/hckops/hckctl/internal/command/version"
 	"github.com/hckops/hckctl/pkg/box"
-	"github.com/hckops/hckctl/pkg/box/model"
+	boxModel "github.com/hckops/hckctl/pkg/box/model"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/template"
@@ -19,12 +19,12 @@ import (
 
 type invokeOptions struct {
 	client   box.BoxClient
-	template *template.TemplateInfo[model.BoxV1]
+	template *template.TemplateInfo[boxModel.BoxV1]
 	loader   *commonCmd.Loader
 }
 
 // start and temporary
-func runBoxClient(sourceLoader template.SourceLoader[model.BoxV1], provider model.BoxProvider, configRef *config.ConfigRef, invokeClient func(*invokeOptions) error) error {
+func runBoxClient(sourceLoader template.SourceLoader[boxModel.BoxV1], provider boxModel.BoxProvider, configRef *config.ConfigRef, invokeClient func(*invokeOptions) error) error {
 
 	boxTemplate, err := sourceLoader.Read()
 	if err != nil || boxTemplate.Value.Kind != schema.KindBoxV1 {
@@ -56,7 +56,7 @@ func runBoxClient(sourceLoader template.SourceLoader[model.BoxV1], provider mode
 }
 
 // open, info and stop-one
-func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeClient func(*invokeOptions, *model.BoxDetails) error) error {
+func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeClient func(*invokeOptions, *boxModel.BoxDetails) error) error {
 
 	loader := commonCmd.NewLoader()
 	loader.Start("loading %s", boxName)
@@ -107,17 +107,17 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 	return errors.New("not found")
 }
 
-func newSourceLoader(boxDetails *model.BoxDetails, cacheDir string) template.SourceLoader[model.BoxV1] {
+func newSourceLoader(boxDetails *boxModel.BoxDetails, cacheDir string) template.SourceLoader[boxModel.BoxV1] {
 	if boxDetails.TemplateInfo.IsCached() {
-		return template.NewLocalLoader[model.BoxV1](boxDetails.TemplateInfo.CachedTemplate.Path)
+		return template.NewLocalLoader[boxModel.BoxV1](boxDetails.TemplateInfo.CachedTemplate.Path)
 	} else {
 		sourceOpts := commonCmd.NewGitSourceOptions(cacheDir, boxDetails.TemplateInfo.GitTemplate.Commit)
-		return template.NewGitLoader[model.BoxV1](sourceOpts, boxDetails.TemplateInfo.GitTemplate.Name)
+		return template.NewGitLoader[boxModel.BoxV1](sourceOpts, boxDetails.TemplateInfo.GitTemplate.Name)
 	}
 }
 
-func newBoxClientOpts(provider model.BoxProvider, configRef *config.ConfigRef) *model.BoxClientOptions {
-	return &model.BoxClientOptions{
+func newBoxClientOpts(provider boxModel.BoxProvider, configRef *config.ConfigRef) *boxModel.BoxClientOptions {
+	return &boxModel.BoxClientOptions{
 		Provider:   provider,
 		DockerOpts: configRef.Config.Provider.Docker.ToDockerOptions(),
 		KubeOpts:   configRef.Config.Provider.Kube.ToKubeOptions(),
@@ -125,7 +125,7 @@ func newBoxClientOpts(provider model.BoxProvider, configRef *config.ConfigRef) *
 	}
 }
 
-func newDefaultBoxClient(provider model.BoxProvider, configRef *config.ConfigRef, loader *commonCmd.Loader) (box.BoxClient, error) {
+func newDefaultBoxClient(provider boxModel.BoxProvider, configRef *config.ConfigRef, loader *commonCmd.Loader) (box.BoxClient, error) {
 
 	boxClientOpts := newBoxClientOpts(provider, configRef)
 	boxClient, err := box.NewBoxClient(boxClientOpts)
@@ -138,8 +138,8 @@ func newDefaultBoxClient(provider model.BoxProvider, configRef *config.ConfigRef
 	return boxClient, nil
 }
 
-func newCreateOptions(info *template.TemplateInfo[model.BoxV1], labels commonModel.Labels, sizeValue string) (*model.CreateOptions, error) {
-	size, err := model.ExistResourceSize(sizeValue)
+func newCreateOptions(info *template.TemplateInfo[boxModel.BoxV1], labels commonModel.Labels, sizeValue string) (*boxModel.CreateOptions, error) {
+	size, err := boxModel.ExistResourceSize(sizeValue)
 	if err != nil {
 		return nil, err
 	}
@@ -147,12 +147,12 @@ func newCreateOptions(info *template.TemplateInfo[model.BoxV1], labels commonMod
 	var allLabels commonModel.Labels
 	switch info.SourceType {
 	case template.Local:
-		allLabels = labels.AddBoxSize(size).AddLocal(info.Path)
+		allLabels = boxModel.AddBoxSize(labels, size).AddLocal(info.Path)
 	case template.Git:
-		allLabels = labels.AddBoxSize(size).AddGit(info.Path, info.Revision)
+		allLabels = boxModel.AddBoxSize(labels, size).AddGit(info.Path, info.Revision)
 	}
 
-	return &model.CreateOptions{
+	return &boxModel.CreateOptions{
 		Template: &info.Value.Data,
 		Size:     size,
 		Labels:   allLabels,
