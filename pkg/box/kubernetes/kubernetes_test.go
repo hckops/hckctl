@@ -6,14 +6,15 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/hckops/hckctl/pkg/box/model"
+	boxModel "github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 )
 
 func TestNewResources(t *testing.T) {
 	namespace := "my-namespace"
 	boxName := "my-box-name"
-	template := &model.BoxV1{
+	template := &boxModel.BoxV1{
 		Kind: "box/v1",
 		Name: "my-name",
 		Tags: []string{"my-tag"},
@@ -30,9 +31,9 @@ func TestNewResources(t *testing.T) {
 			"virtual-tty:7681",
 		}},
 	}
-	opts := &model.CreateOptions{
+	opts := &boxModel.CreateOptions{
 		Template: template,
-		Size:     model.ExtraSmall,
+		Size:     boxModel.ExtraSmall,
 		Labels: map[string]string{
 			"a.b.c": "hello",
 			"x.y.z": "world",
@@ -114,40 +115,40 @@ func TestToBoxDetails(t *testing.T) {
 			{Name: "name-z", Port: "remote-3"},
 		},
 	}
-	expected := &model.BoxDetails{
-		Info: model.BoxInfo{
+	expected := &boxModel.BoxDetails{
+		Info: boxModel.BoxInfo{
 			Id:      "myPodName",
 			Name:    "myDeploymentName",
 			Healthy: false,
 		},
-		TemplateInfo: &model.BoxTemplateInfo{
-			GitTemplate: &model.GitTemplateInfo{
+		TemplateInfo: &boxModel.BoxTemplateInfo{
+			GitTemplate: &commonModel.GitTemplateInfo{
 				Url:      "myUrl",
 				Revision: "myRevision",
 				Commit:   "myCommit",
 				Name:     "box/base/arch",
 			},
 		},
-		ProviderInfo: &model.BoxProviderInfo{
-			Provider: model.BoxProvider("kube"),
-			KubeProvider: &model.KubeProviderInfo{
+		ProviderInfo: &boxModel.BoxProviderInfo{
+			Provider: boxModel.BoxProvider("kube"),
+			KubeProvider: &commonModel.KubeProviderInfo{
 				Namespace: "myDeploymentNamespace",
 			},
 		},
-		Size: model.Medium,
-		Env: []model.BoxEnv{
+		Size: boxModel.Medium,
+		Env: []boxModel.BoxEnv{
 			{Key: "MY_KEY_1", Value: "MY_VALUE_1"},
 			{Key: "MY_KEY_2", Value: "MY_VALUE_2"},
 			{Key: "MY_KEY_3", Value: "MY_VALUE_3"},
 		},
-		Ports: []model.BoxPort{
+		Ports: []boxModel.BoxPort{
 			{Alias: "name-y", Local: "none", Remote: "remote-1", Public: false},
 			{Alias: "name-x", Local: "none", Remote: "remote-2", Public: false},
 			{Alias: "name-z", Local: "none", Remote: "remote-3", Public: false},
 		},
 		Created: createdTime,
 	}
-	result, err := ToBoxDetails(deployment, serviceInfo, model.Kubernetes)
+	result, err := ToBoxDetails(deployment, serviceInfo, boxModel.Kubernetes)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)

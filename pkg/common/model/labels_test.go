@@ -4,11 +4,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/hckops/hckctl/pkg/box/model"
 )
 
 func TestLocalLabels(t *testing.T) {
-	labels := NewLocalLabels()
-	expected := BoxLabels{
+	labels := NewBoxLabels().AddDefaultLocal()
+	expected := Labels{
 		"com.hckops.schema.kind":    "box/v1",
 		"com.hckops.template.local": "true",
 	}
@@ -18,8 +20,8 @@ func TestLocalLabels(t *testing.T) {
 }
 
 func TestGitLabels(t *testing.T) {
-	labels := NewGitLabels("myUrl", "myRevision", "myDir")
-	expected := BoxLabels{
+	labels := NewBoxLabels().AddDefaultGit("myUrl", "myRevision", "myDir")
+	expected := Labels{
 		"com.hckops.schema.kind":           "box/v1",
 		"com.hckops.template.git":          "true",
 		"com.hckops.template.git.url":      "myUrl",
@@ -31,9 +33,9 @@ func TestGitLabels(t *testing.T) {
 	assert.Equal(t, expected, labels)
 }
 
-func TestAddLocalLabels(t *testing.T) {
-	labels := NewLocalLabels().AddSizeLabel(Small).AddLocalLabels("/tmp/cache")
-	expected := BoxLabels{
+func TestAboxModelddLocalLabels(t *testing.T) {
+	labels := NewBoxLabels().AddBoxSize(model.Small).AddLocal("/tmp/cache")
+	expected := Labels{
 		"com.hckops.schema.kind":         "box/v1",
 		"com.hckops.template.local":      "true",
 		"com.hckops.template.cache.path": "/tmp/cache",
@@ -45,18 +47,18 @@ func TestAddLocalLabels(t *testing.T) {
 }
 
 func TestAddLocalLabelsInvalid(t *testing.T) {
-	initial := NewLocalLabels()
-	labels := initial.AddGitLabels("myPath", "myCommit")
+	initial := NewBoxLabels().AddDefaultLocal()
+	labels := initial.AddGit("myPath", "myCommit")
 
 	assert.Equal(t, len(initial), len(labels))
 }
 
 func TestAddGitLabels(t *testing.T) {
-	gitLabels := NewGitLabels("https://github.com/hckops/megalopolis", "main", "megalopolis")
+	gitLabels := NewBoxLabels().AddDefaultGit("https://github.com/hckops/megalopolis", "main", "megalopolis")
 
 	path := "/home/test/.cache/hck/megalopolis/box/base/arch.yml"
-	labels := gitLabels.AddSizeLabel(Medium).AddGitLabels(path, "myCommit")
-	expected := BoxLabels{
+	labels := gitLabels.AddBoxSize(model.Medium).AddGit(path, "myCommit")
+	expected := Labels{
 		"com.hckops.schema.kind":           "box/v1",
 		"com.hckops.template.git":          "true",
 		"com.hckops.template.git.url":      "https://github.com/hckops/megalopolis",
@@ -73,14 +75,14 @@ func TestAddGitLabels(t *testing.T) {
 }
 
 func TestAddGitLabelsInvalid(t *testing.T) {
-	initial := NewGitLabels("https://github.com/hckops/megalopolis", "main", "megalopolis")
-	labels := initial.AddLocalLabels("/tmp/cache")
+	initial := NewBoxLabels().AddDefaultGit("https://github.com/hckops/megalopolis", "main", "megalopolis")
+	labels := initial.AddLocal("/tmp/cache")
 
 	assert.Equal(t, len(initial), len(labels))
 }
 
 func TestExist(t *testing.T) {
-	labels := BoxLabels{
+	labels := Labels{
 		"my.name": "myValue",
 	}
 	value, err := labels.exist("my.name")
@@ -90,32 +92,32 @@ func TestExist(t *testing.T) {
 }
 
 func TestExistError(t *testing.T) {
-	_, err := BoxLabels{}.exist("my.name")
+	_, err := Labels{}.exist("my.name")
 	assert.EqualError(t, err, "label my.name not found")
 }
 
 func TestToSize(t *testing.T) {
-	labels := BoxLabels{
+	labels := Labels{
 		"com.hckops.box.size": "xl",
 	}
-	size, err := labels.ToSize()
+	size, err := labels.ToBoxSize()
 
 	assert.NoError(t, err)
-	assert.Equal(t, ExtraLarge, size)
+	assert.Equal(t, model.ExtraLarge, size)
 }
 
 func TestToSizeError(t *testing.T) {
-	_, errLabel := BoxLabels{}.ToSize()
+	_, errLabel := Labels{}.ToBoxSize()
 	assert.EqualError(t, errLabel, "label com.hckops.box.size not found")
 
-	_, errSize := BoxLabels{"com.hckops.box.size": "abc"}.ToSize()
+	_, errSize := Labels{"com.hckops.box.size": "abc"}.ToBoxSize()
 	assert.EqualError(t, errSize, "invalid resource size value=abc")
 }
 
 func TestToCachedTemplateInfo(t *testing.T) {
-	info := NewLocalLabels().
-		AddSizeLabel(Small).
-		AddLocalLabels("/tmp/cache").
+	info := NewBoxLabels().AddDefaultLocal().
+		AddBoxSize(model.Small).
+		AddLocal("/tmp/cache").
 		ToCachedTemplateInfo()
 
 	expected := &CachedTemplateInfo{
@@ -126,9 +128,9 @@ func TestToCachedTemplateInfo(t *testing.T) {
 }
 
 func TestToBoxTemplateInfo(t *testing.T) {
-	info := NewGitLabels("myUrl", "myRevision", "myDir").
-		AddSizeLabel(Medium).
-		AddGitLabels("myDir/myName", "myCommit").
+	info := NewBoxLabels().AddDefaultGit("myUrl", "myRevision", "myDir").
+		AddBoxSize(model.Medium).
+		AddGit("myDir/myName", "myCommit").
 		ToGitTemplateInfo()
 
 	expected := &GitTemplateInfo{
@@ -139,10 +141,4 @@ func TestToBoxTemplateInfo(t *testing.T) {
 	}
 
 	assert.Equal(t, expected, info)
-}
-
-func TestLabelSelector(t *testing.T) {
-	expected := "com.hckops.schema.kind=box-v1"
-
-	assert.Equal(t, expected, BoxLabelSelector())
 }

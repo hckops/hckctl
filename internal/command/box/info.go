@@ -8,7 +8,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/hckops/hckctl/internal/command/config"
-	"github.com/hckops/hckctl/pkg/box/model"
+	boxModel "github.com/hckops/hckctl/pkg/box/model"
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
@@ -37,7 +38,7 @@ func (opts *boxInfoCmdOptions) run(cmd *cobra.Command, args []string) error {
 	boxName := args[0]
 	log.Debug().Msgf("info box: boxName=%s", boxName)
 
-	describeClient := func(invokeOpts *invokeOptions, boxDetails *model.BoxDetails) error {
+	describeClient := func(invokeOpts *invokeOptions, boxDetails *boxModel.BoxDetails) error {
 
 		if value, err := util.EncodeYaml(newBoxValue(&invokeOpts.template.Value.Data, boxDetails)); err != nil {
 			return err
@@ -56,18 +57,18 @@ type BoxValue struct {
 	Healthy       bool
 	Size          string
 	Provider      ProviderValue
-	CacheTemplate *model.CachedTemplateInfo `yaml:"cache,omitempty"`
-	GitTemplate   *model.GitTemplateInfo    `yaml:"git,omitempty"`
-	Env           []string                  `yaml:",omitempty"`
-	Ports         []string                  `yaml:",omitempty"`
+	CacheTemplate *commonModel.CachedTemplateInfo `yaml:"cache,omitempty"`
+	GitTemplate   *commonModel.GitTemplateInfo    `yaml:"git,omitempty"`
+	Env           []string                        `yaml:",omitempty"`
+	Ports         []string                        `yaml:",omitempty"`
 }
 type ProviderValue struct {
 	Name           string
-	DockerProvider *model.DockerProviderInfo `yaml:"docker,omitempty"`
-	KubeProvider   *model.KubeProviderInfo   `yaml:"kubernetes,omitempty"`
+	DockerProvider *commonModel.DockerProviderInfo `yaml:"docker,omitempty"`
+	KubeProvider   *commonModel.KubeProviderInfo   `yaml:"kubernetes,omitempty"`
 }
 
-func newBoxValue(template *model.BoxV1, details *model.BoxDetails) *BoxValue {
+func newBoxValue(template *boxModel.BoxV1, details *boxModel.BoxDetails) *BoxValue {
 
 	var envs []string
 	for _, e := range details.Env {

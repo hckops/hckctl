@@ -11,6 +11,7 @@ import (
 	commonFlag "github.com/hckops/hckctl/internal/command/common/flag"
 	"github.com/hckops/hckctl/internal/command/config"
 	"github.com/hckops/hckctl/pkg/box/model"
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/template"
 )
 
@@ -118,7 +119,7 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 		log.Debug().Msgf("temporary box from local template: path=%s", path)
 
 		sourceLoader := template.NewLocalCachedLoader[model.BoxV1](path, opts.configRef.Config.Template.CacheDir)
-		return opts.temporaryBox(sourceLoader, opts.provider, model.NewLocalLabels())
+		return opts.temporaryBox(sourceLoader, opts.provider, commonModel.NewBoxLabels().AddDefaultLocal())
 
 	} else {
 		name := args[0]
@@ -126,12 +127,12 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 		sourceOpts := commonCmd.NewGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
 		sourceLoader := template.NewGitLoader[model.BoxV1](sourceOpts, name)
-		labels := model.NewGitLabels(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
+		labels := commonModel.NewBoxLabels().AddDefaultGit(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
 		return opts.temporaryBox(sourceLoader, opts.provider, labels)
 	}
 }
 
-func (opts *boxCmdOptions) temporaryBox(sourceLoader template.SourceLoader[model.BoxV1], provider model.BoxProvider, labels model.BoxLabels) error {
+func (opts *boxCmdOptions) temporaryBox(sourceLoader template.SourceLoader[model.BoxV1], provider model.BoxProvider, labels commonModel.Labels) error {
 
 	temporaryClient := func(invokeOpts *invokeOptions) error {
 

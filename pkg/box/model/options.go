@@ -44,7 +44,7 @@ func NewDefaultStreams(tty bool) *BoxStreams {
 type CreateOptions struct {
 	Template *BoxV1
 	Size     ResourceSize
-	Labels   BoxLabels
+	Labels   commonModel.Labels
 }
 
 type ConnectOptions struct {

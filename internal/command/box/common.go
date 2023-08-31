@@ -12,6 +12,7 @@ import (
 	"github.com/hckops/hckctl/internal/command/version"
 	"github.com/hckops/hckctl/pkg/box"
 	"github.com/hckops/hckctl/pkg/box/model"
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/template"
 )
@@ -137,18 +138,18 @@ func newDefaultBoxClient(provider model.BoxProvider, configRef *config.ConfigRef
 	return boxClient, nil
 }
 
-func newCreateOptions(info *template.TemplateInfo[model.BoxV1], labels model.BoxLabels, sizeValue string) (*model.CreateOptions, error) {
+func newCreateOptions(info *template.TemplateInfo[model.BoxV1], labels commonModel.Labels, sizeValue string) (*model.CreateOptions, error) {
 	size, err := model.ExistResourceSize(sizeValue)
 	if err != nil {
 		return nil, err
 	}
 
-	var allLabels model.BoxLabels
+	var allLabels commonModel.Labels
 	switch info.SourceType {
 	case template.Local:
-		allLabels = labels.AddSizeLabel(size).AddLocalLabels(info.Path)
+		allLabels = labels.AddBoxSize(size).AddLocal(info.Path)
 	case template.Git:
-		allLabels = labels.AddSizeLabel(size).AddGitLabels(info.Path, info.Revision)
+		allLabels = labels.AddBoxSize(size).AddGit(info.Path, info.Revision)
 	}
 
 	return &model.CreateOptions{

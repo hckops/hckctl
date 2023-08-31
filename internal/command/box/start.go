@@ -11,7 +11,8 @@ import (
 	commonCmd "github.com/hckops/hckctl/internal/command/common"
 	commonFlag "github.com/hckops/hckctl/internal/command/common/flag"
 	"github.com/hckops/hckctl/internal/command/config"
-	"github.com/hckops/hckctl/pkg/box/model"
+	boxModel "github.com/hckops/hckctl/pkg/box/model"
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/template"
 )
 
@@ -19,7 +20,7 @@ type boxStartCmdOptions struct {
 	configRef    *config.ConfigRef
 	sourceFlag   *commonFlag.SourceFlag
 	providerFlag *commonFlag.ProviderFlag
-	provider     model.BoxProvider
+	provider     boxModel.BoxProvider
 }
 
 func NewBoxStartCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -65,21 +66,21 @@ func (opts *boxStartCmdOptions) run(cmd *cobra.Command, args []string) error {
 		path := args[0]
 		log.Debug().Msgf("start box from local template: path=%s", path)
 
-		sourceLoader := template.NewLocalCachedLoader[model.BoxV1](path, opts.configRef.Config.Template.CacheDir)
-		return startBox(sourceLoader, opts.provider, opts.configRef, model.NewLocalLabels())
+		sourceLoader := template.NewLocalCachedLoader[boxModel.BoxV1](path, opts.configRef.Config.Template.CacheDir)
+		return startBox(sourceLoader, opts.provider, opts.configRef, commonModel.NewBoxLabels().AddDefaultLocal())
 
 	} else {
 		name := args[0]
 		log.Debug().Msgf("start box from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
 		sourceOpts := commonCmd.NewGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
-		sourceLoader := template.NewGitLoader[model.BoxV1](sourceOpts, name)
-		labels := model.NewGitLabels(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
+		sourceLoader := template.NewGitLoader[boxModel.BoxV1](sourceOpts, name)
+		labels := commonModel.NewBoxLabels().AddDefaultGit(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
 		return startBox(sourceLoader, opts.provider, opts.configRef, labels)
 	}
 }
 
-func startBox(sourceLoader template.SourceLoader[model.BoxV1], provider model.BoxProvider, configRef *config.ConfigRef, labels model.BoxLabels) error {
+func startBox(sourceLoader template.SourceLoader[boxModel.BoxV1], provider boxModel.BoxProvider, configRef *config.ConfigRef, labels commonModel.Labels) error {
 
 	createClient := func(invokeOpts *invokeOptions) error {
 

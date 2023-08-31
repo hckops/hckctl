@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 	"golang.org/x/exp/slices"
 
@@ -99,7 +100,7 @@ func newResources(namespace string, name string, opts *boxModel.CreateOptions) *
 		Name:        name,
 		Annotations: opts.Labels,
 		Labels: kubernetes.BuildLabels(name, opts.Template.Image.Repository, opts.Template.ImageVersion(),
-			map[string]string{boxModel.LabelSchemaKind: common.ToKebabCase(schema.KindBoxV1.String())}),
+			map[string]string{commonModel.LabelSchemaKind: common.ToKebabCase(schema.KindBoxV1.String())}),
 		Ports: ports,
 		PodInfo: &kubernetes.PodInfo{
 			Namespace:     namespace,
@@ -143,8 +144,13 @@ func (box *KubeBoxClient) connectBox(opts *boxModel.ConnectOptions) error {
 	}
 }
 
+func BoxLabelSelector() string {
+	// value must be sanitized
+	return fmt.Sprintf("%s=%s", commonModel.LabelSchemaKind, common.ToKebabCase(schema.KindBoxV1.String()))
+}
+
 func boxNameLabelSelector(name string) string {
-	return fmt.Sprintf("%s,%s=%s", boxModel.BoxLabelSelector(), kubernetes.LabelKubeName, name)
+	return fmt.Sprintf("%s,%s=%s", BoxLabelSelector(), kubernetes.LabelKubeName, name)
 }
 
 func (box *KubeBoxClient) searchBox(name string) (*boxModel.BoxInfo, error) {
@@ -283,9 +289,9 @@ func (box *KubeBoxClient) describeBox(name string) (*boxModel.BoxDetails, error)
 
 func ToBoxDetails(deployment *kubernetes.DeploymentDetails, serviceInfo *kubernetes.ServiceInfo, provider boxModel.BoxProvider) (*boxModel.BoxDetails, error) {
 
-	labels := boxModel.BoxLabels(deployment.Annotations)
+	labels := commonModel.Labels(deployment.Annotations)
 
-	size, err := labels.ToSize()
+	size, err := labels.ToBoxSize()
 	if err != nil {
 		return nil, err
 	}
@@ -316,7 +322,7 @@ func ToBoxDetails(deployment *kubernetes.DeploymentDetails, serviceInfo *kuberne
 		},
 		ProviderInfo: &boxModel.BoxProviderInfo{
 			Provider: provider,
-			KubeProvider: &boxModel.KubeProviderInfo{
+			KubeProvider: &commonModel.KubeProviderInfo{
 				Namespace: deployment.Info.Namespace,
 			},
 		},
@@ -330,7 +336,7 @@ func ToBoxDetails(deployment *kubernetes.DeploymentDetails, serviceInfo *kuberne
 func (box *KubeBoxClient) listBoxes() ([]boxModel.BoxInfo, error) {
 	namespace := box.clientOpts.Namespace
 
-	deployments, err := box.client.DeploymentList(namespace, boxModel.BoxPrefixName, boxModel.BoxLabelSelector())
+	deployments, err := box.client.DeploymentList(namespace, boxModel.BoxPrefixName, BoxLabelSelector())
 	if err != nil {
 		return nil, err
 	}

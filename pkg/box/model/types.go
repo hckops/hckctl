@@ -2,6 +2,8 @@ package model
 
 import (
 	"time"
+
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 )
 
 type BoxInfo struct {
@@ -21,36 +23,16 @@ type BoxDetails struct {
 }
 
 type BoxTemplateInfo struct {
-	CachedTemplate *CachedTemplateInfo
-	GitTemplate    *GitTemplateInfo
+	CachedTemplate *commonModel.CachedTemplateInfo
+	GitTemplate    *commonModel.GitTemplateInfo
 }
 
 func (info *BoxTemplateInfo) IsCached() bool {
 	return info.CachedTemplate != nil
 }
 
-type CachedTemplateInfo struct {
-	Path string
-}
-
-type GitTemplateInfo struct {
-	Url      string
-	Revision string
-	Commit   string
-	Name     string
-}
-
 type BoxProviderInfo struct {
 	Provider       BoxProvider
-	DockerProvider *DockerProviderInfo
-	KubeProvider   *KubeProviderInfo
-}
-
-type DockerProviderInfo struct {
-	Network string
-	Ip      string
-}
-
-type KubeProviderInfo struct {
-	Namespace string
+	DockerProvider *commonModel.DockerProviderInfo
+	KubeProvider   *commonModel.KubeProviderInfo
 }

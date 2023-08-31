@@ -268,9 +268,9 @@ func (box *DockerBoxClient) describeBox(name string) (*boxModel.BoxDetails, erro
 
 func toBoxDetails(container docker.ContainerDetails) (*boxModel.BoxDetails, error) {
 
-	labels := boxModel.BoxLabels(container.Labels)
+	labels := commonModel.Labels(container.Labels)
 
-	size, err := labels.ToSize()
+	size, err := labels.ToBoxSize()
 	if err != nil {
 		return nil, err
 	}
@@ -301,7 +301,7 @@ func toBoxDetails(container docker.ContainerDetails) (*boxModel.BoxDetails, erro
 		},
 		ProviderInfo: &boxModel.BoxProviderInfo{
 			Provider: boxModel.Docker,
-			DockerProvider: &boxModel.DockerProviderInfo{
+			DockerProvider: &commonModel.DockerProviderInfo{
 				Network: container.Network.Name,
 				Ip:      container.Network.IpAddress,
 			},
@@ -322,7 +322,7 @@ func newBoxInfo(container docker.ContainerInfo) boxModel.BoxInfo {
 }
 
 func boxLabel() string {
-	return fmt.Sprintf("%s=%s", boxModel.LabelSchemaKind, schema.KindBoxV1.String())
+	return fmt.Sprintf("%s=%s", commonModel.LabelSchemaKind, schema.KindBoxV1.String())
 }
 
 func (box *DockerBoxClient) listBoxes() ([]boxModel.BoxInfo, error) {

@@ -6,8 +6,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/hckops/hckctl/pkg/box/model"
+	boxModel "github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/docker"
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 )
 
 func TestBoxLabel(t *testing.T) {
@@ -45,31 +46,31 @@ func TestToBoxDetails(t *testing.T) {
 			IpAddress: "myNetworkIp",
 		},
 	}
-	expected := &model.BoxDetails{
-		Info: model.BoxInfo{
+	expected := &boxModel.BoxDetails{
+		Info: boxModel.BoxInfo{
 			Id:      "myId",
 			Name:    "myName",
 			Healthy: true,
 		},
-		TemplateInfo: &model.BoxTemplateInfo{
-			CachedTemplate: &model.CachedTemplateInfo{
+		TemplateInfo: &boxModel.BoxTemplateInfo{
+			CachedTemplate: &commonModel.CachedTemplateInfo{
 				Path: "/tmp/cache/myUuid",
 			},
 		},
-		ProviderInfo: &model.BoxProviderInfo{
-			Provider: model.Docker,
-			DockerProvider: &model.DockerProviderInfo{
+		ProviderInfo: &boxModel.BoxProviderInfo{
+			Provider: boxModel.Docker,
+			DockerProvider: &commonModel.DockerProviderInfo{
 				Network: "myNetworkName",
 				Ip:      "myNetworkIp",
 			},
 		},
-		Size: model.Medium,
-		Env: []model.BoxEnv{
+		Size: boxModel.Medium,
+		Env: []boxModel.BoxEnv{
 			{Key: "MY_KEY_1", Value: "MY_VALUE_1"},
 			{Key: "MY_KEY_2", Value: "MY_VALUE_2"},
 			{Key: "MY_KEY_3", Value: "MY_VALUE_3"},
 		},
-		Ports: []model.BoxPort{
+		Ports: []boxModel.BoxPort{
 			{Alias: "none", Local: "local-y", Remote: "remote-1", Public: false},
 			{Alias: "none", Local: "local-x", Remote: "remote-2", Public: false},
 			{Alias: "none", Local: "local-z", Remote: "remote-3", Public: false},
