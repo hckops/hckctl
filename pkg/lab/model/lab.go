@@ -55,12 +55,14 @@ func (lab *LabV1) Pretty() string {
 // TODO use reflection to expand all fields
 func (box *LabBox) Expand(inputs map[string]string) (*LabBox, error) {
 
+	// TODO optional
 	if alias, err := expand(box.Alias, inputs); err != nil {
 		return nil, err
 	} else {
 		box.Alias = alias
 	}
 
+	// TODO optional
 	if vpn, err := expand(box.Vpn, inputs); err != nil {
 		return nil, err
 	} else {

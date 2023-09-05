@@ -158,11 +158,12 @@ just
 <!--
 TODO
 * priority
-    - implement copy + mount vpn docker/kube
+    - play htb: linux/win
+    - >>> implement lab copy + mount vpn docker/kube
     - cloud size comparison
-    - distroless support
-    - add task
-    - remove lab except for schema (?)
+    - verify kube/cloud distroless support
+    - verify kube/cloud no shell support
+    - add task/flow
     - RELEASE
     - brew
     - client timeouts
@@ -223,7 +224,9 @@ TODO
     - list boxes add filters
     - flaky issue zerolog `could not write event: write /home/ubuntu/.local/state/hck/hckctl-ubuntu.log: file already closed`
 * lab 
-    - merge/expand BoxEnv when connecting with actual env e.g. generated password
+    - in `create` add override e.g. `--input alias=parrot --input password=changeme --input vpn=htb-eu`
+    - verify optional merge/overrides
+    - in `connect` merge/expand BoxEnv actual BoxEnv e.g. generated password
     - compose/template/infra
         * https://github.com/SpecterOps/BloodHound/blob/main/examples/docker-compose/docker-compose.yml
         * https://kompose.io
