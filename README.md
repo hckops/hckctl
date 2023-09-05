@@ -222,6 +222,13 @@ TODO
     - list boxes in table with padding see `tabwriter` https://gosamples.dev/string-padding
     - list boxes add filters
     - flaky issue zerolog `could not write event: write /home/ubuntu/.local/state/hck/hckctl-ubuntu.log: file already closed`
+* lab 
+    - merge/expand BoxEnv when connecting with actual env e.g. generated password
+    - compose/template/infra
+        * https://github.com/SpecterOps/BloodHound/blob/main/examples/docker-compose/docker-compose.yml
+        * https://kompose.io
+        * https://github.com/vulhub/vulhub
+        * https://github.com/madhuakula/kubernetes-goat.git
 * task
     - TODO ???
 * version
@@ -236,10 +243,5 @@ TODO
     - man (plugin)
     - kube-inject (plugin) mount sidecar pod at runtime with debugging tools
     - pro (bundle) e.g. flow
-* lab compose/template/infra
-    - https://github.com/SpecterOps/BloodHound/blob/main/examples/docker-compose/docker-compose.yml
-    - https://kompose.io
-    - https://github.com/vulhub/vulhub
-    - https://github.com/madhuakula/kubernetes-goat.git
 
 -->

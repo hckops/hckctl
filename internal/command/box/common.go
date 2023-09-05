@@ -93,7 +93,7 @@ func attemptRunBoxClients(configRef *config.ConfigRef, boxName string, invokeCli
 
 		invokeOpts := &invokeOptions{
 			client:   boxClient,
-			template: templateInfo,
+			template: templateInfo, // TODO with lab merge boxDetails and templateInfo BoxEnv
 			loader:   loader,
 		}
 		if err := invokeClient(invokeOpts, boxDetails); err != nil {
