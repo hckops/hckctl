@@ -319,8 +319,14 @@ func newPodInfo(namespace string, pods *corev1.PodList) (*PodInfo, error) {
 
 	podItem := pods.Items[0]
 
-	// TODO verify with injected sidecar containers ???
-	if len(podItem.Spec.Containers) != 1 {
+	var containers []corev1.Container
+	for _, c := range podItem.Spec.Containers {
+		// exclude injected sidecar containers
+		if !strings.HasPrefix(c.Name, SidecarPrefix) {
+			containers = append(containers, c)
+		}
+	}
+	if len(containers) != 1 {
 		return nil, fmt.Errorf("found %d containers, expected only 1 container for pod: namespace=%s", len(podItem.Spec.Containers), namespace)
 	}
 

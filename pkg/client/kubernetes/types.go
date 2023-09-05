@@ -10,6 +10,7 @@ import (
 
 const (
 	SingleReplica      = 1
+	SidecarPrefix      = "sidecar-"
 	LabelKubeName      = "app.kubernetes.io/name"
 	LabelKubeInstance  = "app.kubernetes.io/instance"
 	LabelKubeVersion   = "app.kubernetes.io/version"
