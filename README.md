@@ -166,7 +166,6 @@ TODO
     - RELEASE
     - brew
     - client timeouts
-    - TODO replace kube impl with helm chart?
     - review `lab` schema
 * general
     - update readme
@@ -205,8 +204,6 @@ TODO
     - add `--remote` mutually exclusive flag
     - update directories to exclude in `resolvePath` e.g. charts
 * box
-    - add box --name alias/override
-    - add box --env override e.g. PWD gen
     - review command: `copy` vs `upload/download`
     - review tty resize
     - mount `/dev/tun` for vpn
@@ -214,7 +211,6 @@ TODO
     - kube: add distroless support
     - kube: verify if close is needed or `return nil`
     - kube: `execBox` deployment always check/scale replica to 1 before exec (test with replica=0)
-    - kube: verify `GetPodInfo` sidecar pod count
     - kube: update resources sizes + comparison
     - docker: COPY shared volume `XDG_DATA_HOME`
     - docker: support powershell `/usr/bin/pwsh` (attach with no tty and raw terminal) see `docker run --rm -it mcr.microsoft.com/powershell`
@@ -223,8 +219,8 @@ TODO
     - add context timeout
     - cloud: ssh key auth only + remove InsecureIgnoreHostKey
     - cloud: remove body from empty request `omitempty to remove "body":{}`
-    - remove lab ??? are envs + copy enough?
     - list boxes in table with padding see `tabwriter` https://gosamples.dev/string-padding
+    - list boxes add filters
     - flaky issue zerolog `could not write event: write /home/ubuntu/.local/state/hck/hckctl-ubuntu.log: file already closed`
 * task
     - TODO ???
@@ -240,42 +236,10 @@ TODO
     - man (plugin)
     - kube-inject (plugin) mount sidecar pod at runtime with debugging tools
     - pro (bundle) e.g. flow
-
-* lab
+* lab compose/template/infra
     - https://github.com/SpecterOps/BloodHound/blob/main/examples/docker-compose/docker-compose.yml
     - https://kompose.io
-
-curl -L https://github.com/kubernetes/kompose/releases/download/v1.30.0/kompose-linux-amd64 -o kompose
-chmod +x kompose
-sudo mv ./kompose /usr/local/bin/kompose
-
-https://raw.githubusercontent.com/SpecterOps/BloodHound/main/examples/docker-compose/docker-compose.yml
-https://github.com/vulhub/vulhub
-
-kompose convert -f docker-compose.yml
-
-https://github.com/madhuakula/kubernetes-goat.git
-
-# password gen
-https://gist.github.com/earthgecko/3089509
-# shell expansion
-https://stackoverflow.com/questions/49001114/shell-expansion-command-substitution-in-golang
-
----
-
-hckctl box cp --from $(pwd)/README.md box-arch-u5qy6:/home/arch
-hckclt lab pwn/parrot --name my-box-name --env HTB_TARGET=10.10.10.10
-
-/home/ubuntu/.cache/hck/local/e934ac36-7c28-4477-8073-1cb4a27c76d2
-
-https://stackoverflow.com/questions/34913840/best-practice-for-connecting-to-a-vpn-though-docker
-vpn:
-  image: myvpn_image
-app1:
-  image: app1_image
-  net: container:vpn
-
-# (DOCKER/KUBE) hckctl lab ctf-vpn --input vpn.default.ref=/my/local/path/config.ovpn
-# (CLOUD) hckctl lab ctf-vpn --input password=CHANGEME --input vpn.default.ref=SECRET_REF
+    - https://github.com/vulhub/vulhub
+    - https://github.com/madhuakula/kubernetes-goat.git
 
 -->

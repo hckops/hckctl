@@ -1,12 +1,12 @@
 package config
 
 import (
-	"github.com/hckops/hckctl/pkg/common/model"
 	"net"
 	"strconv"
 
 	"github.com/hckops/hckctl/internal/command/common"
 	boxModel "github.com/hckops/hckctl/pkg/box/model"
+	"github.com/hckops/hckctl/pkg/common/model"
 	labModel "github.com/hckops/hckctl/pkg/lab/model"
 	"github.com/hckops/hckctl/pkg/logger"
 	"github.com/hckops/hckctl/pkg/schema"
