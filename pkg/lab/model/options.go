@@ -22,8 +22,9 @@ func NewCommonLabOpts() *CommonLabOptions {
 }
 
 type CreateOptions struct {
-	LabTemplate  *LabV1
-	BoxTemplates map[string]*boxModel.BoxV1
-	Parameters   map[string]string
-	Labels       map[string]string
+	LabTemplate   *LabV1
+	BoxTemplates  map[string]*boxModel.BoxV1
+	DumpTemplates map[string]*DumpV1
+	Parameters    map[string]string
+	Labels        map[string]string
 }

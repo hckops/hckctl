@@ -21,6 +21,7 @@ const (
 	KindLabV1
 	KindTaskV1
 	KindFlowV1
+	KindDumpV1
 )
 
 var kinds = map[SchemaKind]string{
@@ -30,6 +31,7 @@ var kinds = map[SchemaKind]string{
 	KindLabV1:    "lab/v1",
 	KindTaskV1:   "task/v1",
 	KindFlowV1:   "flow/v1",
+	KindDumpV1:   "dump/v1",
 }
 
 func (s SchemaKind) String() string {
