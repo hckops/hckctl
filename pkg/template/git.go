@@ -43,22 +43,22 @@ func resolvePathWithRevision(opts *GitSourceOptions, name string) (string, strin
 		return "", "", errors.Wrap(err, "invalid template source")
 	}
 
-	path, err := resolvePath(opts.CacheBaseDir, name)
+	path, err := resolvePath(opts.CachePath(), name)
 	if err != nil {
 		return "", "", errors.Wrap(err, "invalid template name")
 	}
 	return path, hash, nil
 }
 
-func resolvePath(sourceCacheDir, name string) (string, error) {
+func resolvePath(sourceCachePath, name string) (string, error) {
 
 	// list all base directories
 	var directories []string
-	if err := filepath.Walk(sourceCacheDir, func(path string, info os.FileInfo, err error) error {
+	if err := filepath.Walk(sourceCachePath, func(path string, info os.FileInfo, err error) error {
 		// excludes "docker" and hidden directories e.g. ".git", ".github"
 		if info.IsDir() &&
-			!strings.HasPrefix(path, fmt.Sprintf("%s/.", sourceCacheDir)) &&
-			!strings.HasPrefix(path, fmt.Sprintf("%s/docker", sourceCacheDir)) {
+			!strings.HasPrefix(path, fmt.Sprintf("%s/.", sourceCachePath)) &&
+			!strings.HasPrefix(path, fmt.Sprintf("%s/docker", sourceCachePath)) {
 			directories = append(directories, path)
 		}
 		return nil
