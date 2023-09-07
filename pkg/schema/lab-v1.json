@@ -6,7 +6,7 @@
   "type": "object",
   "properties": {
     "kind": {
-      "description": "The type and version of the lab",
+      "description": "The type and version of the lab schema",
       "type": "string",
       "const": "lab/v1"
     },

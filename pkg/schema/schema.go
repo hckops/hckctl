@@ -12,6 +12,9 @@ var boxV1Schema string
 //go:embed lab-v1.json
 var labV1Schema string
 
+//go:embed dump-v1.json
+var dumpV1Schema string
+
 type SchemaKind int
 
 const (

@@ -6,7 +6,7 @@
   "type": "object",
   "properties": {
     "kind": {
-      "description": "The type and version of the box",
+      "description": "The type and version of the box schema",
       "type": "string",
       "const": "box/v1"
     },

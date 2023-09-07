@@ -245,6 +245,7 @@ func TestValidLabV1(t *testing.T) {
 }
 
 // TODO bad validation, box.template.name is required and it should fail
+// TODO "box" is temporary required, change it to mutually exclusive
 func TestLabRequired(t *testing.T) {
 	data :=
 		`{
@@ -261,4 +262,21 @@ func TestLabRequired(t *testing.T) {
 			}
 		}`
 	assert.NoError(t, ValidateLabV1(data))
+}
+
+func TestValidDumpV1(t *testing.T) {
+	data :=
+		`{
+			"kind": "dump/v1",
+			"name": "my-name",
+			"tags": [
+				"my-tag"
+			],
+			"group": "my-group",
+			"git": {
+				"repositoryUrl": "my-url",
+				"branch": "my-branch"
+			}
+		}`
+	assert.NoError(t, ValidateDumpV1(data))
 }
