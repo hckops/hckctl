@@ -213,3 +213,52 @@ func TestBoxNetworkPortUniqueItems(t *testing.T) {
 		}`
 	assert.NoError(t, ValidateBoxV1(data))
 }
+
+func TestValidLabV1(t *testing.T) {
+	data :=
+		`{
+			"kind": "lab/v1",
+			"name": "my-name",
+			"tags": [
+				"my-tag"
+			],
+			"box": {
+				"alias": "my-alias",
+				"template": {
+					"name": "my-template",
+					"env": [
+						"MY_KEY_1=my-value-1",
+						"MY_KEY_2=my-value-2"
+					],
+				},
+				"size": "M",
+				"vpn": "my-vpn",
+				"ports": [
+					"tty"
+				],
+				"dumps": [
+					"seclists"
+				]
+			}
+		}`
+	assert.NoError(t, ValidateLabV1(data))
+}
+
+// TODO bad validation, box.template.name is required and it should fail
+func TestLabRequired(t *testing.T) {
+	data :=
+		`{
+			"kind": "lab/v1",
+			"name": "my-name",
+			"tags": [
+				"my-tag"
+			],
+			"box": {
+				"template": {
+					"name": "my-template"
+				},
+				"size": "M"
+			}
+		}`
+	assert.NoError(t, ValidateLabV1(data))
+}

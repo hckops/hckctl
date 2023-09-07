@@ -167,7 +167,6 @@ TODO
     - RELEASE
     - brew
     - client timeouts
-    - review `lab` schema
 * general
     - update readme
         * remove comments
