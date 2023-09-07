@@ -9,6 +9,6 @@ type DumpV1 struct {
 }
 
 type GitDump struct {
-	RepositoryUrl string
-	Branch        string
+	Repository string
+	Branch     string
 }

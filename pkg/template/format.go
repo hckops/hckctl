@@ -2,6 +2,7 @@ package template
 
 import (
 	"fmt"
+	"reflect"
 
 	"gopkg.in/yaml.v3"
 
@@ -71,6 +72,16 @@ func decodeFromYaml[T TemplateType](value string) (T, error) {
 			return none[T](), fmt.Errorf("lab decoder error: %v", err)
 		}
 		*typeRef = model
+
+	case *lab.DumpV1:
+		var model lab.DumpV1
+		if err := yaml.Unmarshal([]byte(value), &model); err != nil {
+			return none[T](), fmt.Errorf("dump decoder error: %v", err)
+		}
+		*typeRef = model
+
+	default:
+		return templateType, fmt.Errorf("unable to decode yaml invalid schema %v", reflect.TypeOf(templateType))
 
 	}
 	return templateType, nil

@@ -274,7 +274,7 @@ func TestValidDumpV1(t *testing.T) {
 			],
 			"group": "my-group",
 			"git": {
-				"repositoryUrl": "my-url",
+				"repository": "my-url",
 				"branch": "my-branch"
 			}
 		}`
