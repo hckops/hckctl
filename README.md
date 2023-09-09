@@ -158,12 +158,13 @@ just
 <!--
 TODO
 * priority
+    - add task
     - play htb: linux/win
     - implement lab for docker (with kind) and kube
+    - add flow with vpn
     - cloud size comparison
     - verify kube/cloud distroless support
     - verify kube/cloud no shell support
-    - add task/flow with vpn
     - RELEASE
 * general
     - brew release

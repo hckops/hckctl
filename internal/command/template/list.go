@@ -82,7 +82,7 @@ func templateList(cacheDir string, revision string, offline bool) error {
 				total = total + 1
 				// remove prefix and suffix
 				prettyPath := strings.NewReplacer(
-					fmt.Sprintf("%s/", cacheDir), "",
+					fmt.Sprintf("%s/", sourceOpts.CachePath()), "",
 					".yml", "",
 					".yaml", "",
 				).Replace(validation.Path)
