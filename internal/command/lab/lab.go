@@ -105,10 +105,11 @@ func startLab(sourceLoader template.SourceLoader[model.LabV1], provider model.La
 	}
 
 	createOpts := &model.CreateOptions{
-		LabTemplate:  &labTemplate.Value.Data,
-		BoxTemplates: map[string]*boxModel.BoxV1{}, // TODO load box template
-		Parameters:   map[string]string{},          // TODO add override --input alias=parrot --input password=changeme --input vpn=htb-eu
-		Labels:       map[string]string{},          // TODO box+lab labels
+		LabTemplate:   &labTemplate.Value.Data,
+		BoxTemplates:  map[string]*boxModel.BoxV1{}, // TODO load box template
+		DumpTemplates: map[string]*model.DumpV1{},
+		Parameters:    map[string]string{}, // TODO add override --input alias=parrot --input password=changeme --input vpn=htb-eu
+		Labels:        map[string]string{}, // TODO box+lab labels
 	}
 
 	if labInfo, err := labClient.Create(createOpts); err != nil {

@@ -159,15 +159,15 @@ just
 TODO
 * priority
     - play htb: linux/win
-    - >>> implement lab copy + mount vpn docker/kube
+    - implement lab for docker (with kind) and kube
     - cloud size comparison
     - verify kube/cloud distroless support
     - verify kube/cloud no shell support
-    - add task/flow
+    - add task/flow with vpn
     - RELEASE
-    - brew
-    - client timeouts
 * general
+    - brew release
+    - review client timeouts
     - update readme
         * remove comments
         * update setup
@@ -194,8 +194,6 @@ TODO
         * e.g. `box connect <list of boxes>` with `ValidArgsFunction`
         * e.g. `box <list of box templates>` with `ValidArgsFunction`
         * see fix autocomplete
-    - improve command validation e.g. docker `Args: cli.ExactArgs(1)`
-    - filter/list box (list and delete) and template (list and validate) columns by provider + sorting
     - config add set command
     - add confirmation before
         * reset config
@@ -204,12 +202,10 @@ TODO
     - add `--remote` mutually exclusive flag
     - update directories to exclude in `resolvePath` e.g. charts
 * box
-    - review command: `copy` vs `upload/download`
     - review tty resize
-    - mount `/dev/tun` for vpn
     - implement copy ???
     - kube: add distroless support
-    - kube: verify if close is needed or `return nil`
+    - kube: verify if `close()` is needed or `return nil`
     - kube: `execBox` deployment always check/scale replica to 1 before exec (test with replica=0)
     - kube: update resources sizes + comparison
     - docker: COPY shared volume `XDG_DATA_HOME`
@@ -220,7 +216,7 @@ TODO
     - cloud: ssh key auth only + remove InsecureIgnoreHostKey
     - cloud: remove body from empty request `omitempty to remove "body":{}`
     - list boxes in table with padding see `tabwriter` https://gosamples.dev/string-padding
-    - list boxes add filters
+    - filter/list box (list and delete) and template (list and validate) columns by provider + sorting
     - flaky issue zerolog `could not write event: write /home/ubuntu/.local/state/hck/hckctl-ubuntu.log: file already closed`
 * lab 
     - in `create` add override e.g. `--input alias=parrot --input password=changeme --input vpn=htb-eu`
