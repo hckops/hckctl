@@ -24,7 +24,7 @@ func (s SourceType) String() string {
 }
 
 type TemplateType interface {
-	string | box.BoxV1 | lab.LabV1 | lab.DumpV1 | task.TaskV1
+	string | box.BoxV1 | lab.LabV1 | task.TaskV1 | lab.DumpV1
 }
 
 type TemplateValue[T TemplateType] struct {

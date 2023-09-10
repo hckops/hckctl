@@ -17,6 +17,7 @@ func ValidateAll(data string) (SchemaKind, error) {
 	schemaValidations := []schemaValidation{
 		{ValidateBoxV1, KindBoxV1},
 		{ValidateLabV1, KindLabV1},
+		{ValidateTaskV1, KindTaskV1},
 		{ValidateDumpV1, KindDumpV1},
 	}
 	var validationErrors []error
@@ -37,6 +38,10 @@ func ValidateBoxV1(data string) error {
 
 func ValidateLabV1(data string) error {
 	return validateSchema("lab-v1.json", labV1Schema, data)
+}
+
+func ValidateTaskV1(data string) error {
+	return validateSchema("task-v1.json", taskV1Schema, data)
 }
 
 func ValidateDumpV1(data string) error {

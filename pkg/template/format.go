@@ -9,6 +9,7 @@ import (
 	box "github.com/hckops/hckctl/pkg/box/model"
 	lab "github.com/hckops/hckctl/pkg/lab/model"
 	"github.com/hckops/hckctl/pkg/schema"
+	task "github.com/hckops/hckctl/pkg/task/model"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
@@ -23,6 +24,18 @@ func convertFromYamlToYaml(kind schema.SchemaKind, value string) (string, error)
 		}
 	case schema.KindLabV1:
 		if model, err := decodeFromYaml[lab.LabV1](value); err != nil {
+			return "", err
+		} else {
+			return util.EncodeYaml(model)
+		}
+	case schema.KindTaskV1:
+		if model, err := decodeFromYaml[task.TaskV1](value); err != nil {
+			return "", err
+		} else {
+			return util.EncodeYaml(model)
+		}
+	case schema.KindDumpV1:
+		if model, err := decodeFromYaml[lab.DumpV1](value); err != nil {
 			return "", err
 		} else {
 			return util.EncodeYaml(model)
@@ -42,6 +55,18 @@ func convertFromYamlToJson(kind schema.SchemaKind, value string) (string, error)
 		}
 	case schema.KindLabV1:
 		if model, err := decodeFromYaml[lab.LabV1](value); err != nil {
+			return "", err
+		} else {
+			return util.EncodeJsonIndent(model)
+		}
+	case schema.KindTaskV1:
+		if model, err := decodeFromYaml[task.TaskV1](value); err != nil {
+			return "", err
+		} else {
+			return util.EncodeJsonIndent(model)
+		}
+	case schema.KindDumpV1:
+		if model, err := decodeFromYaml[lab.DumpV1](value); err != nil {
 			return "", err
 		} else {
 			return util.EncodeJsonIndent(model)
@@ -70,6 +95,13 @@ func decodeFromYaml[T TemplateType](value string) (T, error) {
 		var model lab.LabV1
 		if err := yaml.Unmarshal([]byte(value), &model); err != nil {
 			return none[T](), fmt.Errorf("lab decoder error: %v", err)
+		}
+		*typeRef = model
+
+	case *task.TaskV1:
+		var model task.TaskV1
+		if err := yaml.Unmarshal([]byte(value), &model); err != nil {
+			return none[T](), fmt.Errorf("task decoder error: %v", err)
 		}
 		*typeRef = model
 

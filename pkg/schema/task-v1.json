@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schema.hckops.com/lab-v1.json",
+  "title": "TaskV1",
+  "description": "Defines the template of a dump",
+  "type": "object",
+  "properties": {
+    "kind": {
+      "description": "The type and version of the dump schema",
+      "type": "string",
+      "const": "task/v1"
+    },
+    "name": {
+      "description": "The name of the task",
+      "type": "string"
+    },
+    "tags": {
+      "description": "Tags of the task",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "kind",
+    "name",
+    "tags"
+  ]
+}

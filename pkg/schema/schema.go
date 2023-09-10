@@ -12,6 +12,9 @@ var boxV1Schema string
 //go:embed lab-v1.json
 var labV1Schema string
 
+//go:embed task-v1.json
+var taskV1Schema string
+
 //go:embed dump-v1.json
 var dumpV1Schema string
 

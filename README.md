@@ -159,6 +159,7 @@ just
 TODO
 * priority
     - add task
+    - update task schema and validation
     - play htb: linux/win
     - implement lab for docker (with kind) and kube
     - add flow with vpn

@@ -280,3 +280,15 @@ func TestValidDumpV1(t *testing.T) {
 		}`
 	assert.NoError(t, ValidateDumpV1(data))
 }
+
+func TestValidTaskV1(t *testing.T) {
+	data :=
+		`{
+			"kind": "task/v1",
+			"name": "my-name",
+			"tags": [
+				"my-tag"
+			]
+		}`
+	assert.NoError(t, ValidateTaskV1(data))
+}
