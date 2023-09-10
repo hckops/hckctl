@@ -26,5 +26,5 @@ type CreateOptions struct {
 	BoxTemplates  map[string]*boxModel.BoxV1
 	DumpTemplates map[string]*DumpV1
 	Parameters    map[string]string
-	Labels        map[string]string
+	Labels        commonModel.Labels
 }

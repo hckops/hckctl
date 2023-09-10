@@ -1,9 +1,9 @@
 package lab
 
 import (
-	"errors"
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
@@ -13,8 +13,9 @@ import (
 	labFlag "github.com/hckops/hckctl/internal/command/lab/flag"
 	"github.com/hckops/hckctl/internal/command/version"
 	boxModel "github.com/hckops/hckctl/pkg/box/model"
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/lab"
-	"github.com/hckops/hckctl/pkg/lab/model"
+	labModel "github.com/hckops/hckctl/pkg/lab/model"
 	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/template"
 )
@@ -23,7 +24,7 @@ type labCmdOptions struct {
 	configRef    *config.ConfigRef
 	sourceFlag   *commonFlag.SourceFlag
 	providerFlag *commonFlag.ProviderFlag
-	provider     model.LabProvider
+	provider     labModel.LabProvider
 }
 
 func NewLabCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -70,7 +71,7 @@ func (opts *labCmdOptions) run(cmd *cobra.Command, args []string) error {
 		path := args[0]
 		log.Debug().Msgf("create lab from local template: path=%s", path)
 
-		sourceLoader := template.NewLocalCachedLoader[model.LabV1](path, opts.configRef.Config.Template.CacheDir)
+		sourceLoader := template.NewLocalCachedLoader[labModel.LabV1](path, opts.configRef.Config.Template.CacheDir)
 		// TODO labels
 		return startLab(sourceLoader, opts.provider, opts.configRef)
 
@@ -79,13 +80,13 @@ func (opts *labCmdOptions) run(cmd *cobra.Command, args []string) error {
 		log.Debug().Msgf("create lab from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
 
 		sourceOpts := commonCmd.NewGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
-		sourceLoader := template.NewGitLoader[model.LabV1](sourceOpts, name)
+		sourceLoader := template.NewGitLoader[labModel.LabV1](sourceOpts, name)
 		// TODO labels
 		return startLab(sourceLoader, opts.provider, opts.configRef)
 	}
 }
 
-func startLab(sourceLoader template.SourceLoader[model.LabV1], provider model.LabProvider, configRef *config.ConfigRef) error {
+func startLab(sourceLoader template.SourceLoader[labModel.LabV1], provider labModel.LabProvider, configRef *config.ConfigRef) error {
 
 	labTemplate, err := sourceLoader.Read()
 	if err != nil || labTemplate.Value.Kind != schema.KindLabV1 {
@@ -104,12 +105,12 @@ func startLab(sourceLoader template.SourceLoader[model.LabV1], provider model.La
 		return err
 	}
 
-	createOpts := &model.CreateOptions{
+	createOpts := &labModel.CreateOptions{
 		LabTemplate:   &labTemplate.Value.Data,
 		BoxTemplates:  map[string]*boxModel.BoxV1{}, // TODO load box template
-		DumpTemplates: map[string]*model.DumpV1{},
-		Parameters:    map[string]string{}, // TODO add override --input alias=parrot --input password=changeme --input vpn=htb-eu
-		Labels:        map[string]string{}, // TODO box+lab labels
+		DumpTemplates: map[string]*labModel.DumpV1{},
+		Parameters:    map[string]string{},  // TODO add override --input alias=parrot --input password=changeme --input vpn=htb-eu
+		Labels:        commonModel.Labels{}, // TODO box+lab labels
 	}
 
 	if labInfo, err := labClient.Create(createOpts); err != nil {
@@ -121,8 +122,8 @@ func startLab(sourceLoader template.SourceLoader[model.LabV1], provider model.La
 	return nil
 }
 
-func newDefaultLabClient(provider model.LabProvider, configRef *config.ConfigRef, loader *commonCmd.Loader) (lab.LabClient, error) {
-	labClientOpts := &model.LabClientOptions{
+func newDefaultLabClient(provider labModel.LabProvider, configRef *config.ConfigRef, loader *commonCmd.Loader) (lab.LabClient, error) {
+	labClientOpts := &labModel.LabClientOptions{
 		Provider:  provider,
 		CloudOpts: configRef.Config.Provider.Cloud.ToCloudOptions(version.ClientVersion()),
 	}
