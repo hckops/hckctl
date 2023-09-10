@@ -10,6 +10,7 @@ import (
 	labModel "github.com/hckops/hckctl/pkg/lab/model"
 	"github.com/hckops/hckctl/pkg/logger"
 	"github.com/hckops/hckctl/pkg/schema"
+	taskModel "github.com/hckops/hckctl/pkg/task/model"
 )
 
 // ConfigRef is a wrapper used to avoid global variables.
@@ -19,14 +20,21 @@ type ConfigRef struct {
 	Config *ConfigV1
 }
 
+// TODO not used, useful for migrations
+const (
+	currentVersion = "1.0"
+)
+
 type ConfigV1 struct {
 	Kind     string         `yaml:"kind"`
+	Version  string         `yaml:"version"`
 	Log      LogConfig      `yaml:"log"`
 	Provider ProviderConfig `yaml:"provider"`
 	Network  NetworkConfig  `yaml:"network"`
 	Template TemplateConfig `yaml:"template"`
 	Box      BoxConfig      `yaml:"box"`
 	Lab      LabConfig      `yaml:"lab"`
+	Task     TaskConfig     `yaml:"task"`
 }
 
 type LogConfig struct {
@@ -108,9 +116,14 @@ type LabConfig struct {
 	Vpn      string `yaml:"vpn"`
 }
 
+type TaskConfig struct {
+	Provider string `yaml:"provider"`
+}
+
 func newConfig(logFile, cacheDir string) *ConfigV1 {
 	return &ConfigV1{
-		Kind: schema.KindConfigV1.String(),
+		Kind:    schema.KindConfigV1.String(),
+		Version: currentVersion,
 		Log: LogConfig{
 			Level:    logger.InfoLogLevel.String(),
 			FilePath: logFile,
@@ -146,6 +159,9 @@ func newConfig(logFile, cacheDir string) *ConfigV1 {
 		Lab: LabConfig{
 			Provider: labModel.Cloud.String(),
 			Vpn:      common.DefaultVpnName,
+		},
+		Task: TaskConfig{
+			Provider: taskModel.Docker.String(),
 		},
 	}
 }

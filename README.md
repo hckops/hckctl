@@ -166,6 +166,7 @@ TODO
     - verify kube/cloud distroless support
     - verify kube/cloud no shell support
     - RELEASE
+    - config migration between versions
 * general
     - brew release
     - review client timeouts

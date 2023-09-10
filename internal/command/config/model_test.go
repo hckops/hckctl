@@ -13,7 +13,8 @@ func TestNewConfig(t *testing.T) {
 	cacheDir := "/tmp/cache/"
 
 	expected := &ConfigV1{
-		Kind: "config/v1",
+		Kind:    "config/v1",
+		Version: "1.0",
 		Log: LogConfig{
 			Level:    "info",
 			FilePath: logFile,
@@ -49,6 +50,9 @@ func TestNewConfig(t *testing.T) {
 		Lab: LabConfig{
 			Provider: "cloud",
 			Vpn:      "default",
+		},
+		Task: TaskConfig{
+			Provider: "docker",
 		},
 	}
 

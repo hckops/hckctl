@@ -10,6 +10,7 @@ import (
 	commonCmd "github.com/hckops/hckctl/internal/command/common"
 	commonFlag "github.com/hckops/hckctl/internal/command/common/flag"
 	"github.com/hckops/hckctl/internal/command/config"
+	taskFlag "github.com/hckops/hckctl/internal/command/task/flag"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/task"
 	"github.com/hckops/hckctl/pkg/task/model"
@@ -21,6 +22,7 @@ type taskCmdOptions struct {
 	configRef    *config.ConfigRef
 	sourceFlag   *commonFlag.SourceFlag
 	providerFlag *commonFlag.ProviderFlag
+	provider     taskModel.TaskProvider
 	commandFlag  string // e.g. default (nothing), inline (reserved keyword), other values
 }
 
@@ -42,14 +44,18 @@ func NewTaskCmd(configRef *config.ConfigRef) *cobra.Command {
 	// --revision or --local
 	opts.sourceFlag = commonFlag.AddTemplateSourceFlag(command)
 	// --provider (enum)
-	// TODO opts.providerFlag = labFlag.AddLabProviderFlag(command)
+	opts.providerFlag = taskFlag.AddTaskProviderFlag(command)
 
 	return command
 }
 
 func (opts *taskCmdOptions) validate(cmd *cobra.Command, args []string) error {
 
-	// TODO validate provider
+	validProvider, err := taskFlag.ValidateTaskProvider(opts.configRef.Config.Task.Provider, opts.providerFlag)
+	if err != nil {
+		return err
+	}
+	opts.provider = validProvider
 
 	if err := commonFlag.ValidateSourceFlag(opts.providerFlag, opts.sourceFlag); err != nil {
 		log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
@@ -66,8 +72,7 @@ func (opts *taskCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 		sourceLoader := template.NewLocalCachedLoader[model.TaskV1](path, opts.configRef.Config.Template.CacheDir)
 		// TODO labels
-		// TODO provider
-		return runTask(sourceLoader, "TODO opts.provider", opts.configRef)
+		return runTask(sourceLoader, opts.provider, opts.configRef)
 
 	} else {
 		name := args[0]
@@ -76,8 +81,7 @@ func (opts *taskCmdOptions) run(cmd *cobra.Command, args []string) error {
 		sourceOpts := commonCmd.NewGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
 		sourceLoader := template.NewGitLoader[model.TaskV1](sourceOpts, name)
 		// TODO labels
-		// TODO provider
-		return runTask(sourceLoader, "TODO opts.provider", opts.configRef)
+		return runTask(sourceLoader, opts.provider, opts.configRef)
 	}
 }
 
