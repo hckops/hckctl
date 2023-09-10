@@ -14,19 +14,17 @@ type DockerTaskClient struct {
 }
 
 func NewDockerTaskClient(commonOpts *taskModel.CommonTaskOptions, dockerOpts *commonModel.DockerOptions) (*DockerTaskClient, error) {
-	// TODO
-	return &DockerTaskClient{}, nil
+	return newDockerTaskClient(commonOpts, dockerOpts)
 }
 
-func (lab *DockerTaskClient) Provider() taskModel.TaskProvider {
+func (task *DockerTaskClient) Provider() taskModel.TaskProvider {
 	return taskModel.Docker
 }
 
-func (lab *DockerTaskClient) Events() *event.EventBus {
-	return lab.eventBus
+func (task *DockerTaskClient) Events() *event.EventBus {
+	return task.eventBus
 }
 
-func (lab *DockerTaskClient) Run(opts *taskModel.CreateOptions) error {
-	// TODO
-	return nil
+func (task *DockerTaskClient) Run(opts *taskModel.CreateOptions) error {
+	return task.runTask(opts)
 }

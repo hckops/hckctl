@@ -83,7 +83,7 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 	}
 
 	containerConfig, err := docker.BuildContainerConfig(&docker.ContainerConfigOpts{
-		ImageName:     opts.Template.ImageName(),
+		ImageName:     imageName,
 		ContainerName: containerName,
 		Env:           containerEnv,
 		Ports:         containerPorts,
