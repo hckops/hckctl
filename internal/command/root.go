@@ -12,6 +12,7 @@ import (
 	commonCmd "github.com/hckops/hckctl/internal/command/common"
 	configCmd "github.com/hckops/hckctl/internal/command/config"
 	labCmd "github.com/hckops/hckctl/internal/command/lab"
+	taskCmd "github.com/hckops/hckctl/internal/command/task"
 	templateCmd "github.com/hckops/hckctl/internal/command/template"
 	versionCmd "github.com/hckops/hckctl/internal/command/version"
 	"github.com/hckops/hckctl/pkg/logger"
@@ -72,6 +73,7 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.AddCommand(boxCmd.NewBoxCmd(configRef))
 	rootCmd.AddCommand(configCmd.NewConfigCmd(configRef))
 	rootCmd.AddCommand(labCmd.NewLabCmd(configRef))
+	rootCmd.AddCommand(taskCmd.NewTaskCmd(configRef))
 	rootCmd.AddCommand(templateCmd.NewTemplateCmd(configRef))
 	rootCmd.AddCommand(versionCmd.NewVersionCmd())
 	return rootCmd

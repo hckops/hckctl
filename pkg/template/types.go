@@ -6,6 +6,7 @@ import (
 	box "github.com/hckops/hckctl/pkg/box/model"
 	lab "github.com/hckops/hckctl/pkg/lab/model"
 	"github.com/hckops/hckctl/pkg/schema"
+	task "github.com/hckops/hckctl/pkg/task/model"
 )
 
 type SourceType uint
@@ -23,7 +24,7 @@ func (s SourceType) String() string {
 }
 
 type TemplateType interface {
-	string | box.BoxV1 | lab.LabV1 | lab.DumpV1
+	string | box.BoxV1 | lab.LabV1 | lab.DumpV1 | task.TaskV1
 }
 
 type TemplateValue[T TemplateType] struct {
