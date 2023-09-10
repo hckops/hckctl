@@ -39,7 +39,7 @@ func NewLabCmd(configRef *config.ConfigRef) *cobra.Command {
 		Args:    cobra.ExactArgs(1),
 		PreRunE: opts.validate,
 		RunE:    opts.run,
-		Hidden:  true, // TODO WIP
+		Hidden:  false, // TODO WIP
 	}
 
 	// --revision or --local
