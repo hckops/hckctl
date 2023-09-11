@@ -106,9 +106,9 @@ func runTask(sourceLoader template.SourceLoader[taskModel.TaskV1], provider task
 	}
 
 	createOpts := &taskModel.CreateOptions{
-		TaskTemplate: &info.Value.Data,
-		Parameters:   commonModel.Parameters{}, // TODO common model
-		Labels:       commonCmd.AddTemplateLabels[taskModel.TaskV1](info, labels),
+		Template:   &info.Value.Data,
+		Parameters: commonModel.Parameters{}, // TODO common model
+		Labels:     commonCmd.AddTemplateLabels[taskModel.TaskV1](info, labels),
 	}
 
 	return taskClient.Run(createOpts)

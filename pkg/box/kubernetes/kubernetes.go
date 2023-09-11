@@ -99,14 +99,14 @@ func newResources(namespace string, name string, opts *boxModel.CreateOptions) *
 		Namespace:   namespace,
 		Name:        name,
 		Annotations: opts.Labels,
-		Labels: kubernetes.BuildLabels(name, opts.Template.Image.Repository, opts.Template.ImageVersion(),
+		Labels: kubernetes.BuildLabels(name, opts.Template.Image.Repository, opts.Template.Image.ResolveVersion(),
 			map[string]string{commonModel.LabelSchemaKind: common.ToKebabCase(schema.KindBoxV1.String())}),
 		Ports: ports,
 		PodInfo: &kubernetes.PodInfo{
 			Namespace:     namespace,
 			PodName:       "INVALID_POD_NAME", // not used, generated suffix by kube
 			ContainerName: opts.Template.Image.Repository,
-			ImageName:     opts.Template.ImageName(),
+			ImageName:     opts.Template.Image.Name(),
 			Env:           envs,
 			Resource:      opts.Size.ToKubeResource(),
 		},

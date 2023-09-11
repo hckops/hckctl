@@ -8,6 +8,7 @@ import (
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
@@ -19,13 +20,10 @@ const (
 )
 
 type BoxV1 struct {
-	Kind  string
-	Name  string
-	Tags  []string
-	Image struct {
-		Repository string
-		Version    string
-	}
+	Kind    string
+	Name    string
+	Tags    []string
+	Image   commonModel.Image
 	Shell   string
 	Env     []string
 	Network struct {
@@ -88,20 +86,6 @@ func ToBoxTemplateName(boxName string) string {
 	} else {
 		return trimmed
 	}
-}
-
-func (box *BoxV1) ImageName() string {
-	return fmt.Sprintf("%s:%s", box.Image.Repository, box.ImageVersion())
-}
-
-func (box *BoxV1) ImageVersion() string {
-	var version string
-	if box.Image.Version == "" {
-		version = "latest"
-	} else {
-		version = box.Image.Version
-	}
-	return version
 }
 
 func (box *BoxV1) HasPorts() bool {

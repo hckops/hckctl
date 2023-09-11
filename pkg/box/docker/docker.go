@@ -37,7 +37,7 @@ func (box *DockerBoxClient) close() error {
 // TODO limit resources by size?
 func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.BoxInfo, error) {
 
-	imageName := opts.Template.ImageName()
+	imageName := opts.Template.Image.Name()
 	imagePullOpts := &docker.ImagePullOpts{
 		ImageName: imageName,
 		OnImagePullCallback: func() {

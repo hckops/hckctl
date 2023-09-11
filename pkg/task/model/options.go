@@ -21,7 +21,7 @@ func NewCommonTaskOpts() *CommonTaskOptions {
 }
 
 type CreateOptions struct {
-	TaskTemplate *TaskV1
-	Parameters   map[string]string
-	Labels       commonModel.Labels
+	Template   *TaskV1
+	Parameters map[string]string
+	Labels     commonModel.Labels
 }

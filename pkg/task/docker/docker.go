@@ -30,8 +30,8 @@ func (task *DockerTaskClient) close() error {
 }
 
 func (task *DockerTaskClient) runTask(opts *taskModel.CreateOptions) error {
-	// TODO imageName := opts.Template.ImageName()
-	imageName := "docker/whalesay:latest"
+
+	imageName := opts.Template.Image.Name()
 	imagePullOpts := &docker.ImagePullOpts{
 		ImageName: imageName,
 		OnImagePullCallback: func() {
