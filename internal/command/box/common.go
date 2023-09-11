@@ -144,13 +144,7 @@ func newCreateOptions(info *template.TemplateInfo[boxModel.BoxV1], labels common
 		return nil, err
 	}
 
-	var allLabels commonModel.Labels
-	switch info.SourceType {
-	case template.Local:
-		allLabels = boxModel.AddBoxSize(labels, size).AddLocal(info.Path)
-	case template.Git:
-		allLabels = boxModel.AddBoxSize(labels, size).AddGit(info.Path, info.Revision)
-	}
+	allLabels := commonCmd.AddTemplateLabels[boxModel.BoxV1](info, boxModel.AddBoxSize(labels, size))
 
 	return &boxModel.CreateOptions{
 		Template: &info.Value.Data,

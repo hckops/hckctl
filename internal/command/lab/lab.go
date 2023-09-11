@@ -72,8 +72,7 @@ func (opts *labCmdOptions) run(cmd *cobra.Command, args []string) error {
 		log.Debug().Msgf("create lab from local template: path=%s", path)
 
 		sourceLoader := template.NewLocalCachedLoader[labModel.LabV1](path, opts.configRef.Config.Template.CacheDir)
-		// TODO labels
-		return startLab(sourceLoader, opts.provider, opts.configRef)
+		return startLab(sourceLoader, opts.provider, opts.configRef, labModel.NewLabLabels().AddDefaultLocal())
 
 	} else {
 		name := args[0]
@@ -81,24 +80,24 @@ func (opts *labCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 		sourceOpts := commonCmd.NewGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
 		sourceLoader := template.NewGitLoader[labModel.LabV1](sourceOpts, name)
-		// TODO labels
-		return startLab(sourceLoader, opts.provider, opts.configRef)
+		labels := labModel.NewLabLabels().AddDefaultGit(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
+		return startLab(sourceLoader, opts.provider, opts.configRef, labels)
 	}
 }
 
-func startLab(sourceLoader template.SourceLoader[labModel.LabV1], provider labModel.LabProvider, configRef *config.ConfigRef) error {
+func startLab(sourceLoader template.SourceLoader[labModel.LabV1], provider labModel.LabProvider, configRef *config.ConfigRef, labels commonModel.Labels) error {
 
-	labTemplate, err := sourceLoader.Read()
-	if err != nil || labTemplate.Value.Kind != schema.KindLabV1 {
+	info, err := sourceLoader.Read()
+	if err != nil || info.Value.Kind != schema.KindLabV1 {
 		log.Warn().Err(err).Msg("error reading template")
 		return errors.New("invalid template")
 	}
 
 	loader := commonCmd.NewLoader()
-	loader.Start("loading template %s", labTemplate.Value.Data.Name)
+	loader.Start("loading template %s", info.Value.Data.Name)
 	defer loader.Stop()
 
-	log.Info().Msgf("loading template: provider=%s name=%s\n%s", provider, labTemplate.Value.Data.Name, labTemplate.Value.Data.Pretty())
+	log.Info().Msgf("loading template: provider=%s name=%s\n%s", provider, info.Value.Data.Name, info.Value.Data.Pretty())
 
 	labClient, err := newDefaultLabClient(provider, configRef, loader)
 	if err != nil {
@@ -106,11 +105,12 @@ func startLab(sourceLoader template.SourceLoader[labModel.LabV1], provider labMo
 	}
 
 	createOpts := &labModel.CreateOptions{
-		LabTemplate:   &labTemplate.Value.Data,
+		LabTemplate:   &info.Value.Data,
 		BoxTemplates:  map[string]*boxModel.BoxV1{},  // TODO load box templates
 		DumpTemplates: map[string]*labModel.DumpV1{}, // TODO load dump templates
 		Parameters:    commonModel.Parameters{},      // TODO add overrides --input alias=parrot --input password=changeme --input vpn=htb-eu
 		Labels:        commonModel.Labels{},          // TODO box+lab labels
+		//Labels: commonCmd.AddTemplateLabels[labModel.LabV1](info, labels),
 	}
 
 	if labInfo, err := labClient.Create(createOpts); err != nil {
