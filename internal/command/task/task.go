@@ -105,13 +105,14 @@ func runTask(sourceLoader template.SourceLoader[taskModel.TaskV1], provider task
 		return err
 	}
 
-	createOpts := &taskModel.CreateOptions{
+	runOpts := &taskModel.RunOptions{
 		Template:   &info.Value.Data,
-		Parameters: commonModel.Parameters{}, // TODO common model
+		Parameters: commonModel.Parameters{}, // TODO []string rename commands
 		Labels:     commonCmd.AddTemplateLabels[taskModel.TaskV1](info, labels),
+		StreamOpts: commonModel.NewStdStreamOpts(false),
 	}
 
-	return taskClient.Run(createOpts)
+	return taskClient.Run(runOpts)
 }
 
 func newDefaultTaskClient(provider taskModel.TaskProvider, configRef *config.ConfigRef, loader *commonCmd.Loader) (task.TaskClient, error) {

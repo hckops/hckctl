@@ -2,10 +2,11 @@ package util
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
+	"regexp"
 	"strings"
 
 	"github.com/dchest/uniuri"
+	"github.com/pkg/errors"
 )
 
 func IotaToValues[T comparable](kv map[T]string) []string {
@@ -40,4 +41,11 @@ func SplitKeyValue(kv string) (string, string, error) {
 		return key, value, nil
 	}
 	return "", "", errors.New("invalid key-value pair")
+}
+
+// matches anything other than a letter, digit or underscore, equivalent to "[^a-zA-Z0-9_]"
+var anyNonWordCharacterRegex = regexp.MustCompile(`\W+`)
+
+func ToLowerKebabCase(value string) string {
+	return anyNonWordCharacterRegex.ReplaceAllString(strings.ToLower(strings.TrimSpace(value)), "-")
 }

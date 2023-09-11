@@ -12,7 +12,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/hckops/hckctl/pkg/client/common"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 func BuildResources(opts *ResourcesOpts) (*appsv1.Deployment, *corev1.Service, error) {
@@ -42,7 +42,7 @@ func BuildLabels(name, instance, version string, extra map[string]string) map[st
 	// default
 	labels := map[string]string{
 		LabelKubeName:      name,
-		LabelKubeInstance:  common.ToKebabCase(instance),
+		LabelKubeInstance:  util.ToLowerKebabCase(instance),
 		LabelKubeVersion:   version,
 		LabelKubeManagedBy: "hckops", // TODO common?
 	}
@@ -62,7 +62,7 @@ func buildPod(objectMeta metav1.ObjectMeta, podInfo *PodInfo, ports []KubePort) 
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{
-					Name:            common.ToKebabCase(podInfo.ContainerName),
+					Name:            util.ToLowerKebabCase(podInfo.ContainerName),
 					Image:           podInfo.ImageName,
 					ImagePullPolicy: corev1.PullIfNotPresent,
 					TTY:             true,

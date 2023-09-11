@@ -7,7 +7,6 @@ import (
 	"golang.org/x/exp/slices"
 
 	boxModel "github.com/hckops/hckctl/pkg/box/model"
-	"github.com/hckops/hckctl/pkg/client/common"
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/schema"
@@ -100,7 +99,7 @@ func newResources(namespace string, name string, opts *boxModel.CreateOptions) *
 		Name:        name,
 		Annotations: opts.Labels,
 		Labels: kubernetes.BuildLabels(name, opts.Template.Image.Repository, opts.Template.Image.ResolveVersion(),
-			map[string]string{commonModel.LabelSchemaKind: common.ToKebabCase(schema.KindBoxV1.String())}),
+			map[string]string{commonModel.LabelSchemaKind: util.ToLowerKebabCase(schema.KindBoxV1.String())}),
 		Ports: ports,
 		PodInfo: &kubernetes.PodInfo{
 			Namespace:     namespace,
@@ -178,7 +177,7 @@ func (box *KubeBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.BoxIn
 	// exec
 	opts := &kubernetes.PodExecOpts{
 		Namespace: box.clientOpts.Namespace,
-		PodName:   common.ToKebabCase(template.Image.Repository), // pod.Spec.Containers[0].Name
+		PodName:   util.ToLowerKebabCase(template.Image.Repository), // pod.Spec.Containers[0].Name
 		PodId:     info.Id,
 		Shell:     template.Shell,
 		InStream:  streamOpts.In,

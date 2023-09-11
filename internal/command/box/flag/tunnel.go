@@ -21,7 +21,7 @@ type TunnelFlag struct {
 func (f *TunnelFlag) ToConnectOptions(template *boxModel.BoxV1, name string, temporary bool) *boxModel.ConnectOptions {
 	return &boxModel.ConnectOptions{
 		Template:      template,
-		StreamOpts:    commonModel.NewStreamOpts(true),
+		StreamOpts:    commonModel.NewStdStreamOpts(true),
 		Name:          name,
 		DisableExec:   f.NoExec,
 		DisableTunnel: f.NoTunnel,

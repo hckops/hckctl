@@ -25,6 +25,6 @@ func (task *DockerTaskClient) Events() *event.EventBus {
 	return task.eventBus
 }
 
-func (task *DockerTaskClient) Run(opts *taskModel.CreateOptions) error {
+func (task *DockerTaskClient) Run(opts *taskModel.RunOptions) error {
 	return task.runTask(opts)
 }

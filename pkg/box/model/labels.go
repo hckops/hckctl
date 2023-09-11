@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hckops/hckctl/pkg/client/common"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/schema"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 const (
@@ -33,5 +33,5 @@ func ToBoxSize(labels commonModel.Labels) (ResourceSize, error) {
 
 func BoxLabelSelector() string {
 	// value must be sanitized
-	return fmt.Sprintf("%s=%s", commonModel.LabelSchemaKind, common.ToKebabCase(schema.KindBoxV1.String()))
+	return fmt.Sprintf("%s=%s", commonModel.LabelSchemaKind, util.ToLowerKebabCase(schema.KindBoxV1.String()))
 }

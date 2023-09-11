@@ -61,7 +61,7 @@ func SortEnv(env []BoxEnv) []BoxEnv {
 }
 
 func (box *BoxV1) GenerateName() string {
-	return fmt.Sprintf("%s%s-%s", BoxPrefixName, box.Name, util.RandomAlphanumeric(5))
+	return fmt.Sprintf("%s%s-%s", BoxPrefixName, util.ToLowerKebabCase(box.Name), util.RandomAlphanumeric(5))
 }
 
 // ToBoxTemplateName returns the strictly validated template name, or the original trimmed name

@@ -13,7 +13,3 @@ func TestDefaultShell(t *testing.T) {
 
 	assert.Equal(t, "foo", DefaultShell("foo"))
 }
-
-func TestToKebabCase(t *testing.T) {
-	assert.Equal(t, "hckops-my-test_value-example", ToKebabCase("hckops/my-test_value$example"))
-}

@@ -30,7 +30,7 @@ type StreamOptions struct {
 	IsTty bool // tty is false for ssh tunnel or logs
 }
 
-func NewStreamOpts(tty bool) *StreamOptions {
+func NewStdStreamOpts(tty bool) *StreamOptions {
 	return &StreamOptions{
 		In:    os.Stdin,
 		Out:   os.Stdout,

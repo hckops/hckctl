@@ -11,7 +11,7 @@ import (
 type TaskClient interface {
 	Provider() model.TaskProvider
 	Events() *event.EventBus
-	Run(opts *model.CreateOptions) error
+	Run(opts *model.RunOptions) error
 }
 
 func NewTaskClient(opts *model.TaskClientOptions) (TaskClient, error) {

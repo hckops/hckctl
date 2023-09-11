@@ -29,7 +29,7 @@ func (task *DockerTaskClient) close() error {
 	return task.client.Close()
 }
 
-func (task *DockerTaskClient) runTask(opts *taskModel.CreateOptions) error {
+func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 
 	imageName := opts.Template.Image.Name()
 	imagePullOpts := &docker.ImagePullOpts{
@@ -64,18 +64,16 @@ func (task *DockerTaskClient) runTask(opts *taskModel.CreateOptions) error {
 	}
 
 	// taskName
-	// TODO containerName := opts.Template.GenerateName()
-	containerName := "task-whalesay-12345"
+	containerName := opts.Template.GenerateName()
 
-	// TODO tty false?
 	containerConfig, err := docker.BuildContainerConfig(&docker.ContainerConfigOpts{
 		ImageName:     imageName,
 		ContainerName: containerName,
-		//Env:           containerEnv,
-		//Ports:         containerPorts,
-		Labels: opts.Labels,
-		Tty:    false,
-		Cmd:    []string{"cowsay", "hello world"},
+		Env:           []docker.ContainerEnv{},
+		Ports:         []docker.ContainerPort{},
+		Labels:        opts.Labels,
+		Tty:           opts.StreamOpts.IsTty,
+		Cmd:           []string{"cowsay", "hello world"}, // TODO parameters vs command
 	})
 	if err != nil {
 		return err
@@ -87,8 +85,7 @@ func (task *DockerTaskClient) runTask(opts *taskModel.CreateOptions) error {
 		return err
 	}
 
-	// TODO networkName := box.clientOpts.NetworkName
-	networkName := "hckops" // TODO unique network?
+	networkName := task.clientOpts.NetworkName
 	networkId, err := task.client.NetworkUpsert(networkName)
 	if err != nil {
 		return err
@@ -117,9 +114,6 @@ func (task *DockerTaskClient) runTask(opts *taskModel.CreateOptions) error {
 		return err
 	}
 	// TODO box.eventBus.Publish(newContainerCreateDockerEvent(opts.Template.Name, containerName, containerId))
-
-	// TODO background task
-	//return &boxModel.BoxInfo{Id: containerId, Name: containerName, Healthy: true}, nil
 
 	if err := task.client.ContainerLogsStd(containerId); err != nil {
 		return err
