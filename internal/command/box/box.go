@@ -119,7 +119,7 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 		log.Debug().Msgf("temporary box from local template: path=%s", path)
 
 		sourceLoader := template.NewLocalCachedLoader[boxModel.BoxV1](path, opts.configRef.Config.Template.CacheDir)
-		return opts.temporaryBox(sourceLoader, opts.provider, boxModel.NewBoxLabels().AddDefaultLocal())
+		return opts.temporaryBox(sourceLoader, boxModel.NewBoxLabels().AddDefaultLocal())
 
 	} else {
 		name := args[0]
@@ -128,11 +128,11 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 		sourceOpts := commonCmd.NewGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
 		sourceLoader := template.NewGitLoader[boxModel.BoxV1](sourceOpts, name)
 		labels := boxModel.NewBoxLabels().AddDefaultGit(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
-		return opts.temporaryBox(sourceLoader, opts.provider, labels)
+		return opts.temporaryBox(sourceLoader, labels)
 	}
 }
 
-func (opts *boxCmdOptions) temporaryBox(sourceLoader template.SourceLoader[boxModel.BoxV1], provider boxModel.BoxProvider, labels commonModel.Labels) error {
+func (opts *boxCmdOptions) temporaryBox(sourceLoader template.SourceLoader[boxModel.BoxV1], labels commonModel.Labels) error {
 
 	temporaryClient := func(invokeOpts *invokeOptions) error {
 
@@ -148,5 +148,5 @@ func (opts *boxCmdOptions) temporaryBox(sourceLoader template.SourceLoader[boxMo
 		connectOpts := opts.tunnelFlag.ToConnectOptions(&invokeOpts.template.Value.Data, boxInfo.Name, true)
 		return invokeOpts.client.Connect(connectOpts)
 	}
-	return runBoxClient(sourceLoader, provider, opts.configRef, temporaryClient)
+	return runBoxClient(sourceLoader, opts.provider, opts.configRef, temporaryClient)
 }

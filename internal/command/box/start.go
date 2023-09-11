@@ -67,7 +67,7 @@ func (opts *boxStartCmdOptions) run(cmd *cobra.Command, args []string) error {
 		log.Debug().Msgf("start box from local template: path=%s", path)
 
 		sourceLoader := template.NewLocalCachedLoader[boxModel.BoxV1](path, opts.configRef.Config.Template.CacheDir)
-		return startBox(sourceLoader, opts.provider, opts.configRef, boxModel.NewBoxLabels().AddDefaultLocal())
+		return opts.startBox(sourceLoader, boxModel.NewBoxLabels().AddDefaultLocal())
 
 	} else {
 		name := args[0]
@@ -76,15 +76,15 @@ func (opts *boxStartCmdOptions) run(cmd *cobra.Command, args []string) error {
 		sourceOpts := commonCmd.NewGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
 		sourceLoader := template.NewGitLoader[boxModel.BoxV1](sourceOpts, name)
 		labels := boxModel.NewBoxLabels().AddDefaultGit(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
-		return startBox(sourceLoader, opts.provider, opts.configRef, labels)
+		return opts.startBox(sourceLoader, labels)
 	}
 }
 
-func startBox(sourceLoader template.SourceLoader[boxModel.BoxV1], provider boxModel.BoxProvider, configRef *config.ConfigRef, labels commonModel.Labels) error {
+func (opts *boxStartCmdOptions) startBox(sourceLoader template.SourceLoader[boxModel.BoxV1], labels commonModel.Labels) error {
 
 	createClient := func(invokeOpts *invokeOptions) error {
 
-		createOpts, err := newCreateOptions(invokeOpts.template, labels, configRef.Config.Box.Size)
+		createOpts, err := newCreateOptions(invokeOpts.template, labels, opts.configRef.Config.Box.Size)
 		if err != nil {
 			return err
 		}
@@ -96,5 +96,5 @@ func startBox(sourceLoader template.SourceLoader[boxModel.BoxV1], provider boxMo
 		}
 		return nil
 	}
-	return runBoxClient(sourceLoader, provider, configRef, createClient)
+	return runBoxClient(sourceLoader, opts.provider, opts.configRef, createClient)
 }
