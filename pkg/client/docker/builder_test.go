@@ -28,6 +28,7 @@ func TestBuildContainerConfig(t *testing.T) {
 		OpenStdin:    true,
 		StdinOnce:    true,
 		Tty:          true,
+		Cmd:          []string{},
 		Env: []string{
 			"TTYD_USERNAME=username",
 			"TTYD_PASSWORD=password",
@@ -46,6 +47,8 @@ func TestBuildContainerConfig(t *testing.T) {
 		ContainerName: "myContainerName",
 		Env:           envs,
 		Ports:         ports,
+		Tty:           true,
+		Cmd:           []string{},
 		Labels: map[string]string{
 			"a.b.c": "hello",
 			"x.y.z": "world",

@@ -12,6 +12,8 @@ type ContainerConfigOpts struct {
 	ContainerName string
 	Env           []ContainerEnv
 	Ports         []ContainerPort
+	Tty           bool
+	Cmd           []string
 	Labels        map[string]string
 }
 
@@ -26,11 +28,13 @@ type ImageRemoveOpts struct {
 }
 
 type ContainerCreateOpts struct {
-	ContainerName            string
-	ContainerConfig          *container.Config
-	HostConfig               *container.HostConfig
-	NetworkingConfig         *network.NetworkingConfig
-	OnContainerStartCallback func()
+	ContainerName             string
+	ContainerConfig           *container.Config
+	HostConfig                *container.HostConfig
+	NetworkingConfig          *network.NetworkingConfig
+	WaitStatus                bool
+	OnContainerStartCallback  func()
+	OnContainerStatusCallback func(string)
 }
 
 type ContainerRestartOpts struct {

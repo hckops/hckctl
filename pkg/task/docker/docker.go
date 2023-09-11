@@ -74,6 +74,8 @@ func (task *DockerTaskClient) runTask(opts *taskModel.CreateOptions) error {
 		//Env:           containerEnv,
 		//Ports:         containerPorts,
 		Labels: opts.Labels,
+		Tty:    false,
+		Cmd:    []string{"cowsay", "hello world"},
 	})
 	if err != nil {
 		return err
@@ -98,6 +100,10 @@ func (task *DockerTaskClient) runTask(opts *taskModel.CreateOptions) error {
 		ContainerConfig:  containerConfig,
 		HostConfig:       hostConfig,
 		NetworkingConfig: docker.BuildNetworkingConfig(networkName, networkId), // all on the same network
+		WaitStatus:       true,
+		OnContainerStatusCallback: func(s string) {
+			//box.eventBus.Publish(newContainerCreateStatusDockerEvent(status))
+		},
 		OnContainerStartCallback: func() {
 			//for _, e := range opts.Template.EnvironmentVariables() {
 			//	box.eventBus.Publish(newContainerCreateEnvDockerEvent(containerName, e))
@@ -114,20 +120,12 @@ func (task *DockerTaskClient) runTask(opts *taskModel.CreateOptions) error {
 
 	// TODO background task
 	//return &boxModel.BoxInfo{Id: containerId, Name: containerName, Healthy: true}, nil
-	return task.logsBox(containerId, taskModel.NewTaskStreams())
-}
 
-func (task *DockerTaskClient) logsBox(containerId string, streams *taskModel.TaskStreams) error {
-	opts := &docker.ContainerLogsOpts{
-		ContainerId: containerId,
-		OutStream:   streams.Out,
-		ErrStream:   streams.Err,
-		OnStreamCloseCallback: func() {
-			// TODO box.eventBus.Publish(newContainerExecExitDockerEvent(containerId))
-		},
-		OnStreamErrorCallback: func(err error) {
-			// TODO box.eventBus.Publish(newContainerExecErrorDockerEvent(containerId, err))
-		},
+	if err := task.client.ContainerLogsStd(containerId); err != nil {
+		return err
 	}
-	return task.client.ContainerLogs(opts)
+	if err := task.client.ContainerRemove(containerId); err != nil {
+		return err
+	}
+	return nil
 }

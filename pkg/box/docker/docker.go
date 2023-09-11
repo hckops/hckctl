@@ -88,6 +88,8 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 		Env:           containerEnv,
 		Ports:         containerPorts,
 		Labels:        opts.Labels,
+		Tty:           true, // always
+		Cmd:           []string{},
 	})
 	if err != nil {
 		return nil, err
@@ -118,6 +120,10 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 				box.eventBus.Publish(newContainerCreateEnvDockerEvent(containerName, e))
 				box.eventBus.Publish(newContainerCreateEnvDockerConsoleEvent(containerName, e))
 			}
+		},
+		WaitStatus: false, // TODO skip because it's blocking?!
+		OnContainerStatusCallback: func(status string) {
+			box.eventBus.Publish(newContainerCreateStatusDockerEvent(status))
 		},
 	}
 	// boxId

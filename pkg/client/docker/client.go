@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -93,6 +94,18 @@ func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, 
 
 	if err := client.docker.ContainerStart(client.ctx, newContainer.ID, types.ContainerStartOptions{}); err != nil {
 		return "", errors.Wrap(err, "error container start")
+	}
+
+	if opts.WaitStatus {
+		statusCh, errCh := client.docker.ContainerWait(client.ctx, newContainer.ID, container.WaitConditionNotRunning)
+		select {
+		case err := <-errCh:
+			if err != nil {
+				return "", errors.Wrap(err, "error container wait")
+			}
+		case status := <-statusCh:
+			opts.OnContainerStatusCallback(fmt.Sprintf("wait status: containerId=%s code=%d", newContainer.ID, status.StatusCode))
+		}
 	}
 
 	opts.OnContainerStartCallback()
@@ -327,6 +340,22 @@ func (client *DockerClient) ContainerLogs(opts *ContainerLogsOpts) error {
 	case <-doneChan:
 		return nil
 	}
+}
+
+func (client *DockerClient) ContainerLogsStd(containerId string) error {
+
+	outStream, err := client.docker.ContainerLogs(client.ctx, containerId, types.ContainerLogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Follow:     true,
+	})
+	if err != nil {
+		return errors.Wrap(err, "error container logs std")
+	}
+
+	// with the generic streams some logs are not printed properly to stdout: try running "whalesay" image
+	_, err = stdcopy.StdCopy(os.Stdout, os.Stderr, outStream)
+	return err
 }
 
 func (client *DockerClient) NetworkUpsert(networkName string) (string, error) {
