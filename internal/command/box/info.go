@@ -13,7 +13,7 @@ import (
 	"github.com/hckops/hckctl/pkg/util"
 )
 
-// TODO output format yaml/json
+// TODO add output format yaml/json
 type boxInfoCmdOptions struct {
 	configRef *config.ConfigRef
 }

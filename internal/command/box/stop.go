@@ -16,7 +16,7 @@ import (
 
 type boxStopCmdOptions struct {
 	configRef *config.ConfigRef
-	all       bool // TODO refactor --providers="docker,kube" or --providers="all"
+	allFlag   bool // TODO refactor --providers="docker,kube" or --providers="all"
 }
 
 func NewBoxStopCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -36,14 +36,14 @@ func NewBoxStopCmd(configRef *config.ConfigRef) *cobra.Command {
 		allFlagName  = "all"
 		allFlagUsage = "stop all boxes"
 	)
-	command.Flags().BoolVarP(&opts.all, allFlagName, commonFlag.NoneFlagShortHand, false, allFlagUsage)
+	command.Flags().BoolVarP(&opts.allFlag, allFlagName, commonFlag.NoneFlagShortHand, false, allFlagUsage)
 
 	return command
 }
 
 func (opts *boxStopCmdOptions) run(cmd *cobra.Command, args []string) error {
 
-	if len(args) == 0 && opts.all {
+	if len(args) == 0 && opts.allFlag {
 		loader := common.NewLoader()
 		defer loader.Stop()
 		loader.Start("stopping boxes")
@@ -62,7 +62,7 @@ func (opts *boxStopCmdOptions) run(cmd *cobra.Command, args []string) error {
 			return nil
 		}
 
-	} else if len(args) == 1 && !opts.all {
+	} else if len(args) == 1 && !opts.allFlag {
 		boxName := args[0]
 		log.Debug().Msgf("stop box: boxName=%s", boxName)
 

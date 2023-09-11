@@ -12,9 +12,9 @@ import (
 	"github.com/hckops/hckctl/internal/command/config"
 )
 
+// TODO add "providers" filter (comma separated list), default all
 type boxListCmdOptions struct {
 	configRef *config.ConfigRef
-	providers string // TODO filter by provider (comma separated list), default all
 }
 
 func NewBoxListCmd(configRef *config.ConfigRef) *cobra.Command {

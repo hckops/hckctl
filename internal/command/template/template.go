@@ -17,10 +17,10 @@ import (
 )
 
 type templateCmdOptions struct {
-	configRef  *config.ConfigRef
-	formatFlag formatFlag
-	sourceFlag *flag.SourceFlag
-	offline    bool
+	configRef   *config.ConfigRef
+	formatFlag  formatFlag
+	sourceFlag  *flag.SourceFlag
+	offlineFlag bool
 }
 
 func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -68,7 +68,7 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 	opts.sourceFlag = flag.AddTemplateSourceFlag(command)
 
 	// --offline or --local
-	flag.AddOfflineFlag(command, &opts.offline)
+	flag.AddOfflineFlag(command, &opts.offlineFlag)
 	command.MarkFlagsMutuallyExclusive(flag.OfflineFlagName, flag.LocalFlagName)
 
 	command.AddCommand(NewTemplateListCmd(configRef))
@@ -93,9 +93,9 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 			RepositoryUrl:   common.TemplateSourceUrl,
 			DefaultRevision: common.TemplateSourceRevision,
 			Revision:        opts.sourceFlag.Revision,
-			AllowOffline:    opts.offline,
+			AllowOffline:    opts.offlineFlag,
 		}
-		log.Debug().Msgf("print git template: name=%s revision=%s offline=%v", name, opts.sourceFlag.Revision, opts.offline)
+		log.Debug().Msgf("print git template: name=%s revision=%s offline=%v", name, opts.sourceFlag.Revision, opts.offlineFlag)
 
 		return printTemplate(NewGitValidator(sourceOpts, name), format)
 	}

@@ -23,10 +23,8 @@ type taskCmdOptions struct {
 	sourceFlag   *commonFlag.SourceFlag
 	providerFlag *commonFlag.ProviderFlag
 	provider     taskModel.TaskProvider
-	commandFlag  string // e.g. default (nothing), inline (reserved keyword), other values
+	inlineFlag   bool
 }
-
-// TODO offline
 
 func NewTaskCmd(configRef *config.ConfigRef) *cobra.Command {
 
@@ -39,13 +37,18 @@ func NewTaskCmd(configRef *config.ConfigRef) *cobra.Command {
 		Short:   "Run a task",
 		PreRunE: opts.validate,
 		RunE:    opts.run,
-		Hidden:  false, // TODO WIP
 	}
 
 	// --revision or --local
 	opts.sourceFlag = commonFlag.AddTemplateSourceFlag(command)
 	// --provider (enum)
 	opts.providerFlag = taskFlag.AddTaskProviderFlag(command)
+
+	const (
+		inlineFlagName  = "inline"
+		inlineFlagUsage = "inline arguments"
+	)
+	command.Flags().BoolVarP(&opts.inlineFlag, inlineFlagName, commonFlag.NoneFlagShortHand, false, inlineFlagUsage)
 
 	return command
 }
@@ -114,7 +117,7 @@ func runTask(sourceLoader template.SourceLoader[taskModel.TaskV1], provider task
 func newDefaultTaskClient(provider taskModel.TaskProvider, configRef *config.ConfigRef, loader *commonCmd.Loader) (task.TaskClient, error) {
 	taskClientOpts := &taskModel.TaskClientOptions{
 		Provider:   provider,
-		DockerOpts: nil, // TODO
+		DockerOpts: configRef.Config.Provider.Docker.ToDockerOptions(),
 	}
 
 	taskClient, err := task.NewTaskClient(taskClientOpts)

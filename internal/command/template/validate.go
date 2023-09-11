@@ -11,7 +11,7 @@ import (
 	. "github.com/hckops/hckctl/pkg/template"
 )
 
-// TODO see common list options: kind (compare expected), order, column
+// TODO see common flags in "list" command: kind (compare expected), order, column
 type templateValidateCmdOptions struct{}
 
 func NewTemplateValidateCmd() *cobra.Command {

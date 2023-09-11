@@ -15,13 +15,13 @@ import (
 	. "github.com/hckops/hckctl/pkg/template"
 )
 
+// TODO add "kind" filter (comma separated list) e.g. "box,lab,task"
+// TODO add "order" to sort output
+// TODO add "column" to output only specific fields
 type templateListCmdOptions struct {
-	configRef *config.ConfigRef
-	revision  string
-	offline   bool
-	kind      string // TODO filter comma separated list e.g. "box,lab"
-	order     string // TODO sort output
-	column    string // TODO output only specific fields
+	configRef    *config.ConfigRef
+	revisionFlag string
+	offlineFlag  bool
 }
 
 func NewTemplateListCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -49,15 +49,15 @@ func NewTemplateListCmd(configRef *config.ConfigRef) *cobra.Command {
 	}
 
 	// --revision
-	flag.AddRevisionFlag(command, &opts.revision)
+	flag.AddRevisionFlag(command, &opts.revisionFlag)
 	// --offline
-	flag.AddOfflineFlag(command, &opts.offline)
+	flag.AddOfflineFlag(command, &opts.offlineFlag)
 
 	return command
 }
 
 func (opts *templateListCmdOptions) run(cmd *cobra.Command, args []string) error {
-	return templateList(opts.configRef.Config.Template.CacheDir, opts.revision, opts.offline)
+	return templateList(opts.configRef.Config.Template.CacheDir, opts.revisionFlag, opts.offlineFlag)
 }
 
 func templateList(cacheDir string, revision string, offline bool) error {
