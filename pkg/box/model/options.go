@@ -1,9 +1,6 @@
 package model
 
 import (
-	"io"
-	"os"
-
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/event"
 )
@@ -25,22 +22,6 @@ func NewCommonBoxOpts() *CommonBoxOptions {
 	}
 }
 
-type BoxStreams struct {
-	In    io.ReadCloser
-	Out   io.Writer
-	Err   io.Writer
-	IsTty bool // tty is false only for ssh tunnel
-}
-
-func NewDefaultStreams(tty bool) *BoxStreams {
-	return &BoxStreams{
-		In:    os.Stdin,
-		Out:   os.Stdout,
-		Err:   os.Stderr,
-		IsTty: tty,
-	}
-}
-
 type CreateOptions struct {
 	Template *BoxV1
 	Size     ResourceSize
@@ -49,7 +30,7 @@ type CreateOptions struct {
 
 type ConnectOptions struct {
 	Template      *BoxV1
-	Streams       *BoxStreams
+	StreamOpts    *commonModel.StreamOptions
 	Name          string
 	DisableExec   bool
 	DisableTunnel bool

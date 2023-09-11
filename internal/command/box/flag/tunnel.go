@@ -4,7 +4,8 @@ import (
 	"github.com/spf13/cobra"
 
 	commonFlag "github.com/hckops/hckctl/internal/command/common/flag"
-	"github.com/hckops/hckctl/pkg/box/model"
+	boxModel "github.com/hckops/hckctl/pkg/box/model"
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 )
 
 const (
@@ -17,10 +18,10 @@ type TunnelFlag struct {
 	NoTunnel bool
 }
 
-func (f *TunnelFlag) ToConnectOptions(template *model.BoxV1, name string, temporary bool) *model.ConnectOptions {
-	return &model.ConnectOptions{
+func (f *TunnelFlag) ToConnectOptions(template *boxModel.BoxV1, name string, temporary bool) *boxModel.ConnectOptions {
+	return &boxModel.ConnectOptions{
 		Template:      template,
-		Streams:       model.NewDefaultStreams(true),
+		StreamOpts:    commonModel.NewStreamOpts(true),
 		Name:          name,
 		DisableExec:   f.NoExec,
 		DisableTunnel: f.NoTunnel,

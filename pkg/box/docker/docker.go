@@ -143,7 +143,7 @@ func (box *DockerBoxClient) connectBox(opts *boxModel.ConnectOptions) error {
 		if opts.DisableExec || opts.DisableTunnel {
 			box.eventBus.Publish(newContainerExecIgnoreDockerEvent(info.Id))
 		}
-		return box.execBox(opts.Template, info, opts.Streams, opts.DeleteOnExit)
+		return box.execBox(opts.Template, info, opts.StreamOpts, opts.DeleteOnExit)
 	}
 }
 
@@ -160,7 +160,7 @@ func (box *DockerBoxClient) searchBox(name string) (*boxModel.BoxInfo, error) {
 	return nil, errors.New("box not found")
 }
 
-func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.BoxInfo, streams *boxModel.BoxStreams, deleteOnExit bool) error {
+func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.BoxInfo, streamOpts *commonModel.StreamOptions, deleteOnExit bool) error {
 	command := template.Shell
 	box.eventBus.Publish(newContainerExecDockerEvent(info.Id, info.Name, command))
 
@@ -179,7 +179,7 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 			// stop loader
 			box.eventBus.Publish(newContainerExecDockerLoaderEvent())
 		}
-		return box.logsBox(info.Id, streams)
+		return box.logsBox(info.Id, streamOpts)
 	}
 
 	// already printed for temporary box
@@ -206,10 +206,10 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 	execOpts := &docker.ContainerExecOpts{
 		ContainerId: info.Id,
 		Shell:       command,
-		InStream:    streams.In,
-		OutStream:   streams.Out,
-		ErrStream:   streams.Err,
-		IsTty:       streams.IsTty,
+		InStream:    streamOpts.In,
+		OutStream:   streamOpts.Out,
+		ErrStream:   streamOpts.Err,
+		IsTty:       streamOpts.IsTty,
 		OnContainerExecCallback: func() {
 			// stop loader
 			box.eventBus.Publish(newContainerExecDockerLoaderEvent())
@@ -242,11 +242,11 @@ func (box *DockerBoxClient) publishPortInfo(networkMap map[string]boxModel.BoxPo
 	box.eventBus.Publish(newContainerCreatePortBindDockerConsoleEvent(containerName, networkPort, portPadding))
 }
 
-func (box *DockerBoxClient) logsBox(containerId string, streams *boxModel.BoxStreams) error {
+func (box *DockerBoxClient) logsBox(containerId string, streamOpts *commonModel.StreamOptions) error {
 	opts := &docker.ContainerLogsOpts{
 		ContainerId: containerId,
-		OutStream:   streams.Out,
-		ErrStream:   streams.Err,
+		OutStream:   streamOpts.Out,
+		ErrStream:   streamOpts.Err,
 		OnStreamCloseCallback: func() {
 			box.eventBus.Publish(newContainerExecExitDockerEvent(containerId))
 		},

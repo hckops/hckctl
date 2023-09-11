@@ -140,7 +140,7 @@ func (box *KubeBoxClient) connectBox(opts *boxModel.ConnectOptions) error {
 			}
 		}
 
-		return box.execBox(opts.Template, info, opts.Streams, opts.DeleteOnExit)
+		return box.execBox(opts.Template, info, opts.StreamOpts, opts.DeleteOnExit)
 	}
 }
 
@@ -169,7 +169,7 @@ func (box *KubeBoxClient) searchBox(name string) (*boxModel.BoxInfo, error) {
 	}
 }
 
-func (box *KubeBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.BoxInfo, streams *boxModel.BoxStreams, deleteOnExit bool) error {
+func (box *KubeBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.BoxInfo, streamOpts *commonModel.StreamOptions, deleteOnExit bool) error {
 	box.eventBus.Publish(newPodExecKubeEvent(template.Name, box.clientOpts.Namespace, info.Id, template.Shell))
 
 	// TODO if BoxInfo not Healthy attempt scale 1
@@ -181,10 +181,10 @@ func (box *KubeBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.BoxIn
 		PodName:   common.ToKebabCase(template.Image.Repository), // pod.Spec.Containers[0].Name
 		PodId:     info.Id,
 		Shell:     template.Shell,
-		InStream:  streams.In,
-		OutStream: streams.Out,
-		ErrStream: streams.Err,
-		IsTty:     streams.IsTty,
+		InStream:  streamOpts.In,
+		OutStream: streamOpts.Out,
+		ErrStream: streamOpts.Err,
+		IsTty:     streamOpts.IsTty,
 		OnExecCallback: func() {
 			// stop loader
 			box.eventBus.Publish(newPodExecKubeLoaderEvent())
