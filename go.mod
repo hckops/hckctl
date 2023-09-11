@@ -1,6 +1,6 @@
 module github.com/hckops/hckctl
 
-go 1.20
+go 1.21
 
 require (
 	github.com/MakeNowJust/heredoc v1.0.0
