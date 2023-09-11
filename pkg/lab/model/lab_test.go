@@ -27,8 +27,8 @@ func TestMerge(t *testing.T) {
 	}
 	expected := &boxModel.BoxV1{
 		Env: []string{
-			"TTYD_USERNAME=username",
 			"TTYD_PASSWORD=${password:random}", // merge
+			"TTYD_USERNAME=username",
 		},
 	}
 	result := testLab.Box.Template.Merge(testBox)

@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"golang.org/x/exp/slices"
+
 	boxModel "github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/util"
 )
@@ -42,6 +44,7 @@ func (t *BoxTemplate) Merge(original *boxModel.BoxV1) *boxModel.BoxV1 {
 			envs = append(envs, fmt.Sprintf("%s=%s", key, originalEnv.Value))
 		}
 	}
+	slices.Sort(envs)
 
 	original.Env = envs
 	return original
