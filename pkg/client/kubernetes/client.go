@@ -15,7 +15,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/cli-runtime/pkg/genericiooptions"
 	applyv1 "k8s.io/client-go/applyconfigurations/core/v1"
 	"k8s.io/client-go/kubernetes"
 	app "k8s.io/client-go/kubernetes/typed/apps/v1"
@@ -406,7 +406,7 @@ func (client *KubeClient) PodExec(opts *PodExecOpts) error {
 	streamOptions := exec.StreamOptions{
 		Stdin: true,
 		TTY:   opts.IsTty,
-		IOStreams: genericclioptions.IOStreams{
+		IOStreams: genericiooptions.IOStreams{
 			In:     opts.InStream,
 			Out:    opts.OutStream,
 			ErrOut: opts.ErrStream,
