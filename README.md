@@ -11,13 +11,13 @@
 </p>
 
 <p align="center">
-  <i>The novel declarative Breach and Attack Simulation engine</i><br>
+  <i>The declarative Breach and Attack Simulation engine</i><br>
   <a href="#quick-start">Quick start</a>&nbsp;&bull;
   <a href="#setup">Setup</a>&nbsp;&bull;
   <a href="#development">Development</a>
 </p>
 
-Launch manual and automated attacks with pre-defined and always up-to-date templates of your everyday-tools.
+Launch manual and automated attacks with pre-defined and always up-to-date templates of your favourite tools.
 Designed to transparently run locally, remotely or integrated in pipelines and for the purpose of analyzing, aggregating and exporting reports.
 
 ## Quick start
@@ -38,7 +38,7 @@ hckctl box parrot --provider cloud
 
 ### Task
 
-Run tools with pre-defined commands and without installing any binary
+Run a [`task`](https://github.com/hckops/megalopolis/tree/main/task) with pre-defined commands and without installing any binary
 ```bash
 # fire a scan
 hckctl task rustscan
@@ -48,11 +48,11 @@ hckctl task rustscan
 
 Access your favourite platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com) etc.) from a personalized [`lab`](https://github.com/hckops/megalopolis/tree/main/lab)
 ```bash
-# connects to the vpn, generate password, expose public ports etc.
-hckctl lap ctf-linux
+# connects to a vpn, exposes public ports, mount dumps etc.
+hckctl lab ctf-linux
 ```
 
-### Flow (WIP)
+### Flow (TODO)
 
 Launch multiple tasks in parallel and combine the results
 ```bash
@@ -83,32 +83,35 @@ hckctl flow scrape www.example.com
 
 ### Template
 
-Explore the public templates, and consider pinning a git `revision` to ensure reliability in a CI/CD pipeline
+Explore public templates. Pin a git `revision` to ensure reliability in a CI/CD pipeline
 ```bash
 hckctl template list
 ```
 
-Please, feel free to contribute to the companion [repository](https://github.com/hckops/megalopolis) and add more templates
+Please, feel free to contribute to the companion [repository](https://github.com/hckops/megalopolis) and add more templates.
+
+### Config
+
+Edit default configurations
+```bash
+# vim ${HOME}/.config/hck/config.yml
+# prints current configs
+hckctl config
+
+# resets default configs
+hckctl config --reset
+```
 
 ## Setup
 
-> TODO
-
+Download the latest binaries
 ```bash
 # TODO latest
-curl -sSL https://github.com/hckops/hckctl/releases/download/v0.1.0/hckctl_linux_x86_64.tar.gz | \
+HCKCTL_VERSION=???
+
+curl -sSL https://github.com/hckops/hckctl/releases/download/${HCKCTL_VERSION}/hckctl_linux_x86_64.tar.gz | \
   tar -xzf - -C /usr/local/bin
 ```
-
-Edit the config to override the defaults
-```bash
-hckctl config
-```
-<!--
-If you are looking for a quick way to start with ArgoCD consider [kube-template](https://github.com/hckops/kube-template).
-Just follow the readme, you'll be able to create and deploy a cluster on DigitalOcean using GitHub actions with literally a `git push`.
-Once ready, update the `box.kube.configpath` config to use `clusters/do-template-kubeconfig.yaml`, that's all!
--->
 
 ## Development
 
