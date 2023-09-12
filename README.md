@@ -11,93 +11,50 @@
 </p>
 
 <p align="center">
-  <i>The declarative Breach and Attack Simulation Tool</i><br>
+  <i>The novel declarative Breach and Attack Simulation engine</i><br>
   <a href="#quick-start">Quick start</a>&nbsp;&bull;
   <a href="#setup">Setup</a>&nbsp;&bull;
   <a href="#development">Development</a>
 </p>
 
-<!--
-TODO description/screenshot/video/gif
-
-A novel Breach and Attack Simulation (BAS) engine with a declarative approach to launch manual and automated attacks, either against a sandbox lab or your infrastructure.
-It leverages pre-defined and always up-to-date recipes of your everyday tools to probe and verify your security posture.
-Designed to transparently run locally, remotely or integrated in pipelines and to analyze, aggregate and export reports.
--->
+Launch manual and automated attacks with pre-defined and always up-to-date templates of your everyday-tools.
+Designed to transparently run locally, remotely or integrated in pipelines and for the purpose of analyzing, aggregating and exporting reports.
 
 ## Quick start
 
 ### Box
 
-Create an [`alpine`](https://github.com/hckops/megalopolis/blob/main/box/base/alpine.yml) box to see how it works
+Spin-up a [`box`](https://github.com/hckops/megalopolis/tree/main/box) and access all port-forwarded ports locally
 ```bash
 # spawns a temporary docker box locally
 hckctl box alpine
 
 # deploys an ephemeral box to your kubernetes cluster
-hckctl box alpine --provider kube
+hckctl box arch --provider kube
 
-# TODO add env credentials: alpine|changeme
-# (mac|linux) tty
-[open|xdg-open] http://localhost:7681
+# creates a managed box
+hckctl box parrot --provider cloud
 ```
-
-Spin-up a [`parrot`](https://github.com/hckops/megalopolis/blob/main/box/base/parrot.yml) box and access all port-forwarded ports locally to start hacking
-```bash
-# credentials: parrot|changeme
-hckctl box parrot
-
-# vnc
-vncviewer localhost:5900
-
-# (mac|linux) novnc
-[open|xdg-open] http://localhost:6080
-```
-
-Attack a vulnerable [`dvwa`](https://github.com/hckops/megalopolis/blob/main/box/vulnerable/dvwa.yml) box
-```bash
-hckctl box start dvwa
-
-# (mac|linux) web
-[open|xdg-open] http://localhost:8080
-```
-
-*There are no differences between an attacker or a vulnerable box, if you can containerize it you can run it*
 
 ### Task
 
-> TODO
-
+Run tools with pre-defined commands and without installing any binary
 ```bash
-# https://github.com/RustScan/RustScan/wiki/Installation-Guide#docker-whale
-hckctl task rustscan ???
-
-# TODO envs + args
+# fire a scan
+hckctl task rustscan
 ```
 
-<!--
-### Lab
+### Lab (preview)
 
-> Unleash the power of Kubernetes with GitOps to simulate whole infrastructures, for both red and blue teams
-
-Easily start your remote htb-kali pwnbox connected to the [Hack The Box](https://www.hackthebox.com) VPN to sharpen your skills
+Access your favourite platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com) etc.) from a personalized [`lab`](https://github.com/hckops/megalopolis/tree/main/lab)
 ```bash
-# TODO create kube secret
-# TODO htb-kali
-
-# credentials: kali|changeme
-hckctl lab htb-kali --provider argo
+# connects to the vpn, generate password, expose public ports etc.
+hckctl lap ctf-linux
 ```
 
-TODO
-```bash
-kube-goat
-```
+### Flow (WIP)
 
-### Flow
-
-> WIP
-
+Launch multiple tasks in parallel and combine the results
 ```bash
 hckctl flow atomic-red-team T1485
 hckctl flow scan 0.0.0.0
@@ -111,7 +68,18 @@ hckctl flow campaign/phishing @example.com
 hckctl flow api/virustotal/upload
 hckctl flow scrape www.example.com
 ```
--->
+
+### Machine
+
+> create and access AWS EC2, Azure Virtual Machines, DigitalOcean Droplet, QEMU etc.
+
+### Man
+
+> combine tldr and cheat
+
+### Plugin
+
+> add custom commands
 
 ### Template
 
@@ -230,8 +198,6 @@ TODO
         * https://kompose.io
         * https://github.com/vulhub/vulhub
         * https://github.com/madhuakula/kubernetes-goat.git
-* task
-    - TODO ???
 * version
     - print if new version available
     - implement server `version` in json format docker/kube/cloud

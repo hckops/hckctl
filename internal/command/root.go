@@ -26,7 +26,7 @@ func NewRootCmd() *cobra.Command {
 
 	rootCmd := &cobra.Command{
 		Use:   commonCmd.CliName,
-		Short: "The Cloud Native HaCKing Tool",
+		Short: "The declarative HaCKing Tool",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 
 			// suppress messages on error
