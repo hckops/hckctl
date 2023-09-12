@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <i>The Cloud Native Breach and Attack Simulation Tool</i><br>
+  <i>The declarative Breach and Attack Simulation Tool</i><br>
   <a href="#quick-start">Quick start</a>&nbsp;&bull;
   <a href="#setup">Setup</a>&nbsp;&bull;
   <a href="#development">Development</a>
