@@ -35,6 +35,7 @@ func NewTaskCmd(configRef *config.ConfigRef) *cobra.Command {
 	command := &cobra.Command{
 		Use:     "task [name]",
 		Short:   "Run a task",
+		Args:    cobra.MinimumNArgs(1),
 		PreRunE: opts.validate,
 		RunE:    opts.run,
 	}
@@ -75,7 +76,7 @@ func (opts *taskCmdOptions) run(cmd *cobra.Command, args []string) error {
 		log.Debug().Msgf("run task from local template: path=%s", path)
 
 		sourceLoader := template.NewLocalCachedLoader[taskModel.TaskV1](path, opts.configRef.Config.Template.CacheDir)
-		return runTask(sourceLoader, opts.provider, opts.configRef, taskModel.NewTaskLabels().AddDefaultLocal())
+		return opts.runTask(sourceLoader, taskModel.NewTaskLabels().AddDefaultLocal(), args[1:])
 
 	} else {
 		name := args[0]
@@ -84,11 +85,11 @@ func (opts *taskCmdOptions) run(cmd *cobra.Command, args []string) error {
 		sourceOpts := commonCmd.NewGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
 		sourceLoader := template.NewGitLoader[taskModel.TaskV1](sourceOpts, name)
 		labels := taskModel.NewTaskLabels().AddDefaultGit(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
-		return runTask(sourceLoader, opts.provider, opts.configRef, labels)
+		return opts.runTask(sourceLoader, labels, args[1:])
 	}
 }
 
-func runTask(sourceLoader template.SourceLoader[taskModel.TaskV1], provider taskModel.TaskProvider, configRef *config.ConfigRef, labels commonModel.Labels) error {
+func (opts *taskCmdOptions) runTask(sourceLoader template.SourceLoader[taskModel.TaskV1], labels commonModel.Labels, inlineArguments []string) error {
 
 	info, err := sourceLoader.Read()
 	if err != nil || info.Value.Kind != schema.KindTaskV1 {
@@ -100,14 +101,22 @@ func runTask(sourceLoader template.SourceLoader[taskModel.TaskV1], provider task
 	loader.Start("loading template %s", info.Value.Data.Name) // TODO review template name e.g task/name (lowercase)
 	defer loader.Stop()
 
-	taskClient, err := newDefaultTaskClient(provider, configRef, loader)
+	taskClient, err := newDefaultTaskClient(opts.provider, opts.configRef, loader)
 	if err != nil {
 		return err
 	}
 
+	var arguments []string
+	if opts.inlineFlag {
+		arguments = inlineArguments
+	} else {
+		// TODO expand/merge values
+		arguments = info.Value.Data.DefaultCommandArgs()
+	}
+
 	runOpts := &taskModel.RunOptions{
 		Template:   &info.Value.Data,
-		Arguments:  info.Value.Data.DefaultCommandArgs(), // TODO expand/merge values
+		Arguments:  arguments,
 		Labels:     commonCmd.AddTemplateLabels[taskModel.TaskV1](info, labels),
 		StreamOpts: commonModel.NewStdStreamOpts(false),
 	}
