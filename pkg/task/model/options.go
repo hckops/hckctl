@@ -22,7 +22,7 @@ func NewCommonTaskOpts() *CommonTaskOptions {
 
 type RunOptions struct {
 	Template   *TaskV1
-	Parameters map[string]string
+	Arguments  []string
 	Labels     commonModel.Labels
 	StreamOpts *commonModel.StreamOptions
 }

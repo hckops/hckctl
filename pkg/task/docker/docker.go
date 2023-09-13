@@ -73,7 +73,7 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 		Ports:         []docker.ContainerPort{},
 		Labels:        opts.Labels,
 		Tty:           opts.StreamOpts.IsTty,
-		Cmd:           []string{"cowsay", "hello world"}, // TODO parameters vs command
+		Cmd:           opts.Arguments,
 	})
 	if err != nil {
 		return err

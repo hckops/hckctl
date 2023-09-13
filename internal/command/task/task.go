@@ -107,7 +107,7 @@ func runTask(sourceLoader template.SourceLoader[taskModel.TaskV1], provider task
 
 	runOpts := &taskModel.RunOptions{
 		Template:   &info.Value.Data,
-		Parameters: commonModel.Parameters{}, // TODO []string rename commands
+		Arguments:  []string{}, // TODO []string rename commands
 		Labels:     commonCmd.AddTemplateLabels[taskModel.TaskV1](info, labels),
 		StreamOpts: commonModel.NewStdStreamOpts(false),
 	}
