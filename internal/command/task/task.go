@@ -97,7 +97,7 @@ func runTask(sourceLoader template.SourceLoader[taskModel.TaskV1], provider task
 	}
 
 	loader := commonCmd.NewLoader()
-	loader.Start("loading template %s", info.Value.Data.Name)
+	loader.Start("loading template %s", info.Value.Data.Name) // TODO review template name e.g task/name (lowercase)
 	defer loader.Stop()
 
 	taskClient, err := newDefaultTaskClient(provider, configRef, loader)
@@ -107,7 +107,7 @@ func runTask(sourceLoader template.SourceLoader[taskModel.TaskV1], provider task
 
 	runOpts := &taskModel.RunOptions{
 		Template:   &info.Value.Data,
-		Arguments:  []string{}, // TODO []string rename commands
+		Arguments:  info.Value.Data.DefaultCommandArgs(), // TODO expand/merge values
 		Labels:     commonCmd.AddTemplateLabels[taskModel.TaskV1](info, labels),
 		StreamOpts: commonModel.NewStdStreamOpts(false),
 	}

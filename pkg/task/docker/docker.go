@@ -115,6 +115,8 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 	}
 	// TODO box.eventBus.Publish(newContainerCreateDockerEvent(opts.Template.Name, containerName, containerId))
 
+	// TODO stop loader
+
 	if err := task.client.ContainerLogsStd(containerId); err != nil {
 		return err
 	}
