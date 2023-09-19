@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hckops/hckctl/internal/command/common"
+	"github.com/hckops/hckctl/pkg/common/model"
 )
 
 func ValidateSourceFlag(provider *ProviderFlag, sourceFlag *SourceFlag) error {
@@ -18,6 +19,13 @@ func ValidateSourceFlag(provider *ProviderFlag, sourceFlag *SourceFlag) error {
 			return fmt.Errorf("flag not supported: provider=%s %s=%v",
 				provider.String(), LocalFlagName, sourceFlag.Local)
 		}
+	}
+	return nil
+}
+
+func ValidateNetworkVpnFlag(name string, networks map[string]model.VpnNetworkInfo) error {
+	if _, ok := networks[name]; !ok {
+		return fmt.Errorf("vpn network [%s] config not found", name)
 	}
 	return nil
 }

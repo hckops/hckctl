@@ -99,3 +99,13 @@ func TestToCloudOptions(t *testing.T) {
 	}
 	assert.Equal(t, expected, cloudConfig.ToCloudOptions("hckctl-dev"))
 }
+
+func TestVpnNetworks(t *testing.T) {
+	networkConfig := NetworkConfig{
+		Vpn: []VpnConfig{
+			{Name: "readme", Path: "../../../README.md"},
+			{Name: "license", Path: "../../../LICENSE"},
+		},
+	}
+	assert.Equal(t, 2, len(networkConfig.VpnNetworks()))
+}

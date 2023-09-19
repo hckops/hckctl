@@ -42,3 +42,9 @@ func (image *Image) ResolveVersion() string {
 	}
 	return version
 }
+
+type VpnNetworkInfo struct {
+	Name        string
+	LocalPath   string
+	ConfigValue string
+}

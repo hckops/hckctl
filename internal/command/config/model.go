@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/hckops/hckctl/pkg/util"
 	"net"
 	"strconv"
 
@@ -99,6 +100,21 @@ type NetworkConfig struct {
 type VpnConfig struct {
 	Name string `yaml:"name"`
 	Path string `yaml:"path"`
+}
+
+func (c *NetworkConfig) VpnNetworks() map[string]model.VpnNetworkInfo {
+	info := map[string]model.VpnNetworkInfo{}
+	for _, network := range c.Vpn {
+		// ignores invalid paths
+		if configFile, err := util.ReadFile(network.Path); err == nil {
+			info[network.Name] = model.VpnNetworkInfo{
+				Name:        network.Name,
+				LocalPath:   network.Path,
+				ConfigValue: configFile,
+			}
+		}
+	}
+	return info
 }
 
 type TemplateConfig struct {
