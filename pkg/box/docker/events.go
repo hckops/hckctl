@@ -76,12 +76,12 @@ func newContainerCreateEnvDockerConsoleEvent(containerName string, env model.Box
 	return &dockerBoxEvent{kind: event.PrintConsole, value: fmt.Sprintf("[%s] %s=%s", containerName, env.Key, env.Value)}
 }
 
-func newContainerCreateDockerEvent(templateName string, containerName string, containerId string) *dockerBoxEvent {
-	return &dockerBoxEvent{kind: event.LogInfo, value: fmt.Sprintf("container create: templateName=%s containerName=%s containerId=%s", templateName, containerName, containerId)}
-}
-
 func newContainerCreateStatusDockerEvent(status string) *dockerBoxEvent {
 	return &dockerBoxEvent{kind: event.LogDebug, value: status}
+}
+
+func newContainerCreateDockerEvent(templateName string, containerName string, containerId string) *dockerBoxEvent {
+	return &dockerBoxEvent{kind: event.LogInfo, value: fmt.Sprintf("container create: templateName=%s containerName=%s containerId=%s", templateName, containerName, containerId)}
 }
 
 func newContainerRestartDockerEvent(containerId string, status string) *dockerBoxEvent {

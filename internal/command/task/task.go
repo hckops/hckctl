@@ -113,19 +113,17 @@ func (opts *taskCmdOptions) runTask(sourceLoader template.SourceLoader[taskModel
 	loader.Start("loading template %s", info.Value.Data.Name) // TODO review template name e.g task/name (lowercase)
 	defer loader.Stop()
 
+	log.Info().Msgf("loading template: provider=%s name=%s\n%s", opts.provider, info.Value.Data.Name, info.Value.Data.Pretty())
+
 	taskClient, err := newDefaultTaskClient(opts.provider, opts.configRef, loader)
 	if err != nil {
 		return err
 	}
 
-	// TODO --command and --input
-	// TODO opts.networkVpnFlag
-
 	var arguments []string
 	if opts.commandFlag.Inline {
 		arguments = inlineArguments
 	} else {
-		// TODO expand/merge values
 		arguments = info.Value.Data.DefaultCommandArguments()
 	}
 

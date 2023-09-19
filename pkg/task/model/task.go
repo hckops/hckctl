@@ -45,3 +45,8 @@ func (task *TaskV1) DefaultCommandArguments() []string {
 	}
 	return []string{}
 }
+
+func (task *TaskV1) Pretty() string {
+	value, _ := util.EncodeJsonIndent(task)
+	return value
+}

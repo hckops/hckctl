@@ -43,12 +43,12 @@ func TestBuildContainerConfig(t *testing.T) {
 		},
 	}
 	opts := &ContainerConfigOpts{
-		ImageName:     "myImageName",
-		ContainerName: "myContainerName",
-		Env:           envs,
-		Ports:         ports,
-		Tty:           true,
-		Cmd:           []string{},
+		ImageName: "myImageName",
+		Hostname:  "myContainerName",
+		Env:       envs,
+		Ports:     ports,
+		Tty:       true,
+		Cmd:       []string{},
 		Labels: map[string]string{
 			"a.b.c": "hello",
 			"x.y.z": "world",
@@ -66,14 +66,28 @@ func TestBuildHostConfig(t *testing.T) {
 		{Local: "1024", Remote: "1024"},
 	}
 	expected := &container.HostConfig{
+		NetworkMode: "myNetworkMode",
 		PortBindings: nat.PortMap{
 			"1024/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "1024"}},
 		},
 	}
+	opts := &ContainerHostConfigOpts{
+		NetworkMode:        "myNetworkMode",
+		Ports:              ports,
+		OnPortBindCallback: func(port ContainerPort) {},
+	}
 
-	result, err := BuildHostConfig(ports, func(port ContainerPort) {})
+	result, err := BuildHostConfig(opts)
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
+}
+
+func TestDefaultNetworkMode(t *testing.T) {
+	assert.Equal(t, "default", DefaultNetworkMode())
+}
+
+func TestContainerNetworkMode(t *testing.T) {
+	assert.Equal(t, "container:myIdOrName", ContainerNetworkMode("myIdOrName"))
 }
 
 func TestBuildNetworkingConfig(t *testing.T) {

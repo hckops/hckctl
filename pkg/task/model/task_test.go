@@ -1,6 +1,7 @@
 package model
 
 import (
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"strings"
 	"testing"
 
@@ -43,4 +44,39 @@ func TestDefaultCommandArgs(t *testing.T) {
 
 	emptyArgs := (&TaskV1{}).DefaultCommandArguments()
 	assert.Equal(t, []string{}, emptyArgs)
+}
+
+func TestPretty(t *testing.T) {
+	task := &TaskV1{
+		Kind: "task/v1",
+		Name: "whalesay",
+		Tags: []string{"test"},
+		Image: commonModel.Image{
+			Repository: "docker/whalesay",
+		},
+		Commands: []TaskCommand{
+			{Name: "default", Arguments: []string{"cowsay", "${hello:hckops}"}},
+		},
+	}
+	json := `{
+  "Kind": "task/v1",
+  "Name": "whalesay",
+  "Tags": [
+    "test"
+  ],
+  "Image": {
+    "Repository": "docker/whalesay",
+    "Version": ""
+  },
+  "Commands": [
+    {
+      "Name": "default",
+      "Arguments": [
+        "cowsay",
+        "${hello:hckops}"
+      ]
+    }
+  ]
+}`
+	assert.Equal(t, json, task.Pretty())
 }

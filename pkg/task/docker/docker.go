@@ -37,14 +37,14 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 	imagePullOpts := &docker.ImagePullOpts{
 		ImageName: imageName,
 		OnImagePullCallback: func() {
-			// TODO box.eventBus.Publish(newImagePullDockerLoaderEvent(imageName))
+			task.eventBus.Publish(newImagePullDockerLoaderEvent(imageName))
 		},
 	}
-	// TODO box.eventBus.Publish(newImagePullDockerEvent(imageName))
+	task.eventBus.Publish(newImagePullDockerEvent(imageName))
 	if err := task.client.ImagePull(imagePullOpts); err != nil {
 		// try to use an existing image if exists
 		if task.clientOpts.IgnoreImagePullError {
-			// TODO box.eventBus.Publish(newImagePullIgnoreDockerEvent(imageName))
+			task.eventBus.Publish(newImagePullIgnoreDockerEvent(imageName))
 		} else {
 			// do not allow offline
 			return err
@@ -54,11 +54,11 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 	// cleanup obsolete nightly images
 	imageRemoveOpts := &docker.ImageRemoveOpts{
 		OnImageRemoveCallback: func(imageId string) {
-			// TODO box.eventBus.Publish(newImageRemoveDockerEvent(imageId))
+			task.eventBus.Publish(newImageRemoveDockerEvent(imageId))
 		},
 		OnImageRemoveErrorCallback: func(imageId string, err error) {
 			// ignore error: keep images used by existing containers
-			// TODO box.eventBus.Publish(newImageRemoveIgnoreDockerEvent(imageId, err))
+			task.eventBus.Publish(newImageRemoveIgnoreDockerEvent(imageId, err))
 		},
 	}
 	if err := task.client.ImageRemoveDangling(imageRemoveOpts); err != nil {
@@ -69,20 +69,23 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 	containerName := opts.Template.GenerateName()
 
 	containerConfig, err := docker.BuildContainerConfig(&docker.ContainerConfigOpts{
-		ImageName:     imageName,
-		ContainerName: containerName,
-		Env:           []docker.ContainerEnv{},
-		Ports:         []docker.ContainerPort{},
-		Labels:        opts.Labels,
-		Tty:           opts.StreamOpts.IsTty,
-		Cmd:           opts.Arguments,
+		ImageName: imageName,
+		Hostname:  "", // TODO vpn NetworkMode conflicts with Hostname containerName
+		Env:       []docker.ContainerEnv{},
+		Ports:     []docker.ContainerPort{},
+		Labels:    opts.Labels,
+		Tty:       opts.StreamOpts.IsTty,
+		Cmd:       opts.Arguments,
 	})
 	if err != nil {
 		return err
 	}
 
-	onPortBindCallback := func(port docker.ContainerPort) {}
-	hostConfig, err := docker.BuildHostConfig([]docker.ContainerPort{}, onPortBindCallback)
+	hostConfig, err := docker.BuildHostConfig(&docker.ContainerHostConfigOpts{
+		NetworkMode:        docker.DefaultNetworkMode(), // TODO vpn
+		Ports:              []docker.ContainerPort{},
+		OnPortBindCallback: func(docker.ContainerPort) {},
+	})
 	if err != nil {
 		return err
 	}
@@ -92,7 +95,7 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 	if err != nil {
 		return err
 	}
-	// TODO box.eventBus.Publish(newNetworkUpsertDockerEvent(networkName, networkId))
+	task.eventBus.Publish(newNetworkUpsertDockerEvent(networkName, networkId))
 
 	containerOpts := &docker.ContainerCreateOpts{
 		ContainerName:    containerName,
@@ -100,24 +103,18 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 		HostConfig:       hostConfig,
 		NetworkingConfig: docker.BuildNetworkingConfig(networkName, networkId), // all on the same network
 		WaitStatus:       true,
-		OnContainerStatusCallback: func(s string) {
-			//box.eventBus.Publish(newContainerCreateStatusDockerEvent(status))
+		OnContainerStatusCallback: func(status string) {
+			task.eventBus.Publish(newContainerCreateStatusDockerEvent(status))
 		},
-		OnContainerStartCallback: func() {
-			//for _, e := range opts.Template.EnvironmentVariables() {
-			//	box.eventBus.Publish(newContainerCreateEnvDockerEvent(containerName, e))
-			//	box.eventBus.Publish(newContainerCreateEnvDockerConsoleEvent(containerName, e))
-			//}
-		},
+		OnContainerStartCallback: func() {},
 	}
 	// taskId
 	containerId, err := task.client.ContainerCreate(containerOpts)
 	if err != nil {
 		return err
 	}
-	// TODO box.eventBus.Publish(newContainerCreateDockerEvent(opts.Template.Name, containerName, containerId))
-
-	// TODO stop loader
+	task.eventBus.Publish(newContainerCreateDockerEvent(opts.Template.Name, containerName, containerId))
+	task.eventBus.Publish(newContainerCreateDockerLoaderEvent())
 
 	if err := task.client.ContainerLogsStd(containerId); err != nil {
 		return err

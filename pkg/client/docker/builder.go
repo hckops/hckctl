@@ -2,6 +2,7 @@ package docker
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -28,7 +29,7 @@ func BuildContainerConfig(opts *ContainerConfigOpts) (*container.Config, error) 
 	}
 
 	return &container.Config{
-		Hostname:     opts.ContainerName, // TODO vpn conflict with NetworkMode
+		Hostname:     opts.Hostname,
 		Image:        opts.ImageName,
 		AttachStdin:  true,
 		AttachStdout: true,
@@ -43,10 +44,10 @@ func BuildContainerConfig(opts *ContainerConfigOpts) (*container.Config, error) 
 	}, nil
 }
 
-func BuildHostConfig(ports []ContainerPort, onPortBindCallback func(port ContainerPort)) (*container.HostConfig, error) {
+func BuildHostConfig(opts *ContainerHostConfigOpts) (*container.HostConfig, error) {
 
 	portBindings := make(nat.PortMap)
-	for _, port := range ports {
+	for _, port := range opts.Ports {
 
 		localPort, err := util.FindOpenPort(port.Local)
 		if err != nil {
@@ -59,7 +60,7 @@ func BuildHostConfig(ports []ContainerPort, onPortBindCallback func(port Contain
 		}
 
 		// actual bound port
-		onPortBindCallback(ContainerPort{
+		opts.OnPortBindCallback(ContainerPort{
 			Local:  localPort,
 			Remote: port.Remote,
 		})
@@ -71,9 +72,17 @@ func BuildHostConfig(ports []ContainerPort, onPortBindCallback func(port Contain
 	}
 
 	return &container.HostConfig{
+		NetworkMode:  container.NetworkMode(opts.NetworkMode),
 		PortBindings: portBindings,
-		//NetworkMode:  "container:alpine-openvpn-???", // TODO vpn
 	}, nil
+}
+
+func DefaultNetworkMode() string {
+	return string(container.IsolationDefault)
+}
+
+func ContainerNetworkMode(idOrName string) string {
+	return strings.Join([]string{"container", idOrName}, ":")
 }
 
 func BuildNetworkingConfig(networkName, networkId string) *network.NetworkingConfig {

@@ -83,13 +83,13 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 	}
 
 	containerConfig, err := docker.BuildContainerConfig(&docker.ContainerConfigOpts{
-		ImageName:     imageName,
-		ContainerName: containerName,
-		Env:           containerEnv,
-		Ports:         containerPorts,
-		Labels:        opts.Labels,
-		Tty:           true, // always
-		Cmd:           []string{},
+		ImageName: imageName,
+		Hostname:  containerName,
+		Env:       containerEnv,
+		Ports:     containerPorts,
+		Labels:    opts.Labels,
+		Tty:       true, // always
+		Cmd:       []string{},
 	})
 	if err != nil {
 		return nil, err
@@ -98,7 +98,11 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 	onPortBindCallback := func(port docker.ContainerPort) {
 		box.publishPortInfo(networkMap, containerName, port)
 	}
-	hostConfig, err := docker.BuildHostConfig(containerPorts, onPortBindCallback)
+	hostConfig, err := docker.BuildHostConfig(&docker.ContainerHostConfigOpts{
+		NetworkMode:        docker.DefaultNetworkMode(),
+		Ports:              containerPorts,
+		OnPortBindCallback: onPortBindCallback,
+	})
 	if err != nil {
 		return nil, err
 	}

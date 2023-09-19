@@ -8,13 +8,19 @@ import (
 )
 
 type ContainerConfigOpts struct {
-	ImageName     string
-	ContainerName string
-	Env           []ContainerEnv
-	Ports         []ContainerPort
-	Tty           bool
-	Cmd           []string
-	Labels        map[string]string
+	ImageName string
+	Hostname  string
+	Env       []ContainerEnv
+	Ports     []ContainerPort
+	Tty       bool
+	Cmd       []string
+	Labels    map[string]string
+}
+
+type ContainerHostConfigOpts struct {
+	NetworkMode        string
+	Ports              []ContainerPort
+	OnPortBindCallback func(port ContainerPort)
 }
 
 type ImagePullOpts struct {

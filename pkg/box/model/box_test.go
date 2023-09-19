@@ -5,16 +5,15 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 )
 
 var testBox = &BoxV1{
 	Kind: "box/v1",
 	Name: "my-name",
 	Tags: []string{"my-tag"},
-	Image: struct {
-		Repository string
-		Version    string
-	}{
+	Image: commonModel.Image{
 		Repository: "hckops/my-image",
 	},
 	Shell: "/bin/bash",
