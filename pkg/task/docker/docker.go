@@ -8,6 +8,8 @@ import (
 	taskModel "github.com/hckops/hckctl/pkg/task/model"
 )
 
+// TODO events
+
 func newDockerTaskClient(commonOpts *taskModel.CommonTaskOptions, dockerOpts *commonModel.DockerOptions) (*DockerTaskClient, error) {
 	commonOpts.EventBus.Publish(newInitDockerClientEvent())
 

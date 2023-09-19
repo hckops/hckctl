@@ -28,7 +28,7 @@ func BuildContainerConfig(opts *ContainerConfigOpts) (*container.Config, error) 
 	}
 
 	return &container.Config{
-		Hostname:     opts.ContainerName,
+		Hostname:     opts.ContainerName, // TODO vpn conflict with NetworkMode
 		Image:        opts.ImageName,
 		AttachStdin:  true,
 		AttachStdout: true,
@@ -72,6 +72,7 @@ func BuildHostConfig(ports []ContainerPort, onPortBindCallback func(port Contain
 
 	return &container.HostConfig{
 		PortBindings: portBindings,
+		//NetworkMode:  "container:alpine-openvpn-???", // TODO vpn
 	}, nil
 }
 

@@ -39,11 +39,11 @@ func NewLabCmd(configRef *config.ConfigRef) *cobra.Command {
 		Args:    cobra.ExactArgs(1),
 		PreRunE: opts.validate,
 		RunE:    opts.run,
-		Hidden:  false, // TODO WIP
+		Hidden:  false,
 	}
 
 	// --revision or --local
-	opts.sourceFlag = commonFlag.AddTemplateSourceFlag(command)
+	opts.sourceFlag = commonFlag.AddSourceFlag(command)
 	// --provider (enum)
 	opts.providerFlag = labFlag.AddLabProviderFlag(command)
 
@@ -106,11 +106,10 @@ func startLab(sourceLoader template.SourceLoader[labModel.LabV1], provider labMo
 
 	createOpts := &labModel.CreateOptions{
 		LabTemplate:   &info.Value.Data,
-		BoxTemplates:  map[string]*boxModel.BoxV1{},  // TODO load box templates
-		DumpTemplates: map[string]*labModel.DumpV1{}, // TODO load dump templates
+		BoxTemplates:  map[string]*boxModel.BoxV1{},  // cloud only
+		DumpTemplates: map[string]*labModel.DumpV1{}, // cloud only
 		Parameters:    map[string]string{},           // TODO add overrides --input alias=parrot --input password=changeme --input vpn=htb-eu
-		Labels:        commonModel.Labels{},          // TODO box+lab labels
-		//Labels: commonCmd.AddTemplateLabels[labModel.LabV1](info, labels),
+		Labels:        commonModel.Labels{},          // cloud only
 	}
 
 	if labInfo, err := labClient.Create(createOpts); err != nil {

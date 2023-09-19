@@ -23,8 +23,8 @@ type TaskV1 struct {
 }
 
 type TaskCommand struct {
-	Name string
-	Args []string
+	Name      string
+	Arguments []string
 }
 
 func (task *TaskV1) GenerateName() string {
@@ -39,9 +39,9 @@ func (task *TaskV1) CommandMap() map[string]TaskCommand {
 	return commands
 }
 
-func (task *TaskV1) DefaultCommandArgs() []string {
+func (task *TaskV1) DefaultCommandArguments() []string {
 	if command, ok := task.CommandMap()[DefaultTaskCommand]; ok {
-		return command.Args
+		return command.Arguments
 	}
 	return []string{}
 }

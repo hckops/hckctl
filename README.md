@@ -18,7 +18,7 @@
 </p>
 
 Launch manual and automated attacks with pre-defined and always up-to-date templates of your favourite tools.
-Designed to transparently run locally, remotely or integrated in pipelines and for the purpose of analyzing, aggregating and exporting reports.
+Designed to transparently run locally, remotely or integrated in pipelines for the purpose of analyzing, aggregating and exporting reports.
 
 ## Quick start
 
@@ -40,8 +40,17 @@ hckctl box parrot --provider cloud
 
 Run a [`task`](https://github.com/hckops/megalopolis/tree/main/task) with pre-defined commands and without installing any binary
 ```bash
-# fire a scan
-hckctl task rustscan
+# use with the "default" arguments
+hckctl task rustscan --input address=127.0.0.1
+
+# use the "full" arguments
+hckctl task nmap --command full --input address=127.0.0.1 --input port=80
+
+# custom arguments
+hckctl task rustscan --inline -- -a 127.0.0.1
+
+# scan Lame box
+hckctl task rustscan --inline --network-vpn htb -- -a 10.10.10.3 --ulimit 5000
 ```
 
 ### Lab (preview)
@@ -80,6 +89,10 @@ hckctl flow scrape www.example.com
 ### Plugin
 
 > add custom commands
+
+### Prompt
+
+> chatgpt style https://github.com/snwfdhmp/awesome-gpt-prompt-engineering
 
 ### Template
 

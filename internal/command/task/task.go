@@ -3,6 +3,7 @@ package task
 import (
 	"fmt"
 
+	"github.com/MakeNowJust/heredoc"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -19,11 +20,12 @@ import (
 )
 
 type taskCmdOptions struct {
-	configRef    *config.ConfigRef
-	sourceFlag   *commonFlag.SourceFlag
-	providerFlag *commonFlag.ProviderFlag
-	provider     taskModel.TaskProvider
-	inlineFlag   bool
+	configRef      *config.ConfigRef
+	sourceFlag     *commonFlag.SourceFlag
+	providerFlag   *commonFlag.ProviderFlag
+	provider       taskModel.TaskProvider
+	commandFlag    *taskFlag.CommandFlag
+	networkVpnFlag string
 }
 
 func NewTaskCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -35,37 +37,45 @@ func NewTaskCmd(configRef *config.ConfigRef) *cobra.Command {
 	command := &cobra.Command{
 		Use:     "task [name]",
 		Short:   "Run a task",
+		Long:    heredoc.Doc(`TODO long`),
+		Example: heredoc.Doc(`TODO example`),
 		Args:    cobra.MinimumNArgs(1),
 		PreRunE: opts.validate,
 		RunE:    opts.run,
 	}
 
 	// --revision or --local
-	opts.sourceFlag = commonFlag.AddTemplateSourceFlag(command)
+	opts.sourceFlag = commonFlag.AddSourceFlag(command)
 	// --provider (enum)
 	opts.providerFlag = taskFlag.AddTaskProviderFlag(command)
-
-	const (
-		inlineFlagName  = "inline"
-		inlineFlagUsage = "inline arguments"
-	)
-	command.Flags().BoolVarP(&opts.inlineFlag, inlineFlagName, commonFlag.NoneFlagShortHand, false, inlineFlagUsage)
+	// --network-vpn
+	commonFlag.AddNetworkVpnFlag(command, &opts.networkVpnFlag)
+	// --inline OR --command with N --inputs
+	opts.commandFlag = taskFlag.AddCommandFlag(command)
 
 	return command
 }
 
 func (opts *taskCmdOptions) validate(cmd *cobra.Command, args []string) error {
 
+	// provider
 	validProvider, err := taskFlag.ValidateTaskProvider(opts.configRef.Config.Task.Provider, opts.providerFlag)
 	if err != nil {
 		return err
 	}
 	opts.provider = validProvider
 
+	// source
 	if err := commonFlag.ValidateSourceFlag(opts.providerFlag, opts.sourceFlag); err != nil {
 		log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
 		return errors.New(commonFlag.ErrorFlagNotSupported)
 	}
+
+	// vpn
+	if err := commonFlag.ValidateNetworkVpnFlag(opts.networkVpnFlag, opts.configRef.Config.Network.VpnNetworks()); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -106,12 +116,15 @@ func (opts *taskCmdOptions) runTask(sourceLoader template.SourceLoader[taskModel
 		return err
 	}
 
+	// TODO --command and --input
+	// TODO opts.networkVpnFlag
+
 	var arguments []string
-	if opts.inlineFlag {
+	if opts.commandFlag.Inline {
 		arguments = inlineArguments
 	} else {
 		// TODO expand/merge values
-		arguments = info.Value.Data.DefaultCommandArgs()
+		arguments = info.Value.Data.DefaultCommandArguments()
 	}
 
 	runOpts := &taskModel.RunOptions{

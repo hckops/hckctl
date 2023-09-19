@@ -2,6 +2,7 @@ package flag
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hckops/hckctl/internal/command/common"
 	"github.com/hckops/hckctl/pkg/common/model"
@@ -24,8 +25,11 @@ func ValidateSourceFlag(provider *ProviderFlag, sourceFlag *SourceFlag) error {
 }
 
 func ValidateNetworkVpnFlag(name string, networks map[string]model.VpnNetworkInfo) error {
-	if _, ok := networks[name]; !ok {
-		return fmt.Errorf("vpn network [%s] config not found", name)
+	if strings.TrimSpace(name) == "" {
+		return nil
 	}
-	return nil
+	if _, ok := networks[name]; ok {
+		return nil
+	}
+	return fmt.Errorf("vpn network [%s] config not found", name)
 }
