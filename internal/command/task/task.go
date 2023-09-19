@@ -21,7 +21,7 @@ import (
 
 type taskCmdOptions struct {
 	configRef      *config.ConfigRef
-	sourceFlag     *commonFlag.SourceFlag
+	sourceFlag     *commonFlag.TemplateSourceFlag
 	providerFlag   *commonFlag.ProviderFlag
 	provider       taskModel.TaskProvider
 	commandFlag    *taskFlag.CommandFlag
@@ -45,12 +45,12 @@ func NewTaskCmd(configRef *config.ConfigRef) *cobra.Command {
 	}
 
 	// --revision or --local
-	opts.sourceFlag = commonFlag.AddSourceFlag(command)
+	opts.sourceFlag = commonFlag.AddTemplateSourceFlag(command)
 	// --provider (enum)
 	opts.providerFlag = taskFlag.AddTaskProviderFlag(command)
 	// --network-vpn
 	commonFlag.AddNetworkVpnFlag(command, &opts.networkVpnFlag)
-	// --inline OR --command with N --inputs
+	// --inline or --command with N --inputs
 	opts.commandFlag = taskFlag.AddCommandFlag(command)
 
 	return command
@@ -66,7 +66,7 @@ func (opts *taskCmdOptions) validate(cmd *cobra.Command, args []string) error {
 	opts.provider = validProvider
 
 	// source
-	if err := commonFlag.ValidateSourceFlag(opts.providerFlag, opts.sourceFlag); err != nil {
+	if err := commonFlag.ValidateTemplateSourceFlag(opts.providerFlag, opts.sourceFlag); err != nil {
 		log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
 		return errors.New(commonFlag.ErrorFlagNotSupported)
 	}
@@ -75,6 +75,8 @@ func (opts *taskCmdOptions) validate(cmd *cobra.Command, args []string) error {
 	if err := commonFlag.ValidateNetworkVpnFlag(opts.networkVpnFlag, opts.configRef.Config.Network.VpnNetworks()); err != nil {
 		return err
 	}
+
+	// TODO validate --inputs key=value format
 
 	return nil
 }

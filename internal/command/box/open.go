@@ -41,7 +41,7 @@ func (opts *boxOpenCmdOptions) run(cmd *cobra.Command, args []string) error {
 	connectClient := func(invokeOpts *invokeOptions, _ *model.BoxDetails) error {
 
 		// log only and ignore invalid tunnel flags to avoid false positive during provider attempts
-		if err := boxFlag.ValidateTunnelFlag(invokeOpts.client.Provider(), opts.tunnelFlag); err != nil {
+		if err := boxFlag.ValidateTunnelFlag(opts.tunnelFlag, invokeOpts.client.Provider()); err != nil {
 			log.Warn().Err(err).Msgf("ignore validation %s", commonFlag.ErrorFlagNotSupported)
 		}
 

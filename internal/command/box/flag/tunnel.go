@@ -1,6 +1,8 @@
 package flag
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	commonFlag "github.com/hckops/hckctl/internal/command/common/flag"
@@ -51,4 +53,16 @@ func AddTunnelFlag(command *cobra.Command) *TunnelFlag {
 	noTunnelFlag := addNoTunnelFlag(command, &tunnelFlag.NoTunnel)
 	command.MarkFlagsMutuallyExclusive(noExecFlag, noTunnelFlag)
 	return tunnelFlag
+}
+
+func ValidateTunnelFlag(tunnelFlag *TunnelFlag, provider boxModel.BoxProvider) error {
+	switch provider {
+	// docker exposes automatically all ports
+	case boxModel.Docker:
+		if tunnelFlag.NoExec || tunnelFlag.NoTunnel {
+			return fmt.Errorf("flag not supported: provider=%s %s=%v %s=%v",
+				boxModel.Docker.String(), noExecFlagName, tunnelFlag.NoExec, noTunnelFlagName, tunnelFlag.NoTunnel)
+		}
+	}
+	return nil
 }

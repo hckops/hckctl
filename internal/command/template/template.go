@@ -17,10 +17,10 @@ import (
 )
 
 type templateCmdOptions struct {
-	configRef   *config.ConfigRef
-	formatFlag  formatFlag
-	sourceFlag  *flag.SourceFlag
-	offlineFlag bool
+	configRef          *config.ConfigRef
+	formatFlag         formatFlag
+	templateSourceFlag *flag.TemplateSourceFlag
+	offlineFlag        bool
 }
 
 func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -65,10 +65,9 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 	command.Flags().Var(formatValue, formatFlagName, formatUsage)
 
 	// --revision or --local
-	opts.sourceFlag = flag.AddSourceFlag(command)
-
+	opts.templateSourceFlag = flag.AddTemplateSourceFlag(command)
 	// --offline or --local
-	flag.AddOfflineFlag(command, &opts.offlineFlag)
+	flag.AddTemplateOfflineFlag(command, &opts.offlineFlag)
 	command.MarkFlagsMutuallyExclusive(flag.OfflineFlagName, flag.LocalFlagName)
 
 	command.AddCommand(NewTemplateListCmd(configRef))
@@ -81,7 +80,7 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 	format := opts.formatFlag.String()
 
 	// TODO add remote url
-	if opts.sourceFlag.Local {
+	if opts.templateSourceFlag.Local {
 		path := args[0]
 		log.Debug().Msgf("print local template: path=%s", path)
 
@@ -92,10 +91,10 @@ func (opts *templateCmdOptions) run(cmd *cobra.Command, args []string) error {
 			CacheBaseDir:    opts.configRef.Config.Template.CacheDir,
 			RepositoryUrl:   common.TemplateSourceUrl,
 			DefaultRevision: common.TemplateSourceRevision,
-			Revision:        opts.sourceFlag.Revision,
+			Revision:        opts.templateSourceFlag.Revision,
 			AllowOffline:    opts.offlineFlag,
 		}
-		log.Debug().Msgf("print git template: name=%s revision=%s offline=%v", name, opts.sourceFlag.Revision, opts.offlineFlag)
+		log.Debug().Msgf("print git template: name=%s revision=%s offline=%v", name, opts.templateSourceFlag.Revision, opts.offlineFlag)
 
 		return printTemplate(NewGitValidator(sourceOpts, name), format)
 	}

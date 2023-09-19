@@ -10,32 +10,31 @@ import (
 )
 
 const (
-	RevisionFlagName = "revision"
+	revisionFlagName = "revision"
 	LocalFlagName    = "local"
 	OfflineFlagName  = "offline"
 )
 
-// TODO add remote
-
-type SourceFlag struct {
+type TemplateSourceFlag struct {
 	Revision string
 	Local    bool
+	// TODO add remote
 }
 
-func AddRevisionFlag(command *cobra.Command, revision *string) string {
+func AddTemplateRevisionFlag(command *cobra.Command, revision *string) string {
 	const (
 		flagShortName = "r"
 		flagUsage     = "megalopolis version, one of branch|tag|sha"
 	)
 
-	command.Flags().StringVarP(revision, RevisionFlagName, flagShortName, common.TemplateSourceRevision, flagUsage)
+	command.Flags().StringVarP(revision, revisionFlagName, flagShortName, common.TemplateSourceRevision, flagUsage)
 	// overrides default template val
-	_ = viper.BindPFlag(fmt.Sprintf("template.%s", RevisionFlagName), command.Flags().Lookup(RevisionFlagName))
+	_ = viper.BindPFlag(fmt.Sprintf("template.%s", revisionFlagName), command.Flags().Lookup(revisionFlagName))
 
-	return RevisionFlagName
+	return revisionFlagName
 }
 
-func AddLocalFlag(command *cobra.Command, local *bool) string {
+func AddTemplateLocalFlag(command *cobra.Command, local *bool) string {
 	const (
 		flagUsage = "use a local template"
 	)
@@ -43,18 +42,34 @@ func AddLocalFlag(command *cobra.Command, local *bool) string {
 	return LocalFlagName
 }
 
-func AddSourceFlag(command *cobra.Command) *SourceFlag {
-	sourceFlag := &SourceFlag{}
-	revisionFlag := AddRevisionFlag(command, &sourceFlag.Revision)
-	localFlag := AddLocalFlag(command, &sourceFlag.Local)
-	command.MarkFlagsMutuallyExclusive(revisionFlag, localFlag)
-	return sourceFlag
-}
-
-func AddOfflineFlag(command *cobra.Command, offline *bool) string {
+func AddTemplateOfflineFlag(command *cobra.Command, offline *bool) string {
 	const (
 		flagUsage = "ignore latest git templates"
 	)
 	command.Flags().BoolVarP(offline, OfflineFlagName, NoneFlagShortHand, false, flagUsage)
 	return OfflineFlagName
+}
+
+func AddTemplateSourceFlag(command *cobra.Command) *TemplateSourceFlag {
+	sourceFlag := &TemplateSourceFlag{}
+	revisionFlag := AddTemplateRevisionFlag(command, &sourceFlag.Revision)
+	localFlag := AddTemplateLocalFlag(command, &sourceFlag.Local)
+	command.MarkFlagsMutuallyExclusive(revisionFlag, localFlag)
+	return sourceFlag
+}
+
+func ValidateTemplateSourceFlag(provider *ProviderFlag, sourceFlag *TemplateSourceFlag) error {
+	switch *provider {
+	// clients can't decide revision or deploy custom templates
+	case CloudProviderFlag:
+		if sourceFlag.Revision != common.TemplateSourceRevision {
+			return fmt.Errorf("flag not supported: provider=%s %s=%s",
+				provider.String(), revisionFlagName, sourceFlag.Revision)
+		}
+		if sourceFlag.Local {
+			return fmt.Errorf("flag not supported: provider=%s %s=%v",
+				provider.String(), LocalFlagName, sourceFlag.Local)
+		}
+	}
+	return nil
 }

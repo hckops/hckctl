@@ -16,11 +16,11 @@ import (
 )
 
 type boxCmdOptions struct {
-	configRef    *config.ConfigRef
-	sourceFlag   *commonFlag.SourceFlag
-	providerFlag *commonFlag.ProviderFlag
-	provider     boxModel.BoxProvider
-	tunnelFlag   *boxFlag.TunnelFlag
+	configRef          *config.ConfigRef
+	templateSourceFlag *commonFlag.TemplateSourceFlag
+	providerFlag       *commonFlag.ProviderFlag
+	provider           boxModel.BoxProvider
+	tunnelFlag         *boxFlag.TunnelFlag
 }
 
 func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -76,7 +76,7 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 	}
 
 	// --revision or --local
-	opts.sourceFlag = commonFlag.AddSourceFlag(command)
+	opts.templateSourceFlag = commonFlag.AddTemplateSourceFlag(command)
 	// --provider (enum)
 	opts.providerFlag = boxFlag.AddBoxProviderFlag(command)
 	// --no-exec or --no-tunnel
@@ -99,12 +99,12 @@ func (opts *boxCmdOptions) validate(cmd *cobra.Command, args []string) error {
 	}
 	opts.provider = validProvider
 
-	if err := commonFlag.ValidateSourceFlag(opts.providerFlag, opts.sourceFlag); err != nil {
+	if err := commonFlag.ValidateTemplateSourceFlag(opts.providerFlag, opts.templateSourceFlag); err != nil {
 		log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
 		return errors.New(commonFlag.ErrorFlagNotSupported)
 	}
 
-	if err := boxFlag.ValidateTunnelFlag(opts.provider, opts.tunnelFlag); err != nil {
+	if err := boxFlag.ValidateTunnelFlag(opts.tunnelFlag, opts.provider); err != nil {
 		log.Warn().Err(err).Msgf("ignore validation %s", commonFlag.ErrorFlagNotSupported)
 		// ignore validation
 		return nil
@@ -114,7 +114,7 @@ func (opts *boxCmdOptions) validate(cmd *cobra.Command, args []string) error {
 
 func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 
-	if opts.sourceFlag.Local {
+	if opts.templateSourceFlag.Local {
 		path := args[0]
 		log.Debug().Msgf("temporary box from local template: path=%s", path)
 
@@ -123,9 +123,9 @@ func (opts *boxCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	} else {
 		name := args[0]
-		log.Debug().Msgf("temporary box from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
+		log.Debug().Msgf("temporary box from git template: name=%s revision=%s", name, opts.templateSourceFlag.Revision)
 
-		sourceOpts := commonCmd.NewGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
+		sourceOpts := commonCmd.NewGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.templateSourceFlag.Revision)
 		sourceLoader := template.NewGitLoader[boxModel.BoxV1](sourceOpts, name)
 		labels := boxModel.NewBoxLabels().AddDefaultGit(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
 		return opts.temporaryBox(sourceLoader, labels)

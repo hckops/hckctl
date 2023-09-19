@@ -49,9 +49,9 @@ func NewTemplateListCmd(configRef *config.ConfigRef) *cobra.Command {
 	}
 
 	// --revision
-	flag.AddRevisionFlag(command, &opts.revisionFlag)
+	flag.AddTemplateRevisionFlag(command, &opts.revisionFlag)
 	// --offline
-	flag.AddOfflineFlag(command, &opts.offlineFlag)
+	flag.AddTemplateOfflineFlag(command, &opts.offlineFlag)
 
 	return command
 }

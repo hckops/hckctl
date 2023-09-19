@@ -17,10 +17,10 @@ import (
 )
 
 type boxStartCmdOptions struct {
-	configRef    *config.ConfigRef
-	sourceFlag   *commonFlag.SourceFlag
-	providerFlag *commonFlag.ProviderFlag
-	provider     boxModel.BoxProvider
+	configRef          *config.ConfigRef
+	templateSourceFlag *commonFlag.TemplateSourceFlag
+	providerFlag       *commonFlag.ProviderFlag
+	provider           boxModel.BoxProvider
 }
 
 func NewBoxStartCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -38,7 +38,7 @@ func NewBoxStartCmd(configRef *config.ConfigRef) *cobra.Command {
 	}
 
 	// --revision or --local
-	opts.sourceFlag = commonFlag.AddSourceFlag(command)
+	opts.templateSourceFlag = commonFlag.AddTemplateSourceFlag(command)
 	// --provider (enum)
 	opts.providerFlag = boxFlag.AddBoxProviderFlag(command)
 
@@ -53,7 +53,7 @@ func (opts *boxStartCmdOptions) validate(cmd *cobra.Command, args []string) erro
 	}
 	opts.provider = validProvider
 
-	if err := commonFlag.ValidateSourceFlag(opts.providerFlag, opts.sourceFlag); err != nil {
+	if err := commonFlag.ValidateTemplateSourceFlag(opts.providerFlag, opts.templateSourceFlag); err != nil {
 		log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
 		return errors.New(commonFlag.ErrorFlagNotSupported)
 	}
@@ -62,7 +62,7 @@ func (opts *boxStartCmdOptions) validate(cmd *cobra.Command, args []string) erro
 
 func (opts *boxStartCmdOptions) run(cmd *cobra.Command, args []string) error {
 
-	if opts.sourceFlag.Local {
+	if opts.templateSourceFlag.Local {
 		path := args[0]
 		log.Debug().Msgf("start box from local template: path=%s", path)
 
@@ -71,9 +71,9 @@ func (opts *boxStartCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	} else {
 		name := args[0]
-		log.Debug().Msgf("start box from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
+		log.Debug().Msgf("start box from git template: name=%s revision=%s", name, opts.templateSourceFlag.Revision)
 
-		sourceOpts := commonCmd.NewGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
+		sourceOpts := commonCmd.NewGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.templateSourceFlag.Revision)
 		sourceLoader := template.NewGitLoader[boxModel.BoxV1](sourceOpts, name)
 		labels := boxModel.NewBoxLabels().AddDefaultGit(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
 		return opts.startBox(sourceLoader, labels)
