@@ -38,7 +38,7 @@ func NewBoxStartCmd(configRef *config.ConfigRef) *cobra.Command {
 	}
 
 	// --revision or --local
-	opts.sourceFlag = commonFlag.AddTemplateSourceFlag(command)
+	opts.sourceFlag = commonFlag.AddSourceFlag(command)
 	// --provider (enum)
 	opts.providerFlag = boxFlag.AddBoxProviderFlag(command)
 

@@ -43,7 +43,7 @@ func AddLocalFlag(command *cobra.Command, local *bool) string {
 	return LocalFlagName
 }
 
-func AddTemplateSourceFlag(command *cobra.Command) *SourceFlag {
+func AddSourceFlag(command *cobra.Command) *SourceFlag {
 	sourceFlag := &SourceFlag{}
 	revisionFlag := AddRevisionFlag(command, &sourceFlag.Revision)
 	localFlag := AddLocalFlag(command, &sourceFlag.Local)

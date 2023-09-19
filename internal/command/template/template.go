@@ -65,7 +65,7 @@ func NewTemplateCmd(configRef *config.ConfigRef) *cobra.Command {
 	command.Flags().Var(formatValue, formatFlagName, formatUsage)
 
 	// --revision or --local
-	opts.sourceFlag = flag.AddTemplateSourceFlag(command)
+	opts.sourceFlag = flag.AddSourceFlag(command)
 
 	// --offline or --local
 	flag.AddOfflineFlag(command, &opts.offlineFlag)
