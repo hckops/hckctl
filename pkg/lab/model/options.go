@@ -25,6 +25,6 @@ type CreateOptions struct {
 	LabTemplate   *LabV1
 	BoxTemplates  map[string]*boxModel.BoxV1
 	DumpTemplates map[string]*DumpV1
-	Parameters    map[string]string
+	Parameters    commonModel.Parameters
 	Labels        commonModel.Labels
 }

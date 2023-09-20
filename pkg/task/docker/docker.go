@@ -96,6 +96,7 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 		return err
 	}
 	task.eventBus.Publish(newNetworkUpsertDockerEvent(networkName, networkId))
+	task.eventBus.Publish(newContainerCreateDockerLoaderEvent())
 
 	containerOpts := &docker.ContainerCreateOpts{
 		ContainerName:    containerName,
@@ -114,7 +115,7 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 		return err
 	}
 	task.eventBus.Publish(newContainerCreateDockerEvent(opts.Template.Name, containerName, containerId))
-	task.eventBus.Publish(newContainerCreateDockerLoaderEvent())
+	task.eventBus.Publish(newContainerStartDockerLoaderEvent())
 
 	if err := task.client.ContainerLogsStd(containerId); err != nil {
 		return err

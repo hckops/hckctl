@@ -2,12 +2,11 @@ package model
 
 import (
 	"fmt"
-	"os"
-	"strings"
 
 	"golang.org/x/exp/slices"
 
 	boxModel "github.com/hckops/hckctl/pkg/box/model"
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
@@ -56,17 +55,17 @@ func (lab *LabV1) Pretty() string {
 }
 
 // TODO use reflection to expand all fields
-func (box *LabBox) Expand(inputs map[string]string) (*LabBox, error) {
+func (box *LabBox) Expand(parameters commonModel.Parameters) (*LabBox, error) {
 
 	// TODO optional
-	if alias, err := expand(box.Alias, inputs); err != nil {
+	if alias, err := util.Expand(box.Alias, parameters); err != nil {
 		return nil, err
 	} else {
 		box.Alias = alias
 	}
 
 	// TODO optional
-	if vpn, err := expand(box.Vpn, inputs); err != nil {
+	if vpn, err := util.Expand(box.Vpn, parameters); err != nil {
 		return nil, err
 	} else {
 		box.Vpn = vpn
@@ -75,58 +74,11 @@ func (box *LabBox) Expand(inputs map[string]string) (*LabBox, error) {
 	for i, e := range box.Template.Env {
 		if key, value, err := util.SplitKeyValue(e); err == nil {
 			// ignore errors
-			if env, err := expand(value, inputs); err == nil {
+			if env, err := util.Expand(value, parameters); err == nil {
 				box.Template.Env[i] = fmt.Sprintf("%s=%s", key, env)
 			}
 		}
 	}
 
 	return box, nil
-}
-
-func expand(raw string, inputs map[string]string) (string, error) {
-	// reserved keyword
-	const separator = ":"
-	var err error
-	expanded := os.Expand(raw, func(value string) string {
-
-		// empty value
-		if strings.TrimSpace(value) == "" {
-			return ""
-		}
-
-		// optional field
-		items := strings.Split(value, separator)
-		if len(items) == 2 {
-			// handle keywords
-			switch items[1] {
-			case "random":
-				return util.RandomAlphanumeric(10)
-			}
-
-			key := items[0]
-			if input, ok := inputs[key]; !ok {
-				// default
-				return items[1]
-			} else {
-				// input
-				return input
-			}
-		}
-
-		// required field
-		if raw == fmt.Sprintf("$%s", value) || raw == fmt.Sprintf("${%s}", value) {
-			if input, ok := inputs[value]; !ok {
-				err = fmt.Errorf("%s required", value)
-				return ""
-			} else {
-				return input
-			}
-		}
-
-		err = fmt.Errorf("%s unexpected error", value)
-		return ""
-	})
-
-	return expanded, err
 }

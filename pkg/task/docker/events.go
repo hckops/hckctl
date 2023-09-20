@@ -65,5 +65,9 @@ func newContainerCreateDockerEvent(templateName string, containerName string, co
 }
 
 func newContainerCreateDockerLoaderEvent() *dockerTaskEvent {
+	return &dockerTaskEvent{kind: event.LoaderUpdate, value: "running"}
+}
+
+func newContainerStartDockerLoaderEvent() *dockerTaskEvent {
 	return &dockerTaskEvent{kind: event.LoaderStop, value: "waiting"}
 }

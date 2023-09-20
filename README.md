@@ -40,8 +40,10 @@ hckctl box parrot --provider cloud
 
 Run a [`task`](https://github.com/hckops/megalopolis/tree/main/task) with pre-defined commands and without installing any binary
 ```bash
-# use with the "default" arguments
+# use "default" command
 hckctl task rustscan --input address=127.0.0.1
+# equivalent of
+hckctl task rustscan --command default --input address=127.0.0.1
 
 # use the "full" arguments
 hckctl task nmap --command full --input address=127.0.0.1 --input port=80

@@ -2,6 +2,7 @@ package task
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/pkg/errors"
@@ -125,15 +126,26 @@ func (opts *taskCmdOptions) runTask(sourceLoader template.SourceLoader[taskModel
 		return err
 	}
 
-	// TODO --command and --input
 	// TODO opts.networkVpnFlag
 
 	var arguments []string
 	if opts.commandFlag.Inline {
 		arguments = inlineArguments
 	} else {
-		// TODO expand/merge values
-		arguments = info.Value.Data.DefaultCommandArguments()
+		taskCommand, err := info.Value.Data.DefaultCommand(opts.commandFlag.Preset)
+		if err != nil {
+			log.Warn().Err(err).Msg("error command")
+			return errors.New("invalid command")
+		}
+		expandedArguments, err := taskCommand.ExpandCommandArguments(opts.parameters)
+		if err != nil {
+			log.Warn().Err(err).Msg("error expand command arguments")
+			return errors.New("invalid command arguments")
+		}
+		log.Info().Msgf("run task command=%s arguments=[%s] inputs=%v expanded=[%s]",
+			taskCommand.Name, strings.Join(taskCommand.Arguments, ","), opts.parameters, strings.Join(expandedArguments, ","))
+
+		arguments = expandedArguments
 	}
 
 	runOpts := &taskModel.RunOptions{

@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -48,4 +49,51 @@ var anyNonWordCharacterRegex = regexp.MustCompile(`\W+`)
 
 func ToLowerKebabCase(value string) string {
 	return anyNonWordCharacterRegex.ReplaceAllString(strings.ToLower(strings.TrimSpace(value)), "-")
+}
+
+func Expand(raw string, inputs map[string]string) (string, error) {
+	// reserved keyword
+	const separator = ":"
+	var err error
+	expanded := os.Expand(raw, func(value string) string {
+
+		// empty value
+		if strings.TrimSpace(value) == "" {
+			return ""
+		}
+
+		// optional field
+		items := strings.Split(value, separator)
+		if len(items) == 2 {
+			// handle keywords
+			switch items[1] {
+			case "random":
+				return RandomAlphanumeric(10)
+			}
+
+			key := items[0]
+			if input, ok := inputs[key]; !ok {
+				// default
+				return items[1]
+			} else {
+				// input
+				return input
+			}
+		}
+
+		// required field
+		if raw == fmt.Sprintf("$%s", value) || raw == fmt.Sprintf("${%s}", value) {
+			if input, ok := inputs[value]; !ok {
+				err = fmt.Errorf("%s required", value)
+				return ""
+			} else {
+				return input
+			}
+		}
+
+		err = fmt.Errorf("%s unexpected error", value)
+		return ""
+	})
+
+	return expanded, err
 }

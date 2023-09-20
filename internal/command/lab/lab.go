@@ -108,7 +108,7 @@ func startLab(sourceLoader template.SourceLoader[labModel.LabV1], provider labMo
 		LabTemplate:   &info.Value.Data,
 		BoxTemplates:  map[string]*boxModel.BoxV1{},  // cloud only
 		DumpTemplates: map[string]*labModel.DumpV1{}, // cloud only
-		Parameters:    map[string]string{},           // TODO add overrides --input alias=parrot --input password=changeme --input vpn=htb-eu
+		Parameters:    commonModel.Parameters{},      // TODO add overrides --input alias=parrot --input password=changeme --input vpn=htb-eu
 		Labels:        commonModel.Labels{},          // cloud only
 	}
 

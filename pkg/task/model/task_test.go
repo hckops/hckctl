@@ -32,18 +32,25 @@ func TestCommandMap(t *testing.T) {
 	assert.Equal(t, expected, commands)
 }
 
-func TestDefaultCommandArgs(t *testing.T) {
+func TestDefaultCommand(t *testing.T) {
 	task := &TaskV1{
 		Commands: []TaskCommand{
 			{Name: "default", Arguments: []string{"arg1", "arg2"}},
 		},
 	}
-	expected := []string{"arg1", "arg2"}
-	arguments := task.DefaultCommandArguments()
-	assert.Equal(t, expected, arguments)
+	expected := TaskCommand{Name: "default", Arguments: []string{"arg1", "arg2"}}
 
-	emptyArgs := (&TaskV1{}).DefaultCommandArguments()
-	assert.Equal(t, []string{}, emptyArgs)
+	commandEmpty, errEmpty := task.DefaultCommand("")
+	assert.Equal(t, expected, commandEmpty)
+	assert.Nil(t, errEmpty)
+
+	commandDefault, errDefault := task.DefaultCommand("default")
+	assert.Equal(t, expected, commandDefault)
+	assert.Nil(t, errDefault)
+
+	commandInvalid, errInvalid := (&TaskV1{}).DefaultCommand("foo")
+	assert.Equal(t, TaskCommand{}, commandInvalid)
+	assert.EqualError(t, errInvalid, "foo command not found")
 }
 
 func TestPretty(t *testing.T) {
@@ -79,4 +86,26 @@ func TestPretty(t *testing.T) {
   ]
 }`
 	assert.Equal(t, json, task.Pretty())
+}
+
+func TestExpandCommandArguments(t *testing.T) {
+	command := TaskCommand{Arguments: []string{
+		" -a ",
+		"-b bbb",
+		"-c ${ccc:CCC}",
+		"-d ${ddd:DDD}",
+		"-e f --g HHH",
+	}}
+	parameters := commonModel.Parameters{
+		"bbb": "BBB",
+		"ddd": "AAA",
+	}
+	expected := []string{
+		"-a", "-b", "bbb", "-c", "CCC", "-d", "AAA", "-e", "f", "--g", "HHH",
+	}
+	expanded, err := command.ExpandCommandArguments(parameters)
+
+	assert.Len(t, expanded, 11)
+	assert.Equal(t, expected, expanded)
+	assert.Nil(t, err)
 }
