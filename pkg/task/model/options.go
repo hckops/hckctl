@@ -21,8 +21,9 @@ func NewCommonTaskOpts() *CommonTaskOptions {
 }
 
 type RunOptions struct {
-	Template   *TaskV1
-	Arguments  []string
-	Labels     commonModel.Labels
-	StreamOpts *commonModel.StreamOptions
+	Template    *TaskV1
+	Arguments   []string
+	Labels      commonModel.Labels
+	NetworkInfo commonModel.NetworkInfo
+	StreamOpts  *commonModel.StreamOptions
 }

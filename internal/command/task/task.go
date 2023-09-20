@@ -130,6 +130,8 @@ func (opts *taskCmdOptions) runTask(sourceLoader template.SourceLoader[taskModel
 
 	var arguments []string
 	if opts.commandFlag.Inline {
+		log.Info().Msgf("run task inline arguments=[%s]", strings.Join(inlineArguments, ","))
+
 		arguments = inlineArguments
 	} else {
 		taskCommand, err := info.Value.Data.DefaultCommand(opts.commandFlag.Preset)
@@ -148,11 +150,20 @@ func (opts *taskCmdOptions) runTask(sourceLoader template.SourceLoader[taskModel
 		arguments = expandedArguments
 	}
 
+	var networkInfo commonModel.NetworkInfo
+	if opts.networkVpnFlag != "" {
+		if vpnNetworkInfo, ok := opts.configRef.Config.Network.VpnNetworks()[opts.networkVpnFlag]; ok {
+			log.Info().Msgf("run task connected to vpn network name=%s path=%s", vpnNetworkInfo.Name, vpnNetworkInfo.LocalPath)
+			networkInfo.Vpn = vpnNetworkInfo
+		}
+	}
+
 	runOpts := &taskModel.RunOptions{
-		Template:   &info.Value.Data,
-		Arguments:  arguments,
-		Labels:     commonCmd.AddTemplateLabels[taskModel.TaskV1](info, labels),
-		StreamOpts: commonModel.NewStdStreamOpts(false),
+		Template:    &info.Value.Data,
+		Arguments:   arguments,
+		Labels:      commonCmd.AddTemplateLabels[taskModel.TaskV1](info, labels),
+		NetworkInfo: networkInfo,
+		StreamOpts:  commonModel.NewStdStreamOpts(false),
 	}
 
 	return taskClient.Run(runOpts)
