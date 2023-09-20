@@ -23,9 +23,10 @@ type taskCmdOptions struct {
 	configRef      *config.ConfigRef
 	sourceFlag     *commonFlag.TemplateSourceFlag
 	providerFlag   *commonFlag.ProviderFlag
-	provider       taskModel.TaskProvider
 	commandFlag    *taskFlag.CommandFlag
 	networkVpnFlag string
+	provider       taskModel.TaskProvider
+	parameters     commonModel.Parameters
 }
 
 func NewTaskCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -76,8 +77,12 @@ func (opts *taskCmdOptions) validate(cmd *cobra.Command, args []string) error {
 		opts.provider = validProvider
 	}
 
-	// TODO inputs
-
+	// inputs
+	if validParameters, err := taskFlag.ValidateCommandInputsFlag(opts.commandFlag.Inputs); err != nil {
+		return err
+	} else {
+		opts.parameters = validParameters
+	}
 	return nil
 }
 
