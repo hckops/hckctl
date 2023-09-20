@@ -46,10 +46,10 @@ func NewTaskCmd(configRef *config.ConfigRef) *cobra.Command {
 
 	// --revision or --local
 	opts.sourceFlag = commonFlag.AddTemplateSourceFlag(command)
-	// --provider (enum)
-	opts.providerFlag = taskFlag.AddTaskProviderFlag(command)
 	// --network-vpn
 	commonFlag.AddNetworkVpnFlag(command, &opts.networkVpnFlag)
+	// --provider (enum)
+	opts.providerFlag = taskFlag.AddTaskProviderFlag(command)
 	// --inline or --command with N --inputs
 	opts.commandFlag = taskFlag.AddCommandFlag(command)
 
@@ -57,13 +57,6 @@ func NewTaskCmd(configRef *config.ConfigRef) *cobra.Command {
 }
 
 func (opts *taskCmdOptions) validate(cmd *cobra.Command, args []string) error {
-
-	// provider
-	validProvider, err := taskFlag.ValidateTaskProvider(opts.configRef.Config.Task.Provider, opts.providerFlag)
-	if err != nil {
-		return err
-	}
-	opts.provider = validProvider
 
 	// source
 	if err := commonFlag.ValidateTemplateSourceFlag(opts.providerFlag, opts.sourceFlag); err != nil {
@@ -76,7 +69,14 @@ func (opts *taskCmdOptions) validate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// TODO validate --inputs key=value format
+	// provider
+	if validProvider, err := taskFlag.ValidateTaskProviderFlag(opts.configRef.Config.Task.Provider, opts.providerFlag); err != nil {
+		return err
+	} else {
+		opts.provider = validProvider
+	}
+
+	// TODO inputs
 
 	return nil
 }
@@ -120,10 +120,14 @@ func (opts *taskCmdOptions) runTask(sourceLoader template.SourceLoader[taskModel
 		return err
 	}
 
+	// TODO --command and --input
+	// TODO opts.networkVpnFlag
+
 	var arguments []string
 	if opts.commandFlag.Inline {
 		arguments = inlineArguments
 	} else {
+		// TODO expand/merge values
 		arguments = info.Value.Data.DefaultCommandArguments()
 	}
 

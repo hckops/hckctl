@@ -47,15 +47,15 @@ func NewBoxStartCmd(configRef *config.ConfigRef) *cobra.Command {
 
 func (opts *boxStartCmdOptions) validate(cmd *cobra.Command, args []string) error {
 
-	validProvider, err := boxFlag.ValidateBoxProvider(opts.configRef.Config.Box.Provider, opts.providerFlag)
-	if err != nil {
-		return err
-	}
-	opts.provider = validProvider
-
 	if err := commonFlag.ValidateTemplateSourceFlag(opts.providerFlag, opts.templateSourceFlag); err != nil {
 		log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
 		return errors.New(commonFlag.ErrorFlagNotSupported)
+	}
+
+	if validProvider, err := boxFlag.ValidateBoxProviderFlag(opts.configRef.Config.Box.Provider, opts.providerFlag); err != nil {
+		return err
+	} else {
+		opts.provider = validProvider
 	}
 	return nil
 }

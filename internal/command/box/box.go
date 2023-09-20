@@ -93,12 +93,6 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 
 func (opts *boxCmdOptions) validate(cmd *cobra.Command, args []string) error {
 
-	validProvider, err := boxFlag.ValidateBoxProvider(opts.configRef.Config.Box.Provider, opts.providerFlag)
-	if err != nil {
-		return err
-	}
-	opts.provider = validProvider
-
 	if err := commonFlag.ValidateTemplateSourceFlag(opts.providerFlag, opts.templateSourceFlag); err != nil {
 		log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
 		return errors.New(commonFlag.ErrorFlagNotSupported)
@@ -108,6 +102,12 @@ func (opts *boxCmdOptions) validate(cmd *cobra.Command, args []string) error {
 		log.Warn().Err(err).Msgf("ignore validation %s", commonFlag.ErrorFlagNotSupported)
 		// ignore validation
 		return nil
+	}
+
+	if validProvider, err := boxFlag.ValidateBoxProviderFlag(opts.configRef.Config.Box.Provider, opts.providerFlag); err != nil {
+		return err
+	} else {
+		opts.provider = validProvider
 	}
 	return nil
 }

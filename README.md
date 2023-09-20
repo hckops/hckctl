@@ -18,7 +18,7 @@
 </p>
 
 Launch manual and automated attacks with pre-defined and always up-to-date templates of your favourite tools.
-Designed to transparently run locally, remotely or integrated in pipelines for the purpose of analyzing, aggregating and exporting reports.
+Designed to transparently run locally, remotely or integrated in pipelines for the purpose of analyzing, aggregating and exporting results.
 
 ## Quick start
 
@@ -125,6 +125,10 @@ HCKCTL_VERSION=???
 curl -sSL https://github.com/hckops/hckctl/releases/download/${HCKCTL_VERSION}/hckctl_linux_x86_64.tar.gz | \
   tar -xzf - -C /usr/local/bin
 ```
+
+## Contribute
+
+> TODO example of how to point to a specific pr/revision in a forked repo
 
 ## Development
 

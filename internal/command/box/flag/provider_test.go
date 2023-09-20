@@ -44,7 +44,7 @@ func TestBoxProviderIds(t *testing.T) {
 func TestValidateBoxProviderConfig(t *testing.T) {
 	var boxProviderFlag flag.ProviderFlag
 	boxProviderFlag = flag.UnknownProviderFlag
-	boxProvider, err := ValidateBoxProvider("docker", &boxProviderFlag)
+	boxProvider, err := ValidateBoxProviderFlag("docker", &boxProviderFlag)
 
 	assert.NoError(t, err)
 	assert.Equal(t, "docker", boxProvider.String())
@@ -53,7 +53,7 @@ func TestValidateBoxProviderConfig(t *testing.T) {
 func TestValidateBoxProviderFlag(t *testing.T) {
 	var boxProviderFlag flag.ProviderFlag
 	boxProviderFlag = flag.KubeProviderFlag
-	boxProvider, err := ValidateBoxProvider("docker", &boxProviderFlag)
+	boxProvider, err := ValidateBoxProviderFlag("docker", &boxProviderFlag)
 
 	assert.NoError(t, err)
 	assert.Equal(t, "kube", boxProvider.String())

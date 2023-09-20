@@ -28,7 +28,7 @@ func labProviderIds() map[commonFlag.ProviderFlag][]string {
 	return commonFlag.ProviderIds(labProviders())
 }
 
-func ValidateLabProvider(configValue string, providerId *commonFlag.ProviderFlag) (model.LabProvider, error) {
+func ValidateLabProviderFlag(configValue string, providerId *commonFlag.ProviderFlag) (model.LabProvider, error) {
 	if configProvider, err := commonFlag.ExistProvider(labProviderIds(), configValue); err != nil {
 		return commonFlag.UnknownProvider, errors.New("invalid config provider")
 	} else if providerId.String() == commonFlag.UnknownProvider {

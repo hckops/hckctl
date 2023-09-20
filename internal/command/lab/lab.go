@@ -52,15 +52,15 @@ func NewLabCmd(configRef *config.ConfigRef) *cobra.Command {
 
 func (opts *labCmdOptions) validate(cmd *cobra.Command, args []string) error {
 
-	validProvider, err := labFlag.ValidateLabProvider(opts.configRef.Config.Lab.Provider, opts.providerFlag)
-	if err != nil {
-		return err
-	}
-	opts.provider = validProvider
-
 	if err := commonFlag.ValidateTemplateSourceFlag(opts.providerFlag, opts.templateSourceFlag); err != nil {
 		log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
 		return errors.New(commonFlag.ErrorFlagNotSupported)
+	}
+
+	if validProvider, err := labFlag.ValidateLabProviderFlag(opts.configRef.Config.Lab.Provider, opts.providerFlag); err != nil {
+		return err
+	} else {
+		opts.provider = validProvider
 	}
 	return nil
 }

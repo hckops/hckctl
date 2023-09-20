@@ -28,7 +28,7 @@ func taskProviderIds() map[commonFlag.ProviderFlag][]string {
 	return commonFlag.ProviderIds(taskProviders())
 }
 
-func ValidateTaskProvider(configValue string, providerId *commonFlag.ProviderFlag) (model.TaskProvider, error) {
+func ValidateTaskProviderFlag(configValue string, providerId *commonFlag.ProviderFlag) (model.TaskProvider, error) {
 	if configProvider, err := commonFlag.ExistProvider(taskProviderIds(), configValue); err != nil {
 		return commonFlag.UnknownProvider, errors.New("invalid config provider")
 	} else if providerId.String() == commonFlag.UnknownProvider {

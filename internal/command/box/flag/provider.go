@@ -35,7 +35,7 @@ func boxProviderIds() map[commonFlag.ProviderFlag][]string {
 	return commonFlag.ProviderIds(BoxProviders())
 }
 
-func ValidateBoxProvider(configValue string, providerId *commonFlag.ProviderFlag) (model.BoxProvider, error) {
+func ValidateBoxProviderFlag(configValue string, providerId *commonFlag.ProviderFlag) (model.BoxProvider, error) {
 	if configProvider, err := commonFlag.ExistProvider(boxProviderIds(), configValue); err != nil {
 		return commonFlag.UnknownProvider, errors.New("invalid config provider")
 	} else if providerId.String() == commonFlag.UnknownProvider {
