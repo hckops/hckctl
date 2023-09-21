@@ -82,6 +82,35 @@ func TestBuildHostConfig(t *testing.T) {
 	assert.Equal(t, expected, result)
 }
 
+func TestBuildVpnContainerConfig(t *testing.T) {
+	expected := &container.Config{
+		Image: "myImageName",
+		Env: []string{
+			"OPENVPN_CONFIG=myVpnConfigPath",
+		},
+	}
+	result := BuildVpnContainerConfig("myImageName", "myVpnConfigPath")
+	assert.Equal(t, expected, result)
+}
+
+func TestBuildVpnHostConfig(t *testing.T) {
+	expected := &container.HostConfig{
+		CapAdd:  []string{"NET_ADMIN"},
+		Sysctls: map[string]string{"net.ipv6.conf.all.disable_ipv6": "0"},
+		Resources: container.Resources{
+			Devices: []container.DeviceMapping{
+				{
+					PathOnHost:        "/dev/net/tun",
+					PathInContainer:   "/dev/net/tun",
+					CgroupPermissions: "rwm",
+				},
+			},
+		},
+	}
+	result := BuildVpnHostConfig()
+	assert.Equal(t, expected, result)
+}
+
 func TestDefaultNetworkMode(t *testing.T) {
 	assert.Equal(t, "default", DefaultNetworkMode())
 }
