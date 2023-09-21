@@ -28,6 +28,7 @@ func BuildContainerConfig(opts *ContainerConfigOpts) (*container.Config, error) 
 		exposedPorts[p] = struct{}{}
 	}
 
+	// TODO Volumes
 	return &container.Config{
 		Hostname:     opts.Hostname,
 		Image:        opts.ImageName,
@@ -75,6 +76,29 @@ func BuildHostConfig(opts *ContainerHostConfigOpts) (*container.HostConfig, erro
 		NetworkMode:  container.NetworkMode(opts.NetworkMode),
 		PortBindings: portBindings,
 	}, nil
+}
+
+func BuildVpnContainerConfig(imageName string, vpnConfigPath string) *container.Config {
+	return &container.Config{
+		Image: imageName,
+		Env:   []string{fmt.Sprintf("OPENVPN_CONFIG=%s", vpnConfigPath)},
+	}
+}
+
+func BuildVpnHostConfig() *container.HostConfig {
+	return &container.HostConfig{
+		CapAdd:  []string{"NET_ADMIN"},
+		Sysctls: map[string]string{"net.ipv6.conf.all.disable_ipv6": "0"},
+		Resources: container.Resources{
+			Devices: []container.DeviceMapping{
+				{
+					PathOnHost:        "/dev/net/tun",
+					PathInContainer:   "/dev/net/tun",
+					CgroupPermissions: "rwm",
+				},
+			},
+		},
+	}
 }
 
 func DefaultNetworkMode() string {

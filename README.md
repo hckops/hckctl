@@ -53,6 +53,7 @@ hckctl task rustscan --inline -- -a 127.0.0.1
 
 # scan Lame box
 hckctl task rustscan --inline --network-vpn htb -- -a 10.10.10.3 --ulimit 5000
+hckctl task nmap --command full --network-vpn htb --input address=10.10.10.3
 ```
 
 ### Lab (preview)
@@ -91,6 +92,10 @@ hckctl flow scrape www.example.com
 ### Plugin
 
 > add custom commands
+
+### TUI
+
+> see lazydocker
 
 ### Prompt
 

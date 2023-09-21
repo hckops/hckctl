@@ -126,8 +126,6 @@ func (opts *taskCmdOptions) runTask(sourceLoader template.SourceLoader[taskModel
 		return err
 	}
 
-	// TODO opts.networkVpnFlag
-
 	var arguments []string
 	if opts.commandFlag.Inline {
 		log.Info().Msgf("run task inline arguments=[%s]", strings.Join(inlineArguments, ","))
@@ -154,7 +152,7 @@ func (opts *taskCmdOptions) runTask(sourceLoader template.SourceLoader[taskModel
 	if opts.networkVpnFlag != "" {
 		if vpnNetworkInfo, ok := opts.configRef.Config.Network.VpnNetworks()[opts.networkVpnFlag]; ok {
 			log.Info().Msgf("run task connected to vpn network name=%s path=%s", vpnNetworkInfo.Name, vpnNetworkInfo.LocalPath)
-			networkInfo.Vpn = vpnNetworkInfo
+			networkInfo.Vpn = &vpnNetworkInfo
 		}
 	}
 

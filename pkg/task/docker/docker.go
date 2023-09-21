@@ -8,8 +8,6 @@ import (
 	taskModel "github.com/hckops/hckctl/pkg/task/model"
 )
 
-// TODO events
-
 func newDockerTaskClient(commonOpts *taskModel.CommonTaskOptions, dockerOpts *commonModel.DockerOptions) (*DockerTaskClient, error) {
 	commonOpts.EventBus.Publish(newInitDockerClientEvent())
 
@@ -33,7 +31,88 @@ func (task *DockerTaskClient) close() error {
 
 func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 
+	// vpn sidecar
+	var networkMode string
+	if opts.NetworkInfo.Vpn != nil {
+		if vpnContainerId, err := task.startVpnSidecar(opts.NetworkInfo.Vpn); err != nil {
+			return err
+		} else {
+			networkMode = docker.ContainerNetworkMode(vpnContainerId)
+		}
+	} else {
+		networkMode = docker.DefaultNetworkMode()
+	}
+
 	imageName := opts.Template.Image.Name()
+	if err := task.pullImage(imageName); err != nil {
+		return err
+	}
+
+	containerConfig, err := docker.BuildContainerConfig(&docker.ContainerConfigOpts{
+		ImageName: imageName,
+		Hostname:  "", // vpn NetworkMode conflicts with Hostname containerName
+		Env:       []docker.ContainerEnv{},
+		Ports:     []docker.ContainerPort{},
+		Labels:    opts.Labels,
+		Tty:       opts.StreamOpts.IsTty,
+		Cmd:       opts.Arguments,
+	})
+	if err != nil {
+		return err
+	}
+
+	hostConfig, err := docker.BuildHostConfig(&docker.ContainerHostConfigOpts{
+		NetworkMode:        networkMode,
+		Ports:              []docker.ContainerPort{},
+		OnPortBindCallback: func(docker.ContainerPort) {},
+	})
+	if err != nil {
+		return err
+	}
+
+	networkName := task.clientOpts.NetworkName
+	networkId, err := task.client.NetworkUpsert(networkName)
+	if err != nil {
+		return err
+	}
+	task.eventBus.Publish(newNetworkUpsertDockerEvent(networkName, networkId))
+	task.eventBus.Publish(newContainerCreateDockerLoaderEvent())
+
+	// taskName
+	containerName := opts.Template.GenerateName()
+
+	containerOpts := &docker.ContainerCreateOpts{
+		ContainerName:    containerName,
+		ContainerConfig:  containerConfig,
+		HostConfig:       hostConfig,
+		NetworkingConfig: docker.BuildNetworkingConfig(networkName, networkId), // all on the same network
+		WaitStatus:       true,
+		OnContainerCreateCallback: func(string) error {
+			return nil
+		},
+		OnContainerStatusCallback: func(status string) {
+			task.eventBus.Publish(newContainerCreateStatusDockerEvent(status))
+		},
+		OnContainerStartCallback: func() {},
+	}
+	// taskId
+	containerId, err := task.client.ContainerCreate(containerOpts)
+	if err != nil {
+		return err
+	}
+	task.eventBus.Publish(newContainerCreateDockerEvent(opts.Template.Name, containerName, containerId))
+	task.eventBus.Publish(newContainerStartDockerLoaderEvent())
+
+	if err := task.client.ContainerLogsStd(containerId); err != nil {
+		return err
+	}
+	if err := task.client.ContainerRemove(containerId); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (task *DockerTaskClient) pullImage(imageName string) error {
 	imagePullOpts := &docker.ImagePullOpts{
 		ImageName: imageName,
 		OnImagePullCallback: func() {
@@ -65,63 +144,51 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 		return err
 	}
 
-	// taskName
-	containerName := opts.Template.GenerateName()
+	return nil
+}
 
-	containerConfig, err := docker.BuildContainerConfig(&docker.ContainerConfigOpts{
-		ImageName: imageName,
-		Hostname:  "", // TODO vpn NetworkMode conflicts with Hostname containerName
-		Env:       []docker.ContainerEnv{},
-		Ports:     []docker.ContainerPort{},
-		Labels:    opts.Labels,
-		Tty:       opts.StreamOpts.IsTty,
-		Cmd:       opts.Arguments,
-	})
-	if err != nil {
-		return err
-	}
+func (task *DockerTaskClient) startVpnSidecar(vpnInfo *commonModel.VpnNetworkInfo) (string, error) {
 
-	hostConfig, err := docker.BuildHostConfig(&docker.ContainerHostConfigOpts{
-		NetworkMode:        docker.DefaultNetworkMode(), // TODO vpn
-		Ports:              []docker.ContainerPort{},
-		OnPortBindCallback: func(docker.ContainerPort) {},
-	})
-	if err != nil {
-		return err
+	containerName := "alpine-openvpn-12345"
+	imageName := "hckops/alpine-openvpn:latest"
+	vpnConfigPath := "/usr/share/client.ovpn"
+
+	if err := task.pullImage(imageName); err != nil {
+		return "", err
 	}
 
 	networkName := task.clientOpts.NetworkName
 	networkId, err := task.client.NetworkUpsert(networkName)
 	if err != nil {
-		return err
+		return "", err
 	}
 	task.eventBus.Publish(newNetworkUpsertDockerEvent(networkName, networkId))
 	task.eventBus.Publish(newContainerCreateDockerLoaderEvent())
 
 	containerOpts := &docker.ContainerCreateOpts{
 		ContainerName:    containerName,
-		ContainerConfig:  containerConfig,
-		HostConfig:       hostConfig,
-		NetworkingConfig: docker.BuildNetworkingConfig(networkName, networkId), // all on the same network
-		WaitStatus:       true,
+		ContainerConfig:  docker.BuildVpnContainerConfig(imageName, vpnConfigPath),
+		HostConfig:       docker.BuildVpnHostConfig(),
+		NetworkingConfig: docker.BuildNetworkingConfig(networkName, networkId),
+		WaitStatus:       false,
+		OnContainerCreateCallback: func(containerId string) error {
+			if err := task.client.CopyFileToContainer(containerId, vpnInfo.LocalPath, vpnConfigPath); err != nil {
+				// TODO event
+				return err
+			}
+			return nil
+		},
 		OnContainerStatusCallback: func(status string) {
 			task.eventBus.Publish(newContainerCreateStatusDockerEvent(status))
 		},
 		OnContainerStartCallback: func() {},
 	}
-	// taskId
+	// sidecarId
 	containerId, err := task.client.ContainerCreate(containerOpts)
 	if err != nil {
-		return err
+		return "", err
 	}
-	task.eventBus.Publish(newContainerCreateDockerEvent(opts.Template.Name, containerName, containerId))
-	task.eventBus.Publish(newContainerStartDockerLoaderEvent())
+	//task.eventBus.Publish(newContainerCreateDockerEvent(opts.Template.Name, containerName, containerId))
 
-	if err := task.client.ContainerLogsStd(containerId); err != nil {
-		return err
-	}
-	if err := task.client.ContainerRemove(containerId); err != nil {
-		return err
-	}
-	return nil
+	return containerId, nil
 }

@@ -46,7 +46,7 @@ func (image *Image) ResolveVersion() string {
 type Parameters map[string]string
 
 type NetworkInfo struct {
-	Vpn VpnNetworkInfo
+	Vpn *VpnNetworkInfo
 }
 
 type VpnNetworkInfo struct {

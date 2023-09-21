@@ -119,6 +119,9 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 		ContainerConfig:  containerConfig,
 		HostConfig:       hostConfig,
 		NetworkingConfig: docker.BuildNetworkingConfig(networkName, networkId), // all on the same network
+		OnContainerCreateCallback: func(string) error {
+			return nil
+		},
 		OnContainerStartCallback: func() {
 			for _, e := range opts.Template.EnvironmentVariables() {
 				box.eventBus.Publish(newContainerCreateEnvDockerEvent(containerName, e))

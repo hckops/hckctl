@@ -5,6 +5,7 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 )
 
 type ContainerConfigOpts struct {
@@ -14,7 +15,7 @@ type ContainerConfigOpts struct {
 	Ports     []ContainerPort
 	Tty       bool
 	Cmd       []string
-	Labels    map[string]string
+	Labels    commonModel.Labels
 }
 
 type ContainerHostConfigOpts struct {
@@ -39,6 +40,7 @@ type ContainerCreateOpts struct {
 	HostConfig                *container.HostConfig
 	NetworkingConfig          *network.NetworkingConfig
 	WaitStatus                bool
+	OnContainerCreateCallback func(containerId string) error
 	OnContainerStartCallback  func()
 	OnContainerStatusCallback func(string)
 }

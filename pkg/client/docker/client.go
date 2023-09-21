@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	dockerApi "github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
@@ -90,6 +92,10 @@ func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, 
 		opts.ContainerName)
 	if err != nil {
 		return "", errors.Wrap(err, "error container create")
+	}
+
+	if err := opts.OnContainerCreateCallback(newContainer.ID); err != nil {
+		return "", errors.Wrap(err, "error container create callback")
 	}
 
 	if err := client.docker.ContainerStart(client.ctx, newContainer.ID, types.ContainerStartOptions{}); err != nil {
@@ -375,4 +381,75 @@ func (client *DockerClient) NetworkUpsert(networkName string) (string, error) {
 	} else {
 		return newNetwork.ID, nil
 	}
+}
+
+func (client *DockerClient) CopyFileToContainer(containerId string, localPath string, containerPath string) error {
+	// TODO https://github.com/moby/moby/issues/38035
+	// https://github.com/moby/moby/issues/26652
+	// https://github.com/docker/cli/blob/b1d27091e50595fecd8a2a4429557b70681395b2/cli/command/container/cp.go#L182-L282
+	// TODO https://github.com/docker/cli/blob/master/cli/command/container/cp.go#L182
+
+	// Get an absolute source path.
+	srcPath, err := resolveLocalPath(localPath)
+	if err != nil {
+		return err
+	}
+
+	// Prepare destination copy info by stat-ing the container path.
+	dstInfo := archive.CopyInfo{Path: containerPath}
+	dstStat, err := client.docker.ContainerStatPath(client.ctx, containerId, containerPath)
+	if err != nil {
+		// TODO error is ignore
+		//return err
+	}
+
+	// Validate the destination path.
+	if err := validateOutputPathFileMode(dstStat.Mode); err != nil {
+		return errors.Wrapf(err, `destination "%s:%s" must be a directory or a regular file`, containerId, containerPath)
+	}
+
+	// ???
+	dstInfo.Exists, dstInfo.IsDir = true, dstStat.Mode.IsDir()
+
+	// Prepare source copy info.
+	srcInfo, err := archive.CopyInfoSourcePath(srcPath, false)
+	if err != nil {
+		return err
+	}
+
+	srcArchive, err := archive.TarResource(srcInfo)
+	if err != nil {
+		return err
+	}
+	defer srcArchive.Close()
+
+	dstDir, preparedArchive, err := archive.PrepareArchiveCopy(srcArchive, srcInfo, dstInfo)
+	if err != nil {
+		return err
+	}
+	defer preparedArchive.Close()
+
+	if err := client.docker.CopyToContainer(client.ctx, containerId, dstDir, preparedArchive, types.CopyToContainerOptions{
+		AllowOverwriteDirWithFile: true,
+	}); err != nil {
+		return errors.Wrap(err, "error copy file to container")
+	}
+	return nil
+}
+
+func resolveLocalPath(localPath string) (absPath string, err error) {
+	if absPath, err = filepath.Abs(localPath); err != nil {
+		return
+	}
+	return archive.PreserveTrailingDotOrSeparator(absPath, localPath), nil
+}
+
+func validateOutputPathFileMode(fileMode os.FileMode) error {
+	switch {
+	case fileMode&os.ModeDevice != 0:
+		return errors.New("got a device")
+	case fileMode&os.ModeIrregular != 0:
+		return errors.New("got an irregular file")
+	}
+	return nil
 }
