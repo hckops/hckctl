@@ -52,8 +52,9 @@ hckctl task nmap --command full --input address=127.0.0.1 --input port=80
 hckctl task rustscan --inline -- -a 127.0.0.1
 
 # scan Lame box
-hckctl task rustscan --inline --network-vpn htb -- -a 10.10.10.3 --ulimit 5000
-hckctl task nmap --command full --network-vpn htb --input address=10.10.10.3
+hckctl task nmap --network-vpn htb --command full --input address=10.10.10.3
+hckctl task rustscan --network-vpn htb --inline -- -a 10.10.10.3 --ulimit 5000
+hckctl task nuclei --network-vpn htb --input target=10.10.10.3
 ```
 
 ### Lab (preview)

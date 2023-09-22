@@ -103,6 +103,10 @@ func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, 
 	}
 
 	if opts.WaitStatus {
+		if err := opts.OnContainerWaitCallback(newContainer.ID); err != nil {
+			return "", errors.Wrap(err, "error container wait callback")
+		}
+
 		statusCh, errCh := client.docker.ContainerWait(client.ctx, newContainer.ID, container.WaitConditionNotRunning)
 		select {
 		case err := <-errCh:

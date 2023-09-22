@@ -41,8 +41,9 @@ type ContainerCreateOpts struct {
 	NetworkingConfig          *network.NetworkingConfig
 	WaitStatus                bool
 	OnContainerCreateCallback func(containerId string) error
-	OnContainerStartCallback  func()
+	OnContainerWaitCallback   func(containerId string) error
 	OnContainerStatusCallback func(string)
+	OnContainerStartCallback  func()
 }
 
 type ContainerRestartOpts struct {

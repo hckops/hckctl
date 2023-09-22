@@ -71,3 +71,7 @@ func newContainerCreateDockerLoaderEvent() *dockerTaskEvent {
 func newContainerStartDockerLoaderEvent() *dockerTaskEvent {
 	return &dockerTaskEvent{kind: event.LoaderStop, value: "waiting"}
 }
+
+func newVpnConnectDockerLoaderEvent(vpnName string) *dockerTaskEvent {
+	return &dockerTaskEvent{kind: event.LoaderUpdate, value: fmt.Sprintf("connecting to %s", vpnName)}
+}

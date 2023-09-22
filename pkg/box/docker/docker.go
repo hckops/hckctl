@@ -115,22 +115,21 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 	box.eventBus.Publish(newNetworkUpsertDockerEvent(networkName, networkId))
 
 	containerOpts := &docker.ContainerCreateOpts{
-		ContainerName:    containerName,
-		ContainerConfig:  containerConfig,
-		HostConfig:       hostConfig,
-		NetworkingConfig: docker.BuildNetworkingConfig(networkName, networkId), // all on the same network
-		OnContainerCreateCallback: func(string) error {
-			return nil
+		ContainerName:             containerName,
+		ContainerConfig:           containerConfig,
+		HostConfig:                hostConfig,
+		NetworkingConfig:          docker.BuildNetworkingConfig(networkName, networkId), // all on the same network
+		WaitStatus:                false,
+		OnContainerCreateCallback: func(string) error { return nil },
+		OnContainerWaitCallback:   func(string) error { return nil },
+		OnContainerStatusCallback: func(status string) {
+			box.eventBus.Publish(newContainerCreateStatusDockerEvent(status))
 		},
 		OnContainerStartCallback: func() {
 			for _, e := range opts.Template.EnvironmentVariables() {
 				box.eventBus.Publish(newContainerCreateEnvDockerEvent(containerName, e))
 				box.eventBus.Publish(newContainerCreateEnvDockerConsoleEvent(containerName, e))
 			}
-		},
-		WaitStatus: false, // TODO skip because it's blocking?!
-		OnContainerStatusCallback: func(status string) {
-			box.eventBus.Publish(newContainerCreateStatusDockerEvent(status))
 		},
 	}
 	// boxId
