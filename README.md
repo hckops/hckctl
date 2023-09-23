@@ -23,7 +23,7 @@ Designed to transparently run locally, remotely or integrated in pipelines, `hck
 
 Create a custom vulnerable target (single box with specific CVE or whole infrastructes) or connect to your CTF platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup or network configurations.
 
-Access the managed cloud platform from anywhere, orchestrate complex scenario and analyze, aggregate and export your results.
+Access the managed cloud platform from anywhere, orchestrate complex scenarios and analyze, aggregate and export your results.
 
 ## Quick start
 
@@ -49,6 +49,10 @@ Access your target from a personalized [`lab`](https://github.com/hckops/megalop
 hckctl lab ctf-linux
 ```
 
+#### Hack The Box example
+
+> TODO
+
 ### Task
 
 Run a [`task`](https://github.com/hckops/megalopolis/tree/main/task) using pre-defined commands
@@ -68,7 +72,7 @@ hckctl task rustscan --inline -- -a 127.0.0.1
 #### Hack The Box example
 
 Prerequisites
-* start the `Lame` machine from your account
+* start the `Lame` machine in your account
 * add your vpn config
     ```bash
     vim ${HOME}/.config/hck/config.yml
@@ -79,7 +83,7 @@ Prerequisites
         path: /home/ubuntu/ctf/openvpn/htb_test_eu_vip_28.ovpn
     ```
 
-Run tasks against the machine
+Run your tasks against the machine
 ```bash
 # scan with nmap
 hckctl task nmap --network-vpn htb --command full --input address=10.10.10.3
@@ -95,7 +99,7 @@ hckctl task nuclei --network-vpn htb --input target=10.10.10.3
 
 ### Flow (cloud preview)
 
-Launch multiple tasks in parallel and combine the results
+Launch multiple tasks in parallel, collect and combine the results
 ```bash
 hckctl flow scan www.example.com
 hckctl flow fuzz 127.0.0.1:8080
@@ -161,10 +165,6 @@ curl -sSL https://github.com/hckops/hckctl/releases/download/${HCKCTL_VERSION}/h
   tar -xzf - -C /usr/local/bin
 ```
 
-## Contribute
-
-> TODO example of how to point to a specific pr/revision in a forked repo
-
 ## Development
 
 * [just](https://github.com/casey/just)
@@ -177,6 +177,10 @@ go run cmd/main.go
 just
 ./build/hckctl
 ```
+
+## Contribute
+
+> TODO example of how to point to a specific pr/revision in a forked repo
 
 <!--
 TODO
