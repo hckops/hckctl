@@ -43,13 +43,15 @@ hckctl box parrot --provider cloud
 
 ### Lab (preview)
 
+> TODO video
+
 Access your target from a personalized [`lab`](https://github.com/hckops/megalopolis/tree/main/lab)
 ```bash
 # connects to a vpn, exposes public ports, mount dumps etc.
 hckctl lab ctf-linux
 ```
 
-#### Hack The Box example
+#### HTB example
 
 > TODO
 
@@ -69,18 +71,18 @@ hckctl task nmap --command full --input address=127.0.0.1 --input port=80
 hckctl task rustscan --inline -- -a 127.0.0.1
 ```
 
-#### Hack The Box example
+#### HTB example
 
 Prerequisites
-* start the `Lame` machine in your account
-* add your vpn config
+* start the retired [Lame](https://app.hackthebox.com/machines/Lame) machine in your account
+* edit your network vpn config
     ```bash
     vim ${HOME}/.config/hck/config.yml
-    # edit path
+    # update path
     network:
       vpn:
       - name: htb
-        path: /home/ubuntu/ctf/openvpn/htb_test_eu_vip_28.ovpn
+        path: /home/demo/ctf/openvpn/htb_demo_eu_vip_28.ovpn
     ```
 
 Run your tasks against the machine
@@ -173,6 +175,7 @@ just
 TODO
 * priority
     - add box/lab --network-vpn support
+    - add task providers: kube and cloud
     - fix task interrupt CTRL-C exit (delete containers)
     - add task volume or copy dir e.g. ffuf + seclists
     - play htb: linux/win
