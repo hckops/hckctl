@@ -1,7 +1,6 @@
 package config
 
 import (
-	"github.com/hckops/hckctl/pkg/util"
 	"net"
 	"strconv"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/hckops/hckctl/pkg/logger"
 	"github.com/hckops/hckctl/pkg/schema"
 	taskModel "github.com/hckops/hckctl/pkg/task/model"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 // ConfigRef is a wrapper used to avoid global variables.

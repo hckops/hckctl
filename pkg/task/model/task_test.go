@@ -1,11 +1,12 @@
 package model
 
 import (
-	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 )
 
 func TestGenerateName(t *testing.T) {
