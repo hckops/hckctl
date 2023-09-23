@@ -134,7 +134,7 @@ hckctl config --reset
 
 ## Roadmap
 
-* Machine: instead of just containers, create and access VMs e.g. DigitalOcean Droplet, AWS EC2, Azure Virtual Machines, QEMU etc.
+* Machine: create and access VMs e.g. DigitalOcean Droplet, AWS EC2, Azure Virtual Machines, QEMU etc.
 * Man: combine tldr and cheat
 * Plugin: add your custom commands
 * TUI: similar to lazydocker and k9s
@@ -170,23 +170,19 @@ just
 
 <!--
 
-// task
-// TODO interrupt CTRL-C exit
-// TODO read-only volume OR copy dir ?! e.g. ffuf + seclist
-// TODO context timeout e.g. vpn or target not available
-
 TODO
 * priority
-    - add task
-    - update task schema and validation
+    - add box/lab --network-vpn support
+    - fix task interrupt CTRL-C exit (delete containers)
+    - add task volume or copy dir e.g. ffuf + seclists
     - play htb: linux/win
-    - implement lab for docker (with kind) and kube
-    - add flow with vpn
-    - cloud size comparison
+    - add flow example
+    - fix cloud size comparison
+    - add context client timeout e.g. vpn or target not available
     - verify kube/cloud distroless support
-    - verify kube/cloud no shell support
+    - verify kube/cloud no-shell support
     - RELEASE
-    - config migration between versions
+    - verify config migration between versions
 * general
     - brew release
     - review client timeouts
@@ -194,22 +190,19 @@ TODO
         * remove comments
         * update setup
         * descriptions/screenshot/gif
-    - add *guide*: all commands explained
-    - add *example*: different uses cases e.g htb, etc
     - delete old branches (video)
     - disclaimer of responsibility
     - update internal cli diagram
     - convert TODOs left in GitHub issues
     - add GitHub org labels: feature/bug/question
     - review/delete GitHub project
-    - highlight attacker and victim boxes to create specific scenario
     - add go reference badge
-    - public `kali-core` image
-    - PR to official doc to run
+    - public `preview/kali-core` image
+    - create PR to external official doc to run
         * owasp/dvwa
         * https://github.com/vulhub/vulhub
         * https://houdini.secsi.io
-    - flaky tests
+    - flaky tests (?)
         * kubernetes_test.go:TestNewResources
 * cli
     - autocomplete commands and values
@@ -223,6 +216,7 @@ TODO
 * template
     - add `--remote` mutually exclusive flag
     - update directories to exclude in `resolvePath` e.g. charts
+    - add filters and review output e.g. table
 * box
     - review tty resize
     - implement copy ???
