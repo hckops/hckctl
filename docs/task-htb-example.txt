@@ -103,4 +103,3 @@ hckctl task nuclei --network-vpn htb --input target=10.10.10.3
 [ftp-anonymous-login] [tcp] [medium] 10.10.10.3:21
 [openssh-detect] [tcp] [info] 10.10.10.3:22 [SSH-2.0-OpenSSH_4.7p1 Debian-8ubuntu1]
 [samba-detect] [tcp] [info] 10.10.10.3:139
-ubuntu@dell in ~/Projects/hckops/hckctl on (main ▲) $
