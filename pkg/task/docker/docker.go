@@ -2,8 +2,9 @@ package docker
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"strings"
+
+	"github.com/pkg/errors"
 
 	"github.com/hckops/hckctl/pkg/client/docker"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
@@ -44,7 +45,7 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 			return err
 		} else {
 			networkMode = docker.ContainerNetworkMode(sidecarContainerId)
-			// remove on exit
+			// remove sidecar on exit
 			defer task.client.ContainerRemove(sidecarContainerId)
 		}
 	} else {
@@ -94,21 +95,16 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 		WaitStatus:                true,                                                 // block
 		OnContainerCreateCallback: func(string) error { return nil },
 		OnContainerWaitCallback: func(containerId string) error {
-			task.eventBus.Publish(newContainerStartDockerLoaderEvent())
+			// stop loader
+			task.eventBus.Publish(newContainerWaitDockerLoaderEvent())
 
-			// TODO error event
-			// tail logs before start waiting
-			if err := task.client.ContainerLogsStd(containerId); err != nil {
-				return err
-			}
-			return nil
+			// tail logs before blocking
+			return task.client.ContainerLogsStd(containerId)
 		},
 		OnContainerStatusCallback: func(status string) {
 			task.eventBus.Publish(newContainerCreateStatusDockerEvent(status))
 		},
-		OnContainerStartCallback: func() {
-			task.eventBus.Publish(newContainerStartDockerLoaderEvent())
-		},
+		OnContainerStartCallback: func() {},
 	}
 	// taskId
 	containerId, err := task.client.ContainerCreate(containerOpts)
@@ -117,10 +113,8 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 	}
 	task.eventBus.Publish(newContainerCreateDockerEvent(opts.Template.Name, containerName, containerId))
 
-	if err := task.client.ContainerRemove(containerId); err != nil {
-		return err
-	}
-	return nil
+	// remove temporary container
+	return task.client.ContainerRemove(containerId)
 }
 
 func (task *DockerTaskClient) pullImage(imageName string, pullEvent *dockerTaskEvent) error {
@@ -159,12 +153,12 @@ func (task *DockerTaskClient) pullImage(imageName string, pullEvent *dockerTaskE
 }
 
 func buildVpnSidecarName(taskName string) string {
-	return fmt.Sprintf("sidecar-vpn-%s", strings.Split(taskName, "-")[2])
+	tokens := strings.Split(taskName, "-")
+	return fmt.Sprintf("sidecar-vpn-%s", tokens[len(tokens)-1])
 }
 
 func (task *DockerTaskClient) startVpnSidecar(containerName string, vpnInfo *commonModel.VpnNetworkInfo) (string, error) {
 
-	// TODO context timeout
 	imageName := "hckops/alpine-openvpn:latest"
 	// base directory must exist
 	vpnConfigPath := "/usr/share/client.ovpn"
@@ -179,11 +173,8 @@ func (task *DockerTaskClient) startVpnSidecar(containerName string, vpnInfo *com
 		HostConfig:      docker.BuildVpnHostConfig(),
 		WaitStatus:      false,
 		OnContainerCreateCallback: func(containerId string) error {
-			// TODO error event
-			if err := task.client.CopyFileToContainer(containerId, vpnInfo.LocalPath, vpnConfigPath); err != nil {
-				return err
-			}
-			return nil
+			// upload openvpn config file
+			return task.client.CopyFileToContainer(containerId, vpnInfo.LocalPath, vpnConfigPath)
 		},
 		OnContainerStatusCallback: func(status string) {
 			task.eventBus.Publish(newContainerCreateStatusDockerEvent(status))
@@ -195,7 +186,7 @@ func (task *DockerTaskClient) startVpnSidecar(containerName string, vpnInfo *com
 	if err != nil {
 		return "", err
 	}
-	//task.eventBus.Publish(newContainerCreateDockerEvent(opts.Template.Name, containerName, containerId))
+	task.eventBus.Publish(newContainerCreateDockerEvent("sidecar-vpn", containerName, containerId))
 
 	return containerId, nil
 }

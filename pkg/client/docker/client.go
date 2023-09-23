@@ -388,28 +388,25 @@ func (client *DockerClient) NetworkUpsert(networkName string) (string, error) {
 }
 
 func (client *DockerClient) CopyFileToContainer(containerId string, localPath string, containerPath string) error {
-	// TODO https://github.com/moby/moby/issues/38035
-	// https://github.com/moby/moby/issues/26652
-	// https://github.com/docker/cli/blob/b1d27091e50595fecd8a2a4429557b70681395b2/cli/command/container/cp.go#L182-L282
-	// TODO https://github.com/docker/cli/blob/master/cli/command/container/cp.go#L182
+	// see https://github.com/docker/cli/blob/b1d27091e50595fecd8a2a4429557b70681395b2/cli/command/container/cp.go#L182-L282
 
 	// Get an absolute source path.
 	srcPath, err := resolveLocalPath(localPath)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error copy file to container: resolve local path")
 	}
 
 	// Prepare destination copy info by stat-ing the container path.
 	dstInfo := archive.CopyInfo{Path: containerPath}
 	dstStat, err := client.docker.ContainerStatPath(client.ctx, containerId, containerPath)
 	if err != nil {
-		// TODO error is ignore
-		//return err
+		// Ignore any error and assume that the parent directory of the destination
+		// path exists, in which case the copy may still succeed.
 	}
 
 	// Validate the destination path.
 	if err := validateOutputPathFileMode(dstStat.Mode); err != nil {
-		return errors.Wrapf(err, `destination "%s:%s" must be a directory or a regular file`, containerId, containerPath)
+		return errors.Wrapf(err, `error copy file to container: destination "%s:%s" must be a directory or a regular file`, containerId, containerPath)
 	}
 
 	// ???
@@ -418,18 +415,18 @@ func (client *DockerClient) CopyFileToContainer(containerId string, localPath st
 	// Prepare source copy info.
 	srcInfo, err := archive.CopyInfoSourcePath(srcPath, false)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error copy file to container: source copy info")
 	}
 
 	srcArchive, err := archive.TarResource(srcInfo)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error copy file to container: tar archive")
 	}
 	defer srcArchive.Close()
 
 	dstDir, preparedArchive, err := archive.PrepareArchiveCopy(srcArchive, srcInfo, dstInfo)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error copy file to container: prepare archive")
 	}
 	defer preparedArchive.Close()
 

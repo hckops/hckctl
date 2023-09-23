@@ -42,7 +42,7 @@ type ContainerCreateOpts struct {
 	WaitStatus                bool
 	OnContainerCreateCallback func(containerId string) error
 	OnContainerWaitCallback   func(containerId string) error
-	OnContainerStatusCallback func(string)
+	OnContainerStatusCallback func(status string)
 	OnContainerStartCallback  func()
 }
 

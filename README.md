@@ -97,6 +97,8 @@ hckctl task nuclei --network-vpn htb --input target=10.10.10.3
 # TODO ffuf
 ```
 
+See [output](./docs/task-htb-example.txt) example
+
 ### Flow (cloud preview)
 
 Launch multiple tasks in parallel, collect and combine the results
@@ -132,27 +134,11 @@ hckctl config --reset
 
 ## Roadmap
 
-> TODO create issues and add links
-
-### Machine
-
-> create and access AWS EC2, Azure Virtual Machines, DigitalOcean Droplet, QEMU etc.
-
-### Man
-
-> combine tldr and cheat
-
-### Plugin
-
-> add custom commands
-
-### TUI
-
-> similar to lazydocker and k9s
-
-### Prompt
-
-> chatgpt prompt style
+* Machine: instead of just containers, create and access VMs e.g. DigitalOcean Droplet, AWS EC2, Azure Virtual Machines, QEMU etc.
+* Man: combine tldr and cheat
+* Plugin: add your custom commands
+* TUI: similar to lazydocker and k9s
+* Prompt: chatgpt prompt style
 
 ## Setup
 
@@ -183,6 +169,12 @@ just
 > TODO example of how to point to a specific pr/revision in a forked repo
 
 <!--
+
+// task
+// TODO interrupt CTRL-C exit
+// TODO read-only volume OR copy dir ?! e.g. ffuf + seclist
+// TODO context timeout e.g. vpn or target not available
+
 TODO
 * priority
     - add task
@@ -269,5 +261,7 @@ TODO
     - man (plugin)
     - kube-inject (plugin) mount sidecar pod at runtime with debugging tools
     - pro (bundle) e.g. flow
-https://github.com/snwfdhmp/awesome-gpt-prompt-engineering
+* prompt
+    - https://github.com/snwfdhmp/awesome-gpt-prompt-engineering
+
 -->

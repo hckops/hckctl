@@ -164,7 +164,11 @@ func (opts *taskCmdOptions) runTask(sourceLoader template.SourceLoader[taskModel
 		StreamOpts:  commonModel.NewStdStreamOpts(false),
 	}
 
-	return taskClient.Run(runOpts)
+	if err := taskClient.Run(runOpts); err != nil {
+		log.Warn().Err(err).Msg("error run task")
+		return errors.New("error run task")
+	}
+	return nil
 }
 
 func newDefaultTaskClient(provider taskModel.TaskProvider, configRef *config.ConfigRef, loader *commonCmd.Loader) (task.TaskClient, error) {

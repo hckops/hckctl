@@ -1,0 +1,106 @@
+############################## nmap ##############################
+
+hckctl task nmap --network-vpn htb --command full --input address=10.10.10.3
+Starting Nmap 7.94 ( https://nmap.org ) at 2023-09-23 09:11 UTC
+Nmap scan report for 10.10.10.3
+Host is up (0.11s latency).
+Not shown: 996 filtered tcp ports (no-response)
+PORT    STATE SERVICE     VERSION
+21/tcp  open  ftp         vsftpd 2.3.4
+|_ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| ftp-syst:
+|   STAT:
+| FTP server status:
+|      Connected to 10.10.14.2
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      vsFTPd 2.3.4 - secure, fast, stable
+|_End of status
+22/tcp  open  ssh         OpenSSH 4.7p1 Debian 8ubuntu1 (protocol 2.0)
+| ssh-hostkey:
+|   1024 60:0f:cf:e1:c0:5f:6a:74:d6:90:24:fa:c4:d5:6c:cd (DSA)
+|_  2048 56:56:24:0f:21:1d:de:a7:2b:ae:61:b1:24:3d:e8:f3 (RSA)
+139/tcp open  netbios-ssn Samba smbd 3.X - 4.X (workgroup: WORKGROUP)
+445/tcp open  netbios-ssn Samba smbd 3.0.20-Debian (workgroup: WORKGROUP)
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+Host script results:
+|_clock-skew: mean: 2h00m55s, deviation: 2h49m45s, median: 52s
+| smb-os-discovery:
+|   OS: Unix (Samba 3.0.20-Debian)
+|   Computer name: lame
+|   NetBIOS computer name:
+|   Domain name: hackthebox.gr
+|   FQDN: lame.hackthebox.gr
+|_  System time: 2023-09-23T05:12:20-04:00
+| smb-security-mode:
+|   account_used: guest
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: disabled (dangerous, but default)
+|_smb2-time: Protocol negotiation failed (SMB2)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 62.99 seconds
+
+############################## rustscan ##############################
+
+hckctl task rustscan --network-vpn htb --inline -- -a 10.10.10.3 --ulimit 5000
+.----. .-. .-. .----..---.  .----. .---.   .--.  .-. .-.
+| {}  }| { } |{ {__ {_   _}{ {__  /  ___} / {} \ |  `| |
+| .-. \| {_} |.-._} } | |  .-._} }\     }/  /\  \| |\  |
+`-' `-'`-----'`----'  `-'  `----'  `---' `-'  `-'`-' `-'
+The Modern Day Port Scanner.
+________________________________________
+: http://discord.skerritt.blog           :
+: https://github.com/RustScan/RustScan :
+ --------------------------------------
+Nmap? More like slowmap.🐢
+
+[~] The config file is expected to be at "/home/rustscan/.rustscan.toml"
+[~] Automatically increasing ulimit value to 5000.
+Open 10.10.10.3:21
+Open 10.10.10.3:22
+Open 10.10.10.3:139
+Open 10.10.10.3:445
+[~] Starting Script(s)
+[~] Starting Nmap 7.80 ( https://nmap.org ) at 2023-09-23 09:12 UTC
+Initiating Ping Scan at 09:12
+Scanning 10.10.10.3 [2 ports]
+Completed Ping Scan at 09:12, 3.00s elapsed (1 total hosts)
+Nmap scan report for 10.10.10.3 [host down, received no-response]
+Read data files from: /usr/bin/../share/nmap
+Note: Host seems down. If it is really up, but blocking our ping probes, try -Pn
+Nmap done: 1 IP address (0 hosts up) scanned in 3.05 seconds
+
+############################## nuclei ##############################
+
+hckctl task nuclei --network-vpn htb --input target=10.10.10.3
+
+                     __     _
+   ____  __  _______/ /__  (_)
+  / __ \/ / / / ___/ / _ \/ /
+ / / / / /_/ / /__/ /  __/ /
+/_/ /_/\__,_/\___/_/\___/_/   v2.9.15
+
+		projectdiscovery.io
+
+[INF] nuclei-templates are not installed, installing...
+[INF] Successfully installed nuclei-templates at /root/nuclei-templates
+[INF] Current nuclei version: v2.9.15 (latest)
+[INF] Current nuclei-templates version: v9.6.4 (latest)
+[INF] New templates added in latest release: 121
+[INF] Templates loaded for current scan: 6892
+[INF] Targets loaded for current scan: 1
+[INF] Running httpx on input host
+[INF] Found 0 URL from httpx
+[INF] Templates clustered: 1194 (Reduced 1133 Requests)
+[vsftpd-backdoor] [tcp] [critical] 10.10.10.3:21
+[ftp-anonymous-login] [tcp] [medium] 10.10.10.3:21
+[openssh-detect] [tcp] [info] 10.10.10.3:22 [SSH-2.0-OpenSSH_4.7p1 Debian-8ubuntu1]
+[samba-detect] [tcp] [info] 10.10.10.3:139
+ubuntu@dell in ~/Projects/hckops/hckctl on (main ▲) $

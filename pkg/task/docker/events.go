@@ -68,10 +68,14 @@ func newContainerCreateDockerLoaderEvent() *dockerTaskEvent {
 	return &dockerTaskEvent{kind: event.LoaderUpdate, value: "running"}
 }
 
-func newContainerStartDockerLoaderEvent() *dockerTaskEvent {
+func newContainerWaitDockerLoaderEvent() *dockerTaskEvent {
 	return &dockerTaskEvent{kind: event.LoaderStop, value: "waiting"}
 }
 
 func newVpnConnectDockerLoaderEvent(vpnName string) *dockerTaskEvent {
 	return &dockerTaskEvent{kind: event.LoaderUpdate, value: fmt.Sprintf("connecting to %s", vpnName)}
+}
+
+func newContainerErrorDockerEvent(containerId string, err error) *dockerTaskEvent {
+	return &dockerTaskEvent{kind: event.LogError, value: fmt.Sprintf("container exec error: containerId=%s error=%v", containerId, err)}
 }
