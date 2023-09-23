@@ -18,10 +18,12 @@
 </p>
 
 Launch manual and automated attacks with pre-defined and always up-to-date templates of your favourite tools.
-Designed to transparently run locally, remotely or integrated in pipelines, `hckctl` is free and open-source, no vendor lock-in, extensible and built using native Docker and Kubernetes api.
-Create a custom vulnerable target or connect to your CTF platform without wasting anymore time on boring installations, environment setup or network configurations.
 
-Leverage the managed cloud platform to access it from anywhere, orchestrate complex scenarios and analyze, aggregate and export your results.
+Designed to transparently run locally, remotely or integrated in pipelines, `hckctl` is free and open-source, no vendor lock-in, extensible and built using native providers api.
+
+Create a custom vulnerable target (single box with specific CVE or whole infrastructes) or connect to your CTF platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup or network configurations.
+
+Access the managed cloud platform from anywhere, orchestrate complex scenario and analyze, aggregate and export your results.
 
 ## Quick start
 
@@ -39,6 +41,14 @@ hckctl box arch --provider kube
 hckctl box parrot --provider cloud
 ```
 
+### Lab (preview)
+
+Access your target from a personalized [`lab`](https://github.com/hckops/megalopolis/tree/main/lab)
+```bash
+# connects to a vpn, exposes public ports, mount dumps etc.
+hckctl lab ctf-linux
+```
+
 ### Task
 
 Run a [`task`](https://github.com/hckops/megalopolis/tree/main/task) using pre-defined commands
@@ -48,71 +58,56 @@ hckctl task rustscan --input address=127.0.0.1
 # equivalent of
 hckctl task rustscan --command default --input address=127.0.0.1
 
-# use the "full" arguments
+# use the "full" preset arguments
 hckctl task nmap --command full --input address=127.0.0.1 --input port=80
 
-# use custom arguments
+# invoke it with custom arguments
 hckctl task rustscan --inline -- -a 127.0.0.1
 ```
 
-Hack The Box example, start the `Lame` box
-```bash
-# TODO add vpn config
+#### Hack The Box example
 
-# run tasks
+Prerequisites
+* start the `Lame` machine from your account
+* add your vpn config
+    ```bash
+    vim ${HOME}/.config/hck/config.yml
+    # edit path
+    network:
+      vpn:
+      - name: htb
+        path: /home/ubuntu/ctf/openvpn/htb_test_eu_vip_28.ovpn
+    ```
+
+Run tasks against the machine
+```bash
+# scan with nmap
 hckctl task nmap --network-vpn htb --command full --input address=10.10.10.3
+
+# scan with rustscan
 hckctl task rustscan --network-vpn htb --inline -- -a 10.10.10.3 --ulimit 5000
+
+# scan with nuclei
 hckctl task nuclei --network-vpn htb --input target=10.10.10.3
+
+# TODO ffuf
 ```
 
-### Lab (preview)
-
-Access your favourite platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com) etc.) from a personalized [`lab`](https://github.com/hckops/megalopolis/tree/main/lab)
-```bash
-# connects to a vpn, exposes public ports, mount dumps etc.
-hckctl lab ctf-linux
-```
-
-### Flow (TODO)
+### Flow (cloud preview)
 
 Launch multiple tasks in parallel and combine the results
 ```bash
-hckctl flow atomic-red-team T1485
-hckctl flow scan 0.0.0.0
-hckctl flow prowler
-hckctl flow fuzz 0.0.0.0:8080/path
-hckctl flow exploit/sql 0.0.0.0
-hckctl flow tool/metasploit auxiliary/scanner/ssh/ssh_version
+hckctl flow scan www.example.com
+hckctl flow fuzz 127.0.0.1:8080
+hckctl flow sql 127.0.0.1:3306
+hckctl flow atomic-red-team 127.0.0.1 T1485
 hckctl flow c2 ping
-hckctl flow gen/pdf
 hckctl flow campaign/phishing @example.com
-hckctl flow api/virustotal/upload
-hckctl flow scrape www.example.com
 ```
-
-### Machine
-
-> create and access AWS EC2, Azure Virtual Machines, DigitalOcean Droplet, QEMU etc.
-
-### Man
-
-> combine tldr and cheat
-
-### Plugin
-
-> add custom commands
-
-### TUI
-
-> see lazydocker
-
-### Prompt
-
-> chatgpt style https://github.com/snwfdhmp/awesome-gpt-prompt-engineering
 
 ### Template
 
-Explore public templates. Pin a git `revision` to ensure reliability in a CI/CD pipeline
+Explore all available templates. Pin a git `revision` to ensure reliability in automated pipelines
 ```bash
 hckctl template list
 ```
@@ -130,6 +125,30 @@ hckctl config
 # resets default configs
 hckctl config --reset
 ```
+
+## Roadmap
+
+> TODO create issues and add links
+
+### Machine
+
+> create and access AWS EC2, Azure Virtual Machines, DigitalOcean Droplet, QEMU etc.
+
+### Man
+
+> combine tldr and cheat
+
+### Plugin
+
+> add custom commands
+
+### TUI
+
+> similar to lazydocker and k9s
+
+### Prompt
+
+> chatgpt prompt style
 
 ## Setup
 
@@ -246,5 +265,5 @@ TODO
     - man (plugin)
     - kube-inject (plugin) mount sidecar pod at runtime with debugging tools
     - pro (bundle) e.g. flow
-
+https://github.com/snwfdhmp/awesome-gpt-prompt-engineering
 -->
