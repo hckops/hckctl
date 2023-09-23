@@ -183,6 +183,7 @@ TODO
     - verify kube/cloud no-shell support
     - RELEASE
     - verify config migration between versions
+    - refactor `cmd` vs `internal/command` in the same package
 * general
     - brew release
     - review client timeouts
