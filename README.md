@@ -18,7 +18,10 @@
 </p>
 
 Launch manual and automated attacks with pre-defined and always up-to-date templates of your favourite tools.
-Designed to transparently run locally, remotely or integrated in pipelines for the purpose of analyzing, aggregating and exporting results.
+Designed to transparently run locally, remotely or integrated in pipelines, `hckctl` is free and open-source, no vendor lock-in, extensible and built using native Docker and Kubernetes api.
+Create a custom vulnerable target or connect to your CTF platform without wasting anymore time on boring installations, environment setup or network configurations.
+
+Leverage the managed cloud platform to access it from anywhere, orchestrate complex scenarios and analyze, aggregate and export your results.
 
 ## Quick start
 
@@ -26,7 +29,7 @@ Designed to transparently run locally, remotely or integrated in pipelines for t
 
 Spin-up a [`box`](https://github.com/hckops/megalopolis/tree/main/box) and access all port-forwarded ports locally
 ```bash
-# spawns a temporary docker box locally
+# spawns a temporary docker (default) box locally
 hckctl box alpine
 
 # deploys an ephemeral box to your kubernetes cluster
@@ -38,9 +41,9 @@ hckctl box parrot --provider cloud
 
 ### Task
 
-Run a [`task`](https://github.com/hckops/megalopolis/tree/main/task) with pre-defined commands and without installing any binary
+Run a [`task`](https://github.com/hckops/megalopolis/tree/main/task) using pre-defined commands
 ```bash
-# use "default" command
+# use the "default" arguments
 hckctl task rustscan --input address=127.0.0.1
 # equivalent of
 hckctl task rustscan --command default --input address=127.0.0.1
@@ -48,10 +51,15 @@ hckctl task rustscan --command default --input address=127.0.0.1
 # use the "full" arguments
 hckctl task nmap --command full --input address=127.0.0.1 --input port=80
 
-# custom arguments
+# use custom arguments
 hckctl task rustscan --inline -- -a 127.0.0.1
+```
 
-# scan Lame box
+Hack The Box example, start the `Lame` box
+```bash
+# TODO add vpn config
+
+# run tasks
 hckctl task nmap --network-vpn htb --command full --input address=10.10.10.3
 hckctl task rustscan --network-vpn htb --inline -- -a 10.10.10.3 --ulimit 5000
 hckctl task nuclei --network-vpn htb --input target=10.10.10.3
