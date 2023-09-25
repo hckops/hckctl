@@ -19,6 +19,10 @@ import (
 const (
 	configDirEnv  string = "HCK_CONFIG_DIR" // overrides .config/hck
 	configEnvName string = "HCK_CONFIG"
+
+	logDirName     = "log"
+	shareDirName   = "share"
+	taskLogDirName = "task/log"
 )
 
 func InitConfig(force bool) error {
@@ -73,14 +77,13 @@ func getConfigDir() (string, error) {
 }
 
 func createDefaultConfig(configPath string) error {
-	// default log file
-	logFile, err := getLogFile()
+	configOpts, err := newConfigOptions()
 	if err != nil {
-		return errors.Wrap(err, "invalid log file")
+		return errors.Wrap(err, "error config options")
 	}
 
 	// default config
-	cliConfig := newConfig(logFile, getCacheDir())
+	cliConfig := newConfig(configOpts)
 
 	var configString string
 	if configString, err = util.EncodeYaml(&cliConfig); err != nil {
@@ -96,19 +99,44 @@ func createDefaultConfig(configPath string) error {
 	return nil
 }
 
+func newConfigOptions() (*configOptions, error) {
+
+	// default log file
+	logFile, err := getLogFile()
+	if err != nil {
+		return nil, errors.Wrap(err, "invalid log file")
+	}
+
+	sharePath := filepath.Join(xdg.StateHome, common.DefaultDirName, shareDirName)
+	if err := util.CreateBaseDir(logFile); err != nil {
+		return nil, errors.Wrap(err, "error creating share dir")
+	}
+
+	taskLogPath := filepath.Join(xdg.StateHome, common.DefaultDirName, taskLogDirName)
+	if err := util.CreateBaseDir(logFile); err != nil {
+		return nil, errors.Wrap(err, "error creating task dir")
+	}
+
+	return &configOptions{
+		logFile:    logFile,
+		cacheDir:   filepath.Join(xdg.CacheHome, common.DefaultDirName),
+		shareDir:   sharePath,
+		taskLogDir: taskLogPath,
+	}, nil
+}
+
 func getLogFile() (string, error) {
 	usr, err := user.Current()
 	if err != nil {
 		return "", errors.Wrap(err, "unable to retrieve current user")
 	}
 
-	logFile := filepath.Join(xdg.StateHome, common.DefaultDirName, fmt.Sprintf("%s-%s.log", common.CliName, usr.Username))
+	logFile := filepath.Join(xdg.StateHome, common.DefaultDirName, fmt.Sprintf("%s/%s-%s.log", logDirName, common.CliName, usr.Username))
+	if err := util.CreateBaseDir(logFile); err != nil {
+		return "", errors.Wrap(err, "error creating config dir")
+	}
 
 	return logFile, nil
-}
-
-func getCacheDir() string {
-	return filepath.Join(xdg.CacheHome, common.DefaultDirName)
 }
 
 func LoadConfig() (*ConfigV1, error) {

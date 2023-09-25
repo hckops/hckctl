@@ -7,7 +7,6 @@ import (
 	"github.com/hckops/hckctl/internal/command/common"
 	boxModel "github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/common/model"
-	labModel "github.com/hckops/hckctl/pkg/lab/model"
 	"github.com/hckops/hckctl/pkg/logger"
 	"github.com/hckops/hckctl/pkg/schema"
 	taskModel "github.com/hckops/hckctl/pkg/task/model"
@@ -33,8 +32,8 @@ type ConfigV1 struct {
 	Provider ProviderConfig `yaml:"provider"`
 	Network  NetworkConfig  `yaml:"network"`
 	Template TemplateConfig `yaml:"template"`
+	Common   CommonConfig   `yaml:"common"`
 	Box      BoxConfig      `yaml:"box"`
-	Lab      LabConfig      `yaml:"lab"`
 	Task     TaskConfig     `yaml:"task"`
 }
 
@@ -122,27 +121,34 @@ type TemplateConfig struct {
 	CacheDir string `yaml:"cacheDir"`
 }
 
+type CommonConfig struct {
+	ShareDir string `yaml:"shareDir"`
+}
+
 type BoxConfig struct {
 	Provider string `yaml:"provider"`
 	Size     string `yaml:"size"`
 }
 
-type LabConfig struct {
-	Provider string `yaml:"provider"`
-	Vpn      string `yaml:"vpn"`
-}
-
 type TaskConfig struct {
 	Provider string `yaml:"provider"`
+	LogDir   string `yaml:"logDir"`
 }
 
-func newConfig(logFile, cacheDir string) *ConfigV1 {
+type configOptions struct {
+	logFile    string
+	cacheDir   string
+	shareDir   string
+	taskLogDir string
+}
+
+func newConfig(opts *configOptions) *ConfigV1 {
 	return &ConfigV1{
 		Kind:    schema.KindConfigV1.String(),
 		Version: currentVersion,
 		Log: LogConfig{
 			Level:    logger.InfoLogLevel.String(),
-			FilePath: logFile,
+			FilePath: opts.logFile,
 		},
 		Provider: ProviderConfig{
 			Docker: DockerConfig{
@@ -166,18 +172,19 @@ func newConfig(logFile, cacheDir string) *ConfigV1 {
 		},
 		Template: TemplateConfig{
 			Revision: common.TemplateSourceRevision,
-			CacheDir: cacheDir,
+			CacheDir: opts.cacheDir,
+		},
+		Common: CommonConfig{
+			ShareDir: opts.shareDir,
 		},
 		Box: BoxConfig{
 			Provider: boxModel.Docker.String(),
 			Size:     boxModel.Small.String(),
 		},
-		Lab: LabConfig{
-			Provider: labModel.Cloud.String(),
-			Vpn:      common.DefaultVpnName,
-		},
+
 		Task: TaskConfig{
 			Provider: taskModel.Docker.String(),
+			LogDir:   opts.taskLogDir,
 		},
 	}
 }

@@ -71,18 +71,18 @@ func (opts *taskCmdOptions) validate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// inputs
+	if validParameters, err := commonFlag.ValidateParametersFlag(opts.commandFlag.Inputs); err != nil {
+		return err
+	} else {
+		opts.parameters = validParameters
+	}
+
 	// provider
 	if validProvider, err := taskFlag.ValidateTaskProviderFlag(opts.configRef.Config.Task.Provider, opts.providerFlag); err != nil {
 		return err
 	} else {
 		opts.provider = validProvider
-	}
-
-	// inputs
-	if validParameters, err := taskFlag.ValidateCommandInputsFlag(opts.commandFlag.Inputs); err != nil {
-		return err
-	} else {
-		opts.parameters = validParameters
 	}
 	return nil
 }

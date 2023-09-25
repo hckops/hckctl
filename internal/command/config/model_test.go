@@ -9,15 +9,20 @@ import (
 )
 
 func TestNewConfig(t *testing.T) {
-	logFile := "/tmp/example.log"
-	cacheDir := "/tmp/cache/"
+
+	configOpts := &configOptions{
+		logFile:    "/tmp/example.log",
+		cacheDir:   "/tmp/cache/",
+		shareDir:   "/tmp/share/",
+		taskLogDir: "/tmp/task/log/",
+	}
 
 	expected := &ConfigV1{
 		Kind:    "config/v1",
 		Version: "1.0",
 		Log: LogConfig{
 			Level:    "info",
-			FilePath: logFile,
+			FilePath: "/tmp/example.log",
 		},
 		Provider: ProviderConfig{
 			Docker: DockerConfig{
@@ -41,22 +46,22 @@ func TestNewConfig(t *testing.T) {
 		},
 		Template: TemplateConfig{
 			Revision: "main",
-			CacheDir: cacheDir,
+			CacheDir: "/tmp/cache/",
+		},
+		Common: CommonConfig{
+			ShareDir: "/tmp/share/",
 		},
 		Box: BoxConfig{
 			Provider: "docker",
 			Size:     "S",
 		},
-		Lab: LabConfig{
-			Provider: "cloud",
-			Vpn:      "default",
-		},
 		Task: TaskConfig{
 			Provider: "docker",
+			LogDir:   "/tmp/task/log/",
 		},
 	}
 
-	result := newConfig(logFile, cacheDir)
+	result := newConfig(configOpts)
 	assert.Equal(t, expected, result)
 }
 
