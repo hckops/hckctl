@@ -25,4 +25,4 @@ build output $VERSION_COMMIT="$(git rev-parse HEAD)" $VERSION_TIMESTAMP="$(date 
     -X github.com/hckops/hckctl/internal/command/version.release=0.0.0 \
     -X github.com/hckops/hckctl/internal/command/version.commit={{VERSION_COMMIT}} \
     -X github.com/hckops/hckctl/internal/command/version.timestamp={{VERSION_TIMESTAMP}}" \
-    -o {{output}}/{{BIN_NAME}} cmd/main.go
+    -o {{output}}/{{BIN_NAME}} internal/main.go

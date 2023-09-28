@@ -4,7 +4,7 @@ before:
     - go mod tidy
 
 builds:
-  - main: ./cmd/main.go
+  - main: ./internal/main.go
     env:
       - CGO_ENABLED=0
     # https://pkg.go.dev/cmd/link

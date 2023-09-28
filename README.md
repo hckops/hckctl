@@ -160,7 +160,7 @@ curl -sSL https://github.com/hckops/hckctl/releases/download/${HCKCTL_VERSION}/h
 
 ```bash
 # run
-go run cmd/main.go
+go run internal/main.go
 
 # build
 just
