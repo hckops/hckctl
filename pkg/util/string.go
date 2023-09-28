@@ -51,6 +51,7 @@ func ToLowerKebabCase(value string) string {
 	return anyNonWordCharacterRegex.ReplaceAllString(strings.ToLower(strings.TrimSpace(value)), "-")
 }
 
+// TODO refactor test in box and task
 func Expand(raw string, inputs map[string]string) (string, error) {
 	// reserved keyword
 	const separator = ":"
@@ -63,7 +64,7 @@ func Expand(raw string, inputs map[string]string) (string, error) {
 		}
 
 		// optional field
-		items := strings.Split(value, separator)
+		items := strings.SplitN(value, separator, 2)
 		if len(items) == 2 {
 			// handle keywords
 			switch items[1] {

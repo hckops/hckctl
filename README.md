@@ -16,7 +16,7 @@
   <a href="#setup">Setup</a>&nbsp;&bull;
   <a href="#development">Development</a>
 </p>
-</br>
+<br>
 
 Launch manual and automated attacks with pre-defined and always up-to-date templates of your favourite tools.
 
@@ -24,7 +24,7 @@ Designed to transparently run locally, remotely or integrated in pipelines, `hck
 
 Create a custom vulnerable target (box with a specific CVE or whole infrastructures) or connect to your CTF platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup or network configurations.
 
-Access the managed cloud platform from anywhere, orchestrate complex scenarios and analyze, aggregate and export your results.
+Leverage the managed cloud platform to orchestrate complex scenarios and observe your security posture analyzing, aggregating and exporting results.
 
 ## Quick start
 

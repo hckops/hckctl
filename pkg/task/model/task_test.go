@@ -96,17 +96,18 @@ func TestExpandCommandArguments(t *testing.T) {
 		"-c ${ccc:CCC}",
 		"-d ${ddd:DDD}",
 		"-e f --g HHH",
+		"-l ${lll:LLL:MMM:NNN}",
 	}}
 	parameters := commonModel.Parameters{
 		"bbb": "BBB",
 		"ddd": "AAA",
 	}
 	expected := []string{
-		"-a", "-b", "bbb", "-c", "CCC", "-d", "AAA", "-e", "f", "--g", "HHH",
+		"-a", "-b", "bbb", "-c", "CCC", "-d", "AAA", "-e", "f", "--g", "HHH", "-l", "LLL:MMM:NNN",
 	}
 	expanded, err := command.ExpandCommandArguments(parameters)
 
-	assert.Len(t, expanded, 11)
+	assert.Len(t, expanded, 13)
 	assert.Equal(t, expected, expanded)
 	assert.Nil(t, err)
 }
