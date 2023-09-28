@@ -22,7 +22,7 @@ Launch manual and automated attacks with pre-defined and always up-to-date templ
 
 Designed to transparently run locally, remotely or integrated in pipelines, `hckctl` is free and open-source, no vendor lock-in, extensible and built using native providers api.
 
-Create a custom vulnerable target (single box with specific CVE or whole infrastructes) or connect to your CTF platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup or network configurations.
+Create a custom vulnerable target (box with a specific CVE or whole infrastructures) or connect to your CTF platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup or network configurations.
 
 Access the managed cloud platform from anywhere, orchestrate complex scenarios and analyze, aggregate and export your results.
 
@@ -102,7 +102,7 @@ hckctl task nuclei --network-vpn htb --input target=10.10.10.3
 
 See [output](./docs/task-htb-example.txt) example
 
-### Flow (cloud preview)
+### Flow (preview)
 
 Launch multiple tasks in parallel, collect and combine the results
 ```bash
@@ -165,6 +165,8 @@ go run cmd/main.go
 # build
 just
 ./build/hckctl
+
+tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 ```
 
 ## Contribute
@@ -173,10 +175,15 @@ just
 
 <!--
 
+- lab/flow no config, only cloud
+- create task logDir
+- create common box/task shareDir (only docker?)
+
 TODO
 * priority
     - add box/lab --network-vpn support
     - add task providers: kube and cloud
+    - TODO lab and task cli example/description
     - fix task interrupt CTRL-C exit (delete containers)
     - add task volume or copy dir e.g. ffuf + seclists
     - play htb: linux/win
