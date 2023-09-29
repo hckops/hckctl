@@ -175,6 +175,13 @@ tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 
 <!--
 
+1) task logs
+2) task share dir
+3) box share dir
+4) task kube/cloud
+5) refactor box/lab network docker/kube/cloud
+6) flow example
+
 TODO
 * priority
     - add box/lab --network-vpn support

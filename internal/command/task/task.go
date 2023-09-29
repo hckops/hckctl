@@ -115,11 +115,13 @@ func (opts *taskCmdOptions) runTask(sourceLoader template.SourceLoader[taskModel
 		return errors.New("invalid template")
 	}
 
+	// TODO resolve partial path e.g. "task/scanner/<NAME>"
+	templateName := strings.ToLower(info.Value.Data.Name)
 	loader := commonCmd.NewLoader()
-	loader.Start("loading template %s", info.Value.Data.Name) // TODO review template name e.g task/name (lowercase)
+	loader.Start("loading template %s", templateName)
 	defer loader.Stop()
 
-	log.Info().Msgf("loading template: provider=%s name=%s\n%s", opts.provider, info.Value.Data.Name, info.Value.Data.Pretty())
+	log.Info().Msgf("loading template: provider=%s name=%s\n%s", opts.provider, templateName, info.Value.Data.Pretty())
 
 	taskClient, err := newDefaultTaskClient(opts.provider, opts.configRef, loader)
 	if err != nil {
@@ -132,14 +134,14 @@ func (opts *taskCmdOptions) runTask(sourceLoader template.SourceLoader[taskModel
 
 		arguments = inlineArguments
 	} else {
-		taskCommand, err := info.Value.Data.DefaultCommand(opts.commandFlag.Preset)
+		taskCommand, err := info.Value.Data.LoadCommand(opts.commandFlag.Preset)
 		if err != nil {
-			log.Warn().Err(err).Msg("error command")
+			log.Warn().Err(err).Msg("error loading command")
 			return errors.New("invalid command")
 		}
 		expandedArguments, err := taskCommand.ExpandCommandArguments(opts.parameters)
 		if err != nil {
-			log.Warn().Err(err).Msg("error expand command arguments")
+			log.Warn().Err(err).Msg("error expanding command arguments")
 			return errors.New("invalid command arguments")
 		}
 		log.Info().Msgf("run task command=%s arguments=[%s] inputs=%v expanded=[%s]",
