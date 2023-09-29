@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -92,6 +94,16 @@ func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, 
 		opts.ContainerName)
 	if err != nil {
 		return "", errors.Wrap(err, "error container create")
+	}
+
+	if opts.CaptureInterrupt {
+		// captures CTRL+C
+		signalChan := make(chan os.Signal, 1)
+		signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
+		go func() {
+			<-signalChan
+			opts.OnContainerInterruptCallback(newContainer.ID)
+		}()
 	}
 
 	if err := opts.OnContainerCreateCallback(newContainer.ID); err != nil {
@@ -363,7 +375,6 @@ func (client *DockerClient) ContainerLogsStd(containerId string) error {
 		return errors.Wrap(err, "error container logs std")
 	}
 
-	// with the generic streams some logs are not printed properly to stdout: try running "whalesay" image
 	_, err = stdcopy.StdCopy(os.Stdout, os.Stderr, outStream)
 	return err
 }
@@ -390,29 +401,29 @@ func (client *DockerClient) NetworkUpsert(networkName string) (string, error) {
 func (client *DockerClient) CopyFileToContainer(containerId string, localPath string, containerPath string) error {
 	// see https://github.com/docker/cli/blob/b1d27091e50595fecd8a2a4429557b70681395b2/cli/command/container/cp.go#L182-L282
 
-	// Get an absolute source path.
+	// get an absolute source path
 	srcPath, err := resolveLocalPath(localPath)
 	if err != nil {
 		return errors.Wrap(err, "error copy file to container: resolve local path")
 	}
 
-	// Prepare destination copy info by stat-ing the container path.
+	// prepare destination copy info by stat-ing the container path
 	dstInfo := archive.CopyInfo{Path: containerPath}
 	dstStat, err := client.docker.ContainerStatPath(client.ctx, containerId, containerPath)
 	if err != nil {
-		// Ignore any error and assume that the parent directory of the destination
-		// path exists, in which case the copy may still succeed.
+		// ignore any error and assume that the parent directory of the destination
+		// path exists, in which case the copy may still succeed
 	}
 
-	// Validate the destination path.
+	// validate the destination path
 	if err := validateOutputPathFileMode(dstStat.Mode); err != nil {
 		return errors.Wrapf(err, `error copy file to container: destination "%s:%s" must be a directory or a regular file`, containerId, containerPath)
 	}
 
-	// ???
+	// assume it's a valid directory
 	dstInfo.Exists, dstInfo.IsDir = true, dstStat.Mode.IsDir()
 
-	// Prepare source copy info.
+	// prepare source copy info
 	srcInfo, err := archive.CopyInfoSourcePath(srcPath, false)
 	if err != nil {
 		return errors.Wrap(err, "error copy file to container: source copy info")

@@ -138,10 +138,10 @@ hckctl config --reset
 ## Roadmap
 
 * Machine: create and access VMs e.g. DigitalOcean Droplet, AWS EC2, Azure Virtual Machines, QEMU etc.
-* Man: combine tldr and cheat
-* Plugin: add your custom commands
 * TUI: similar to lazydocker and k9s
-* Prompt: chatgpt prompt style
+* Plugin: add custom cli commands in any language
+  - Man: combine tldr and cheat
+  - Prompt: chatgpt prompt style
 
 ## Setup
 
@@ -175,29 +175,23 @@ tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 
 <!--
 
-- lab/flow no config, only cloud
-- create task logDir
-- create common box/task shareDir (only docker?)
-
 TODO
 * priority
     - add box/lab --network-vpn support
     - add task providers: kube and cloud
-    - TODO lab and task cli example/description
-    - fix task interrupt CTRL-C exit (delete containers)
-    - add task volume or copy dir e.g. ffuf + seclists
+    - add task shareDir volume or copy dir e.g. ffuf + seclists
+    - save tasks logs to file in logDir + add header with commands/parameters
+    - TODO update lab and task cli example/description
     - play htb: linux/win
     - add flow example
-    - fix cloud size comparison
     - add context client timeout e.g. vpn or target not available
     - verify kube/cloud distroless support
     - verify kube/cloud no-shell support
     - RELEASE
-    - verify config migration between versions
-    - refactor `cmd` vs `internal/command` in the same package
 * general
     - brew release
     - review client timeouts
+    - verify config migration between versions
     - update readme
         * remove comments
         * update setup
@@ -255,6 +249,8 @@ TODO
         * https://kompose.io
         * https://github.com/vulhub/vulhub
         * https://github.com/madhuakula/kubernetes-goat.git
+* task
+    - `history` command to list old tasks i.e. names of log files e.g. <TIMESTAMP>-task-<NAME>-<RANDOM>
 * version
     - print if new version available
     - implement server `version` in json format docker/kube/cloud

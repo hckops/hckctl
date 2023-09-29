@@ -35,15 +35,17 @@ type ImageRemoveOpts struct {
 }
 
 type ContainerCreateOpts struct {
-	ContainerName             string
-	ContainerConfig           *container.Config
-	HostConfig                *container.HostConfig
-	NetworkingConfig          *network.NetworkingConfig
-	WaitStatus                bool
-	OnContainerCreateCallback func(containerId string) error
-	OnContainerWaitCallback   func(containerId string) error
-	OnContainerStatusCallback func(status string)
-	OnContainerStartCallback  func()
+	ContainerName                string
+	ContainerConfig              *container.Config
+	HostConfig                   *container.HostConfig
+	NetworkingConfig             *network.NetworkingConfig
+	WaitStatus                   bool
+	CaptureInterrupt             bool
+	OnContainerInterruptCallback func(containerId string)
+	OnContainerCreateCallback    func(containerId string) error
+	OnContainerWaitCallback      func(containerId string) error
+	OnContainerStatusCallback    func(status string)
+	OnContainerStartCallback     func()
 }
 
 type ContainerRestartOpts struct {

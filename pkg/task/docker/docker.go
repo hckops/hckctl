@@ -88,11 +88,17 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 	task.eventBus.Publish(newContainerCreateDockerLoaderEvent())
 
 	containerOpts := &docker.ContainerCreateOpts{
-		ContainerName:             containerName,
-		ContainerConfig:           containerConfig,
-		HostConfig:                hostConfig,
-		NetworkingConfig:          docker.BuildNetworkingConfig(networkName, networkId), // all on the same network
-		WaitStatus:                true,                                                 // block
+		ContainerName:    containerName,
+		ContainerConfig:  containerConfig,
+		HostConfig:       hostConfig,
+		NetworkingConfig: docker.BuildNetworkingConfig(networkName, networkId), // all on the same network
+		WaitStatus:       true,                                                 // block
+		CaptureInterrupt: true,
+		OnContainerInterruptCallback: func(containerId string) {
+			// returns control to runTask, it will correctly invoke defer to remove the sidecar
+			// unless it's interrupted while the sidecar is being created
+			task.client.ContainerRemove(containerId)
+		},
 		OnContainerCreateCallback: func(string) error { return nil },
 		OnContainerWaitCallback: func(containerId string) error {
 			// stop loader
@@ -160,7 +166,7 @@ func buildVpnSidecarName(taskName string) string {
 func (task *DockerTaskClient) startVpnSidecar(containerName string, vpnInfo *commonModel.VpnNetworkInfo) (string, error) {
 
 	imageName := "hckops/alpine-openvpn:latest"
-	// base directory must exist
+	// base directory "/usr/share" must exist
 	vpnConfigPath := "/usr/share/client.ovpn"
 
 	if err := task.pullImage(imageName, newVpnConnectDockerLoaderEvent(vpnInfo.Name)); err != nil {
@@ -168,10 +174,11 @@ func (task *DockerTaskClient) startVpnSidecar(containerName string, vpnInfo *com
 	}
 
 	containerOpts := &docker.ContainerCreateOpts{
-		ContainerName:   containerName,
-		ContainerConfig: docker.BuildVpnContainerConfig(imageName, vpnConfigPath),
-		HostConfig:      docker.BuildVpnHostConfig(),
-		WaitStatus:      false,
+		ContainerName:    containerName,
+		ContainerConfig:  docker.BuildVpnContainerConfig(imageName, vpnConfigPath),
+		HostConfig:       docker.BuildVpnHostConfig(),
+		WaitStatus:       false,
+		CaptureInterrupt: false, // edge case: killing this while creating will produce an orphan sidecar container
 		OnContainerCreateCallback: func(containerId string) error {
 			// upload openvpn config file
 			return task.client.CopyFileToContainer(containerId, vpnInfo.LocalPath, vpnConfigPath)

@@ -33,7 +33,7 @@ func TestCommandMap(t *testing.T) {
 	assert.Equal(t, expected, commands)
 }
 
-func TestDefaultCommand(t *testing.T) {
+func TestLoadCommand(t *testing.T) {
 	task := &TaskV1{
 		Commands: []TaskCommand{
 			{Name: "default", Arguments: []string{"arg1", "arg2"}},
@@ -41,15 +41,15 @@ func TestDefaultCommand(t *testing.T) {
 	}
 	expected := TaskCommand{Name: "default", Arguments: []string{"arg1", "arg2"}}
 
-	commandEmpty, errEmpty := task.DefaultCommand("")
+	commandEmpty, errEmpty := task.LoadCommand("")
 	assert.Equal(t, expected, commandEmpty)
 	assert.Nil(t, errEmpty)
 
-	commandDefault, errDefault := task.DefaultCommand("default")
+	commandDefault, errDefault := task.LoadCommand("default")
 	assert.Equal(t, expected, commandDefault)
 	assert.Nil(t, errDefault)
 
-	commandInvalid, errInvalid := (&TaskV1{}).DefaultCommand("foo")
+	commandInvalid, errInvalid := (&TaskV1{}).LoadCommand("foo")
 	assert.Equal(t, TaskCommand{}, commandInvalid)
 	assert.EqualError(t, errInvalid, "foo command not found")
 }

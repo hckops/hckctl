@@ -58,7 +58,7 @@ func (task *TaskV1) CommandMap() map[string]TaskCommand {
 	return commands
 }
 
-func (task *TaskV1) DefaultCommand(name string) (TaskCommand, error) {
+func (task *TaskV1) LoadCommand(name string) (TaskCommand, error) {
 	if strings.TrimSpace(name) == "" {
 		if command, ok := task.CommandMap()[defaultTaskCommand]; ok {
 			return command, nil
