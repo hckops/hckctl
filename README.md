@@ -24,7 +24,11 @@ Designed to transparently run locally, remotely or integrated in pipelines, `hck
 
 Create a custom vulnerable target (box with a specific CVE or whole infrastructures) or connect to your CTF platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup or network configurations.
 
-Leverage the managed cloud platform to orchestrate complex scenarios and observe your security posture analyzing, aggregating and exporting results.
+Leverage the cloud platform or request a dedicated managed cluster to:
+* orchestrate complex scenarios
+* monitor and observe your security posture
+* analyze, aggregate and export results via api
+* trigger actions based on your requirements
 
 ## Quick start
 
@@ -137,11 +141,11 @@ hckctl config --reset
 
 ## Roadmap
 
-* Machine: create and access VMs e.g. DigitalOcean Droplet, AWS EC2, Azure Virtual Machines, QEMU etc.
-* TUI: similar to lazydocker and k9s
-* Plugin: add custom cli commands in any language
-  - Man: combine tldr and cheat
-  - Prompt: chatgpt prompt style
+* `machine`: create and access VMs e.g. DigitalOcean Droplet, AWS EC2, Azure Virtual Machines, QEMU etc.
+* `tui`: similar to lazydocker and k9s
+* `plugin`: add custom cli commands in any language
+  - `man`: combine tldr and cheat with task commands
+  - `prompt`: chatgpt prompt style
 
 ## Setup
 
