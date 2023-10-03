@@ -47,3 +47,8 @@ type ContainerPort struct {
 	Local  string
 	Remote string
 }
+
+type ContainerVolume struct {
+	HostDir      string
+	ContainerDir string
+}

@@ -22,6 +22,7 @@ type ContainerHostConfigOpts struct {
 	NetworkMode        string
 	Ports              []ContainerPort
 	OnPortBindCallback func(port ContainerPort)
+	Volumes            []ContainerVolume
 }
 
 type ImagePullOpts struct {

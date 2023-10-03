@@ -14,7 +14,10 @@ const (
 )
 
 func CreateBaseDir(path string) error {
-	dir := filepath.Dir(path)
+	return CreateDir(filepath.Dir(path))
+}
+
+func CreateDir(dir string) error {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		if err := os.MkdirAll(dir, defaultDirectoryMod); err != nil {
 			return errors.Wrapf(err, "unable to create dir %s", dir)

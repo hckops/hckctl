@@ -164,6 +164,7 @@ func (opts *taskCmdOptions) runTask(sourceLoader template.SourceLoader[taskModel
 		Labels:      commonCmd.AddTemplateLabels[taskModel.TaskV1](info, labels),
 		NetworkInfo: networkInfo,
 		StreamOpts:  commonModel.NewStdStreamOpts(false),
+		ShareDir:    opts.configRef.Config.Common.ShareDir,
 		LogDir:      opts.configRef.Config.Task.LogDir,
 	}
 

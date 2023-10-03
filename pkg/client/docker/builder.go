@@ -2,6 +2,7 @@ package docker
 
 import (
 	"fmt"
+	"github.com/docker/docker/api/types/mount"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -72,9 +73,26 @@ func BuildHostConfig(opts *ContainerHostConfigOpts) (*container.HostConfig, erro
 		}}
 	}
 
+	var mounts []mount.Mount
+	if opts.Volumes != nil {
+		for _, volume := range opts.Volumes {
+
+			if err := util.CreateDir(volume.HostDir); err != nil {
+				return nil, errors.Wrap(err, "error docker local volume")
+			}
+
+			mounts = append(mounts, mount.Mount{
+				Type:   mount.TypeBind,
+				Source: volume.HostDir,
+				Target: volume.ContainerDir,
+			})
+		}
+	}
+
 	return &container.HostConfig{
 		NetworkMode:  container.NetworkMode(opts.NetworkMode),
 		PortBindings: portBindings,
+		Mounts:       mounts,
 	}, nil
 }
 

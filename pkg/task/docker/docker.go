@@ -75,6 +75,12 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 		NetworkMode:        networkMode,
 		Ports:              []docker.ContainerPort{},
 		OnPortBindCallback: func(docker.ContainerPort) {},
+		Volumes: []docker.ContainerVolume{
+			{
+				HostDir:      opts.ShareDir,
+				ContainerDir: commonModel.MountedShareDir,
+			},
+		},
 	})
 	if err != nil {
 		return err
@@ -104,10 +110,13 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 		},
 		OnContainerCreateCallback: func(string) error { return nil },
 		OnContainerWaitCallback: func(containerId string) error {
+			task.eventBus.Publish(newVolumeMountDockerEvent(containerId, opts.ShareDir, commonModel.MountedShareDir))
+
 			// stop loader
 			task.eventBus.Publish(newContainerWaitDockerLoaderEvent())
 
 			// TODO prepend file with actual task/command
+			// TODO add flag to TaskV1 template to use "ContainerLogsStd" if command is "help" or "version"
 			// tail logs before blocking
 			task.eventBus.Publish(newContainerLogDockerEvent(logFileName))
 			return task.client.ContainerLogsTee(containerId, logFileName)
@@ -171,7 +180,7 @@ func buildVpnSidecarName(taskName string) string {
 
 func (task *DockerTaskClient) startVpnSidecar(containerName string, vpnInfo *commonModel.VpnNetworkInfo) (string, error) {
 
-	imageName := "hckops/alpine-openvpn:latest"
+	imageName := commonModel.SidecarVpnImageName
 	// base directory "/usr/share" must exist
 	vpnConfigPath := "/usr/share/client.ovpn"
 

@@ -56,6 +56,10 @@ func newNetworkUpsertDockerEvent(networkName string, networkId string) *dockerTa
 	return &dockerTaskEvent{kind: event.LogInfo, value: fmt.Sprintf("network upsert: networkName=%s networkId=%s", networkName, networkId)}
 }
 
+func newVolumeMountDockerEvent(containerId string, hostDir string, containerDir string) *dockerTaskEvent {
+	return &dockerTaskEvent{kind: event.LogInfo, value: fmt.Sprintf("volume mount: containerId=%s hostDir=%s containerDir=%s", containerId, hostDir, containerDir)}
+}
+
 func newContainerCreateStatusDockerEvent(status string) *dockerTaskEvent {
 	return &dockerTaskEvent{kind: event.LogDebug, value: status}
 }

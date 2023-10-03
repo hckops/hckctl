@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"github.com/docker/docker/api/types/mount"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -70,11 +71,19 @@ func TestBuildHostConfig(t *testing.T) {
 		PortBindings: nat.PortMap{
 			"1024/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "1024"}},
 		},
+		Mounts: []mount.Mount{{
+			Type:   mount.TypeBind,
+			Source: "/tmp/hck/share",
+			Target: "/hck/share",
+		}},
 	}
 	opts := &ContainerHostConfigOpts{
 		NetworkMode:        "myNetworkMode",
 		Ports:              ports,
 		OnPortBindCallback: func(port ContainerPort) {},
+		Volumes: []ContainerVolume{
+			{HostDir: "/tmp/hck/share", ContainerDir: "/hck/share"},
+		},
 	}
 
 	result, err := BuildHostConfig(opts)

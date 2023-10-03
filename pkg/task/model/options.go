@@ -26,5 +26,6 @@ type RunOptions struct {
 	Labels      commonModel.Labels
 	NetworkInfo commonModel.NetworkInfo
 	StreamOpts  *commonModel.StreamOptions
+	ShareDir    string
 	LogDir      string
 }

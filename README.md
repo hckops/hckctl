@@ -64,6 +64,10 @@ hckctl lab ctf-linux
 
 Run a [`task`](https://github.com/hckops/megalopolis/tree/main/task) using pre-defined commands
 ```bash
+# default commands
+hckctl task rustscan --command help
+hckctl task rustscan --command version
+
 # use the "default" arguments
 hckctl task rustscan --input address=127.0.0.1
 # equivalent of
@@ -74,6 +78,9 @@ hckctl task nmap --command full --input address=127.0.0.1 --input port=80
 
 # invoke it with custom arguments
 hckctl task rustscan --inline -- -a 127.0.0.1
+
+# monitor the logs
+tail -F ${HOME}/.local/state/hck/task/log/task-rustscan-*
 ```
 
 #### HTB example
@@ -99,9 +106,21 @@ hckctl task nmap --network-vpn htb --command full --input address=10.10.10.3
 hckctl task rustscan --network-vpn htb --inline -- -a 10.10.10.3 --ulimit 5000
 
 # scan with nuclei
-hckctl task nuclei --network-vpn htb --input target=10.10.10.3
+hckctl task nuclei --network-vpn htb --input address=10.10.10.3
 
-# TODO ffuf
+# make sure the shared directory exists
+mkdir -p ${HOME}/.local/state/hck/share/wordlists
+git clone --depth 1 https://github.com/danielmiessler/SecLists.git ${HOME}/.local/state/hck/share/wordlists/SecLists
+
+# fuzzing with ffuf
+hckctl task ffuf --network-vpn htb --input address=10.10.10.242
+
+# fuzzing with gobuster
+hckctl task \
+  --local ../megalopolis/task/fuzzer/gobuster.yml \
+  --network-vpn htb \
+  --input address=10.10.10.242 \
+  --input wordlist=wordlists/SecLists/Discovery/Web-Content/Apache.fuzz.txt
 ```
 
 See [output](./docs/task-htb-example.txt) example
@@ -179,7 +198,6 @@ tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 
 <!--
 
-2) task share dir
 3) box share dir
 4) task kube/cloud
 5) refactor box/lab network docker/kube/cloud
@@ -264,6 +282,8 @@ TODO
     - rename output log file with timestamp?
     - prepend file output with task/command yaml?
     - add command to remove all logs
+    - print name partially resolved e.g. `task/scanner/<NAME>`
+    - skip output file for `help` and `version`
 * version
     - print if new version available
     - implement server `version` in json format docker/kube/cloud
