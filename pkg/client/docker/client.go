@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"fmt"
+	"github.com/hckops/hckctl/pkg/util"
 	"io"
 	"os"
 	"os/signal"
@@ -376,6 +377,29 @@ func (client *DockerClient) ContainerLogsStd(containerId string) error {
 	}
 
 	_, err = stdcopy.StdCopy(os.Stdout, os.Stderr, outStream)
+	return err
+}
+
+func (client *DockerClient) ContainerLogsTee(containerId string, logFileName string) error {
+
+	outStream, err := client.docker.ContainerLogs(client.ctx, containerId, types.ContainerLogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Follow:     true,
+	})
+	if err != nil {
+		return errors.Wrap(err, "error container logs tee")
+	}
+
+	logFile, err := util.OpenFile(logFileName)
+	if err != nil {
+		return errors.Wrap(err, "error container logs file")
+	}
+	multiWriter := io.MultiWriter(os.Stdout, logFile)
+	//log.SetOutput(multiWriter)
+	defer logFile.Close()
+
+	_, err = stdcopy.StdCopy(multiWriter, multiWriter, outStream)
 	return err
 }
 

@@ -175,7 +175,6 @@ tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 
 <!--
 
-1) task logs
 2) task share dir
 3) box share dir
 4) task kube/cloud
@@ -258,6 +257,9 @@ TODO
         * https://github.com/madhuakula/kubernetes-goat.git
 * task
     - `history` command to list old tasks i.e. names of log files e.g. <TIMESTAMP>-task-<NAME>-<RANDOM>
+    - rename output log file with timestamp?
+    - prepend file output with task/command yaml?
+    - add command to remove all logs
 * version
     - print if new version available
     - implement server `version` in json format docker/kube/cloud

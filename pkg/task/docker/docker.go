@@ -2,6 +2,7 @@ package docker
 
 import (
 	"fmt"
+	"path"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -87,6 +88,8 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 	task.eventBus.Publish(newNetworkUpsertDockerEvent(networkName, networkId))
 	task.eventBus.Publish(newContainerCreateDockerLoaderEvent())
 
+	// TODO prefix file name with unix timestamp to order file?
+	logFileName := path.Join(opts.LogDir, containerName)
 	containerOpts := &docker.ContainerCreateOpts{
 		ContainerName:    containerName,
 		ContainerConfig:  containerConfig,
@@ -104,8 +107,10 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 			// stop loader
 			task.eventBus.Publish(newContainerWaitDockerLoaderEvent())
 
+			// TODO prepend file with actual task/command
 			// tail logs before blocking
-			return task.client.ContainerLogsStd(containerId)
+			task.eventBus.Publish(newContainerLogDockerEvent(logFileName))
+			return task.client.ContainerLogsTee(containerId, logFileName)
 		},
 		OnContainerStatusCallback: func(status string) {
 			task.eventBus.Publish(newContainerCreateStatusDockerEvent(status))
@@ -118,6 +123,7 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 		return err
 	}
 	task.eventBus.Publish(newContainerCreateDockerEvent(opts.Template.Name, containerName, containerId))
+	task.eventBus.Publish(newContainerLogDockerConsoleEvent(logFileName))
 
 	// remove temporary container
 	return task.client.ContainerRemove(containerId)

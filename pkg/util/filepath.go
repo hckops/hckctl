@@ -1,6 +1,7 @@
 package util
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 
@@ -9,6 +10,7 @@ import (
 
 const (
 	defaultDirectoryMod os.FileMode = 0755
+	defaultFileMod      os.FileMode = 0666
 )
 
 func CreateBaseDir(path string) error {
@@ -48,6 +50,20 @@ func CopyFile(from string, to string) (int64, error) {
 	defer writer.Close()
 
 	return writer.ReadFrom(reader)
+}
+
+func OpenFile(filePath string) (io.WriteCloser, error) {
+
+	if err := CreateBaseDir(filePath); err != nil {
+		return nil, err
+	}
+
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_RDWR, defaultFileMod)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to open file %s", filePath)
+	}
+
+	return file, nil
 }
 
 func DeleteFile(path string) error {

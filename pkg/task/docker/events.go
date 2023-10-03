@@ -64,6 +64,14 @@ func newContainerCreateDockerEvent(templateName string, containerName string, co
 	return &dockerTaskEvent{kind: event.LogInfo, value: fmt.Sprintf("container create: templateName=%s containerName=%s containerId=%s", templateName, containerName, containerId)}
 }
 
+func newContainerLogDockerEvent(logFileName string) *dockerTaskEvent {
+	return &dockerTaskEvent{kind: event.LogInfo, value: fmt.Sprintf("container log: logFileName=%s", logFileName)}
+}
+
+func newContainerLogDockerConsoleEvent(logFileName string) *dockerTaskEvent {
+	return &dockerTaskEvent{kind: event.PrintConsole, value: fmt.Sprintf("output file: %s", logFileName)}
+}
+
 func newContainerCreateDockerLoaderEvent() *dockerTaskEvent {
 	return &dockerTaskEvent{kind: event.LoaderUpdate, value: "running"}
 }
@@ -74,8 +82,4 @@ func newContainerWaitDockerLoaderEvent() *dockerTaskEvent {
 
 func newVpnConnectDockerLoaderEvent(vpnName string) *dockerTaskEvent {
 	return &dockerTaskEvent{kind: event.LoaderUpdate, value: fmt.Sprintf("connecting to %s", vpnName)}
-}
-
-func newContainerErrorDockerEvent(containerId string, err error) *dockerTaskEvent {
-	return &dockerTaskEvent{kind: event.LogError, value: fmt.Sprintf("container exec error: containerId=%s error=%v", containerId, err)}
 }
