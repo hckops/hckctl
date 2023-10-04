@@ -49,6 +49,30 @@ hckctl box arch --provider kube
 hckctl box parrot --provider cloud
 ```
 
+#### HTB example
+
+Prerequisites
+* start the retired [Postman](https://app.hackthebox.com/machines/Postman) machine in your account
+* edit your local configurations
+    ```bash
+    vim ${HOME}/.config/hck/config.yml
+
+    # edit the networks
+    network:
+      vpn:
+      - name: htb
+        # update with your openvpn config path
+        path: /home/demo/ctf/openvpn/htb_demo_eu_vip_28.ovpn
+    ```
+
+Example of an auto-exploitation box
+```bash
+# exploit the machine and spawn a reverse shell
+hckctl task htb-postman --network-vpn htb
+```
+
+// TODO network-vpn: docker/kube OK, validate cloud -> use lab
+
 ### Lab (preview)
 
 > TODO video
@@ -58,10 +82,6 @@ Access your target from a personalized [`lab`](https://github.com/hckops/megalop
 # connects to a vpn, exposes public ports, mount dumps etc.
 hckctl lab ctf-linux
 ```
-
-#### HTB example
-
-> TODO
 
 ### Task
 
@@ -89,16 +109,8 @@ tail -F ${HOME}/.local/state/hck/task/log/task-rustscan-*
 #### HTB example
 
 Prerequisites
-* start the retired [Lame](https://app.hackthebox.com/machines/Lame) machine in your account
-* edit your network vpn config
-    ```bash
-    vim ${HOME}/.config/hck/config.yml
-    network:
-      vpn:
-      - name: htb
-        # update your path
-        path: /home/demo/ctf/openvpn/htb_demo_eu_vip_28.ovpn
-    ```
+* start the retired [Lame](https://app.hackthebox.com/machines/Lame) and [Knife](https://app.hackthebox.com/machines/Knife) machines in your account
+* edit your network vpn config (see box example above)
 
 Run tasks against the vulnerable machine
 ```bash
@@ -154,7 +166,7 @@ Please, feel free to contribute to the companion [repository](https://github.com
 
 ### Config
 
-Edit default configurations
+Edit the default configurations
 ```bash
 # vim ${HOME}/.config/hck/config.yml
 # prints current configs
@@ -211,6 +223,10 @@ tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 ## Contribute
 
 > TODO example of how to point to a specific pr/revision in a forked repo
+
+## Disclaimer
+
+> TODO
 
 <!--
 

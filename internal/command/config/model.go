@@ -1,12 +1,13 @@
 package config
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 
 	"github.com/hckops/hckctl/internal/command/common"
 	boxModel "github.com/hckops/hckctl/pkg/box/model"
-	"github.com/hckops/hckctl/pkg/common/model"
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/logger"
 	"github.com/hckops/hckctl/pkg/schema"
 	taskModel "github.com/hckops/hckctl/pkg/task/model"
@@ -52,8 +53,8 @@ type DockerConfig struct {
 	NetworkName string `yaml:"networkName"`
 }
 
-func (c *DockerConfig) ToDockerOptions() *model.DockerOptions {
-	return &model.DockerOptions{
+func (c *DockerConfig) ToDockerOptions() *commonModel.DockerOptions {
+	return &commonModel.DockerOptions{
 		NetworkName:          c.NetworkName,
 		IgnoreImagePullError: true, // always allow to start offline/obsolete images
 	}
@@ -64,8 +65,8 @@ type KubeConfig struct {
 	Namespace  string `yaml:"namespace"`
 }
 
-func (c *KubeConfig) ToKubeOptions() *model.KubeOptions {
-	return &model.KubeOptions{
+func (c *KubeConfig) ToKubeOptions() *commonModel.KubeOptions {
+	return &commonModel.KubeOptions{
 		InCluster:  false,
 		ConfigPath: c.ConfigPath,
 		Namespace:  c.Namespace,
@@ -83,8 +84,8 @@ func (c *CloudConfig) address() string {
 	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
 }
 
-func (c *CloudConfig) ToCloudOptions(version string) *model.CloudOptions {
-	return &model.CloudOptions{
+func (c *CloudConfig) ToCloudOptions(version string) *commonModel.CloudOptions {
+	return &commonModel.CloudOptions{
 		Version:  version,
 		Address:  c.address(),
 		Username: c.Username,
@@ -101,12 +102,12 @@ type VpnConfig struct {
 	Path string `yaml:"path"`
 }
 
-func (c *NetworkConfig) VpnNetworks() map[string]model.VpnNetworkInfo {
-	info := map[string]model.VpnNetworkInfo{}
+func (c *NetworkConfig) VpnNetworks() map[string]commonModel.VpnNetworkInfo {
+	info := map[string]commonModel.VpnNetworkInfo{}
 	for _, network := range c.Vpn {
 		// ignores invalid paths
 		if configFile, err := util.ReadFile(network.Path); err == nil {
-			info[network.Name] = model.VpnNetworkInfo{
+			info[network.Name] = commonModel.VpnNetworkInfo{
 				Name:        network.Name,
 				LocalPath:   network.Path,
 				ConfigValue: configFile,
@@ -114,6 +115,17 @@ func (c *NetworkConfig) VpnNetworks() map[string]model.VpnNetworkInfo {
 		}
 	}
 	return info
+}
+
+func (c *NetworkConfig) ToVpnNetworkInfo(vpnName string) (*commonModel.VpnNetworkInfo, error) {
+	if vpnName != "" {
+		if vpnNetworkInfo, ok := c.VpnNetworks()[vpnName]; ok {
+			return &vpnNetworkInfo, nil
+		} else {
+			return nil, fmt.Errorf("vpn not found name=%s", vpnName)
+		}
+	}
+	return nil, nil
 }
 
 type TemplateConfig struct {

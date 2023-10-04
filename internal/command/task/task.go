@@ -21,13 +21,15 @@ import (
 )
 
 type taskCmdOptions struct {
-	configRef      *config.ConfigRef
-	sourceFlag     *commonFlag.TemplateSourceFlag
-	providerFlag   *commonFlag.ProviderFlag
-	commandFlag    *taskFlag.CommandFlag
-	networkVpnFlag string
-	provider       taskModel.TaskProvider
-	parameters     commonModel.Parameters
+	configRef *config.ConfigRef
+	// flags
+	commandFlag        *taskFlag.CommandFlag
+	networkVpnFlag     string
+	providerFlag       *commonFlag.ProviderFlag
+	templateSourceFlag *commonFlag.TemplateSourceFlag
+	// internal
+	provider   taskModel.TaskProvider
+	parameters commonModel.Parameters
 }
 
 func NewTaskCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -46,50 +48,48 @@ func NewTaskCmd(configRef *config.ConfigRef) *cobra.Command {
 		RunE:    opts.run,
 	}
 
-	// --revision or --local
-	opts.sourceFlag = commonFlag.AddTemplateSourceFlag(command)
+	// --inline or --command with N --inputs
+	opts.commandFlag = taskFlag.AddCommandFlag(command)
 	// --network-vpn
 	commonFlag.AddNetworkVpnFlag(command, &opts.networkVpnFlag)
 	// --provider (enum)
 	opts.providerFlag = taskFlag.AddTaskProviderFlag(command)
-	// --inline or --command with N --inputs
-	opts.commandFlag = taskFlag.AddCommandFlag(command)
+	// --revision or --local
+	opts.templateSourceFlag = commonFlag.AddTemplateSourceFlag(command)
 
 	return command
 }
 
 func (opts *taskCmdOptions) validate(cmd *cobra.Command, args []string) error {
-
-	// source
-	if err := commonFlag.ValidateTemplateSourceFlag(opts.providerFlag, opts.sourceFlag); err != nil {
-		log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
-		return errors.New(commonFlag.ErrorFlagNotSupported)
-	}
-
-	// vpn
-	if err := commonFlag.ValidateNetworkVpnFlag(opts.networkVpnFlag, opts.configRef.Config.Network.VpnNetworks()); err != nil {
-		return err
-	}
-
-	// inputs
+	// command
 	if validParameters, err := commonFlag.ValidateParametersFlag(opts.commandFlag.Inputs); err != nil {
 		return err
 	} else {
 		opts.parameters = validParameters
 	}
-
 	// provider
 	if validProvider, err := taskFlag.ValidateTaskProviderFlag(opts.configRef.Config.Task.Provider, opts.providerFlag); err != nil {
 		return err
 	} else {
 		opts.provider = validProvider
 	}
+	// network-vpn (after provider validation)
+	if vpnNetworkInfo, err := commonFlag.ValidateNetworkVpnFlag(opts.networkVpnFlag, opts.configRef.Config.Network.VpnNetworks()); err != nil {
+		return err
+	} else if vpnNetworkInfo != nil && opts.provider == taskModel.Cloud {
+		return fmt.Errorf("%s: use flow", commonFlag.ErrorFlagNotSupported)
+	}
+	// source
+	if err := commonFlag.ValidateTemplateSourceFlag(opts.providerFlag, opts.templateSourceFlag); err != nil {
+		log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
+		return errors.New(commonFlag.ErrorFlagNotSupported)
+	}
 	return nil
 }
 
 func (opts *taskCmdOptions) run(cmd *cobra.Command, args []string) error {
 
-	if opts.sourceFlag.Local {
+	if opts.templateSourceFlag.Local {
 		path := args[0]
 		log.Debug().Msgf("run task from local template: path=%s", path)
 
@@ -98,9 +98,9 @@ func (opts *taskCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	} else {
 		name := args[0]
-		log.Debug().Msgf("run task from git template: name=%s revision=%s", name, opts.sourceFlag.Revision)
+		log.Debug().Msgf("run task from git template: name=%s revision=%s", name, opts.templateSourceFlag.Revision)
 
-		sourceOpts := commonCmd.NewGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.sourceFlag.Revision)
+		sourceOpts := commonCmd.NewGitSourceOptions(opts.configRef.Config.Template.CacheDir, opts.templateSourceFlag.Revision)
 		sourceLoader := template.NewGitLoader[taskModel.TaskV1](sourceOpts, name)
 		labels := taskModel.NewTaskLabels().AddDefaultGit(sourceOpts.RepositoryUrl, sourceOpts.DefaultRevision, sourceOpts.CacheDirName())
 		return opts.runTask(sourceLoader, labels, args[1:])
@@ -151,11 +151,11 @@ func (opts *taskCmdOptions) runTask(sourceLoader template.SourceLoader[taskModel
 	}
 
 	var networkInfo commonModel.NetworkInfo
-	if opts.networkVpnFlag != "" {
-		if vpnNetworkInfo, ok := opts.configRef.Config.Network.VpnNetworks()[opts.networkVpnFlag]; ok {
-			log.Info().Msgf("run task connected to vpn network name=%s path=%s", vpnNetworkInfo.Name, vpnNetworkInfo.LocalPath)
-			networkInfo.Vpn = &vpnNetworkInfo
-		}
+	if vpnNetworkInfo, err := opts.configRef.Config.Network.ToVpnNetworkInfo(opts.networkVpnFlag); err != nil {
+		log.Warn().Err(err).Msg("error invalid vpn config")
+	} else if vpnNetworkInfo != nil {
+		log.Info().Msgf("run task connected to vpn network name=%s path=%s", vpnNetworkInfo.Name, vpnNetworkInfo.LocalPath)
+		networkInfo.Vpn = vpnNetworkInfo
 	}
 
 	runOpts := &taskModel.RunOptions{

@@ -1,6 +1,7 @@
 package box
 
 import (
+	"fmt"
 	"github.com/MakeNowJust/heredoc"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -16,11 +17,14 @@ import (
 )
 
 type boxCmdOptions struct {
-	configRef          *config.ConfigRef
-	templateSourceFlag *commonFlag.TemplateSourceFlag
+	configRef *config.ConfigRef
+	// flags
+	networkVpnFlag     string
 	providerFlag       *commonFlag.ProviderFlag
-	provider           boxModel.BoxProvider
+	templateSourceFlag *commonFlag.TemplateSourceFlag
 	tunnelFlag         *boxFlag.TunnelFlag
+	// internal
+	provider boxModel.BoxProvider
 }
 
 func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -75,10 +79,12 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 		RunE:    opts.run,
 	}
 
-	// --revision or --local
-	opts.templateSourceFlag = commonFlag.AddTemplateSourceFlag(command)
+	// --network-vpn
+	commonFlag.AddNetworkVpnFlag(command, &opts.networkVpnFlag)
 	// --provider (enum)
 	opts.providerFlag = boxFlag.AddBoxProviderFlag(command)
+	// --revision or --local
+	opts.templateSourceFlag = commonFlag.AddTemplateSourceFlag(command)
 	// --no-exec or --no-tunnel
 	opts.tunnelFlag = boxFlag.AddTunnelFlag(command)
 
@@ -92,22 +98,28 @@ func NewBoxCmd(configRef *config.ConfigRef) *cobra.Command {
 }
 
 func (opts *boxCmdOptions) validate(cmd *cobra.Command, args []string) error {
-
-	if err := commonFlag.ValidateTemplateSourceFlag(opts.providerFlag, opts.templateSourceFlag); err != nil {
-		log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
-		return errors.New(commonFlag.ErrorFlagNotSupported)
-	}
-
-	if err := boxFlag.ValidateTunnelFlag(opts.tunnelFlag, opts.provider); err != nil {
-		log.Warn().Err(err).Msgf("ignore validation %s", commonFlag.ErrorFlagNotSupported)
-		// ignore validation
-		return nil
-	}
-
+	// provider
 	if validProvider, err := boxFlag.ValidateBoxProviderFlag(opts.configRef.Config.Box.Provider, opts.providerFlag); err != nil {
 		return err
 	} else {
 		opts.provider = validProvider
+	}
+	// network-vpn (after provider validation)
+	if vpnNetworkInfo, err := commonFlag.ValidateNetworkVpnFlag(opts.networkVpnFlag, opts.configRef.Config.Network.VpnNetworks()); err != nil {
+		return err
+	} else if vpnNetworkInfo != nil && opts.provider == boxModel.Cloud {
+		return fmt.Errorf("%s: use lab", commonFlag.ErrorFlagNotSupported)
+	}
+	// source
+	if err := commonFlag.ValidateTemplateSourceFlag(opts.providerFlag, opts.templateSourceFlag); err != nil {
+		log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
+		return errors.New(commonFlag.ErrorFlagNotSupported)
+	}
+	// tunnel
+	if err := boxFlag.ValidateTunnelFlag(opts.tunnelFlag, opts.provider); err != nil {
+		log.Warn().Err(err).Msgf("ignore validation %s", commonFlag.ErrorFlagNotSupported)
+		// ignore validation
+		return nil
 	}
 	return nil
 }
@@ -136,7 +148,7 @@ func (opts *boxCmdOptions) temporaryBox(sourceLoader template.SourceLoader[boxMo
 
 	temporaryClient := func(invokeOpts *invokeOptions) error {
 
-		createOpts, err := newCreateOptions(invokeOpts.template, labels, opts.configRef.Config.Box.Size)
+		createOpts, err := newCreateOptions(invokeOpts.template, labels, opts.configRef, opts.networkVpnFlag)
 		if err != nil {
 			return err
 		}

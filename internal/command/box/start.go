@@ -17,10 +17,13 @@ import (
 )
 
 type boxStartCmdOptions struct {
-	configRef          *config.ConfigRef
-	templateSourceFlag *commonFlag.TemplateSourceFlag
+	configRef *config.ConfigRef
+	// flags
+	networkVpnFlag     string
 	providerFlag       *commonFlag.ProviderFlag
-	provider           boxModel.BoxProvider
+	templateSourceFlag *commonFlag.TemplateSourceFlag
+	// internal
+	provider boxModel.BoxProvider
 }
 
 func NewBoxStartCmd(configRef *config.ConfigRef) *cobra.Command {
@@ -37,25 +40,33 @@ func NewBoxStartCmd(configRef *config.ConfigRef) *cobra.Command {
 		RunE:    opts.run,
 	}
 
-	// --revision or --local
-	opts.templateSourceFlag = commonFlag.AddTemplateSourceFlag(command)
+	// --network-vpn
+	commonFlag.AddNetworkVpnFlag(command, &opts.networkVpnFlag)
 	// --provider (enum)
 	opts.providerFlag = boxFlag.AddBoxProviderFlag(command)
+	// --revision or --local
+	opts.templateSourceFlag = commonFlag.AddTemplateSourceFlag(command)
 
 	return command
 }
 
 func (opts *boxStartCmdOptions) validate(cmd *cobra.Command, args []string) error {
-
-	if err := commonFlag.ValidateTemplateSourceFlag(opts.providerFlag, opts.templateSourceFlag); err != nil {
-		log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
-		return errors.New(commonFlag.ErrorFlagNotSupported)
-	}
-
+	// provider
 	if validProvider, err := boxFlag.ValidateBoxProviderFlag(opts.configRef.Config.Box.Provider, opts.providerFlag); err != nil {
 		return err
 	} else {
 		opts.provider = validProvider
+	}
+	// network-vpn (after provider validation)
+	if vpnNetworkInfo, err := commonFlag.ValidateNetworkVpnFlag(opts.networkVpnFlag, opts.configRef.Config.Network.VpnNetworks()); err != nil {
+		return err
+	} else if vpnNetworkInfo != nil && opts.provider == boxModel.Cloud {
+		return fmt.Errorf("%s: use lab", commonFlag.ErrorFlagNotSupported)
+	}
+	// source
+	if err := commonFlag.ValidateTemplateSourceFlag(opts.providerFlag, opts.templateSourceFlag); err != nil {
+		log.Warn().Err(err).Msgf(commonFlag.ErrorFlagNotSupported)
+		return errors.New(commonFlag.ErrorFlagNotSupported)
 	}
 	return nil
 }
@@ -84,7 +95,7 @@ func (opts *boxStartCmdOptions) startBox(sourceLoader template.SourceLoader[boxM
 
 	createClient := func(invokeOpts *invokeOptions) error {
 
-		createOpts, err := newCreateOptions(invokeOpts.template, labels, opts.configRef.Config.Box.Size)
+		createOpts, err := newCreateOptions(invokeOpts.template, labels, opts.configRef, opts.networkVpnFlag)
 		if err != nil {
 			return err
 		}

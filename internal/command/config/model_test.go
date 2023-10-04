@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/hckops/hckctl/pkg/util"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -113,4 +114,31 @@ func TestVpnNetworks(t *testing.T) {
 		},
 	}
 	assert.Equal(t, 2, len(networkConfig.VpnNetworks()))
+}
+
+func TestToVpnNetworkInfo(t *testing.T) {
+	networkConfig := NetworkConfig{
+		Vpn: []VpnConfig{
+			{Name: "readme", Path: "../../../README.md"},
+			{Name: "license", Path: "../../../LICENSE"},
+		},
+	}
+
+	emptyVpn, emptyErr := networkConfig.ToVpnNetworkInfo("")
+	assert.Nil(t, emptyVpn)
+	assert.Nil(t, emptyErr)
+
+	validVpn, validErr := networkConfig.ToVpnNetworkInfo("readme")
+	configFile, _ := util.ReadFile("../../../README.md")
+	expected := &model.VpnNetworkInfo{
+		Name:        "readme",
+		LocalPath:   "../../../README.md",
+		ConfigValue: configFile,
+	}
+	assert.Equal(t, expected, validVpn)
+	assert.Nil(t, validErr)
+
+	invalidVpn, invalidErr := networkConfig.ToVpnNetworkInfo("foo")
+	assert.Nil(t, invalidVpn)
+	assert.EqualError(t, invalidErr, "vpn not found name=foo")
 }

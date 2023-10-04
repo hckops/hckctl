@@ -9,9 +9,19 @@ import (
 )
 
 func TestValidateNetworkVpnFlag(t *testing.T) {
-	assert.Nil(t, ValidateNetworkVpnFlag("", map[string]model.VpnNetworkInfo{}))
-	assert.Nil(t, ValidateNetworkVpnFlag("default", map[string]model.VpnNetworkInfo{"default": {}}))
+	emptyVpn, emptyErr := ValidateNetworkVpnFlag("", map[string]model.VpnNetworkInfo{})
+	assert.Nil(t, emptyVpn)
+	assert.Nil(t, emptyErr)
 
-	errMissing := ValidateNetworkVpnFlag("default", map[string]model.VpnNetworkInfo{})
-	assert.EqualError(t, errMissing, "vpn network [default] config not found")
+	validVpn, validErr := ValidateNetworkVpnFlag("default", map[string]model.VpnNetworkInfo{"default": {
+		Name:        "myDefault",
+		LocalPath:   "myLocalPath",
+		ConfigValue: "myConfigValue",
+	}})
+	assert.Equal(t, &model.VpnNetworkInfo{Name: "myDefault", LocalPath: "myLocalPath", ConfigValue: "myConfigValue"}, validVpn)
+	assert.Nil(t, validErr)
+
+	invalidVpn, invalidErr := ValidateNetworkVpnFlag("default", map[string]model.VpnNetworkInfo{})
+	assert.Nil(t, invalidVpn)
+	assert.EqualError(t, invalidErr, "vpn network [default] config not found")
 }

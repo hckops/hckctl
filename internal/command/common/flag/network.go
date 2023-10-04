@@ -18,12 +18,12 @@ func AddNetworkVpnFlag(command *cobra.Command, networkVpn *string) string {
 	return flagName
 }
 
-func ValidateNetworkVpnFlag(name string, networks map[string]model.VpnNetworkInfo) error {
+func ValidateNetworkVpnFlag(name string, networks map[string]model.VpnNetworkInfo) (*model.VpnNetworkInfo, error) {
 	if strings.TrimSpace(name) == "" {
-		return nil
+		return nil, nil
 	}
-	if _, ok := networks[name]; ok {
-		return nil
+	if vpnNetworkInfo, ok := networks[name]; ok {
+		return &vpnNetworkInfo, nil
 	}
-	return fmt.Errorf("vpn network [%s] config not found", name)
+	return nil, fmt.Errorf("vpn network [%s] config not found", name)
 }

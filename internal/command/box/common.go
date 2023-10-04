@@ -138,17 +138,27 @@ func newDefaultBoxClient(provider boxModel.BoxProvider, configRef *config.Config
 	return boxClient, nil
 }
 
-func newCreateOptions(info *template.TemplateInfo[boxModel.BoxV1], labels commonModel.Labels, sizeValue string) (*boxModel.CreateOptions, error) {
-	size, err := boxModel.ExistResourceSize(sizeValue)
+func newCreateOptions(info *template.TemplateInfo[boxModel.BoxV1], labels commonModel.Labels, configRef *config.ConfigRef, vpnName string) (*boxModel.CreateOptions, error) {
+
+	size, err := boxModel.ExistResourceSize(configRef.Config.Box.Size)
 	if err != nil {
 		return nil, err
 	}
 
 	allLabels := commonCmd.AddTemplateLabels[boxModel.BoxV1](info, boxModel.AddBoxSize(labels, size))
 
+	var networkInfo commonModel.NetworkInfo
+	if vpnNetworkInfo, err := configRef.Config.Network.ToVpnNetworkInfo(vpnName); err != nil {
+		log.Warn().Err(err).Msg("error invalid vpn config")
+	} else if vpnNetworkInfo != nil {
+		log.Info().Msgf("box connected to vpn network name=%s path=%s", vpnNetworkInfo.Name, vpnNetworkInfo.LocalPath)
+		networkInfo.Vpn = vpnNetworkInfo
+	}
+
 	return &boxModel.CreateOptions{
-		Template: &info.Value.Data,
-		Size:     size,
-		Labels:   allLabels,
+		Template:    &info.Value.Data,
+		Size:        size,
+		Labels:      allLabels,
+		NetworkInfo: networkInfo,
 	}, nil
 }
