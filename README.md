@@ -14,7 +14,10 @@
   <i>The declarative Breach and Attack Simulation engine</i><br>
   <a href="#quick-start">Quick start</a>&nbsp;&bull;
   <a href="#setup">Setup</a>&nbsp;&bull;
-  <a href="#development">Development</a>
+  <a href="#provider">Provider</a>&nbsp;&bull;
+  <a href="#development">Development</a>&nbsp;&bull;
+  <a href="#roadmap">Roadmap</a>&nbsp;&bull;
+  <a href="#contribute">Contribute</a>
 </p>
 <br>
 
@@ -22,13 +25,13 @@ Launch manual and automated attacks with pre-defined and always up-to-date templ
 
 Designed to transparently run locally, remotely or integrated in pipelines, `hckctl` is free and open-source, no vendor lock-in, extensible and built using native providers api.
 
-Create a custom vulnerable target (box with a specific CVE or whole infrastructures) or connect to your CTF platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup or network configurations.
+Create your vulnerable target (box with a specific CVE or whole infrastructures) or connect to your CTF platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup or network configurations.
 
 Leverage the cloud platform or request a dedicated managed cluster to:
 * orchestrate complex scenarios
 * monitor and observe your security posture
 * analyze, aggregate and export results via api
-* trigger actions based on your requirements
+* trigger actions based on events
 
 ## Quick start
 
@@ -68,7 +71,7 @@ Run a [`task`](https://github.com/hckops/megalopolis/tree/main/task) using pre-d
 hckctl task rustscan --command help
 hckctl task rustscan --command version
 
-# use the "default" arguments
+# use the "default" preset arguments
 hckctl task rustscan --input address=127.0.0.1
 # equivalent of
 hckctl task rustscan --command default --input address=127.0.0.1
@@ -158,14 +161,6 @@ hckctl config
 hckctl config --reset
 ```
 
-## Roadmap
-
-* `machine`: create and access VMs e.g. DigitalOcean Droplet, AWS EC2, Azure Virtual Machines, QEMU etc.
-* `tui`: similar to lazydocker and k9s
-* `plugin`: add custom cli commands in any language
-  - `man`: combine tldr and cheat with task commands
-  - `prompt`: chatgpt prompt style
-
 ## Setup
 
 Download the latest binaries
@@ -176,6 +171,16 @@ HCKCTL_VERSION=???
 curl -sSL https://github.com/hckops/hckctl/releases/download/${HCKCTL_VERSION}/hckctl_linux_x86_64.tar.gz | \
   tar -xzf - -C /usr/local/bin
 ```
+
+## Provider
+
+> TODO setup
+
+List of supported providers
+* docker
+* kubernetes
+* cloud
+* podman (coming soon)
 
 ## Development
 
@@ -191,6 +196,14 @@ just
 
 tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 ```
+
+## Roadmap
+
+* `machine` create and access VMs e.g. DigitalOcean Droplet, AWS EC2, Azure Virtual Machines, QEMU etc.
+* `tui` similar to lazydocker and k9s
+* `plugin` add custom cli commands in any language
+  - `man` combine tldr and cheat with task commands
+  - `prompt` chatgpt prompt style
 
 ## Contribute
 
