@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <i>The declarative Breach and Attack Simulation engine</i><br>
+  <i>The declarative Breach and Attack Simulation tool</i><br>
   <a href="#quick-start">Quick start</a>&nbsp;&bull;
   <a href="#setup">Setup</a>&nbsp;&bull;
   <a href="#provider">Provider</a>&nbsp;&bull;
@@ -93,14 +93,14 @@ Prerequisites
 * edit your network vpn config
     ```bash
     vim ${HOME}/.config/hck/config.yml
-    # update path
     network:
       vpn:
       - name: htb
+        # update your path
         path: /home/demo/ctf/openvpn/htb_demo_eu_vip_28.ovpn
     ```
 
-Run your tasks against the machine
+Run tasks against the vulnerable machine
 ```bash
 # scan with nmap
 hckctl task nmap --network-vpn htb --command full --input address=10.10.10.3
@@ -110,10 +110,15 @@ hckctl task rustscan --network-vpn htb --inline -- -a 10.10.10.3 --ulimit 5000
 
 # scan with nuclei
 hckctl task nuclei --network-vpn htb --input address=10.10.10.3
+```
+See [output](./docs/task-htb-example.txt) example
 
-# make sure the shared directory exists
+Use the shared directory to mount local paths
+```bash
+# download your wordlists
 mkdir -p ${HOME}/.local/state/hck/share/wordlists
-git clone --depth 1 https://github.com/danielmiessler/SecLists.git ${HOME}/.local/state/hck/share/wordlists/SecLists
+git clone --depth 1 https://github.com/danielmiessler/SecLists.git \
+  ${HOME}/.local/state/hck/share/wordlists/SecLists
 
 # fuzzing with ffuf
 hckctl task ffuf --network-vpn htb --input address=10.10.10.242
@@ -125,8 +130,6 @@ hckctl task \
   --input address=10.10.10.242 \
   --input wordlist=wordlists/SecLists/Discovery/Web-Content/Apache.fuzz.txt
 ```
-
-See [output](./docs/task-htb-example.txt) example
 
 ### Flow (preview)
 
@@ -176,7 +179,7 @@ curl -sSL https://github.com/hckops/hckctl/releases/download/${HCKCTL_VERSION}/h
 
 > TODO setup
 
-List of supported providers
+List of currently supported providers
 * docker
 * kubernetes
 * cloud
@@ -291,12 +294,14 @@ TODO
         * https://github.com/vulhub/vulhub
         * https://github.com/madhuakula/kubernetes-goat.git
 * task
+    - review TaskV1 schema i.e. `pages`, `license`, command `description`
     - `history` command to list old tasks i.e. names of log files e.g. <TIMESTAMP>-task-<NAME>-<RANDOM>
     - rename output log file with timestamp?
     - prepend file output with task/command yaml?
     - add command to remove all logs
     - print name partially resolved e.g. `task/scanner/<NAME>`
     - skip output file for `help` and `version`
+    - add argument `--volume` to restrict shared directories/files
 * version
     - print if new version available
     - implement server `version` in json format docker/kube/cloud
