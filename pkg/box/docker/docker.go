@@ -102,6 +102,12 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 		NetworkMode:        docker.DefaultNetworkMode(),
 		Ports:              containerPorts,
 		OnPortBindCallback: onPortBindCallback,
+		Volumes: []docker.ContainerVolume{
+			{
+				HostDir:      opts.ShareDir,
+				ContainerDir: commonModel.MountedShareDir,
+			},
+		},
 	})
 	if err != nil {
 		return nil, err

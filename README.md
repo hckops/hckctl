@@ -25,7 +25,7 @@ Launch manual and automated attacks with pre-defined and always up-to-date templ
 
 Designed to transparently run locally, remotely or integrated in pipelines, `hckctl` is free and open-source, no vendor lock-in, extensible and built using native providers api.
 
-Create your vulnerable target (box with a specific CVE or whole infrastructures) or connect to your CTF platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup or network configurations.
+Create your vulnerable target (box with a specific CVE or whole infrastructures) or connect to your CTF platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup and network configurations.
 
 Leverage the cloud platform or request a dedicated managed cluster to:
 * orchestrate complex scenarios
@@ -57,7 +57,7 @@ Prerequisites
     ```bash
     vim ${HOME}/.config/hck/config.yml
 
-    # edit the networks
+    # edit vpn network
     network:
       vpn:
       - name: htb
@@ -65,19 +65,17 @@ Prerequisites
         path: /home/demo/ctf/openvpn/htb_demo_eu_vip_28.ovpn
     ```
 
-Example of an auto-exploitation box
+Start the auto-exploitation box
 ```bash
 # exploit the machine and spawn a reverse shell
 hckctl task htb-postman --network-vpn htb
 ```
 
-// TODO network-vpn: docker/kube OK, validate cloud -> use lab
-
 ### Lab (preview)
 
 > TODO video
 
-Access your target from a personalized [`lab`](https://github.com/hckops/megalopolis/tree/main/lab)
+Access your target from a managed [`lab`](https://github.com/hckops/megalopolis/tree/main/lab)
 ```bash
 # connects to a vpn, exposes public ports, mount dumps etc.
 hckctl lab ctf-linux
@@ -230,7 +228,6 @@ tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 
 <!--
 
-3) box share dir
 4) task kube/cloud
 5) refactor box/lab network docker/kube/cloud
 6) flow example

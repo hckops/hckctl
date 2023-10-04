@@ -27,6 +27,7 @@ type CreateOptions struct {
 	Size        ResourceSize
 	Labels      commonModel.Labels
 	NetworkInfo commonModel.NetworkInfo
+	ShareDir    string
 }
 
 type ConnectOptions struct {
