@@ -53,11 +53,10 @@ hckctl box parrot --provider cloud
 
 Prerequisites
 * start the retired [Postman](https://app.hackthebox.com/machines/Postman) machine in your account
-* edit your local configurations
+* edit your vpn network config
     ```bash
     vim ${HOME}/.config/hck/config.yml
 
-    # edit vpn network
     network:
       vpn:
       - name: htb
@@ -67,8 +66,11 @@ Prerequisites
 
 Start the auto-exploitation box
 ```bash
+# TODO
+hckctl box parrot-sec
+
 # exploit the machine and spawn a reverse shell
-hckctl task htb-postman --network-vpn htb
+hckctl box htb-postman --network-vpn htb
 ```
 
 ### Lab (preview)
@@ -108,7 +110,7 @@ tail -F ${HOME}/.local/state/hck/task/log/task-rustscan-*
 
 Prerequisites
 * start the retired [Lame](https://app.hackthebox.com/machines/Lame) and [Knife](https://app.hackthebox.com/machines/Knife) machines in your account
-* edit your network vpn config (see box example above)
+* edit your vpn network config (see box example above)
 
 Run tasks against the vulnerable machine
 ```bash
@@ -281,6 +283,7 @@ TODO
     - update directories to exclude in `resolvePath` e.g. charts
     - add filters and review output e.g. table
 * box
+    - print/event shared directory
     - review tty resize
     - implement copy ???
     - kube: add distroless support

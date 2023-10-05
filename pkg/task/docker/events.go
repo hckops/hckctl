@@ -24,32 +24,8 @@ func (e *dockerTaskEvent) String() string {
 	return e.value
 }
 
-func newInitDockerClientEvent() *dockerTaskEvent {
-	return &dockerTaskEvent{kind: event.LogDebug, value: "init docker client"}
-}
-
-func newCloseDockerClientEvent() *dockerTaskEvent {
-	return &dockerTaskEvent{kind: event.LogDebug, value: "close docker client"}
-}
-
-func newImagePullDockerEvent(imageName string) *dockerTaskEvent {
-	return &dockerTaskEvent{kind: event.LogInfo, value: fmt.Sprintf("image pull: imageName=%s", imageName)}
-}
-
 func newImagePullDockerLoaderEvent(imageName string) *dockerTaskEvent {
 	return &dockerTaskEvent{kind: event.LoaderUpdate, value: fmt.Sprintf("pulling image %s", imageName)}
-}
-
-func newImagePullIgnoreDockerEvent(imageName string) *dockerTaskEvent {
-	return &dockerTaskEvent{kind: event.LogWarning, value: fmt.Sprintf("image pull ignored: imageName=%s", imageName)}
-}
-
-func newImageRemoveDockerEvent(imageId string) *dockerTaskEvent {
-	return &dockerTaskEvent{kind: event.LogInfo, value: fmt.Sprintf("image remove: imageId=%s", imageId)}
-}
-
-func newImageRemoveIgnoreDockerEvent(imageId string, err error) *dockerTaskEvent {
-	return &dockerTaskEvent{kind: event.LogWarning, value: fmt.Sprintf("image remove ignored: imageId=%s error=%v", imageId, err)}
 }
 
 func newNetworkUpsertDockerEvent(networkName string, networkId string) *dockerTaskEvent {
@@ -82,8 +58,4 @@ func newContainerCreateDockerLoaderEvent() *dockerTaskEvent {
 
 func newContainerWaitDockerLoaderEvent() *dockerTaskEvent {
 	return &dockerTaskEvent{kind: event.LoaderStop, value: "waiting"}
-}
-
-func newVpnConnectDockerLoaderEvent(vpnName string) *dockerTaskEvent {
-	return &dockerTaskEvent{kind: event.LoaderUpdate, value: fmt.Sprintf("connecting to %s", vpnName)}
 }

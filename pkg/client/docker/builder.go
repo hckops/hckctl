@@ -77,7 +77,7 @@ func BuildHostConfig(opts *ContainerHostConfigOpts) (*container.HostConfig, erro
 	if opts.Volumes != nil {
 		for _, volume := range opts.Volumes {
 
-			if err := util.CreateDir(volume.HostDir); err != nil {
+			if err := util.CreateBaseDir(volume.HostDir); err != nil {
 				return nil, errors.Wrap(err, "error docker local volume")
 			}
 

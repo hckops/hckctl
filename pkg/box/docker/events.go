@@ -24,14 +24,6 @@ func (e *dockerBoxEvent) String() string {
 	return e.value
 }
 
-func newInitDockerClientEvent() *dockerBoxEvent {
-	return &dockerBoxEvent{kind: event.LogDebug, value: "init docker client"}
-}
-
-func newCloseDockerClientEvent() *dockerBoxEvent {
-	return &dockerBoxEvent{kind: event.LogDebug, value: "close docker client"}
-}
-
 func newImagePullDockerEvent(imageName string) *dockerBoxEvent {
 	return &dockerBoxEvent{kind: event.LogInfo, value: fmt.Sprintf("image pull: imageName=%s", imageName)}
 }

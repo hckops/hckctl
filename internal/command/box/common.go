@@ -160,5 +160,6 @@ func newCreateOptions(info *template.TemplateInfo[boxModel.BoxV1], labels common
 		Size:        size,
 		Labels:      allLabels,
 		NetworkInfo: networkInfo,
+		ShareDir:    configRef.Config.Common.ShareDir,
 	}, nil
 }

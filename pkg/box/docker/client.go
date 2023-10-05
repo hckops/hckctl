@@ -4,13 +4,13 @@ import (
 	"github.com/pkg/errors"
 
 	boxModel "github.com/hckops/hckctl/pkg/box/model"
-	"github.com/hckops/hckctl/pkg/client/docker"
+	commonDocker "github.com/hckops/hckctl/pkg/common/docker"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/event"
 )
 
 type DockerBoxClient struct {
-	client     *docker.DockerClient
+	docker     *commonDocker.DockerCommonClient
 	clientOpts *commonModel.DockerOptions
 	eventBus   *event.EventBus
 }

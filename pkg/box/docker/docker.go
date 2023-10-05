@@ -9,69 +9,61 @@ import (
 
 	boxModel "github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/docker"
+	commonDocker "github.com/hckops/hckctl/pkg/common/docker"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/schema"
 )
 
 func newDockerBoxClient(commonOpts *boxModel.CommonBoxOptions, dockerOpts *commonModel.DockerOptions) (*DockerBoxClient, error) {
-	commonOpts.EventBus.Publish(newInitDockerClientEvent())
 
-	dockerClient, err := docker.NewDockerClient()
+	dockerClient, err := commonDocker.NewDockerCommonClient(commonOpts.EventBus, dockerOpts)
 	if err != nil {
-		return nil, errors.Wrap(err, "error docker box")
+		return nil, errors.Wrap(err, "error docker box client")
 	}
 
 	return &DockerBoxClient{
-		client:     dockerClient,
+		docker:     dockerClient,
 		clientOpts: dockerOpts,
 		eventBus:   commonOpts.EventBus,
 	}, nil
 }
 
 func (box *DockerBoxClient) close() error {
-	box.eventBus.Publish(newCloseDockerClientEvent())
-	box.eventBus.Close()
-	return box.client.Close()
+	return box.docker.Client.Close()
 }
 
 // TODO limit resources by size?
 func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.BoxInfo, error) {
 
-	imageName := opts.Template.Image.Name()
-	imagePullOpts := &docker.ImagePullOpts{
-		ImageName: imageName,
-		OnImagePullCallback: func() {
-			box.eventBus.Publish(newImagePullDockerLoaderEvent(imageName))
-		},
-	}
-	box.eventBus.Publish(newImagePullDockerEvent(imageName))
-	if err := box.client.ImagePull(imagePullOpts); err != nil {
-		// try to use an existing image if exists
-		if box.clientOpts.IgnoreImagePullError {
-			box.eventBus.Publish(newImagePullIgnoreDockerEvent(imageName))
-		} else {
-			// do not allow offline
-			return nil, err
-		}
-	}
-
-	// cleanup obsolete nightly images
-	imageRemoveOpts := &docker.ImageRemoveOpts{
-		OnImageRemoveCallback: func(imageId string) {
-			box.eventBus.Publish(newImageRemoveDockerEvent(imageId))
-		},
-		OnImageRemoveErrorCallback: func(imageId string, err error) {
-			// ignore error: keep images used by existing containers
-			box.eventBus.Publish(newImageRemoveIgnoreDockerEvent(imageId, err))
-		},
-	}
-	if err := box.client.ImageRemoveDangling(imageRemoveOpts); err != nil {
-		return nil, err
-	}
-
 	// boxName
 	containerName := opts.Template.GenerateName()
 
+	// vpn sidecar
+	var hostname string
+	var networkMode string
+	if opts.NetworkInfo.Vpn != nil {
+		if sidecarContainerId, err := box.docker.StartVpnSidecar(containerName, opts.NetworkInfo.Vpn); err != nil {
+			return nil, err
+		} else {
+			// fixes conflicting options: hostname and the network mode
+			hostname = ""
+			networkMode = docker.ContainerNetworkMode(sidecarContainerId)
+			// remove sidecar on exit
+			// TODO defer box.docker.Client.ContainerRemove(sidecarContainerId)
+		}
+	} else {
+		hostname = containerName
+		networkMode = docker.DefaultNetworkMode()
+	}
+
+	imageName := opts.Template.Image.Name()
+	if err := box.docker.PullImageOffline(imageName, func() {
+		box.eventBus.Publish(newImagePullDockerLoaderEvent(imageName))
+	}); err != nil {
+		return nil, err
+	}
+
+	// TODO https://github.com/dperson/openvpn-client/issues/210
 	var containerEnv []docker.ContainerEnv
 	for _, e := range opts.Template.EnvironmentVariables() {
 		containerEnv = append(containerEnv, docker.ContainerEnv{Key: e.Key, Value: e.Value})
@@ -84,7 +76,7 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 
 	containerConfig, err := docker.BuildContainerConfig(&docker.ContainerConfigOpts{
 		ImageName: imageName,
-		Hostname:  containerName,
+		Hostname:  hostname,
 		Env:       containerEnv,
 		Ports:     containerPorts,
 		Labels:    opts.Labels,
@@ -99,13 +91,13 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 		box.publishPortInfo(networkMap, containerName, port)
 	}
 	hostConfig, err := docker.BuildHostConfig(&docker.ContainerHostConfigOpts{
-		NetworkMode:        docker.DefaultNetworkMode(),
+		NetworkMode:        networkMode,
 		Ports:              containerPorts,
 		OnPortBindCallback: onPortBindCallback,
 		Volumes: []docker.ContainerVolume{
 			{
 				HostDir:      opts.ShareDir,
-				ContainerDir: commonModel.MountedShareDir,
+				ContainerDir: commonModel.MountShareDir,
 			},
 		},
 	})
@@ -114,20 +106,22 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 	}
 
 	networkName := box.clientOpts.NetworkName
-	networkId, err := box.client.NetworkUpsert(networkName)
+	networkId, err := box.docker.Client.NetworkUpsert(networkName)
 	if err != nil {
 		return nil, err
 	}
 	box.eventBus.Publish(newNetworkUpsertDockerEvent(networkName, networkId))
 
 	containerOpts := &docker.ContainerCreateOpts{
-		ContainerName:             containerName,
-		ContainerConfig:           containerConfig,
-		HostConfig:                hostConfig,
-		NetworkingConfig:          docker.BuildNetworkingConfig(networkName, networkId), // all on the same network
-		WaitStatus:                false,
-		OnContainerCreateCallback: func(string) error { return nil },
-		OnContainerWaitCallback:   func(string) error { return nil },
+		ContainerName:                containerName,
+		ContainerConfig:              containerConfig,
+		HostConfig:                   hostConfig,
+		NetworkingConfig:             docker.BuildNetworkingConfig(networkName, networkId), // all on the same network
+		WaitStatus:                   false,
+		CaptureInterrupt:             false,           // TODO ???
+		OnContainerInterruptCallback: func(string) {}, // TODO ???
+		OnContainerCreateCallback:    func(string) error { return nil },
+		OnContainerWaitCallback:      func(string) error { return nil },
 		OnContainerStatusCallback: func(status string) {
 			box.eventBus.Publish(newContainerCreateStatusDockerEvent(status))
 		},
@@ -139,7 +133,7 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 		},
 	}
 	// boxId
-	containerId, err := box.client.ContainerCreate(containerOpts)
+	containerId, err := box.docker.Client.ContainerCreate(containerOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +176,7 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 			box.eventBus.Publish(newContainerRestartDockerEvent(info.Id, status))
 		},
 	}
-	if err := box.client.ContainerRestart(restartsOpts); err != nil {
+	if err := box.docker.Client.ContainerRestart(restartsOpts); err != nil {
 		return err
 	}
 
@@ -196,7 +190,7 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 
 	// already printed for temporary box
 	if !deleteOnExit {
-		containerDetails, err := box.client.ContainerInspect(info.Id)
+		containerDetails, err := box.docker.Client.ContainerInspect(info.Id)
 		if err != nil {
 			return err
 		}
@@ -230,7 +224,7 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 			box.eventBus.Publish(newContainerExecExitDockerEvent(info.Id))
 
 			if deleteOnExit {
-				if err := box.client.ContainerRemove(info.Id); err != nil {
+				if err := box.docker.Client.ContainerRemove(info.Id); err != nil {
 					box.eventBus.Publish(newContainerExecErrorDockerEvent(info.Id, errors.Wrap(err, "error container exec remove")))
 				}
 			}
@@ -240,7 +234,7 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 		},
 	}
 
-	return box.client.ContainerExec(execOpts)
+	return box.docker.Client.ContainerExec(execOpts)
 }
 
 func (box *DockerBoxClient) publishPortInfo(networkMap map[string]boxModel.BoxPort, containerName string, containerPort docker.ContainerPort) {
@@ -266,7 +260,7 @@ func (box *DockerBoxClient) logsBox(containerId string, streamOpts *commonModel.
 			box.eventBus.Publish(newContainerExecErrorDockerEvent(containerId, err))
 		},
 	}
-	return box.client.ContainerLogs(opts)
+	return box.docker.Client.ContainerLogs(opts)
 }
 
 func (box *DockerBoxClient) describeBox(name string) (*boxModel.BoxDetails, error) {
@@ -276,7 +270,7 @@ func (box *DockerBoxClient) describeBox(name string) (*boxModel.BoxDetails, erro
 	}
 
 	box.eventBus.Publish(newContainerInspectDockerEvent(info.Id))
-	containerInfo, err := box.client.ContainerInspect(info.Id)
+	containerInfo, err := box.docker.Client.ContainerInspect(info.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -345,7 +339,7 @@ func boxLabel() string {
 
 func (box *DockerBoxClient) listBoxes() ([]boxModel.BoxInfo, error) {
 
-	containers, err := box.client.ContainerList(boxModel.BoxPrefixName, boxLabel())
+	containers, err := box.docker.Client.ContainerList(boxModel.BoxPrefixName, boxLabel())
 	if err != nil {
 		return nil, err
 	}
@@ -371,7 +365,7 @@ func (box *DockerBoxClient) deleteBoxes(names []string) ([]string, error) {
 		// all or filter
 		if len(names) == 0 || slices.Contains(names, boxInfo.Name) {
 
-			if err := box.client.ContainerRemove(boxInfo.Id); err == nil {
+			if err := box.docker.Client.ContainerRemove(boxInfo.Id); err == nil {
 				deleted = append(deleted, boxInfo.Name)
 				box.eventBus.Publish(newContainerRemoveDockerEvent(boxInfo.Id))
 			} else {

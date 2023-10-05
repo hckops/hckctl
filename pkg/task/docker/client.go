@@ -1,14 +1,14 @@
 package docker
 
 import (
-	"github.com/hckops/hckctl/pkg/client/docker"
+	commonDocker "github.com/hckops/hckctl/pkg/common/docker"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/event"
 	taskModel "github.com/hckops/hckctl/pkg/task/model"
 )
 
 type DockerTaskClient struct {
-	client     *docker.DockerClient
+	docker     *commonDocker.DockerCommonClient
 	clientOpts *commonModel.DockerOptions
 	eventBus   *event.EventBus
 }
@@ -26,5 +26,6 @@ func (task *DockerTaskClient) Events() *event.EventBus {
 }
 
 func (task *DockerTaskClient) Run(opts *taskModel.RunOptions) error {
+	// TODO defer task.close()
 	return task.runTask(opts)
 }

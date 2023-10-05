@@ -1,11 +1,15 @@
 package model
 
+import (
+	"github.com/hckops/hckctl/pkg/common/model"
+)
+
 type BoxProvider string
 
 const (
-	Docker     BoxProvider = "docker"
-	Kubernetes BoxProvider = "kube"
-	Cloud      BoxProvider = "cloud"
+	Docker     BoxProvider = model.DockerProvider
+	Kubernetes BoxProvider = model.KubernetesProvider
+	Cloud      BoxProvider = model.CloudProvider
 )
 
 func (p BoxProvider) String() string {

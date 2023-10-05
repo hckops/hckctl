@@ -1,6 +1,10 @@
 package model
 
 const (
+	DockerProvider     = "docker"
+	KubernetesProvider = "kube"
+	CloudProvider      = "cloud"
+
 	SidecarVpnImageName = "hckops/alpine-openvpn:latest"
-	MountedShareDir     = "/hck/share"
+	MountShareDir       = "/hck/share"
 )
