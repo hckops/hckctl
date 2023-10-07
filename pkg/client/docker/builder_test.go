@@ -78,9 +78,11 @@ func TestBuildHostConfig(t *testing.T) {
 		}},
 	}
 	opts := &ContainerHostConfigOpts{
-		NetworkMode:        "myNetworkMode",
-		Ports:              ports,
-		OnPortBindCallback: func(port ContainerPort) {},
+		NetworkMode: "myNetworkMode",
+		PortConfig: &ContainerPortConfigOpts{
+			Ports:              ports,
+			OnPortBindCallback: func(port ContainerPort) {},
+		},
 		Volumes: []ContainerVolume{
 			{HostDir: "/tmp/hck/share", ContainerDir: "/hck/share"},
 		},
@@ -91,18 +93,10 @@ func TestBuildHostConfig(t *testing.T) {
 	assert.Equal(t, expected, result)
 }
 
-func TestBuildVpnContainerConfig(t *testing.T) {
-	expected := &container.Config{
-		Image: "myImageName",
-		Env: []string{
-			"OPENVPN_CONFIG=myVpnConfigPath",
-		},
-	}
-	result := BuildVpnContainerConfig("myImageName", "myVpnConfigPath")
-	assert.Equal(t, expected, result)
-}
-
 func TestBuildVpnHostConfig(t *testing.T) {
+	ports := []ContainerPort{
+		{Local: "1024", Remote: "1024"},
+	}
 	expected := &container.HostConfig{
 		CapAdd:  []string{"NET_ADMIN"},
 		Sysctls: map[string]string{"net.ipv6.conf.all.disable_ipv6": "0"},
@@ -115,9 +109,16 @@ func TestBuildVpnHostConfig(t *testing.T) {
 				},
 			},
 		},
+		PortBindings: nat.PortMap{
+			"1024/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "1024"}},
+		},
 	}
-	result := BuildVpnHostConfig()
+	result, err := BuildVpnHostConfig(&ContainerPortConfigOpts{
+		Ports:              ports,
+		OnPortBindCallback: func(port ContainerPort) {},
+	})
 	assert.Equal(t, expected, result)
+	assert.NoError(t, err)
 }
 
 func TestDefaultNetworkMode(t *testing.T) {

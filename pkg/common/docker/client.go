@@ -78,9 +78,19 @@ func buildVpnSidecarName(containerName string) string {
 	return fmt.Sprintf("sidecar-vpn-%s", tokens[len(tokens)-1])
 }
 
-func (common *DockerCommonClient) StartVpnSidecar(baseContainerName string, vpnInfo *commonModel.VpnNetworkInfo) (string, error) {
+type StartVpnSidecarOptions struct {
+	MainContainerName  string
+	VpnInfo            *commonModel.VpnNetworkInfo
+	ContainerPorts     []docker.ContainerPort
+	OnPortBindCallback func(port docker.ContainerPort)
+}
 
+func (common *DockerCommonClient) StartVpnSidecar(baseContainerName string, vpnInfo *commonModel.VpnNetworkInfo, portConfig *docker.ContainerPortConfigOpts) (string, error) {
+
+	// sidecarName
 	containerName := buildVpnSidecarName(baseContainerName)
+
+	// constants
 	imageName := commonModel.SidecarVpnImageName
 	// base directory "/usr/share" must exist
 	vpnConfigPath := "/usr/share/client.ovpn"
@@ -92,10 +102,28 @@ func (common *DockerCommonClient) StartVpnSidecar(baseContainerName string, vpnI
 		return "", err
 	}
 
+	containerConfig, err := docker.BuildContainerConfig(&docker.ContainerConfigOpts{
+		ImageName: imageName,
+		Hostname:  baseContainerName,
+		Env:       []docker.ContainerEnv{{Key: "OPENVPN_CONFIG", Value: vpnConfigPath}},
+		Ports:     portConfig.Ports,
+		Tty:       false,
+		Cmd:       []string{},
+		Labels:    commonModel.Labels{},
+	})
+	if err != nil {
+		return "", err
+	}
+
+	hostConfig, err := docker.BuildVpnHostConfig(portConfig)
+	if err != nil {
+		return "", err
+	}
+
 	containerOpts := &docker.ContainerCreateOpts{
 		ContainerName:    containerName,
-		ContainerConfig:  docker.BuildVpnContainerConfig(imageName, vpnConfigPath),
-		HostConfig:       docker.BuildVpnHostConfig(),
+		ContainerConfig:  containerConfig,
+		HostConfig:       hostConfig,
 		WaitStatus:       false,
 		CaptureInterrupt: false, // edge case: killing this while creating will produce an orphan sidecar container
 		OnContainerCreateCallback: func(containerId string) error {

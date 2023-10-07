@@ -29,7 +29,6 @@ func BuildContainerConfig(opts *ContainerConfigOpts) (*container.Config, error) 
 		exposedPorts[p] = struct{}{}
 	}
 
-	// TODO Volumes
 	return &container.Config{
 		Hostname:     opts.Hostname,
 		Image:        opts.ImageName,
@@ -48,29 +47,9 @@ func BuildContainerConfig(opts *ContainerConfigOpts) (*container.Config, error) 
 
 func BuildHostConfig(opts *ContainerHostConfigOpts) (*container.HostConfig, error) {
 
-	portBindings := make(nat.PortMap)
-	for _, port := range opts.Ports {
-
-		localPort, err := util.FindOpenPort(port.Local)
-		if err != nil {
-			return nil, errors.Wrap(err, "error docker local port: hostConfig")
-		}
-
-		remotePort, err := nat.NewPort("tcp", port.Remote)
-		if err != nil {
-			return nil, errors.Wrap(err, "error docker remote port: hostConfig")
-		}
-
-		// actual bound port
-		opts.OnPortBindCallback(ContainerPort{
-			Local:  localPort,
-			Remote: port.Remote,
-		})
-
-		portBindings[remotePort] = []nat.PortBinding{{
-			HostIP:   "0.0.0.0",
-			HostPort: localPort,
-		}}
+	portBindings, err := buildPortBindings(opts.PortConfig)
+	if err != nil {
+		return nil, err
 	}
 
 	var mounts []mount.Mount
@@ -96,14 +75,41 @@ func BuildHostConfig(opts *ContainerHostConfigOpts) (*container.HostConfig, erro
 	}, nil
 }
 
-func BuildVpnContainerConfig(imageName string, vpnConfigPath string) *container.Config {
-	return &container.Config{
-		Image: imageName,
-		Env:   []string{fmt.Sprintf("OPENVPN_CONFIG=%s", vpnConfigPath)},
+func buildPortBindings(opts *ContainerPortConfigOpts) (nat.PortMap, error) {
+	portBindings := make(nat.PortMap)
+	for _, port := range opts.Ports {
+
+		localPort, err := util.FindOpenPort(port.Local)
+		if err != nil {
+			return nil, errors.Wrap(err, "error docker local port: hostConfig")
+		}
+
+		remotePort, err := nat.NewPort("tcp", port.Remote)
+		if err != nil {
+			return nil, errors.Wrap(err, "error docker remote port: hostConfig")
+		}
+
+		// actual bound port
+		opts.OnPortBindCallback(ContainerPort{
+			Local:  localPort,
+			Remote: port.Remote,
+		})
+
+		portBindings[remotePort] = []nat.PortBinding{{
+			HostIP:   "0.0.0.0",
+			HostPort: localPort,
+		}}
 	}
+	return portBindings, nil
 }
 
-func BuildVpnHostConfig() *container.HostConfig {
+func BuildVpnHostConfig(opts *ContainerPortConfigOpts) (*container.HostConfig, error) {
+
+	portBindings, err := buildPortBindings(opts)
+	if err != nil {
+		return nil, err
+	}
+
 	return &container.HostConfig{
 		CapAdd:  []string{"NET_ADMIN"},
 		Sysctls: map[string]string{"net.ipv6.conf.all.disable_ipv6": "0"},
@@ -116,7 +122,8 @@ func BuildVpnHostConfig() *container.HostConfig {
 				},
 			},
 		},
-	}
+		PortBindings: portBindings,
+	}, nil
 }
 
 func DefaultNetworkMode() string {

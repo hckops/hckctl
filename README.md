@@ -64,13 +64,18 @@ Prerequisites
         path: /home/demo/ctf/openvpn/htb_demo_eu_vip_28.ovpn
     ```
 
-Start the auto-exploitation box
+Start your own *pwnbox* and solve the challenges
 ```bash
-# TODO
-hckctl box parrot-sec
+# pull a preview box (first time might take a while)
+hckctl box preview/parrot-sec --network-vpn htb
+```
+
+Start an auto-exploitation box
+```bash
+# TODO review
 
 # exploit the machine and spawn a reverse shell
-hckctl box htb-postman --network-vpn htb
+hckctl box --network-vpn htb --local ../megalopolis/box/ctf/htb-postman.yml
 ```
 
 ### Lab (preview)

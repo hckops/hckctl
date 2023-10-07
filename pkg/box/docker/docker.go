@@ -38,20 +38,44 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 	// boxName
 	containerName := opts.Template.GenerateName()
 
+	// ports
+	networkMap := opts.Template.NetworkPorts(false)
+	var containerPorts []docker.ContainerPort
+	for _, p := range networkMap {
+		containerPorts = append(containerPorts, docker.ContainerPort{Local: p.Local, Remote: p.Remote})
+	}
+	portConfig := &docker.ContainerPortConfigOpts{
+		Ports: containerPorts,
+		OnPortBindCallback: func(port docker.ContainerPort) {
+			box.publishPortInfo(networkMap, containerName, port)
+		},
+	}
+
 	// vpn sidecar
 	var hostname string
 	var networkMode string
 	if opts.NetworkInfo.Vpn != nil {
-		if sidecarContainerId, err := box.docker.StartVpnSidecar(containerName, opts.NetworkInfo.Vpn); err != nil {
+		// set all networks configs on the sidecar to avoid options conflicts
+		if sidecarContainerId, err := box.docker.StartVpnSidecar(containerName, opts.NetworkInfo.Vpn, portConfig); err != nil {
 			return nil, err
 		} else {
-			// fixes conflicting options: hostname and the network mode
+			// fix conflicting options: hostname and the network mode
 			hostname = ""
+
+			// fix conflicting options: port exposing and the container type network mode
+			containerPorts = []docker.ContainerPort{}
+
+			// fix conflicting options: port publishing and the container type network mode
+			portConfig = &docker.ContainerPortConfigOpts{}
+
+			// use vpn network
 			networkMode = docker.ContainerNetworkMode(sidecarContainerId)
-			// remove sidecar on exit
-			// TODO defer box.docker.Client.ContainerRemove(sidecarContainerId)
+
+			// TODO remove sidecar on exit
+			// defer box.docker.Client.ContainerRemove(sidecarContainerId)
 		}
 	} else {
+		// defaults
 		hostname = containerName
 		networkMode = docker.DefaultNetworkMode()
 	}
@@ -63,15 +87,9 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 		return nil, err
 	}
 
-	// TODO https://github.com/dperson/openvpn-client/issues/210
 	var containerEnv []docker.ContainerEnv
 	for _, e := range opts.Template.EnvironmentVariables() {
 		containerEnv = append(containerEnv, docker.ContainerEnv{Key: e.Key, Value: e.Value})
-	}
-	networkMap := opts.Template.NetworkPorts(false)
-	var containerPorts []docker.ContainerPort
-	for _, p := range networkMap {
-		containerPorts = append(containerPorts, docker.ContainerPort{Local: p.Local, Remote: p.Remote})
 	}
 
 	containerConfig, err := docker.BuildContainerConfig(&docker.ContainerConfigOpts{
@@ -87,13 +105,9 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 		return nil, err
 	}
 
-	onPortBindCallback := func(port docker.ContainerPort) {
-		box.publishPortInfo(networkMap, containerName, port)
-	}
 	hostConfig, err := docker.BuildHostConfig(&docker.ContainerHostConfigOpts{
-		NetworkMode:        networkMode,
-		Ports:              containerPorts,
-		OnPortBindCallback: onPortBindCallback,
+		NetworkMode: networkMode,
+		PortConfig:  portConfig,
 		Volumes: []docker.ContainerVolume{
 			{
 				HostDir:      opts.ShareDir,
