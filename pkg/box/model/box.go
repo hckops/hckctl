@@ -41,8 +41,8 @@ type BoxPort struct {
 func SortPorts(ports []BoxPort) []BoxPort {
 	sorted := ports
 	// ascending order
-	slices.SortFunc(sorted, func(a, b BoxPort) bool {
-		return slices.IsSorted([]string{a.Remote, b.Remote})
+	slices.SortFunc(sorted, func(a, b BoxPort) int {
+		return strings.Compare(a.Remote, b.Remote)
 	})
 	return sorted
 }
@@ -54,8 +54,8 @@ type BoxEnv struct {
 
 func SortEnv(env []BoxEnv) []BoxEnv {
 	sorted := env
-	slices.SortFunc(sorted, func(a, b BoxEnv) bool {
-		return slices.IsSorted([]string{a.Key, b.Key})
+	slices.SortFunc(sorted, func(a, b BoxEnv) int {
+		return strings.Compare(a.Key, b.Key)
 	})
 	return sorted
 }
