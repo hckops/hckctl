@@ -37,7 +37,7 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 	// vpn sidecar
 	var networkMode string
 	if opts.NetworkInfo.Vpn != nil {
-		if sidecarContainerId, err := task.docker.StartVpnSidecar(containerName, opts.NetworkInfo.Vpn, &docker.ContainerPortConfigOpts{}); err != nil {
+		if sidecarContainerId, err := task.docker.StartSidecarVpn(containerName, opts.NetworkInfo.Vpn, &docker.ContainerPortConfigOpts{}); err != nil {
 			return err
 		} else {
 			networkMode = docker.ContainerNetworkMode(sidecarContainerId)

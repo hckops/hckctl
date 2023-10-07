@@ -1,15 +1,15 @@
 package cloud
 
 import (
-	model2 "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/pkg/errors"
 
 	v1 "github.com/hckops/hckctl/pkg/api/v1"
 	"github.com/hckops/hckctl/pkg/client/ssh"
-	"github.com/hckops/hckctl/pkg/lab/model"
+	commonModel "github.com/hckops/hckctl/pkg/common/model"
+	labModel "github.com/hckops/hckctl/pkg/lab/model"
 )
 
-func newCloudLabClient(commonOpts *model.CommonLabOptions, cloudOpts *model2.CloudOptions) (*CloudLabClient, error) {
+func newCloudLabClient(commonOpts *labModel.CommonLabOptions, cloudOpts *commonModel.CloudOptions) (*CloudLabClient, error) {
 	commonOpts.EventBus.Publish(newInitCloudClientEvent())
 
 	clientConfig := &ssh.SshClientConfig{
@@ -29,7 +29,7 @@ func newCloudLabClient(commonOpts *model.CommonLabOptions, cloudOpts *model2.Clo
 	}, nil
 }
 
-func (lab *CloudLabClient) createLab(opts *model.CreateOptions) (*model.LabInfo, error) {
+func (lab *CloudLabClient) createLab(opts *labModel.CreateOptions) (*labModel.LabInfo, error) {
 	lab.eventBus.Publish(newApiCreateCloudLoaderEvent(lab.clientOpts.Address, opts.LabTemplate.Name))
 
 	request := v1.NewLabCreateRequest(lab.clientOpts.Version, opts.LabTemplate.Name, opts.Parameters)
@@ -49,5 +49,5 @@ func (lab *CloudLabClient) createLab(opts *model.CreateOptions) (*model.LabInfo,
 	labName := response.Body.Name
 	lab.eventBus.Publish(newApiCreateCloudEvent(opts.LabTemplate.Name, labName))
 
-	return &model.LabInfo{Id: labName, Name: labName}, nil
+	return &labModel.LabInfo{Id: labName, Name: labName}, nil
 }

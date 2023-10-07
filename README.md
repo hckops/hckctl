@@ -300,6 +300,7 @@ TODO
     - filter/list box (list and delete) and template (list and validate) columns by provider + sorting
     - flaky issue zerolog `could not write event: write /home/ubuntu/.local/state/hck/hckctl-ubuntu.log: file already closed`
 * lab 
+    - `command` cli description and example
     - in `create` add override e.g. `--input alias=parrot --input password=changeme --input vpn=htb-eu`
     - inputs should look for HCK_LAB_??? env var override if --input is not present before using default
     - verify optional merge/overrides

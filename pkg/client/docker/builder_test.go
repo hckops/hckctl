@@ -1,12 +1,12 @@
 package docker
 
 import (
-	"github.com/docker/docker/api/types/mount"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
 )

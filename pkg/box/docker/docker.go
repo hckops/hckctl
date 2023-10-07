@@ -63,8 +63,8 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 	var hostname string
 	var networkMode string
 	if opts.NetworkInfo.Vpn != nil {
-		// set all networks configs on the sidecar to avoid options conflicts
-		if sidecarContainerId, err := box.docker.StartVpnSidecar(containerName, opts.NetworkInfo.Vpn, portConfig); err != nil {
+		// set all network configs on the sidecar to avoid option conflicts
+		if sidecarContainerId, err := box.docker.StartSidecarVpn(containerName, opts.NetworkInfo.Vpn, portConfig); err != nil {
 			return nil, err
 		} else {
 			// fix conflicting options: hostname and the network mode
@@ -130,8 +130,8 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 		HostConfig:                   hostConfig,
 		NetworkingConfig:             docker.BuildNetworkingConfig(networkName, networkId), // all on the same network
 		WaitStatus:                   false,
-		CaptureInterrupt:             false,           // TODO ???
-		OnContainerInterruptCallback: func(string) {}, // TODO ???
+		CaptureInterrupt:             false,
+		OnContainerInterruptCallback: func(string) {},
 		OnContainerCreateCallback:    func(string) error { return nil },
 		OnContainerWaitCallback:      func(string) error { return nil },
 		OnContainerStatusCallback: func(status string) {
@@ -199,6 +199,7 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 		}
 	}
 
+	// restart main container
 	restartsOpts := &docker.ContainerRestartOpts{
 		ContainerId: info.Id,
 		OnRestartCallback: func(status string) {

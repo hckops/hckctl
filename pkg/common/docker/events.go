@@ -2,6 +2,7 @@ package docker
 
 import (
 	"fmt"
+
 	"github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/event"
 )
@@ -47,18 +48,18 @@ func newImageRemoveIgnoreDockerEvent(imageId string, err error) *dockerCommonEve
 	return &dockerCommonEvent{kind: event.LogWarning, value: fmt.Sprintf("image remove ignored: imageId=%s error=%v", imageId, err)}
 }
 
-func newVpnSidecarCreateDockerEvent(containerName string, containerId string) *dockerCommonEvent {
+func newSidecarVpnCreateDockerEvent(containerName string, containerId string) *dockerCommonEvent {
 	return &dockerCommonEvent{kind: event.LogInfo, value: fmt.Sprintf("sidecar-vpn create: containerName=%s containerId=%s", containerName, containerId)}
 }
 
-func newVpnSidecarCreateStatusDockerEvent(status string) *dockerCommonEvent {
+func newSidecarVpnCreateStatusDockerEvent(status string) *dockerCommonEvent {
 	return &dockerCommonEvent{kind: event.LogDebug, value: status}
 }
 
-func newVpnSidecarConnectDockerEvent(vpnName string) *dockerCommonEvent {
+func newSidecarVpnConnectDockerEvent(vpnName string) *dockerCommonEvent {
 	return &dockerCommonEvent{kind: event.LogInfo, value: fmt.Sprintf("sidecar-vpn connect: vpnName=%s", vpnName)}
 }
 
-func newVpnSidecarConnectDockerLoaderEvent(vpnName string) *dockerCommonEvent {
+func newSidecarVpnConnectDockerLoaderEvent(vpnName string) *dockerCommonEvent {
 	return &dockerCommonEvent{kind: event.LoaderUpdate, value: fmt.Sprintf("connecting to %s", vpnName)}
 }

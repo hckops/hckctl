@@ -2,12 +2,12 @@ package docker
 
 import (
 	"fmt"
-	"github.com/docker/docker/api/types/mount"
 	"strings"
 
 	"github.com/pkg/errors"
 
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
 

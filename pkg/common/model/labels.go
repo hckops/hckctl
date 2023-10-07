@@ -2,11 +2,12 @@ package model
 
 import (
 	"fmt"
-	"github.com/hckops/hckctl/pkg/schema"
 	"path/filepath"
 	"strings"
 
 	"golang.org/x/exp/maps"
+
+	"github.com/hckops/hckctl/pkg/schema"
 )
 
 type Labels map[string]string

@@ -2,6 +2,7 @@ package cloud
 
 import (
 	"fmt"
+
 	"github.com/hckops/hckctl/pkg/event"
 	"github.com/hckops/hckctl/pkg/lab/model"
 )

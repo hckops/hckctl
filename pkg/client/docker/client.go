@@ -3,7 +3,6 @@ package docker
 import (
 	"context"
 	"fmt"
-	"github.com/hckops/hckctl/pkg/util"
 	"io"
 	"os"
 	"os/signal"
@@ -23,6 +22,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/hckops/hckctl/pkg/client/common"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 func NewDockerClient() (*DockerClient, error) {

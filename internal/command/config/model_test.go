@@ -1,12 +1,12 @@
 package config
 
 import (
-	"github.com/hckops/hckctl/pkg/util"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/hckops/hckctl/pkg/common/model"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 func TestNewConfig(t *testing.T) {
