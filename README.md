@@ -64,9 +64,9 @@ Prerequisites
         path: /home/demo/ctf/openvpn/htb_demo_eu_vip_28.ovpn
     ```
 
-Start your own *pwnbox* and solve the challenges
+Start your *pwnbox* and solve the challenges
 ```bash
-# pull a preview box (first time might take a while)
+# pulls a preview box (first time might take a while)
 hckctl box preview/parrot-sec --network-vpn htb
 ```
 
@@ -74,7 +74,7 @@ Start an auto-exploitation box
 ```bash
 # TODO review
 
-# exploit the machine and spawn a reverse shell
+# exploits the machine and spawns a reverse shell
 hckctl box --network-vpn htb --local ../megalopolis/box/ctf/htb-postman.yml
 ```
 
@@ -198,7 +198,7 @@ curl -sSL https://github.com/hckops/hckctl/releases/download/${HCKCTL_VERSION}/h
 
 List of currently supported providers
 * docker
-* kubernetes
+* kubernetes: example with local minikube, kind and kube-template
 * cloud
 * podman (coming soon)
 
@@ -221,9 +221,11 @@ tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 
 * `machine` create and access VMs e.g. DigitalOcean Droplet, AWS EC2, Azure Virtual Machines, QEMU etc.
 * `tui` similar to lazydocker and k9s
+* `network` support Tor and ProxyChains
 * `plugin` add custom cli commands in any language
   - `man` combine tldr and cheat with task commands
   - `prompt` chatgpt prompt style
+  - `htb` and `thm` api to start/stop/list machines and submit flags
 
 ## Contribute
 
@@ -235,31 +237,22 @@ tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 
 <!--
 
-4) task kube/cloud
-5) refactor box/lab network docker/kube/cloud
-6) flow example
-
 TODO
 * priority
-    - add box/lab --network-vpn support
     - add task providers: kube and cloud
-    - add task shareDir volume or copy dir e.g. ffuf + seclists
-    - save tasks logs to file in logDir + add header with commands/parameters
-    - TODO update lab and task cli example/description
+    - add box kube --network-vpn
+    - debug `htb-postman`
     - play htb: linux/win
     - add flow example
-    - add context client timeout e.g. vpn or target not available
     - verify kube/cloud distroless support
     - verify kube/cloud no-shell support
     - RELEASE
 * general
+    - public discord server (review channels visibility)
     - brew release
-    - review client timeouts
+    - review context/http/client timeouts e.g. vpn or target not available
     - verify config migration between versions
-    - update readme
-        * remove comments
-        * update setup
-        * descriptions/screenshot/gif
+    - add readme lab video/gif
     - delete old branches (video)
     - disclaimer of responsibility
     - update internal cli diagram
@@ -285,12 +278,13 @@ TODO
         * delete all
 * template
     - add `--remote` mutually exclusive flag
-    - update directories to exclude in `resolvePath` e.g. charts
+    - keep up-to-date directories to exclude in `resolvePath` e.g. charts
     - add filters and review output e.g. table
 * box
-    - print/event shared directory
+    - print name partially resolved e.g. `box/preview/parrot-sec` or `preview/parrot-sec`
+    - print/event shared directory, same as envs, ports etc.
     - review tty resize
-    - implement copy ???
+    - expose copy from/to ???
     - kube: add distroless support
     - kube: verify if `close()` is needed or `return nil`
     - kube: `execBox` deployment always check/scale replica to 1 before exec (test with replica=0)
@@ -307,6 +301,7 @@ TODO
     - flaky issue zerolog `could not write event: write /home/ubuntu/.local/state/hck/hckctl-ubuntu.log: file already closed`
 * lab 
     - in `create` add override e.g. `--input alias=parrot --input password=changeme --input vpn=htb-eu`
+    - inputs should look for HCK_LAB_??? env var override if --input is not present before using default
     - verify optional merge/overrides
     - in `connect` merge/expand BoxEnv actual BoxEnv e.g. generated password
     - compose/template/infra
@@ -315,26 +310,24 @@ TODO
         * https://github.com/vulhub/vulhub
         * https://github.com/madhuakula/kubernetes-goat.git
 * task
+    - inputs should look for HCK_TASK_??? env var override if --input is not present before using default
     - review TaskV1 schema i.e. `pages`, `license`, command `description`
     - `history` command to list old tasks i.e. names of log files e.g. <TIMESTAMP>-task-<NAME>-<RANDOM>
     - rename output log file with timestamp?
-    - prepend file output with task/command yaml?
+    - for debug purposes prepend file output with interpolated task (yaml) or command parameters
     - add command to remove all logs
-    - print name partially resolved e.g. `task/scanner/<NAME>`
+    - print name partially resolved e.g. `task/scanner/<NAME>` or `scanner/<NAME>`
     - skip output file for `help` and `version`
     - add argument `--volume` to restrict shared directories/files
 * version
     - print if new version available
-    - implement server `version` in json format docker/kube/cloud
+    - implement server and providers `version` in json format docker/kube/cloud
 * release
     - add brew https://goreleaser.com/customization/homebrew
     - test linux
     - test mac and mac1
     - test window vm
-* plugins/bundles
-    - man (plugin)
-    - kube-inject (plugin) mount sidecar pod at runtime with debugging tools
-    - pro (bundle) e.g. flow
+    - verify release workflow should depend on ci workflow
 * prompt
     - https://github.com/snwfdhmp/awesome-gpt-prompt-engineering
 
