@@ -273,11 +273,19 @@ func newContainerDetails(container types.ContainerJSON) (ContainerDetails, error
 		return ContainerDetails{}, errors.Wrapf(err, "error parsing container created time %s", container.Created)
 	}
 
-	if len(container.NetworkSettings.Networks) != 1 {
-		return ContainerDetails{}, errors.Wrapf(err, "found %d container networks, expected only 1", len(container.NetworkSettings.Networks))
+	var networkInfo NetworkInfo
+	if len(container.NetworkSettings.Networks) > 1 {
+		return ContainerDetails{}, errors.Wrapf(err, "found %d container networks, expected at most 1", len(container.NetworkSettings.Networks))
+	} else if len(container.NetworkSettings.Networks) == 1 {
+		networkName := maps.Keys(container.NetworkSettings.Networks)[0]
+		network := container.NetworkSettings.Networks[networkName]
+		networkInfo = NetworkInfo{
+			Id:         network.NetworkID,
+			Name:       networkName,
+			IpAddress:  network.IPAddress,
+			MacAddress: network.MacAddress,
+		}
 	}
-	networkName := maps.Keys(container.NetworkSettings.Networks)[0]
-	network := container.NetworkSettings.Networks[networkName]
 
 	return ContainerDetails{
 		Info:    newContainerInfo(container.ID, container.Name, container.State.Status),
@@ -285,12 +293,7 @@ func newContainerDetails(container types.ContainerJSON) (ContainerDetails, error
 		Labels:  container.Config.Labels,
 		Env:     envs,
 		Ports:   ports,
-		Network: NetworkInfo{
-			Id:         network.NetworkID,
-			Name:       networkName,
-			IpAddress:  network.IPAddress,
-			MacAddress: network.MacAddress,
-		},
+		Network: networkInfo,
 	}, nil
 }
 

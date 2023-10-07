@@ -35,6 +35,14 @@ func (box *DockerBoxClient) close() error {
 // TODO limit resources by size?
 func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.BoxInfo, error) {
 
+	// pull image
+	imageName := opts.Template.Image.Name()
+	if err := box.docker.PullImageOffline(imageName, func() {
+		box.eventBus.Publish(newImagePullDockerLoaderEvent(imageName))
+	}); err != nil {
+		return nil, err
+	}
+
 	// boxName
 	containerName := opts.Template.GenerateName()
 
@@ -70,21 +78,11 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 
 			// use vpn network
 			networkMode = docker.ContainerNetworkMode(sidecarContainerId)
-
-			// TODO remove sidecar on exit
-			// defer box.docker.Client.ContainerRemove(sidecarContainerId)
 		}
 	} else {
 		// defaults
 		hostname = containerName
 		networkMode = docker.DefaultNetworkMode()
-	}
-
-	imageName := opts.Template.Image.Name()
-	if err := box.docker.PullImageOffline(imageName, func() {
-		box.eventBus.Publish(newImagePullDockerLoaderEvent(imageName))
-	}); err != nil {
-		return nil, err
 	}
 
 	var containerEnv []docker.ContainerEnv
@@ -184,6 +182,23 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 	command := template.Shell
 	box.eventBus.Publish(newContainerExecDockerEvent(info.Id, info.Name, command))
 
+	// attempt to restart all associated sidecars
+	sidecars, err := box.docker.GetSidecars(info.Name)
+	if err != nil {
+		return err
+	}
+	for _, sidecar := range sidecars {
+		restartsOpts := &docker.ContainerRestartOpts{
+			ContainerId: sidecar.Id,
+			OnRestartCallback: func(status string) {
+				box.eventBus.Publish(newContainerRestartDockerEvent(sidecar.Id, status))
+			},
+		}
+		if err := box.docker.Client.ContainerRestart(restartsOpts); err != nil {
+			return err
+		}
+	}
+
 	restartsOpts := &docker.ContainerRestartOpts{
 		ContainerId: info.Id,
 		OnRestartCallback: func(status string) {
@@ -221,6 +236,16 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 		for _, port := range containerDetails.Ports {
 			box.publishPortInfo(template.NetworkPorts(false), containerDetails.Info.ContainerName, port)
 		}
+		// print sidecar ports
+		for _, sidecar := range sidecars {
+			sidecarDetails, err := box.docker.Client.ContainerInspect(sidecar.Id)
+			if err != nil {
+				return err
+			}
+			for _, port := range sidecarDetails.Ports {
+				box.publishPortInfo(template.NetworkPorts(false), containerDetails.Info.ContainerName, port)
+			}
+		}
 	}
 
 	execOpts := &docker.ContainerExecOpts{
@@ -238,6 +263,12 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 			box.eventBus.Publish(newContainerExecExitDockerEvent(info.Id))
 
 			if deleteOnExit {
+				for _, sidecar := range sidecars {
+					if err := box.docker.Client.ContainerRemove(sidecar.Id); err != nil {
+						box.eventBus.Publish(newContainerExecErrorDockerEvent(sidecar.Id, errors.Wrap(err, "error sidecar exec remove")))
+					}
+				}
+
 				if err := box.docker.Client.ContainerRemove(info.Id); err != nil {
 					box.eventBus.Publish(newContainerExecErrorDockerEvent(info.Id, errors.Wrap(err, "error container exec remove")))
 				}
@@ -358,12 +389,12 @@ func (box *DockerBoxClient) listBoxes() ([]boxModel.BoxInfo, error) {
 		return nil, err
 	}
 
-	var result []boxModel.BoxInfo
+	var boxes []boxModel.BoxInfo
 	for index, c := range containers {
-		result = append(result, newBoxInfo(c))
+		boxes = append(boxes, newBoxInfo(c))
 		box.eventBus.Publish(newContainerListDockerEvent(index, c.ContainerName, c.ContainerId, c.Healthy))
 	}
-	return result, nil
+	return boxes, nil
 }
 
 func (box *DockerBoxClient) deleteBoxes(names []string) ([]string, error) {
@@ -385,6 +416,17 @@ func (box *DockerBoxClient) deleteBoxes(names []string) ([]string, error) {
 			} else {
 				// silently ignore
 				box.eventBus.Publish(newContainerRemoveIgnoreDockerEvent(boxInfo.Id))
+			}
+
+			// delete all sidecars
+			sidecars, _ := box.docker.GetSidecars(boxInfo.Name)
+			for _, sidecar := range sidecars {
+				if err := box.docker.Client.ContainerRemove(sidecar.Id); err != nil {
+					box.eventBus.Publish(newContainerRemoveDockerEvent(sidecar.Id))
+				} else {
+					// silently ignore
+					box.eventBus.Publish(newContainerRemoveIgnoreDockerEvent(sidecar.Id))
+				}
 			}
 		}
 	}

@@ -2,6 +2,7 @@ package docker
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/schema"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -75,20 +76,38 @@ func (common *DockerCommonClient) PullImageOffline(imageName string, onImagePull
 func buildVpnSidecarName(containerName string) string {
 	// expect valid name always
 	tokens := strings.Split(containerName, "-")
-	return fmt.Sprintf("sidecar-vpn-%s", tokens[len(tokens)-1])
+	return fmt.Sprintf("%svpn-%s", commonModel.SidecarPrefixName, tokens[len(tokens)-1])
 }
 
-type StartVpnSidecarOptions struct {
-	MainContainerName  string
-	VpnInfo            *commonModel.VpnNetworkInfo
-	ContainerPorts     []docker.ContainerPort
-	OnPortBindCallback func(port docker.ContainerPort)
+func sidecarLabel() string {
+	return fmt.Sprintf("%s=%s", commonModel.LabelSchemaKind, schema.KindSidecarV1.String())
 }
 
-func (common *DockerCommonClient) StartVpnSidecar(baseContainerName string, vpnInfo *commonModel.VpnNetworkInfo, portConfig *docker.ContainerPortConfigOpts) (string, error) {
+func (common *DockerCommonClient) GetSidecars(containerName string) ([]commonModel.SidecarInfo, error) {
+
+	// filter by prefix and label
+	containers, err := common.Client.ContainerList(commonModel.SidecarPrefixName, sidecarLabel())
+	if err != nil {
+		return nil, err
+	}
+
+	var sidecars []commonModel.SidecarInfo
+	for _, c := range containers {
+		// expect valid name always
+		tokens := strings.Split(c.ContainerName, "-")
+		// include only associated containers
+		if strings.HasSuffix(containerName, tokens[len(tokens)-1]) {
+			sidecars = append(sidecars, commonModel.SidecarInfo{Id: c.ContainerId, Name: c.ContainerName})
+			// TODO common.eventBus.Publish
+		}
+	}
+	return sidecars, nil
+}
+
+func (common *DockerCommonClient) StartVpnSidecar(mainContainerName string, vpnInfo *commonModel.VpnNetworkInfo, portConfig *docker.ContainerPortConfigOpts) (string, error) {
 
 	// sidecarName
-	containerName := buildVpnSidecarName(baseContainerName)
+	containerName := buildVpnSidecarName(mainContainerName)
 
 	// constants
 	imageName := commonModel.SidecarVpnImageName
@@ -104,12 +123,12 @@ func (common *DockerCommonClient) StartVpnSidecar(baseContainerName string, vpnI
 
 	containerConfig, err := docker.BuildContainerConfig(&docker.ContainerConfigOpts{
 		ImageName: imageName,
-		Hostname:  baseContainerName,
+		Hostname:  mainContainerName,
 		Env:       []docker.ContainerEnv{{Key: "OPENVPN_CONFIG", Value: vpnConfigPath}},
 		Ports:     portConfig.Ports,
 		Tty:       false,
 		Cmd:       []string{},
-		Labels:    commonModel.Labels{},
+		Labels:    commonModel.NewSidecarLabels().AddSidecarMain(mainContainerName),
 	})
 	if err != nil {
 		return "", err

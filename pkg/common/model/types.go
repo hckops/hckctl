@@ -45,6 +45,11 @@ func (image *Image) ResolveVersion() string {
 
 type Parameters map[string]string
 
+type SidecarInfo struct {
+	Id   string
+	Name string
+}
+
 type NetworkInfo struct {
 	Vpn *VpnNetworkInfo
 }

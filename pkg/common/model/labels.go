@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/hckops/hckctl/pkg/schema"
 	"path/filepath"
 	"strings"
 
@@ -21,6 +22,7 @@ const (
 	LabelTemplateGitDir      = "com.hckops.template.git.dir"
 	LabelTemplateGitName     = "com.hckops.template.git.name"
 	LabelTemplateCachePath   = "com.hckops.template.cache.path"
+	LabelSidecarMain         = "com.hckops.sidecar.main"
 )
 
 func (l Labels) AddLabel(key string, value string) Labels {
@@ -95,4 +97,14 @@ func (l Labels) ToGitTemplateInfo() *GitTemplateInfo {
 		Commit:   l[LabelTemplateGitCommit],
 		Name:     l[LabelTemplateGitName],
 	}
+}
+
+func NewSidecarLabels() Labels {
+	return map[string]string{
+		LabelSchemaKind: schema.KindSidecarV1.String(),
+	}
+}
+
+func (l Labels) AddSidecarMain(containerName string) Labels {
+	return l.AddLabel(LabelSidecarMain, containerName)
 }
