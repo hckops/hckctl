@@ -109,11 +109,14 @@ hckctl task nmap --command full --input address=127.0.0.1 --input port=80
 hckctl task nuclei --inline -- -u https://example.com
 
 # monitor the logs
-tail -F ${HOME}/.local/state/hck/task/log/task-rustscan-*
+tail -F ${HOME}/.local/state/hck/task/log/task-*
 ```
 
-#### HTB example
+#### TryHackMe example
 
+> TODO
+
+<!--
 Prerequisites
 * start the retired [Lame](https://app.hackthebox.com/machines/Lame) and [Knife](https://app.hackthebox.com/machines/Knife) machines in your account
 * edit your vpn network config (see box example above)
@@ -148,6 +151,7 @@ hckctl task \
   --input address=10.10.10.242 \
   --input wordlist=wordlists/SecLists/Discovery/Web-Content/Apache.fuzz.txt
 ```
+-->
 
 ### Flow (preview)
 
@@ -166,6 +170,8 @@ hckctl flow campaign/phishing @example.com
 Explore all available templates. Pin a git `revision` to ensure reliability in automated pipelines
 ```bash
 hckctl template list
+
+# TODO how to validate local template
 ```
 
 Please, feel free to contribute to the companion [repository](https://github.com/hckops/megalopolis) and add more templates.
@@ -174,9 +180,11 @@ Please, feel free to contribute to the companion [repository](https://github.com
 
 Edit the default configurations
 ```bash
-# vim ${HOME}/.config/hck/config.yml
-# prints current configs
+# prints path and current configs
 hckctl config
+
+# unix path
+vim ${HOME}/.config/hck/config.yml
 
 # resets default configs
 hckctl config --reset
@@ -195,12 +203,39 @@ curl -sSL https://github.com/hckops/hckctl/releases/download/${HCKCTL_VERSION}/h
 
 ## Provider
 
-> TODO setup
-
 List of currently supported providers
 * docker
-* kubernetes: example with local minikube, kind and kube-template
+    - follow the official [instructions](https://docs.docker.com/engine/install) to install it
+    - the fastest way to get started is with the [convenience script](https://get.docker.com)
+    ```bash
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    ./sudo sh get-docker.sh
+    ```
+* kubernetes
+    - use [minikube](https://minikube.sigs.k8s.io) or [kind](https://kind.sigs.k8s.io) to setup a local cluster
+    ```bash
+    provider:
+      kube:
+        # by default it will use "~/.kube/config"
+        configPath: ""
+        namespace: hckops
+    ```
+    - use [kube-template](https://github.com/hckops/kube-template) if you are looking for a simple way to get started with a remote cluster
+    ```bash
+    provider:
+      kube:
+        configPath: "~/PATH/TO/kube-template/clusters/do-template-kubeconfig.yaml"
+    ```
 * cloud
+    - access to the platform is in preview and limited, if you are interested please leave a comment or a :thumbsup: to this issue (TODO) and we'll reach out to everyone with more details
+    ```bash
+    provider:
+      cloud:
+        host: <ADDRESS>
+        port: 2222
+        username: <USERNAME>
+        token: <TOKEN>
+    ```
 * podman (coming soon)
 
 ## Development
@@ -225,8 +260,8 @@ tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 * `network` support Tor and ProxyChains
 * `plugin` add custom cli commands in any language
   - `man` combine tldr and cheat with task commands
-  - `prompt` chatgpt prompt style
   - `htb` and `thm` api to start/stop/list machines and submit flags
+  - `prompt` chatgpt prompt style
 
 ## Contribute
 
@@ -237,6 +272,7 @@ tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 * rename `template` to catalog? or alias?
 * cmd aliases e.g. start/up/create
 * replace task/htb example with thm
+* verify/support kube config relative path
 
 TODO
 * priority
