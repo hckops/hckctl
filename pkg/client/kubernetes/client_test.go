@@ -168,7 +168,7 @@ func TestNewPodInfoErrorReplica(t *testing.T) {
 	}
 	result, err := newPodInfo("myPodNamespace", pods)
 
-	assert.EqualError(t, err, "found 2 pods, expected only 1 pod for deployment: namespace=myPodNamespace")
+	assert.EqualError(t, err, "found 2 pods, expected only 1 pod: namespace=myPodNamespace")
 	assert.Nil(t, result)
 }
 

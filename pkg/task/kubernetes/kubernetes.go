@@ -31,8 +31,9 @@ func (task *KubeTaskClient) close() error {
 	return task.client.Close()
 }
 
-func (task *KubeTaskClient) runTask(opts *taskModel.RunOptions) error {
+// TODO copy vpn https://github.com/goccy/kubejob/blob/master/copy.go
 
+func (task *KubeTaskClient) runTask(opts *taskModel.RunOptions) error {
 	namespace := task.clientOpts.Namespace
 
 	// create namespace
@@ -63,31 +64,38 @@ func (task *KubeTaskClient) runTask(opts *taskModel.RunOptions) error {
 		Namespace: namespace,
 		Spec:      jobSpec,
 		OnStatusEventCallback: func(event string) {
-			// TODO task.eventBus.Publish(newDeploymentCreateStatusKubeEvent(event))
+			task.eventBus.Publish(newJobCreateStatusKubeEvent(event))
 		},
 	}
 	err := task.client.JobCreate(jobOpts)
 	if err != nil {
 		return err
 	}
-	// TODO task.eventBus.Publish
+	task.eventBus.Publish(newJobCreateKubeEvent(namespace, jobName))
 
 	podInfo, err := task.client.PodDescribeFromJob(jobSpec)
 	if err != nil {
 		return err
 	}
-	// TODO task.eventBus.Publish(newPodNameKubeEvent(namespace, podInfo.PodName, podInfo.ContainerName))
+	task.eventBus.Publish(newPodNameKubeEvent(namespace, podInfo.PodName, podInfo.ContainerName))
+
+	// stop loader
+	task.eventBus.Publish(newContainerWaitKubeLoaderEvent())
+
+	// TODO tee
+	logFileName := "TODO_LOG_FILE_NAME"
 
 	logOpts := &kubernetes.PodLogOpts{
 		Namespace: namespace,
 		PodName:   podInfo.PodName,
 		PodId:     podInfo.ContainerName,
 	}
-	// TODO task.eventBus.Publish
+	task.eventBus.Publish(newPodLogKubeEvent(logFileName))
 	if err := task.client.PodLog(logOpts); err != nil {
 		return err
 	}
 
-	// TODO task.eventBus.Publish
+	task.eventBus.Publish(newPodLogKubeConsoleEvent(logFileName))
+	task.eventBus.Publish(newJobDeleteKubeEvent(namespace, jobName))
 	return task.client.JobDelete(namespace, jobName)
 }

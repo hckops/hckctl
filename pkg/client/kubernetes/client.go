@@ -348,7 +348,7 @@ func (client *KubeClient) podDescribe(namespace string, listOptions metav1.ListO
 
 func newPodInfo(namespace string, pods *corev1.PodList) (*PodInfo, error) {
 	if len(pods.Items) != SingleReplica {
-		return nil, fmt.Errorf("found %d pods, expected only 1 pod for deployment: namespace=%s", len(pods.Items), namespace)
+		return nil, fmt.Errorf("found %d pods, expected only 1 pod: namespace=%s", len(pods.Items), namespace)
 	}
 
 	podItem := pods.Items[0]

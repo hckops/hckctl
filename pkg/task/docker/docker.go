@@ -31,6 +31,14 @@ func (task *DockerTaskClient) close() error {
 
 func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 
+	// pull image
+	imageName := opts.Template.Image.Name()
+	if err := task.docker.PullImageOffline(imageName, func() {
+		task.eventBus.Publish(newImagePullDockerLoaderEvent(imageName))
+	}); err != nil {
+		return err
+	}
+
 	// taskName
 	containerName := opts.Template.GenerateName()
 
@@ -46,13 +54,6 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 		}
 	} else {
 		networkMode = docker.DefaultNetworkMode()
-	}
-
-	imageName := opts.Template.Image.Name()
-	if err := task.docker.PullImageOffline(imageName, func() {
-		task.eventBus.Publish(newImagePullDockerLoaderEvent(imageName))
-	}); err != nil {
-		return err
 	}
 
 	containerConfig, err := docker.BuildContainerConfig(&docker.ContainerConfigOpts{
@@ -131,5 +132,6 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 	task.eventBus.Publish(newContainerLogDockerConsoleEvent(logFileName))
 
 	// remove temporary container
+	task.eventBus.Publish(newContainerRemoveDockerEvent(containerId))
 	return task.docker.Client.ContainerRemove(containerId)
 }

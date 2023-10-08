@@ -24,24 +24,8 @@ func (e *dockerBoxEvent) String() string {
 	return e.value
 }
 
-func newImagePullDockerEvent(imageName string) *dockerBoxEvent {
-	return &dockerBoxEvent{kind: event.LogInfo, value: fmt.Sprintf("image pull: imageName=%s", imageName)}
-}
-
 func newImagePullDockerLoaderEvent(imageName string) *dockerBoxEvent {
 	return &dockerBoxEvent{kind: event.LoaderUpdate, value: fmt.Sprintf("pulling image %s", imageName)}
-}
-
-func newImagePullIgnoreDockerEvent(imageName string) *dockerBoxEvent {
-	return &dockerBoxEvent{kind: event.LogWarning, value: fmt.Sprintf("image pull ignored: imageName=%s", imageName)}
-}
-
-func newImageRemoveDockerEvent(imageId string) *dockerBoxEvent {
-	return &dockerBoxEvent{kind: event.LogInfo, value: fmt.Sprintf("image remove: imageId=%s", imageId)}
-}
-
-func newImageRemoveIgnoreDockerEvent(imageId string, err error) *dockerBoxEvent {
-	return &dockerBoxEvent{kind: event.LogWarning, value: fmt.Sprintf("image remove ignored: imageId=%s error=%v", imageId, err)}
 }
 
 func newNetworkUpsertDockerEvent(networkName string, networkId string) *dockerBoxEvent {

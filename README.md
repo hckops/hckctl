@@ -230,7 +230,7 @@ provider:
 
 ### Cloud
 
-Access to the platform is in ***preview*** and limited. If you are interested, please leave a comment or a :thumbsup: to this [issue](https://github.com/hckops/hckctl/issues/104) and we'll reach out with more details
+Access to the platform is limited and in ***preview***. If you are interested, please leave a comment or a :thumbsup: to this [issue](https://github.com/hckops/hckctl/issues/104) and we'll reach out with more details
 ```bash
 provider:
   cloud:
@@ -275,8 +275,10 @@ tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 
 <!--
 
-* rename `template` to catalog? or alias?
-* cmd aliases e.g. start/up/create
+* task kube log file
+* task kube vpn
+* task kube shareDir ? copy dir?
+* task kube interrupt
 * replace task/htb example with thm
 * verify/support kube config relative path
 * update cloud
@@ -284,8 +286,9 @@ tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 
 TODO
 * priority
-    - add task providers: kube and cloud
     - add box kube --network-vpn
+    - add box kube shareDir
+    - add task cloud
     - debug `htb-postman`
     - lab inputs
     - add flow example
@@ -313,6 +316,8 @@ TODO
         * https://houdini.secsi.io
     - flaky tests (?)
         * kubernetes_test.go:TestNewResources
+    - rename `template` to catalog? or alias?
+    - cmd aliases e.g. start/up/create
 * cli
     - autocomplete commands and values
         * e.g. `box connect <list of boxes>` with `ValidArgsFunction`

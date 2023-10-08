@@ -59,3 +59,7 @@ func newContainerCreateDockerLoaderEvent() *dockerTaskEvent {
 func newContainerWaitDockerLoaderEvent() *dockerTaskEvent {
 	return &dockerTaskEvent{kind: event.LoaderStop, value: "waiting"}
 }
+
+func newContainerRemoveDockerEvent(containerId string) *dockerTaskEvent {
+	return &dockerTaskEvent{kind: event.LogInfo, value: fmt.Sprintf("container remove: containerId=%s", containerId)}
+}
