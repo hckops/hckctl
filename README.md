@@ -207,45 +207,44 @@ List of currently supported providers
 
 ### Docker
 
-* follow the official [instructions](https://docs.docker.com/engine/install) to install Docker Engine
-* the fastest way to get started is with the [convenience script](https://get.docker.com)
-    ```bash
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    ./sudo sh get-docker.sh
-    ```
+Follow the official [instructions](https://docs.docker.com/engine/install) to install Docker Engine. The fastest way to get started is with the [convenience script](https://get.docker.com)
+```bash
+curl -fsSL https://get.docker.com -o get-docker.sh
+./sudo sh get-docker.sh
+```
 
 ### Kubernetes
 
-* use [minikube](https://minikube.sigs.k8s.io) or [kind](https://kind.sigs.k8s.io) to setup a local cluster
-    ```bash
-    provider:
-      kube:
-        # by default uses "~/.kube/config"
-        configPath: ""
-        namespace: hckops
-    ```
-* use [kube-template](https://github.com/hckops/kube-template) if you are looking for a simple way to get started with a remote cluster
-    ```bash
-    provider:
-      kube:
-        configPath: "~/PATH/TO/kube-template/clusters/do-template-kubeconfig.yaml"
-    ```
+Use [minikube](https://minikube.sigs.k8s.io) or [kind](https://kind.sigs.k8s.io) to setup a local cluster
+```bash
+provider:
+  kube:
+    # by default uses "~/.kube/config"
+    configPath: ""
+    namespace: hckops
+```
+If you are looking for a simple way to get started with a remote cluster consider [kube-template](https://github.com/hckops/kube-template)
+```bash
+provider:
+  kube:
+    configPath: "~/PATH/TO/kube-template/clusters/do-template-kubeconfig.yaml"
+```
 
 ### Cloud
 
-* access to the platform is in ***preview*** and limited. If you are interested, please leave a comment or a :thumbsup: to this issue (TODO)
-    ```bash
-    provider:
-      cloud:
-        host: <ADDRESS>
-        port: 2222
-        username: <USERNAME>
-        token: <TOKEN>
-    ```
+Access to the platform is in ***preview*** and limited. If you are interested, please leave a comment or a :thumbsup: to this [issue](https://github.com/hckops/hckctl/issues/104) and we'll reach out with more details
+```bash
+provider:
+  cloud:
+    host: <ADDRESS>
+    port: 2222
+    username: <USERNAME>
+    token: <TOKEN>
+```
 
 ### Podman (coming soon)
 
-* follow the official [instructions](https://podman.io/docs/installation) to install Podman
+Follow the official [instructions](https://podman.io/docs/installation) to install Podman
 
 ## Development
 
