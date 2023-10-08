@@ -23,15 +23,15 @@
 
 Launch manual and automated attacks with pre-defined and always up-to-date templates of your favourite tools.
 
-Designed to transparently run locally, remotely or integrated in pipelines, `hckctl` is free and open-source, no vendor lock-in, extensible and built using native providers api.
+Designed to transparently run locally, remotely or integrated in pipelines. `hckctl` is free and open-source, no vendor lock-in, extensible and built using native providers api.
 
 Create your vulnerable target (box with a specific CVE or whole infrastructures) or connect to your CTF platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup and network configurations.
 
 Leverage the cloud platform or request a dedicated managed cluster to:
-* orchestrate complex scenarios
-* monitor and observe your security posture
+* orchestrate complex attack scenarios
+* constantly probe and monitor your security posture
 * analyze, aggregate and export results via api
-* trigger actions based on events
+* trigger instant actions based on observed events and patterns
 
 ## Quick start
 
@@ -93,19 +93,20 @@ hckctl lab ctf-linux
 Run a [`task`](https://github.com/hckops/megalopolis/tree/main/task) using pre-defined commands
 ```bash
 # default commands
-hckctl task rustscan --command help
-hckctl task rustscan --command version
+hckctl task gobuster --command help
+hckctl task fuzzer/ffuf --command version
 
 # use the "default" preset arguments
-hckctl task rustscan --input address=127.0.0.1
+hckctl task rustscan
 # equivalent of
-hckctl task rustscan --command default --input address=127.0.0.1
+hckctl task rustscan --input address=127.0.0.1
+hckctl task scanner/rustscan --command default --input address=127.0.0.1
 
 # use the "full" preset arguments
 hckctl task nmap --command full --input address=127.0.0.1 --input port=80
 
 # invoke it with custom arguments
-hckctl task rustscan --inline -- -a 127.0.0.1
+hckctl task nuclei --inline -- -u https://example.com
 
 # monitor the logs
 tail -F ${HOME}/.local/state/hck/task/log/task-rustscan-*
@@ -231,23 +232,24 @@ tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 
 > TODO example of how to point to a specific pr/revision in a forked repo
 
-## Disclaimer
-
-> TODO
-
 <!--
+
+* rename `template` to catalog? or alias?
+* cmd aliases e.g. start/up/create
+* replace task/htb example with thm
 
 TODO
 * priority
     - add task providers: kube and cloud
     - add box kube --network-vpn
     - debug `htb-postman`
-    - play htb: linux/win
     - add flow example
     - verify kube/cloud distroless support
     - verify kube/cloud no-shell support
+    - play htb: linux/win
     - RELEASE
 * general
+    - add disclaimer to readme?
     - public discord server (review channels visibility)
     - brew release
     - review context/http/client timeouts e.g. vpn or target not available
