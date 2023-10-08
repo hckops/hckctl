@@ -280,6 +280,7 @@ tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 * replace task/htb example with thm
 * verify/support kube config relative path
 * update cloud
+* update platform prs/dependencies
 
 TODO
 * priority
@@ -291,14 +292,14 @@ TODO
     - verify kube/cloud distroless support
     - verify kube/cloud no-shell support
     - play htb: linux/win
-    - RELEASE
+    - RELEASE example https://github.com/boz/kail#homebrew
 * general
     - add disclaimer of responsibility to readme?
     - public discord server (review channels visibility)
     - brew release
     - review context/http/client timeouts e.g. vpn or target not available
     - verify config migration between versions
-    - add readme lab video/gif
+    - add readme lab video/gif https://asciinema.org
     - delete old branches (video)
     - update internal cli diagram
     - convert TODOs left in GitHub issues

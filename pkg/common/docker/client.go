@@ -144,7 +144,7 @@ func (common *DockerCommonClient) StartSidecarVpn(mainContainerName string, vpnI
 		ContainerConfig:  containerConfig,
 		HostConfig:       hostConfig,
 		WaitStatus:       false,
-		CaptureInterrupt: false, // edge case: killing this while creating will produce an orphan sidecar container
+		CaptureInterrupt: false, // edge case: killing this while creating will leave an orphan sidecar container
 		OnContainerCreateCallback: func(containerId string) error {
 			// upload openvpn config file
 			return common.Client.CopyFileToContainer(containerId, vpnInfo.LocalPath, vpnConfigPath)

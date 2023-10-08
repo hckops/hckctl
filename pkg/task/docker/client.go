@@ -26,6 +26,6 @@ func (task *DockerTaskClient) Events() *event.EventBus {
 }
 
 func (task *DockerTaskClient) Run(opts *taskModel.RunOptions) error {
-	// TODO defer task.close()
+	defer task.close()
 	return task.runTask(opts)
 }

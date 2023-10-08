@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
 	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -167,4 +168,36 @@ func buildServicePorts(ports []KubePort) ([]corev1.ServicePort, error) {
 		servicePorts = append(servicePorts, containerPort)
 	}
 	return servicePorts, nil
+}
+
+func BuildJob(opts *JobOpts) *batchv1.Job {
+
+	objectMeta := metav1.ObjectMeta{
+		Name:        opts.Name,
+		Namespace:   opts.Namespace,
+		Annotations: opts.Annotations,
+		Labels:      opts.Labels,
+	}
+
+	return &batchv1.Job{
+		ObjectMeta: objectMeta,
+		Spec: batchv1.JobSpec{
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:            util.ToLowerKebabCase(opts.PodInfo.ContainerName),
+							Image:           opts.PodInfo.ImageName,
+							ImagePullPolicy: corev1.PullIfNotPresent,
+							Command:         []string{},
+							Args:            opts.PodInfo.Arguments,
+							Env:             buildEnvVars(opts.PodInfo.Env),
+						},
+					},
+					RestartPolicy: corev1.RestartPolicyNever,
+				},
+			},
+			BackoffLimit: int32Ptr(0), // attempt only once
+		},
+	}
 }

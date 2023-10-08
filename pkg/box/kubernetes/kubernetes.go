@@ -73,7 +73,7 @@ func (box *KubeBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.Box
 	}
 	box.eventBus.Publish(newDeploymentCreateKubeEvent(namespace, deployment.Name))
 
-	podInfo, err := box.client.PodDescribe(deployment)
+	podInfo, err := box.client.PodDescribeFromDeployment(deployment)
 	if err != nil {
 		return nil, err
 	}
@@ -106,6 +106,7 @@ func newResources(namespace string, name string, opts *boxModel.CreateOptions) *
 			PodName:       "INVALID_POD_NAME", // not used, generated suffix by kube
 			ContainerName: opts.Template.Image.Repository,
 			ImageName:     opts.Template.Image.Name(),
+			Arguments:     []string{},
 			Env:           envs,
 			Resource:      opts.Size.ToKubeResource(),
 		},

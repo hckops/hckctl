@@ -4,6 +4,7 @@ import (
 	"io"
 
 	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 )
 
 type ResourcesOpts struct {
@@ -40,4 +41,24 @@ type PodExecOpts struct {
 	ErrStream      io.Writer
 	IsTty          bool
 	OnExecCallback func()
+}
+
+type PodLogOpts struct {
+	Namespace string
+	PodName   string
+	PodId     string
+}
+
+type JobOpts struct {
+	Namespace   string
+	Name        string
+	Annotations map[string]string
+	Labels      map[string]string
+	PodInfo     *PodInfo
+}
+
+type JobCreateOpts struct {
+	Namespace             string
+	Spec                  *batchv1.Job
+	OnStatusEventCallback func(event string)
 }

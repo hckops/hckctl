@@ -4,13 +4,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -19,6 +22,7 @@ import (
 	applyv1 "k8s.io/client-go/applyconfigurations/core/v1"
 	"k8s.io/client-go/kubernetes"
 	app "k8s.io/client-go/kubernetes/typed/apps/v1"
+	batch "k8s.io/client-go/kubernetes/typed/batch/v1"
 	core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -122,6 +126,10 @@ func (client *KubeClient) AppApi() app.AppsV1Interface {
 	return client.kubeClientSet.AppsV1()
 }
 
+func (client *KubeClient) BatchApi() batch.BatchV1Interface {
+	return client.kubeClientSet.BatchV1()
+}
+
 func (client *KubeClient) NamespaceApply(name string) error {
 
 	// https://github.com/kubernetes/client-go/issues/1036
@@ -191,7 +199,7 @@ func (client *KubeClient) DeploymentList(namespace string, namePrefix string, la
 			continue
 		}
 
-		podInfo, err := client.PodDescribe(&deployment)
+		podInfo, err := client.PodDescribeFromDeployment(&deployment)
 		if err != nil {
 			// skip invalid pod
 			continue
@@ -233,7 +241,7 @@ func (client *KubeClient) DeploymentDescribe(namespace string, name string) (*De
 		return nil, errors.Wrapf(err, "error deployment describe: namespace=%s name=%s", namespace, name)
 	}
 
-	podInfo, err := client.PodDescribe(deployment)
+	podInfo, err := client.PodDescribeFromDeployment(deployment)
 	if err != nil {
 		return nil, err
 	}
@@ -299,17 +307,43 @@ func (client *KubeClient) ServiceDelete(namespace string, name string) error {
 	return nil
 }
 
-func (client *KubeClient) PodDescribe(deployment *appsv1.Deployment) (*PodInfo, error) {
-
+func (client *KubeClient) PodDescribeFromDeployment(deployment *appsv1.Deployment) (*PodInfo, error) {
 	labelSet := labels.Set(deployment.Spec.Selector.MatchLabels)
-	listOptions := metav1.ListOptions{LabelSelector: labelSet.AsSelector().String()}
-
-	pods, err := client.CoreApi().Pods(deployment.Namespace).List(client.ctx, listOptions)
-	if err != nil {
-		return nil, errors.Wrapf(err, "error pod describe: namespace=%s labels=%v", deployment.Namespace, labelSet)
+	listOptions := metav1.ListOptions{
+		LabelSelector: labelSet.AsSelector().String(),
 	}
 
-	return newPodInfo(deployment.Namespace, pods)
+	return client.podDescribe(deployment.Namespace, listOptions)
+}
+
+func buildJobLabelSelector(job *batchv1.Job) (metav1.ListOptions, error) {
+	labelMap, err := metav1.LabelSelectorAsMap(job.Spec.Selector)
+	if err != nil {
+		return metav1.ListOptions{}, errors.Wrapf(err, "error pod describe from job")
+	}
+	listOptions := metav1.ListOptions{
+		LabelSelector: labels.SelectorFromSet(labelMap).String(),
+	}
+	return listOptions, nil
+}
+
+func (client *KubeClient) PodDescribeFromJob(job *batchv1.Job) (*PodInfo, error) {
+	listOptions, err := buildJobLabelSelector(job)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.podDescribe(job.Namespace, listOptions)
+}
+
+func (client *KubeClient) podDescribe(namespace string, listOptions metav1.ListOptions) (*PodInfo, error) {
+
+	pods, err := client.CoreApi().Pods(namespace).List(client.ctx, listOptions)
+	if err != nil {
+		return nil, errors.Wrapf(err, "error pod describe: namespace=%s labels=%v", namespace, listOptions.LabelSelector)
+	}
+
+	return newPodInfo(namespace, pods)
 }
 
 func newPodInfo(namespace string, pods *corev1.PodList) (*PodInfo, error) {
@@ -343,6 +377,7 @@ func newPodInfo(namespace string, pods *corev1.PodList) (*PodInfo, error) {
 		ContainerName: containerItem.Name,
 		ImageName:     containerItem.Image, // <REPOSITORY>/<NAME>:<VERSION>
 		Env:           envs,
+		Arguments:     []string{}, // ignore containerItem.Command and containerItem.Args
 		Resource: &KubeResource{
 			Memory: containerItem.Resources.Requests.Memory().String(),
 			Cpu:    containerItem.Resources.Requests.Cpu().String(),
@@ -448,5 +483,74 @@ func (client *KubeClient) PodExec(opts *PodExecOpts) error {
 	if err := tty.Safe(fn); err != nil {
 		return errors.Wrap(err, "terminal session closed")
 	}
+	return nil
+}
+
+func (client *KubeClient) PodLog(opts *PodLogOpts) error {
+
+	stream, err := client.CoreApi().
+		Pods(opts.Namespace).
+		GetLogs(opts.PodName, &corev1.PodLogOptions{
+			Container: opts.PodId,
+			Follow:    true,
+		}).
+		Stream(client.ctx)
+	if err != nil {
+		return errors.Wrapf(err, "error pod log stream")
+	}
+	defer stream.Close()
+
+	// blocks until the stream is finished
+	_, err = io.Copy(os.Stdout, stream)
+	if err != nil {
+		return errors.Wrapf(err, "error pod log copy")
+	}
+	return nil
+}
+
+func (client *KubeClient) JobCreate(opts *JobCreateOpts) error {
+
+	job, err := client.BatchApi().Jobs(opts.Namespace).Create(client.ctx, opts.Spec, metav1.CreateOptions{})
+	if err != nil {
+		return errors.Wrapf(err, "error job create: namespace=%s name=%s", opts.Namespace, opts.Spec.Name)
+	}
+
+	// blocks until the job is ready, then stop watching
+	listOptions, err := buildJobLabelSelector(job)
+	if err != nil {
+		return err
+	}
+	watcher, err := client.CoreApi().Pods(opts.Namespace).Watch(client.ctx, listOptions)
+	if err != nil {
+		return errors.Wrapf(err, "error job watch: namespace=%s name=%s", opts.Namespace, job.Name)
+	}
+	for event := range watcher.ResultChan() {
+		podEvent, ok := event.Object.(*corev1.Pod)
+		if !ok {
+			// ignore unrelated events
+			continue
+		}
+
+		opts.OnStatusEventCallback(fmt.Sprintf("watch job event: namespace=%s name=%s type=%v phase=%v",
+			opts.Namespace, job.Name, event.Type, podEvent.Status.Phase))
+
+		if podEvent.Status.Phase != corev1.PodPending {
+			watcher.Stop()
+		}
+	}
+	return nil
+}
+
+func (client *KubeClient) JobDelete(namespace string, name string) error {
+
+	// delete job and all pods
+	backgroundDeletion := metav1.DeletePropagationBackground
+	err := client.BatchApi().Jobs(namespace).Delete(client.ctx, name, metav1.DeleteOptions{
+		PropagationPolicy: &backgroundDeletion,
+	})
+	if err != nil {
+		return errors.Wrapf(err, "error job delete: namespace=%s name=%s", namespace, name)
+	}
+
 	return nil
 }

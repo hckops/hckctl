@@ -46,6 +46,7 @@ type PodInfo struct {
 	PodName       string
 	ContainerName string
 	ImageName     string
+	Arguments     []string
 	Env           []KubeEnv
 	Resource      *KubeResource
 }
