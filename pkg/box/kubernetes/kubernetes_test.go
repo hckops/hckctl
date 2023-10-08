@@ -59,6 +59,7 @@ func TestNewResources(t *testing.T) {
 			PodName:       "INVALID_POD_NAME",
 			ContainerName: "hckops/my-image", // sanitized in builder
 			ImageName:     "hckops/my-image:latest",
+			Arguments:     []string{},
 			Env:           nil,
 			Resource: &kubernetes.KubeResource{
 				Memory: "512Mi",

@@ -144,6 +144,7 @@ func TestNewPodInfo(t *testing.T) {
 		PodName:       "myPodName",
 		ContainerName: "myContainerName",
 		ImageName:     "myImageName",
+		Arguments:     []string{},
 		Env: []KubeEnv{
 			{Key: "MY_KEY_1", Value: "MY_VALUE_1"},
 			{Key: "MY_KEY_2", Value: "MY_VALUE_2"},
