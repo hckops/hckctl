@@ -115,8 +115,7 @@ func (opts *taskCmdOptions) runTask(sourceLoader template.SourceLoader[taskModel
 		return errors.New("invalid template")
 	}
 
-	// TODO resolve partial path e.g. "task/scanner/<NAME>"
-	templateName := strings.ToLower(info.Value.Data.Name)
+	templateName := commonCmd.PrettyName(info, opts.configRef.Config.Template.CacheDir, info.Value.Data.Name)
 	loader := commonCmd.NewLoader()
 	loader.Start("loading template %s", templateName)
 	defer loader.Stop()

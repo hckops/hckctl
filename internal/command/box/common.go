@@ -32,11 +32,12 @@ func runBoxClient(sourceLoader template.SourceLoader[boxModel.BoxV1], provider b
 		return errors.New("invalid template")
 	}
 
+	templateName := commonCmd.PrettyName(boxTemplate, configRef.Config.Template.CacheDir, boxTemplate.Value.Data.Name)
 	loader := commonCmd.NewLoader()
-	loader.Start("loading template %s", boxTemplate.Value.Data.Name)
+	loader.Start("loading template %s", templateName)
 	defer loader.Stop()
 
-	log.Info().Msgf("loading template: provider=%s name=%s\n%s", provider, boxTemplate.Value.Data.Name, boxTemplate.Value.Data.Pretty())
+	log.Info().Msgf("loading template: provider=%s name=%s\n%s", provider, templateName, boxTemplate.Value.Data.Pretty())
 
 	boxClient, err := newDefaultBoxClient(provider, configRef, loader)
 	if err != nil {

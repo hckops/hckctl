@@ -81,11 +81,12 @@ func startLab(sourceLoader template.SourceLoader[labModel.LabV1], configRef *con
 		return errors.New("invalid template")
 	}
 
+	templateName := commonCmd.PrettyName(info, configRef.Config.Template.CacheDir, info.Value.Data.Name)
 	loader := commonCmd.NewLoader()
-	loader.Start("loading template %s", info.Value.Data.Name)
+	loader.Start("loading template %s", templateName)
 	defer loader.Stop()
 
-	log.Info().Msgf("loading template: name=%s\n%s", info.Value.Data.Name, info.Value.Data.Pretty())
+	log.Info().Msgf("loading template: name=%s\n%s", templateName, info.Value.Data.Pretty())
 
 	labClient, err := newDefaultLabClient(configRef, loader)
 	if err != nil {

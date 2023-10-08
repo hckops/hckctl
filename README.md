@@ -49,7 +49,7 @@ hckctl box arch --provider kube
 hckctl box parrot --provider cloud
 ```
 
-#### HTB example
+#### HTB demo
 
 Prerequisites
 * start the retired [Postman](https://app.hackthebox.com/machines/Postman) machine in your account
@@ -112,7 +112,7 @@ hckctl task nuclei --inline -- -u https://example.com
 tail -F ${HOME}/.local/state/hck/task/log/task-*
 ```
 
-#### TryHackMe example
+#### TryHackMe demo
 
 > TODO
 
@@ -162,7 +162,7 @@ hckctl flow fuzz 127.0.0.1:8080
 hckctl flow sql 127.0.0.1:3306
 hckctl flow atomic-red-team 127.0.0.1 T1485
 hckctl flow c2 ping
-hckctl flow campaign/phishing @example.com
+hckctl flow phishing @example.com
 ```
 
 ### Template
@@ -202,8 +202,6 @@ curl -sSL https://github.com/hckops/hckctl/releases/download/${HCKCTL_VERSION}/h
 ```
 
 ## Provider
-
-List of currently supported providers
 
 ### Docker
 
@@ -281,6 +279,7 @@ tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 * cmd aliases e.g. start/up/create
 * replace task/htb example with thm
 * verify/support kube config relative path
+* update cloud
 
 TODO
 * priority
@@ -327,7 +326,6 @@ TODO
     - keep up-to-date directories to exclude in `resolvePath` e.g. charts
     - add filters and review output e.g. table
 * box
-    - print name partially resolved e.g. `box/preview/parrot-sec` or `preview/parrot-sec`
     - print/event shared directory, same as envs, ports etc.
     - review tty resize
     - expose copy from/to ???
@@ -363,7 +361,6 @@ TODO
     - rename output log file with timestamp?
     - for debug purposes prepend file output with interpolated task (yaml) or command parameters
     - add command to remove all logs
-    - print name partially resolved e.g. `task/scanner/<NAME>` or `scanner/<NAME>`
     - skip output file for `help` and `version`
     - add argument `--volume` to restrict shared directories/files
 * version

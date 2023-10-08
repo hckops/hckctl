@@ -2,8 +2,6 @@ package template
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/MakeNowJust/heredoc"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -80,12 +78,7 @@ func templateList(cacheDir string, revision string, offline bool) error {
 		for _, validation := range validations {
 			if validation.IsValid {
 				total = total + 1
-				// remove prefix and suffix
-				prettyPath := strings.NewReplacer(
-					fmt.Sprintf("%s/", sourceOpts.CachePath()), "",
-					".yml", "",
-					".yaml", "",
-				).Replace(validation.Path)
+				prettyPath := common.PrettyPath(sourceOpts.CachePath(), validation.Path)
 
 				log.Debug().Msgf("found template: kind=%s pretty=%s path=%s", validation.Value.Kind.String(), prettyPath, validation.Path)
 				fmt.Println(fmt.Sprintf("%s\t%s", validation.Value.Kind.String(), prettyPath))
