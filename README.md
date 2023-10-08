@@ -204,30 +204,36 @@ curl -sSL https://github.com/hckops/hckctl/releases/download/${HCKCTL_VERSION}/h
 ## Provider
 
 List of currently supported providers
-* docker
-    - follow the official [instructions](https://docs.docker.com/engine/install) to install it
-    - the fastest way to get started is with the [convenience script](https://get.docker.com)
+
+### Docker
+
+* follow the official [instructions](https://docs.docker.com/engine/install) to install Docker Engine
+* the fastest way to get started is with the [convenience script](https://get.docker.com)
     ```bash
     curl -fsSL https://get.docker.com -o get-docker.sh
     ./sudo sh get-docker.sh
     ```
-* kubernetes
-    - use [minikube](https://minikube.sigs.k8s.io) or [kind](https://kind.sigs.k8s.io) to setup a local cluster
+
+### Kubernetes
+
+* use [minikube](https://minikube.sigs.k8s.io) or [kind](https://kind.sigs.k8s.io) to setup a local cluster
     ```bash
     provider:
       kube:
-        # by default it will use "~/.kube/config"
+        # by default uses "~/.kube/config"
         configPath: ""
         namespace: hckops
     ```
-    - use [kube-template](https://github.com/hckops/kube-template) if you are looking for a simple way to get started with a remote cluster
+* use [kube-template](https://github.com/hckops/kube-template) if you are looking for a simple way to get started with a remote cluster
     ```bash
     provider:
       kube:
         configPath: "~/PATH/TO/kube-template/clusters/do-template-kubeconfig.yaml"
     ```
-* cloud
-    - access to the platform is in preview and limited, if you are interested please leave a comment or a :thumbsup: to this issue (TODO) and we'll reach out to everyone with more details
+
+### Cloud
+
+* access to the platform is in ***preview*** and limited. If you are interested, please leave a comment or a :thumbsup: to this issue (TODO)
     ```bash
     provider:
       cloud:
@@ -236,7 +242,10 @@ List of currently supported providers
         username: <USERNAME>
         token: <TOKEN>
     ```
-* podman (coming soon)
+
+### Podman (coming soon)
+
+* follow the official [instructions](https://podman.io/docs/installation) to install Podman
 
 ## Development
 
