@@ -25,7 +25,7 @@ Launch manual and automated attacks with pre-defined and always up-to-date templ
 
 Designed to transparently run locally, remotely or integrated in pipelines. `hckctl` is free and open-source, no vendor lock-in, extensible and built using native providers api.
 
-Create your vulnerable target (box with a specific CVE or whole infrastructures) or connect to your CTF platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup and network configurations.
+Attack your vulnerable target infrastructure or connect to your training platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup and network configurations.
 
 Leverage the cloud platform or request a dedicated managed cluster to:
 * orchestrate complex attack scenarios
@@ -286,20 +286,20 @@ TODO
     - add task providers: kube and cloud
     - add box kube --network-vpn
     - debug `htb-postman`
+    - lab inputs
     - add flow example
     - verify kube/cloud distroless support
     - verify kube/cloud no-shell support
     - play htb: linux/win
     - RELEASE
 * general
-    - add disclaimer to readme?
+    - add disclaimer of responsibility to readme?
     - public discord server (review channels visibility)
     - brew release
     - review context/http/client timeouts e.g. vpn or target not available
     - verify config migration between versions
     - add readme lab video/gif
     - delete old branches (video)
-    - disclaimer of responsibility
     - update internal cli diagram
     - convert TODOs left in GitHub issues
     - add GitHub org labels: feature/bug/question

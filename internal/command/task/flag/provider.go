@@ -12,6 +12,7 @@ import (
 func taskProviders() []commonFlag.ProviderFlag {
 	return []commonFlag.ProviderFlag{
 		commonFlag.DockerProviderFlag,
+		commonFlag.KubeProviderFlag,
 	}
 }
 
@@ -19,6 +20,8 @@ func toTaskProvider(p commonFlag.ProviderFlag) (model.TaskProvider, error) {
 	switch p {
 	case commonFlag.DockerProviderFlag:
 		return model.Docker, nil
+	case commonFlag.KubeProviderFlag:
+		return model.Kubernetes, nil
 	default:
 		return commonFlag.UnknownProvider, errors.New("invalid provider")
 	}

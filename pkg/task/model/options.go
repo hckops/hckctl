@@ -8,6 +8,7 @@ import (
 type TaskClientOptions struct {
 	Provider   TaskProvider
 	DockerOpts *commonModel.DockerOptions
+	KubeOpts   *commonModel.KubeOptions
 }
 
 type CommonTaskOptions struct {

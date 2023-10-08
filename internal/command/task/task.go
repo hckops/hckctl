@@ -178,6 +178,7 @@ func newDefaultTaskClient(provider taskModel.TaskProvider, configRef *config.Con
 	taskClientOpts := &taskModel.TaskClientOptions{
 		Provider:   provider,
 		DockerOpts: configRef.Config.Provider.Docker.ToDockerOptions(),
+		KubeOpts:   configRef.Config.Provider.Kube.ToKubeOptions(),
 	}
 
 	taskClient, err := task.NewTaskClient(taskClientOpts)

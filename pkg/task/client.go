@@ -5,6 +5,7 @@ import (
 
 	"github.com/hckops/hckctl/pkg/event"
 	"github.com/hckops/hckctl/pkg/task/docker"
+	"github.com/hckops/hckctl/pkg/task/kubernetes"
 	"github.com/hckops/hckctl/pkg/task/model"
 )
 
@@ -19,6 +20,8 @@ func NewTaskClient(opts *model.TaskClientOptions) (TaskClient, error) {
 	switch opts.Provider {
 	case model.Docker:
 		return docker.NewDockerTaskClient(commonOpts, opts.DockerOpts)
+	case model.Kubernetes:
+		return kubernetes.NewKubeTaskClient(commonOpts, opts.KubeOpts)
 	default:
 		return nil, errors.New("invalid provider")
 	}
