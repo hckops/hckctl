@@ -163,6 +163,75 @@ status:
 	assert.YAMLEqf(t, expectedService, objectToYaml(actualService), "unexpected service")
 }
 
+func TestBuildJob(t *testing.T) {
+
+	expectedJob := `
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    a.b.c: hello
+    x.y.z: world
+  creationTimestamp: null
+  labels:
+    app.kubernetes.io/instance: hckops-my-image
+    app.kubernetes.io/managed-by: hckops
+    app.kubernetes.io/name: my-task-name
+    app.kubernetes.io/version: latest
+    com.hckops.schema.kind: task-v1
+  name: my-task-name
+  namespace: my-namespace
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      creationTimestamp: null
+    spec:
+      containers:
+      - args:
+        - cmd1
+        - cmd2
+        image: hckops/my-image:latest
+        imagePullPolicy: IfNotPresent
+        name: hckops-my-image
+        resources: {}
+      restartPolicy: Never
+status: {}
+`
+
+	namespace := "my-namespace"
+	taskName := "my-task-name"
+	annotations := map[string]string{
+		"a.b.c": "hello",
+		"x.y.z": "world",
+	}
+	extra := map[string]string{
+		"com.hckops.schema.kind": "task-v1",
+	}
+	labels := BuildLabels(taskName, "hckops-my-image", "latest", extra)
+	jobOpts := &JobOpts{
+		Namespace:   namespace,
+		Name:        taskName,
+		Annotations: annotations,
+		Labels:      labels,
+		PodInfo: &PodInfo{
+			Namespace:     namespace,
+			PodName:       "INVALID_POD_NAME",
+			ContainerName: "hckops/my-image",
+			ImageName:     "hckops/my-image:latest",
+			Arguments:     []string{"cmd1", "cmd2"},
+			Env:           []KubeEnv{},
+			Resource:      &KubeResource{},
+		},
+	}
+
+	actualJob := BuildJob(jobOpts)
+	// fix model
+	actualJob.TypeMeta = metav1.TypeMeta{Kind: "Job", APIVersion: "batch/v1"}
+
+	assert.YAMLEqf(t, expectedJob, objectToYaml(actualJob), "unexpected job")
+}
+
 func objectToYaml(object runtime.Object) string {
 	buffer := new(bytes.Buffer)
 	printer := printers.YAMLPrinter{}
