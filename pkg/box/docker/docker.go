@@ -16,20 +16,21 @@ import (
 
 func newDockerBoxClient(commonOpts *boxModel.CommonBoxOptions, dockerOpts *commonModel.DockerOptions) (*DockerBoxClient, error) {
 
-	dockerClient, err := commonDocker.NewDockerCommonClient(commonOpts.EventBus, dockerOpts)
+	dockerCommonClient, err := commonDocker.NewDockerCommonClient(dockerOpts, commonOpts.EventBus)
 	if err != nil {
 		return nil, errors.Wrap(err, "error docker box client")
 	}
 
 	return &DockerBoxClient{
-		docker:     dockerClient,
-		clientOpts: dockerOpts,
-		eventBus:   commonOpts.EventBus,
+		client:       dockerCommonClient.GetClient(),
+		clientOpts:   dockerOpts,
+		dockerCommon: dockerCommonClient,
+		eventBus:     commonOpts.EventBus,
 	}, nil
 }
 
 func (box *DockerBoxClient) close() error {
-	return box.docker.Client.Close()
+	return box.dockerCommon.Close()
 }
 
 // TODO limit resources by size?
@@ -37,7 +38,7 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 
 	// pull image
 	imageName := opts.Template.Image.Name()
-	if err := box.docker.PullImageOffline(imageName, func() {
+	if err := box.dockerCommon.PullImageOffline(imageName, func() {
 		box.eventBus.Publish(newImagePullDockerLoaderEvent(imageName))
 	}); err != nil {
 		return nil, err
@@ -64,7 +65,7 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 	var networkMode string
 	if opts.NetworkInfo.Vpn != nil {
 		// set all network configs on the sidecar to avoid option conflicts
-		if sidecarContainerId, err := box.docker.StartSidecarVpn(containerName, opts.NetworkInfo.Vpn, portConfig); err != nil {
+		if sidecarContainerId, err := box.dockerCommon.StartSidecarVpn(containerName, opts.NetworkInfo.Vpn, portConfig); err != nil {
 			return nil, err
 		} else {
 			// fix conflicting options: hostname and the network mode
@@ -118,7 +119,7 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 	}
 
 	networkName := box.clientOpts.NetworkName
-	networkId, err := box.docker.Client.NetworkUpsert(networkName)
+	networkId, err := box.client.NetworkUpsert(networkName)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +146,7 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 		},
 	}
 	// boxId
-	containerId, err := box.docker.Client.ContainerCreate(containerOpts)
+	containerId, err := box.client.ContainerCreate(containerOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +184,7 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 	box.eventBus.Publish(newContainerExecDockerEvent(info.Id, info.Name, command))
 
 	// attempt to restart all associated sidecars
-	sidecars, err := box.docker.GetSidecars(info.Name)
+	sidecars, err := box.dockerCommon.GetSidecars(info.Name)
 	if err != nil {
 		return err
 	}
@@ -194,7 +195,7 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 				box.eventBus.Publish(newContainerRestartDockerEvent(sidecar.Id, status))
 			},
 		}
-		if err := box.docker.Client.ContainerRestart(restartsOpts); err != nil {
+		if err := box.client.ContainerRestart(restartsOpts); err != nil {
 			return err
 		}
 	}
@@ -206,7 +207,7 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 			box.eventBus.Publish(newContainerRestartDockerEvent(info.Id, status))
 		},
 	}
-	if err := box.docker.Client.ContainerRestart(restartsOpts); err != nil {
+	if err := box.client.ContainerRestart(restartsOpts); err != nil {
 		return err
 	}
 
@@ -220,7 +221,7 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 
 	// already printed for temporary box
 	if !deleteOnExit {
-		containerDetails, err := box.docker.Client.ContainerInspect(info.Id)
+		containerDetails, err := box.client.ContainerInspect(info.Id)
 		if err != nil {
 			return err
 		}
@@ -239,7 +240,7 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 		}
 		// print sidecar ports
 		for _, sidecar := range sidecars {
-			sidecarDetails, err := box.docker.Client.ContainerInspect(sidecar.Id)
+			sidecarDetails, err := box.client.ContainerInspect(sidecar.Id)
 			if err != nil {
 				return err
 			}
@@ -265,12 +266,12 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 
 			if deleteOnExit {
 				for _, sidecar := range sidecars {
-					if err := box.docker.Client.ContainerRemove(sidecar.Id); err != nil {
+					if err := box.client.ContainerRemove(sidecar.Id); err != nil {
 						box.eventBus.Publish(newContainerExecErrorDockerEvent(sidecar.Id, errors.Wrap(err, "error sidecar exec remove")))
 					}
 				}
 
-				if err := box.docker.Client.ContainerRemove(info.Id); err != nil {
+				if err := box.client.ContainerRemove(info.Id); err != nil {
 					box.eventBus.Publish(newContainerExecErrorDockerEvent(info.Id, errors.Wrap(err, "error container exec remove")))
 				}
 			}
@@ -280,7 +281,7 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 		},
 	}
 
-	return box.docker.Client.ContainerExec(execOpts)
+	return box.client.ContainerExec(execOpts)
 }
 
 func (box *DockerBoxClient) publishPortInfo(networkMap map[string]boxModel.BoxPort, containerName string, containerPort docker.ContainerPort) {
@@ -306,7 +307,7 @@ func (box *DockerBoxClient) logsBox(containerId string, streamOpts *commonModel.
 			box.eventBus.Publish(newContainerExecErrorDockerEvent(containerId, err))
 		},
 	}
-	return box.docker.Client.ContainerLogs(opts)
+	return box.client.ContainerLogs(opts)
 }
 
 func (box *DockerBoxClient) describeBox(name string) (*boxModel.BoxDetails, error) {
@@ -316,7 +317,7 @@ func (box *DockerBoxClient) describeBox(name string) (*boxModel.BoxDetails, erro
 	}
 
 	box.eventBus.Publish(newContainerInspectDockerEvent(info.Id))
-	containerInfo, err := box.docker.Client.ContainerInspect(info.Id)
+	containerInfo, err := box.client.ContainerInspect(info.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -385,7 +386,7 @@ func boxLabel() string {
 
 func (box *DockerBoxClient) listBoxes() ([]boxModel.BoxInfo, error) {
 
-	containers, err := box.docker.Client.ContainerList(boxModel.BoxPrefixName, boxLabel())
+	containers, err := box.client.ContainerList(boxModel.BoxPrefixName, boxLabel())
 	if err != nil {
 		return nil, err
 	}
@@ -411,7 +412,7 @@ func (box *DockerBoxClient) deleteBoxes(names []string) ([]string, error) {
 		// all or filter
 		if len(names) == 0 || slices.Contains(names, boxInfo.Name) {
 
-			if err := box.docker.Client.ContainerRemove(boxInfo.Id); err == nil {
+			if err := box.client.ContainerRemove(boxInfo.Id); err == nil {
 				deleted = append(deleted, boxInfo.Name)
 				box.eventBus.Publish(newContainerRemoveDockerEvent(boxInfo.Id))
 			} else {
@@ -420,9 +421,9 @@ func (box *DockerBoxClient) deleteBoxes(names []string) ([]string, error) {
 			}
 
 			// delete all sidecars
-			sidecars, _ := box.docker.GetSidecars(boxInfo.Name)
+			sidecars, _ := box.dockerCommon.GetSidecars(boxInfo.Name)
 			for _, sidecar := range sidecars {
-				if err := box.docker.Client.ContainerRemove(sidecar.Id); err != nil {
+				if err := box.client.ContainerRemove(sidecar.Id); err != nil {
 					box.eventBus.Publish(newContainerRemoveDockerEvent(sidecar.Id))
 				} else {
 					// silently ignore

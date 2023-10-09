@@ -4,15 +4,17 @@ import (
 	"github.com/pkg/errors"
 
 	boxModel "github.com/hckops/hckctl/pkg/box/model"
+	"github.com/hckops/hckctl/pkg/client/docker"
 	commonDocker "github.com/hckops/hckctl/pkg/common/docker"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/event"
 )
 
 type DockerBoxClient struct {
-	docker     *commonDocker.DockerCommonClient
-	clientOpts *commonModel.DockerOptions
-	eventBus   *event.EventBus
+	client       *docker.DockerClient
+	clientOpts   *commonModel.DockerOptions
+	dockerCommon *commonDocker.DockerCommonClient
+	eventBus     *event.EventBus
 }
 
 func NewDockerBoxClient(commonOpts *boxModel.CommonBoxOptions, dockerOpts *commonModel.DockerOptions) (*DockerBoxClient, error) {

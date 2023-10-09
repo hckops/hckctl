@@ -13,12 +13,12 @@ import (
 )
 
 type DockerCommonClient struct {
-	Client     *docker.DockerClient
+	client     *docker.DockerClient
 	clientOpts *commonModel.DockerOptions
 	eventBus   *event.EventBus
 }
 
-func NewDockerCommonClient(eventBus *event.EventBus, dockerOpts *commonModel.DockerOptions) (*DockerCommonClient, error) {
+func NewDockerCommonClient(dockerOpts *commonModel.DockerOptions, eventBus *event.EventBus) (*DockerCommonClient, error) {
 	eventBus.Publish(newInitDockerClientEvent())
 
 	dockerClient, err := docker.NewDockerClient()
@@ -27,16 +27,20 @@ func NewDockerCommonClient(eventBus *event.EventBus, dockerOpts *commonModel.Doc
 	}
 
 	return &DockerCommonClient{
-		Client:     dockerClient,
+		client:     dockerClient,
 		clientOpts: dockerOpts,
 		eventBus:   eventBus,
 	}, nil
 }
 
+func (common *DockerCommonClient) GetClient() *docker.DockerClient {
+	return common.client
+}
+
 func (common *DockerCommonClient) Close() error {
 	common.eventBus.Publish(newCloseDockerClientEvent())
 	common.eventBus.Close()
-	return common.Client.Close()
+	return common.client.Close()
 }
 
 func (common *DockerCommonClient) PullImageOffline(imageName string, onImagePullCallback func()) error {
@@ -46,7 +50,7 @@ func (common *DockerCommonClient) PullImageOffline(imageName string, onImagePull
 		OnImagePullCallback: onImagePullCallback,
 	}
 	common.eventBus.Publish(newImagePullDockerEvent(imageName))
-	if err := common.Client.ImagePull(imagePullOpts); err != nil {
+	if err := common.client.ImagePull(imagePullOpts); err != nil {
 		// ignore error and try to use an existing image if exists
 		if common.clientOpts.IgnoreImagePullError {
 			common.eventBus.Publish(newImagePullIgnoreDockerEvent(imageName))
@@ -66,17 +70,11 @@ func (common *DockerCommonClient) PullImageOffline(imageName string, onImagePull
 			common.eventBus.Publish(newImageRemoveIgnoreDockerEvent(imageId, err))
 		},
 	}
-	if err := common.Client.ImageRemoveDangling(imageRemoveOpts); err != nil {
+	if err := common.client.ImageRemoveDangling(imageRemoveOpts); err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func buildSidecarVpnName(containerName string) string {
-	// expect valid name always
-	tokens := strings.Split(containerName, "-")
-	return fmt.Sprintf("%svpn-%s", commonModel.SidecarPrefixName, tokens[len(tokens)-1])
 }
 
 func sidecarLabel() string {
@@ -86,7 +84,7 @@ func sidecarLabel() string {
 func (common *DockerCommonClient) GetSidecars(containerName string) ([]commonModel.SidecarInfo, error) {
 
 	// filter by prefix and label
-	containers, err := common.Client.ContainerList(commonModel.SidecarPrefixName, sidecarLabel())
+	containers, err := common.client.ContainerList(commonModel.SidecarPrefixName, sidecarLabel())
 	if err != nil {
 		return nil, err
 	}
@@ -102,6 +100,12 @@ func (common *DockerCommonClient) GetSidecars(containerName string) ([]commonMod
 		}
 	}
 	return sidecars, nil
+}
+
+func buildSidecarVpnName(containerName string) string {
+	// expect valid name always
+	tokens := strings.Split(containerName, "-")
+	return fmt.Sprintf("%svpn-%s", commonModel.SidecarPrefixName, tokens[len(tokens)-1])
 }
 
 func (common *DockerCommonClient) StartSidecarVpn(mainContainerName string, vpnInfo *commonModel.VpnNetworkInfo, portConfig *docker.ContainerPortConfigOpts) (string, error) {
@@ -147,7 +151,7 @@ func (common *DockerCommonClient) StartSidecarVpn(mainContainerName string, vpnI
 		CaptureInterrupt: false, // edge case: killing this while creating will leave an orphan sidecar container
 		OnContainerCreateCallback: func(containerId string) error {
 			// upload openvpn config file
-			return common.Client.CopyFileToContainer(containerId, vpnInfo.LocalPath, vpnConfigPath)
+			return common.client.CopyFileToContainer(containerId, vpnInfo.LocalPath, vpnConfigPath)
 		},
 		OnContainerStatusCallback: func(status string) {
 			common.eventBus.Publish(newSidecarVpnCreateStatusDockerEvent(status))
@@ -155,7 +159,7 @@ func (common *DockerCommonClient) StartSidecarVpn(mainContainerName string, vpnI
 		OnContainerStartCallback: func() {},
 	}
 	// sidecarId
-	containerId, err := common.Client.ContainerCreate(containerOpts)
+	containerId, err := common.client.ContainerCreate(containerOpts)
 	if err != nil {
 		return "", err
 	}

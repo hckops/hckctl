@@ -275,8 +275,8 @@ tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 
 <!--
 
-* task kube log file
 * task kube vpn
+* task kube tee log file
 * task kube shareDir ? copy dir?
 * task kube interrupt
 * replace task/htb example with thm
@@ -369,6 +369,7 @@ TODO
     - add command to remove all logs
     - skip output file for `help` and `version`
     - add argument `--volume` to restrict shared directories/files
+    - limit default kube resources
 * version
     - print if new version available
     - implement server and providers `version` in json format docker/kube/cloud
