@@ -24,14 +24,6 @@ func (e *kubeBoxEvent) String() string {
 	return e.value
 }
 
-func newInitKubeClientEvent() *kubeBoxEvent {
-	return &kubeBoxEvent{kind: event.LogDebug, value: "init kube client"}
-}
-
-func newCloseKubeClientEvent() *kubeBoxEvent {
-	return &kubeBoxEvent{kind: event.LogDebug, value: "close kube client"}
-}
-
 func newNamespaceApplyKubeEvent(namespace string) *kubeBoxEvent {
 	return &kubeBoxEvent{kind: event.LogInfo, value: fmt.Sprintf("namespace apply: namespace=%s", namespace)}
 }

@@ -4,6 +4,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
+	commonKube "github.com/hckops/hckctl/pkg/common/kubernetes"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/schema"
 	taskModel "github.com/hckops/hckctl/pkg/task/model"
@@ -11,27 +12,23 @@ import (
 )
 
 func newKubeTaskClient(commonOpts *taskModel.CommonTaskOptions, kubeOpts *commonModel.KubeOptions) (*KubeTaskClient, error) {
-	commonOpts.EventBus.Publish(newInitKubeClientEvent())
 
-	kubeClient, err := kubernetes.NewKubeClient(kubeOpts.InCluster, kubeOpts.ConfigPath)
+	kubeCommonClient, err := commonKube.NewKubeCommonClient(kubeOpts, commonOpts.EventBus)
 	if err != nil {
-		return nil, errors.Wrap(err, "error kube task")
+		return nil, errors.Wrap(err, "error kube task client")
 	}
 
 	return &KubeTaskClient{
-		client:     kubeClient,
+		client:     kubeCommonClient.GetClient(),
 		clientOpts: kubeOpts,
+		kubeCommon: kubeCommonClient,
 		eventBus:   commonOpts.EventBus,
 	}, nil
 }
 
 func (task *KubeTaskClient) close() error {
-	task.eventBus.Publish(newCloseKubeClientEvent())
-	task.eventBus.Close()
-	return task.client.Close()
+	return task.kubeCommon.Close()
 }
-
-// TODO copy vpn https://github.com/goccy/kubejob/blob/master/copy.go
 
 func (task *KubeTaskClient) runTask(opts *taskModel.RunOptions) error {
 	namespace := task.clientOpts.Namespace
@@ -55,7 +52,7 @@ func (task *KubeTaskClient) runTask(opts *taskModel.RunOptions) error {
 			PodName:       "INVALID_POD_NAME", // not used, generated suffix by kube
 			ContainerName: opts.Template.Image.Repository,
 			ImageName:     opts.Template.Image.Name(),
-			Arguments:     opts.Arguments, // TODO verify commands and arguments
+			Arguments:     opts.Arguments,
 			Env:           []kubernetes.KubeEnv{},
 			Resource:      &kubernetes.KubeResource{}, // TODO set default
 		},

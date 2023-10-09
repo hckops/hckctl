@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
+	commonKube "github.com/hckops/hckctl/pkg/common/kubernetes"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/event"
 	taskModel "github.com/hckops/hckctl/pkg/task/model"
@@ -10,6 +11,7 @@ import (
 type KubeTaskClient struct {
 	client     *kubernetes.KubeClient
 	clientOpts *commonModel.KubeOptions
+	kubeCommon *commonKube.KubeCommonClient
 	eventBus   *event.EventBus
 }
 
@@ -26,6 +28,6 @@ func (task *KubeTaskClient) Events() *event.EventBus {
 }
 
 func (task *KubeTaskClient) Run(opts *taskModel.RunOptions) error {
-	// TODO defer task.close()
+	defer task.close()
 	return task.runTask(opts)
 }

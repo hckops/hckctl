@@ -5,6 +5,7 @@ import (
 
 	boxModel "github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
+	commonKube "github.com/hckops/hckctl/pkg/common/kubernetes"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/event"
 )
@@ -12,6 +13,7 @@ import (
 type KubeBoxClient struct {
 	client     *kubernetes.KubeClient
 	clientOpts *commonModel.KubeOptions
+	kubeCommon *commonKube.KubeCommonClient
 	eventBus   *event.EventBus
 }
 

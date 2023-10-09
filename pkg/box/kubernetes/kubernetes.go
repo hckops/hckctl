@@ -8,30 +8,29 @@ import (
 
 	boxModel "github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
+	commonKube "github.com/hckops/hckctl/pkg/common/kubernetes"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
 func newKubeBoxClient(commonOpts *boxModel.CommonBoxOptions, kubeOpts *commonModel.KubeOptions) (*KubeBoxClient, error) {
-	commonOpts.EventBus.Publish(newInitKubeClientEvent())
 
-	kubeClient, err := kubernetes.NewKubeClient(kubeOpts.InCluster, kubeOpts.ConfigPath)
+	kubeCommonClient, err := commonKube.NewKubeCommonClient(kubeOpts, commonOpts.EventBus)
 	if err != nil {
-		return nil, errors.Wrap(err, "error kube box")
+		return nil, errors.Wrap(err, "error kube box client")
 	}
 
 	return &KubeBoxClient{
-		client:     kubeClient,
+		client:     kubeCommonClient.GetClient(),
 		clientOpts: kubeOpts,
+		kubeCommon: kubeCommonClient,
 		eventBus:   commonOpts.EventBus,
 	}, nil
 }
 
 func (box *KubeBoxClient) close() error {
-	box.eventBus.Publish(newCloseKubeClientEvent())
-	box.eventBus.Close()
-	return box.client.Close()
+	return box.kubeCommon.Close()
 }
 
 func (box *KubeBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.BoxInfo, error) {
