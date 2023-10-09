@@ -13,27 +13,28 @@ import (
 
 func newDockerTaskClient(commonOpts *taskModel.CommonTaskOptions, dockerOpts *commonModel.DockerOptions) (*DockerTaskClient, error) {
 
-	dockerClient, err := commonDocker.NewDockerCommonClient(commonOpts.EventBus, dockerOpts)
+	dockerCommonClient, err := commonDocker.NewDockerCommonClient(dockerOpts, commonOpts.EventBus)
 	if err != nil {
 		return nil, errors.Wrap(err, "error docker task client")
 	}
 
 	return &DockerTaskClient{
-		docker:     dockerClient,
-		clientOpts: dockerOpts,
-		eventBus:   commonOpts.EventBus,
+		client:       dockerCommonClient.GetClient(),
+		clientOpts:   dockerOpts,
+		dockerCommon: dockerCommonClient,
+		eventBus:     commonOpts.EventBus,
 	}, nil
 }
 
 func (task *DockerTaskClient) close() error {
-	return task.docker.Client.Close()
+	return task.dockerCommon.Close()
 }
 
 func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 
 	// pull image
 	imageName := opts.Template.Image.Name()
-	if err := task.docker.PullImageOffline(imageName, func() {
+	if err := task.dockerCommon.PullImageOffline(imageName, func() {
 		task.eventBus.Publish(newImagePullDockerLoaderEvent(imageName))
 	}); err != nil {
 		return err
@@ -45,12 +46,12 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 	// vpn sidecar
 	var networkMode string
 	if opts.NetworkInfo.Vpn != nil {
-		if sidecarContainerId, err := task.docker.StartSidecarVpn(containerName, opts.NetworkInfo.Vpn, &docker.ContainerPortConfigOpts{}); err != nil {
+		if sidecarContainerId, err := task.dockerCommon.StartSidecarVpn(containerName, opts.NetworkInfo.Vpn, &docker.ContainerPortConfigOpts{}); err != nil {
 			return err
 		} else {
 			networkMode = docker.ContainerNetworkMode(sidecarContainerId)
 			// remove sidecar on exit
-			defer task.docker.Client.ContainerRemove(sidecarContainerId)
+			defer task.client.ContainerRemove(sidecarContainerId)
 		}
 	} else {
 		networkMode = docker.DefaultNetworkMode()
@@ -84,7 +85,7 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 	}
 
 	networkName := task.clientOpts.NetworkName
-	networkId, err := task.docker.Client.NetworkUpsert(networkName)
+	networkId, err := task.client.NetworkUpsert(networkName)
 	if err != nil {
 		return err
 	}
@@ -103,7 +104,7 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 		OnContainerInterruptCallback: func(containerId string) {
 			// returns control to runTask, it will correctly invoke defer to remove the sidecar
 			// unless it's interrupted while the sidecar is being created
-			task.docker.Client.ContainerRemove(containerId)
+			task.client.ContainerRemove(containerId)
 		},
 		OnContainerCreateCallback: func(string) error { return nil },
 		OnContainerWaitCallback: func(containerId string) error {
@@ -116,7 +117,7 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 			// TODO add flag to TaskV1 template to use "ContainerLogsStd" if command is "help" or "version"
 			// tail logs before blocking
 			task.eventBus.Publish(newContainerLogDockerEvent(logFileName))
-			return task.docker.Client.ContainerLogsTee(containerId, logFileName)
+			return task.client.ContainerLogsTee(containerId, logFileName)
 		},
 		OnContainerStatusCallback: func(status string) {
 			task.eventBus.Publish(newContainerCreateStatusDockerEvent(status))
@@ -124,7 +125,7 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 		OnContainerStartCallback: func() {},
 	}
 	// taskId
-	containerId, err := task.docker.Client.ContainerCreate(containerOpts)
+	containerId, err := task.client.ContainerCreate(containerOpts)
 	if err != nil {
 		return err
 	}
@@ -133,5 +134,5 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 
 	// remove temporary container
 	task.eventBus.Publish(newContainerRemoveDockerEvent(containerId))
-	return task.docker.Client.ContainerRemove(containerId)
+	return task.client.ContainerRemove(containerId)
 }

@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"github.com/hckops/hckctl/pkg/client/docker"
 	commonDocker "github.com/hckops/hckctl/pkg/common/docker"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/event"
@@ -8,9 +9,10 @@ import (
 )
 
 type DockerTaskClient struct {
-	docker     *commonDocker.DockerCommonClient
-	clientOpts *commonModel.DockerOptions
-	eventBus   *event.EventBus
+	client       *docker.DockerClient
+	clientOpts   *commonModel.DockerOptions
+	dockerCommon *commonDocker.DockerCommonClient
+	eventBus     *event.EventBus
 }
 
 func NewDockerTaskClient(commonOpts *taskModel.CommonTaskOptions, dockerOpts *commonModel.DockerOptions) (*DockerTaskClient, error) {
