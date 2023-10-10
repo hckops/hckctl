@@ -176,7 +176,7 @@ hckctl template list
 # TODO how to validate local template
 ```
 
-Please, feel free to contribute to the companion [repository](https://github.com/hckops/megalopolis) and add more templates.
+Please, feel free to contribute to the companion [repository](https://github.com/hckops/megalopolis) and add more templates
 
 ### Config
 

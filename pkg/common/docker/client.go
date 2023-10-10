@@ -81,7 +81,7 @@ func sidecarLabel() string {
 	return fmt.Sprintf("%s=%s", commonModel.LabelSchemaKind, schema.KindSidecarV1.String())
 }
 
-func (common *DockerCommonClient) GetSidecars(containerName string) ([]commonModel.SidecarInfo, error) {
+func (common *DockerCommonClient) SidecarList(containerName string) ([]commonModel.SidecarInfo, error) {
 
 	// filter by prefix and label
 	containers, err := common.client.ContainerList(commonModel.SidecarPrefixName, sidecarLabel())
@@ -108,10 +108,10 @@ func buildSidecarVpnName(containerName string) string {
 	return fmt.Sprintf("%svpn-%s", commonModel.SidecarPrefixName, tokens[len(tokens)-1])
 }
 
-func (common *DockerCommonClient) StartSidecarVpn(mainContainerName string, vpnInfo *commonModel.VpnNetworkInfo, portConfig *docker.ContainerPortConfigOpts) (string, error) {
+func (common *DockerCommonClient) SidecarVpnInject(opts *commonModel.SidecarVpnInjectOpts, portConfig *docker.ContainerPortConfigOpts) (string, error) {
 
 	// sidecarName
-	containerName := buildSidecarVpnName(mainContainerName)
+	containerName := buildSidecarVpnName(opts.MainContainerName)
 
 	// constants
 	imageName := commonModel.SidecarVpnImageName
@@ -119,20 +119,20 @@ func (common *DockerCommonClient) StartSidecarVpn(mainContainerName string, vpnI
 	vpnConfigPath := "/usr/share/client.ovpn"
 
 	if err := common.PullImageOffline(imageName, func() {
-		common.eventBus.Publish(newSidecarVpnConnectDockerEvent(vpnInfo.Name))
-		common.eventBus.Publish(newSidecarVpnConnectDockerLoaderEvent(vpnInfo.Name))
+		common.eventBus.Publish(newSidecarVpnConnectDockerEvent(opts.VpnInfo.Name))
+		common.eventBus.Publish(newSidecarVpnConnectDockerLoaderEvent(opts.VpnInfo.Name))
 	}); err != nil {
 		return "", err
 	}
 
 	containerConfig, err := docker.BuildContainerConfig(&docker.ContainerConfigOpts{
 		ImageName: imageName,
-		Hostname:  mainContainerName,
+		Hostname:  opts.MainContainerName,
 		Env:       []docker.ContainerEnv{{Key: "OPENVPN_CONFIG", Value: vpnConfigPath}},
 		Ports:     portConfig.Ports,
 		Tty:       false,
 		Cmd:       []string{},
-		Labels:    commonModel.NewSidecarLabels().AddSidecarMain(mainContainerName),
+		Labels:    commonModel.NewSidecarLabels().AddSidecarMain(opts.MainContainerName),
 	})
 	if err != nil {
 		return "", err
@@ -151,7 +151,7 @@ func (common *DockerCommonClient) StartSidecarVpn(mainContainerName string, vpnI
 		CaptureInterrupt: false, // edge case: killing this while creating will leave an orphan sidecar container
 		OnContainerCreateCallback: func(containerId string) error {
 			// upload openvpn config file
-			return common.client.CopyFileToContainer(containerId, vpnInfo.LocalPath, vpnConfigPath)
+			return common.client.CopyFileToContainer(containerId, opts.VpnInfo.LocalPath, vpnConfigPath)
 		},
 		OnContainerStatusCallback: func(status string) {
 			common.eventBus.Publish(newSidecarVpnCreateStatusDockerEvent(status))

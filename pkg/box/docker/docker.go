@@ -65,7 +65,11 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 	var networkMode string
 	if opts.NetworkInfo.Vpn != nil {
 		// set all network configs on the sidecar to avoid option conflicts
-		if sidecarContainerId, err := box.dockerCommon.StartSidecarVpn(containerName, opts.NetworkInfo.Vpn, portConfig); err != nil {
+		sidecarOpts := &commonModel.SidecarVpnInjectOpts{
+			MainContainerName: containerName,
+			VpnInfo:           opts.NetworkInfo.Vpn,
+		}
+		if sidecarContainerId, err := box.dockerCommon.SidecarVpnInject(sidecarOpts, portConfig); err != nil {
 			return nil, err
 		} else {
 			// fix conflicting options: hostname and the network mode
@@ -184,7 +188,7 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 	box.eventBus.Publish(newContainerExecDockerEvent(info.Id, info.Name, command))
 
 	// attempt to restart all associated sidecars
-	sidecars, err := box.dockerCommon.GetSidecars(info.Name)
+	sidecars, err := box.dockerCommon.SidecarList(info.Name)
 	if err != nil {
 		return err
 	}
@@ -421,7 +425,7 @@ func (box *DockerBoxClient) deleteBoxes(names []string) ([]string, error) {
 			}
 
 			// delete all sidecars
-			sidecars, _ := box.dockerCommon.GetSidecars(boxInfo.Name)
+			sidecars, _ := box.dockerCommon.SidecarList(boxInfo.Name)
 			for _, sidecar := range sidecars {
 				if err := box.client.ContainerRemove(sidecar.Id); err != nil {
 					box.eventBus.Publish(newContainerRemoveDockerEvent(sidecar.Id))
