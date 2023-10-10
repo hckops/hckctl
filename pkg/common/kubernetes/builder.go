@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"fmt"
+	"path"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,7 +15,7 @@ const (
 	sidecarVpnTunnelVolume = "tun-device-volume"
 	sidecarVpnTunnelPath   = "/dev/net/tun"
 	sidecarVpnSecretVolume = "sidecar-vpn-volume"
-	sidecarVpnSecretPath   = "/secrets/openvpn/client.ovpn"
+	sidecarVpnSecretPath   = "openvpn/client.ovpn"
 	sidecarVpnSecretKey    = "openvpn-config"
 )
 
@@ -39,7 +40,7 @@ func buildSidecarVpnContainer() corev1.Container {
 		Image:           commonModel.SidecarVpnImageName,
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Env: []corev1.EnvVar{
-			{Name: "OPENVPN_CONFIG", Value: sidecarVpnSecretPath},
+			{Name: "OPENVPN_CONFIG", Value: path.Join(secretBasePath, sidecarVpnSecretPath)},
 		},
 		SecurityContext: &corev1.SecurityContext{
 			Capabilities: &corev1.Capabilities{

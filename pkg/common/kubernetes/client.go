@@ -61,6 +61,13 @@ func (common *KubeCommonClient) SidecarVpnInject(namespace string, opts *commonM
 		return err
 	}
 
+	// disable ipv6, see https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster
+	podSpec.SecurityContext = &corev1.PodSecurityContext{
+		Sysctls: []corev1.Sysctl{
+			{Name: "net.ipv6.conf.all.disable_ipv6", Value: "0"},
+		},
+	}
+
 	// inject container
 	podSpec.Containers = append(
 		podSpec.Containers, // current containers

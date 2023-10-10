@@ -71,7 +71,7 @@ spec:
     secret:
       items:
       - key: openvpn-config
-        path: /secrets/openvpn/client.ovpn
+        path: openvpn/client.ovpn
       secretName: main-container-sidecar-vpn-secret
 status: {}
 `

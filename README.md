@@ -223,6 +223,10 @@ provider:
     configPath: ""
     namespace: hckops
 ```
+Make sure you disable IPv6 in your cluster in order to use the vpn
+```bash
+minikube start --extra-config="kubelet.allowed-unsafe-sysctls=net.ipv6.conf.all.disable_ipv6"
+```
 If you are looking for a simple way to get started with a remote cluster consider [kube-template](https://github.com/hckops/kube-template)
 ```bash
 provider:
