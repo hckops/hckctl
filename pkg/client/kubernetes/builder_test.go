@@ -1,16 +1,11 @@
 package kubernetes
 
 import (
-	"bytes"
-	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	appsv1 "k8s.io/api/apps/v1"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/cli-runtime/pkg/printers"
-	"k8s.io/client-go/kubernetes/scheme"
 )
 
 func TestBuildResources(t *testing.T) {
@@ -159,8 +154,8 @@ status:
 	actualService.TypeMeta = metav1.TypeMeta{Kind: "Service", APIVersion: "v1"}
 
 	assert.NoError(t, err)
-	assert.YAMLEqf(t, expectedDeployment, objectToYaml(actualDeployment), "unexpected deployment")
-	assert.YAMLEqf(t, expectedService, objectToYaml(actualService), "unexpected service")
+	assert.YAMLEqf(t, expectedDeployment, ObjectToYaml(actualDeployment), "unexpected deployment")
+	assert.YAMLEqf(t, expectedService, ObjectToYaml(actualService), "unexpected service")
 }
 
 func TestBuildJob(t *testing.T) {
@@ -229,25 +224,5 @@ status: {}
 	// fix model
 	actualJob.TypeMeta = metav1.TypeMeta{Kind: "Job", APIVersion: "batch/v1"}
 
-	assert.YAMLEqf(t, expectedJob, objectToYaml(actualJob), "unexpected job")
-}
-
-func objectToYaml(object runtime.Object) string {
-	buffer := new(bytes.Buffer)
-	printer := printers.YAMLPrinter{}
-	if err := printer.PrintObj(object, buffer); err != nil {
-		log.Fatalf("objectToYaml: %#v\n", err)
-	}
-	return buffer.String()
-}
-
-// https://github.com/kubernetes/client-go/issues/193
-// https://medium.com/@harshjniitr/reading-and-writing-k8s-resource-as-yaml-in-golang-81dc8c7ea800
-func yamlToDeployment(data string) *appsv1.Deployment {
-	decoder := scheme.Codecs.UniversalDeserializer().Decode
-	object, _, err := decoder([]byte(data), nil, nil)
-	if err != nil {
-		log.Fatalf("yamlToDeployment: %#v\n", err)
-	}
-	return object.(*appsv1.Deployment)
+	assert.YAMLEqf(t, expectedJob, ObjectToYaml(actualJob), "unexpected job")
 }

@@ -1,6 +1,7 @@
 package util
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 	"regexp"
@@ -97,4 +98,26 @@ func Expand(raw string, inputs map[string]string) (string, error) {
 	})
 
 	return expanded, err
+}
+
+func Base64Encode(value string) string {
+	// alternative with "len"
+	//encoded := make([]byte, base64.StdEncoding.EncodedLen(len(value)))
+	//base64.StdEncoding.Encode(encoded, []byte(value))
+	//return string(encoded)
+
+	return base64.StdEncoding.EncodeToString([]byte(value))
+}
+
+func Base64Decode(value string) (string, bool) {
+	// alternative with "len"
+	//decoded := make([]byte, base64.StdEncoding.DecodedLen(len(value)))
+	//count, err := base64.StdEncoding.Decode(decoded, []byte(value))
+	//return string(decoded)
+
+	decoded, err := base64.StdEncoding.DecodeString(value)
+	if err != nil {
+		return "", false
+	}
+	return string(decoded), true
 }
