@@ -26,7 +26,8 @@
 
 Launch manual and automated attacks with pre-defined and always up-to-date templates of your favourite tools.
 
-Designed to transparently run locally, remotely or integrated in pipelines. `hckctl` is free and open-source, no vendor lock-in, extensible and built using native providers api.
+Designed to transparently run locally, remotely or integrated in pipelines and with guaranteed stability and retro-compatibility over time.
+`hckctl` is free, open-source and community driven, no vendor lock-in, extensible and built using native providers api.
 
 Attack your vulnerable target infrastructure or connect to your training platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup and network configurations.
 
@@ -48,7 +49,7 @@ hckctl box alpine
 # deploys an ephemeral box to your kubernetes cluster
 hckctl box arch --provider kube
 
-# creates a managed box
+# creates a managed box (preview)
 hckctl box parrot --provider cloud
 ```
 
@@ -99,19 +100,19 @@ Run a [`task`](https://github.com/hckops/megalopolis/tree/main/task) using pre-d
 hckctl task gobuster --command help
 hckctl task fuzzer/ffuf --command version
 
-# use the "default" preset arguments
+# uses the "default" preset arguments
 hckctl task rustscan
 # equivalent of
 hckctl task rustscan --input address=127.0.0.1
 hckctl task scanner/rustscan --command default --input address=127.0.0.1
 
-# use the "full" preset arguments
+# uses the "full" preset arguments
 hckctl task nmap --command full --input address=127.0.0.1 --input port=80
 
-# invoke it with custom arguments
+# invokes it with custom arguments
 hckctl task nuclei --inline -- -u https://example.com
 
-# monitor the logs
+# monitors the logs
 tail -F ${HOME}/.local/state/hck/task/log/task-*
 ```
 
@@ -169,11 +170,20 @@ hckctl flow phishing @example.com
 
 ### Template
 
-Explore all available templates. Pin a git `revision` to ensure reliability in automated pipelines
+Explore all available templates or write your own and validate it locally
 ```bash
+# lists all templates
 hckctl template list
 
-# TODO how to validate local template
+# validates all templates
+hckctl template validate "../megalopolis/**/*.{yml,yaml}"
+```
+
+Even if templates will evolve over time, a lot of design effort has been put around schema validation and versioning.
+The whole project is centered around git as source of truth, simply pin a `revision` (branch, tag, or sha) if you need to ensure long term stability.
+```bash
+# resolves commit hash "12e7599"
+hckctl task trivy --revision v0.1.0
 ```
 
 Please, feel free to contribute to the companion [repository](https://github.com/hckops/megalopolis) and add more templates
@@ -300,6 +310,7 @@ TODO
     - verify kube/cloud no-shell support
     - play htb: linux/win
     - RELEASE example https://github.com/boz/kail#homebrew
+    - docker release and gh-action
 * general
     - add disclaimer of responsibility to readme?
     - public discord server (review channels visibility)
