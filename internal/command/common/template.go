@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/hckops/hckctl/pkg/template"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 func NewGitSourceOptions(cacheDir string, revision string) *template.GitSourceOptions {
@@ -30,5 +31,5 @@ func PrettyName[T template.TemplateType](info *template.TemplateInfo[T], cacheDi
 	if info.SourceType == template.Git {
 		return fmt.Sprintf("%s@%s", PrettyPath(cacheDir, info.Path), info.Revision[:7])
 	}
-	return fmt.Sprintf("%s@%s", strings.ToLower(name), info.Revision)
+	return fmt.Sprintf("%s@%s", util.ToLowerKebabCase(name), info.Revision)
 }
