@@ -26,8 +26,8 @@
 
 Launch manual and automated attacks with pre-defined and always up-to-date templates of your favourite tools.
 
-Designed to transparently run locally, remotely or integrated in pipelines and with guaranteed stability and retro-compatibility over time.
-`hckctl` is free, open-source and community driven, no vendor lock-in, extensible and built using native providers api.
+Designed to transparently run locally, remotely or integrated in pipelines and with guaranteed stability and backward compatibility over time.
+`hckctl` is free, open source and community driven, no vendor lock-in, extensible and built using native providers api.
 
 Attack your vulnerable target infrastructure or connect to your training platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup and network configurations.
 
@@ -179,14 +179,12 @@ hckctl template list
 hckctl template validate "../megalopolis/**/*.{yml,yaml}"
 ```
 
-Even if templates will evolve over time, a lot of design effort has been put around schema validation and versioning.
-The whole project is centered around git as source of truth, simply pin a `revision` (branch, tag, or sha) if you need to ensure long term stability.
+Even if the templates will evolve over time, a lot of design effort has been put around schema validation and versioning.
+The whole project is centered around git as source of truth, simply pin a `revision` (branch, tag, or sha) if you need to ensure long term stability
 ```bash
 # resolves commit hash "12e7599"
 hckctl task trivy --revision v0.1.0
 ```
-
-Please, feel free to contribute to the companion [repository](https://github.com/hckops/megalopolis) and add more templates
 
 ### Config
 
@@ -195,7 +193,7 @@ Edit the default configurations
 # prints path and current configs
 hckctl config
 
-# unix path
+# (unix path)
 vim ${HOME}/.config/hck/config.yml
 
 # resets default configs
@@ -287,7 +285,13 @@ tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 
 ## Contribute
 
-> TODO example of how to point to a specific pr/revision in a forked repo
+Create your custom template and test it locally
+```bash
+# loads local template
+hckctl box --local ../megalopolis/box/preview/powershell.yml
+```
+
+Please, feel free to contribute to the companion [repository](https://github.com/hckops/megalopolis) and add more community templates
 
 <!--
 
