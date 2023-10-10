@@ -316,26 +316,6 @@ func (client *KubeClient) PodDescribeFromDeployment(deployment *appsv1.Deploymen
 	return client.podDescribe(deployment.Namespace, listOptions)
 }
 
-func buildJobLabelSelector(job *batchv1.Job) (metav1.ListOptions, error) {
-	labelMap, err := metav1.LabelSelectorAsMap(job.Spec.Selector)
-	if err != nil {
-		return metav1.ListOptions{}, errors.Wrapf(err, "error pod describe from job")
-	}
-	listOptions := metav1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(labelMap).String(),
-	}
-	return listOptions, nil
-}
-
-func (client *KubeClient) PodDescribeFromJob(job *batchv1.Job) (*PodInfo, error) {
-	listOptions, err := buildJobLabelSelector(job)
-	if err != nil {
-		return nil, err
-	}
-
-	return client.podDescribe(job.Namespace, listOptions)
-}
-
 func (client *KubeClient) podDescribe(namespace string, listOptions metav1.ListOptions) (*PodInfo, error) {
 
 	pods, err := client.CoreApi().Pods(namespace).List(client.ctx, listOptions)
@@ -363,8 +343,7 @@ func newPodInfo(namespace string, pods *corev1.PodList) (*PodInfo, error) {
 	if len(containers) != 1 {
 		return nil, fmt.Errorf("found %d containers, expected only 1 container for pod: namespace=%s", len(podItem.Spec.Containers), namespace)
 	}
-
-	containerItem := podItem.Spec.Containers[0]
+	containerItem := containers[0]
 
 	var envs []KubeEnv
 	for _, e := range containerItem.Env {
@@ -508,6 +487,17 @@ func (client *KubeClient) PodLog(opts *PodLogOpts) error {
 	return nil
 }
 
+func buildJobLabelSelector(job *batchv1.Job) (metav1.ListOptions, error) {
+	labelMap, err := metav1.LabelSelectorAsMap(job.Spec.Selector)
+	if err != nil {
+		return metav1.ListOptions{}, errors.Wrapf(err, "error pod describe from job")
+	}
+	listOptions := metav1.ListOptions{
+		LabelSelector: labels.SelectorFromSet(labelMap).String(),
+	}
+	return listOptions, nil
+}
+
 func (client *KubeClient) JobCreate(opts *JobCreateOpts) error {
 
 	job, err := client.BatchApi().Jobs(opts.Namespace).Create(client.ctx, opts.Spec, metav1.CreateOptions{})
@@ -539,6 +529,21 @@ func (client *KubeClient) JobCreate(opts *JobCreateOpts) error {
 		}
 	}
 	return nil
+}
+
+func (client *KubeClient) JobDescribe(namespace string, name string) (*PodInfo, error) {
+
+	job, err := client.BatchApi().Jobs(namespace).Get(client.ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "error job describe: namespace=%s name=%s", namespace, name)
+	}
+
+	listOptions, err := buildJobLabelSelector(job)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.podDescribe(job.Namespace, listOptions)
 }
 
 func (client *KubeClient) JobDelete(namespace string, name string) error {

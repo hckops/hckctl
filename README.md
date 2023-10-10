@@ -179,10 +179,10 @@ hckctl template list
 hckctl template validate "../megalopolis/**/*.{yml,yaml}"
 ```
 
-Even if the templates will evolve over time, a lot of design effort has been put around schema validation and versioning.
+Even if the template schema will change over time, a lot of design effort has been put around validation and versioning.
 The whole project is centered around git as source of truth, simply pin a `revision` (branch, tag, or sha) if you need to ensure long term stability
 ```bash
-# resolves commit hash "12e7599"
+# uses template "megalopolis/task/scanner/trivy" @ commit hash "12e7599"
 hckctl task trivy --revision v0.1.0
 ```
 
@@ -217,6 +217,7 @@ curl -sSL https://github.com/hckops/hckctl/releases/download/${HCKCTL_VERSION}/h
 
 Follow the official [instructions](https://docs.docker.com/engine/install) to install Docker Engine. The fastest way to get started is with the [convenience script](https://get.docker.com)
 ```bash
+# download and run script
 curl -fsSL https://get.docker.com -o get-docker.sh
 ./sudo sh get-docker.sh
 ```
@@ -295,7 +296,6 @@ Please, feel free to contribute to the companion [repository](https://github.com
 
 <!--
 
-* task/box kube vpn
 * task/box kube shareDir vs copy dir
 * task kube tee log file
 * task kube interrupt

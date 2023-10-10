@@ -30,10 +30,6 @@ func (task *KubeTaskClient) close() error {
 	return task.kubeCommon.Close()
 }
 
-// TODO copy share dir
-// TODO interrupt
-// TODO tee logs
-
 func (task *KubeTaskClient) runTask(opts *taskModel.RunOptions) error {
 	namespace := task.clientOpts.Namespace
 
@@ -58,7 +54,11 @@ func (task *KubeTaskClient) runTask(opts *taskModel.RunOptions) error {
 			ImageName:     opts.Template.Image.Name(),
 			Arguments:     opts.Arguments,
 			Env:           []kubernetes.KubeEnv{},
-			Resource:      &kubernetes.KubeResource{}, // TODO set default
+			// TODO set default
+			Resource: &kubernetes.KubeResource{
+				Memory: "1024Mi",
+				Cpu:    "1000m",
+			},
 		},
 	})
 
@@ -87,7 +87,7 @@ func (task *KubeTaskClient) runTask(opts *taskModel.RunOptions) error {
 	}
 	task.eventBus.Publish(newJobCreateKubeEvent(namespace, jobName))
 
-	podInfo, err := task.client.PodDescribeFromJob(jobSpec)
+	podInfo, err := task.client.JobDescribe(namespace, jobName)
 	if err != nil {
 		return err
 	}
