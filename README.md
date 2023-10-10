@@ -8,6 +8,9 @@
   <a href="https://github.com/hckops/hckctl/actions/workflows/ci.yaml">
     <img src="https://github.com/hckops/hckctl/actions/workflows/ci.yaml/badge.svg" alt="ci">
   </a>
+  <a href="https://github.com/hckops/hckctl/actions/workflows/release.yml">
+    <img src="https://github.com/hckops/hckctl/actions/workflows/release.yml/badge.svg" alt="release">
+  </a>
 </p>
 
 <p align="center">
@@ -137,7 +140,6 @@ See [output](./docs/task-htb-example.txt) example
 Use the shared directory to mount local paths
 ```bash
 # download your wordlists
-mkdir -p ${HOME}/.local/state/hck/share/wordlists
 git clone --depth 1 https://github.com/danielmiessler/SecLists.git \
   ${HOME}/.local/state/hck/share/wordlists/SecLists
 
@@ -230,7 +232,7 @@ provider:
 
 ### Cloud
 
-Access to the platform is limited and in ***preview***. If you are interested, please leave a comment or a :thumbsup: to this [issue](https://github.com/hckops/hckctl/issues/104) and we'll reach out with more details
+Access to the platform is limited and in ***private preview***. If you are interested, please leave a comment or a :thumbsup: to this [issue](https://github.com/hckops/hckctl/issues/104) and we'll reach out with more details
 ```bash
 provider:
   cloud:
@@ -275,19 +277,17 @@ tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 
 <!--
 
-* task kube vpn
+* task/box kube vpn
+* task/box kube shareDir vs copy dir
 * task kube tee log file
-* task kube shareDir ? copy dir?
 * task kube interrupt
 * replace task/htb example with thm
 * verify/support kube config relative path
-* update cloud
-* update platform prs/dependencies
+* update cloud pkg
+* update platform prs
 
 TODO
 * priority
-    - add box kube --network-vpn
-    - add box kube shareDir
     - add task cloud
     - debug `htb-postman`
     - lab inputs
