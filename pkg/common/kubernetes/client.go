@@ -1,7 +1,9 @@
 package kubernetes
 
 import (
+	"github.com/hckops/hckctl/pkg/util"
 	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
@@ -37,4 +39,38 @@ func (common *KubeCommonClient) Close() error {
 	common.eventBus.Publish(newCloseKubeClientEvent())
 	common.eventBus.Close()
 	return common.client.Close()
+}
+
+func (common *KubeCommonClient) SidecarVpnDelete(namespace string, mainContainerName string) error {
+	// delete secret
+	name := buildSidecarVpnSecretName(mainContainerName)
+	if ok, err := common.client.SecretDelete(namespace, name); err != nil {
+		return err
+	} else if ok {
+		common.eventBus.Publish(newSecretDeleteKubeEvent(namespace, name))
+	}
+	return nil
+}
+
+func (common *KubeCommonClient) SidecarVpnInject(namespace string, opts *commonModel.SidecarVpnInjectOpts, podSpec *corev1.PodSpec) error {
+
+	// create secret
+	secret := buildSidecarVpnSecret(namespace, opts.MainContainerName, opts.VpnInfo.ConfigValue)
+	common.eventBus.Publish(newSecretCreateKubeEvent(namespace, secret.Name))
+	if err := common.client.SecretCreate(namespace, secret); err != nil {
+		return err
+	}
+
+	// inject container
+	podSpec.Containers = append(
+		podSpec.Containers, // current containers
+		buildSidecarVpnContainer(),
+	)
+
+	// inject volumes
+	podSpec.Volumes = append(
+		podSpec.Volumes, // current volumes
+		buildSidecarVpnVolumes(util.ToLowerKebabCase(opts.MainContainerName))..., // join slices
+	)
+	return nil
 }

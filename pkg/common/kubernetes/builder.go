@@ -35,7 +35,7 @@ func buildSidecarVpnSecret(namespace, containerName, secretValue string) *corev1
 
 func buildSidecarVpnContainer() corev1.Container {
 	return corev1.Container{
-		Name:            "sidecar-vpn",
+		Name:            fmt.Sprintf("%svpn", commonModel.SidecarPrefixName),
 		Image:           commonModel.SidecarVpnImageName,
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Env: []corev1.EnvVar{

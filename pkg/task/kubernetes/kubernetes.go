@@ -30,6 +30,10 @@ func (task *KubeTaskClient) close() error {
 	return task.kubeCommon.Close()
 }
 
+// TODO copy share dir
+// TODO interrupt
+// TODO tee logs
+
 func (task *KubeTaskClient) runTask(opts *taskModel.RunOptions) error {
 	namespace := task.clientOpts.Namespace
 
@@ -57,6 +61,19 @@ func (task *KubeTaskClient) runTask(opts *taskModel.RunOptions) error {
 			Resource:      &kubernetes.KubeResource{}, // TODO set default
 		},
 	})
+
+	// create secret and inject sidecar-vpn
+	if opts.NetworkInfo.Vpn != nil {
+		sidecarOpts := &commonModel.SidecarVpnInjectOpts{
+			MainContainerName: jobName,
+			VpnInfo:           opts.NetworkInfo.Vpn,
+		}
+		if err := task.kubeCommon.SidecarVpnInject(namespace, sidecarOpts, &jobSpec.Spec.Template.Spec); err != nil {
+			return err
+		}
+		defer task.kubeCommon.SidecarVpnDelete(namespace, jobName)
+	}
+
 	jobOpts := &kubernetes.JobCreateOpts{
 		Namespace: namespace,
 		Spec:      jobSpec,

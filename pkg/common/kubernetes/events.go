@@ -1,31 +1,41 @@
 package kubernetes
 
 import (
+	"fmt"
+
 	"github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/event"
 )
 
-type kubeTaskEvent struct {
+type kubeCommonEvent struct {
 	kind  event.EventKind
 	value string
 }
 
-func (e *kubeTaskEvent) Source() string {
+func (e *kubeCommonEvent) Source() string {
 	return model.KubernetesProvider
 }
 
-func (e *kubeTaskEvent) Kind() event.EventKind {
+func (e *kubeCommonEvent) Kind() event.EventKind {
 	return e.kind
 }
 
-func (e *kubeTaskEvent) String() string {
+func (e *kubeCommonEvent) String() string {
 	return e.value
 }
 
-func newInitKubeClientEvent() *kubeTaskEvent {
-	return &kubeTaskEvent{kind: event.LogDebug, value: "init kube client"}
+func newInitKubeClientEvent() *kubeCommonEvent {
+	return &kubeCommonEvent{kind: event.LogDebug, value: "init kube client"}
 }
 
-func newCloseKubeClientEvent() *kubeTaskEvent {
-	return &kubeTaskEvent{kind: event.LogDebug, value: "close kube client"}
+func newCloseKubeClientEvent() *kubeCommonEvent {
+	return &kubeCommonEvent{kind: event.LogDebug, value: "close kube client"}
+}
+
+func newSecretCreateKubeEvent(namespace string, name string) *kubeCommonEvent {
+	return &kubeCommonEvent{kind: event.LogInfo, value: fmt.Sprintf("secret create: namespace=%s name=%s", namespace, name)}
+}
+
+func newSecretDeleteKubeEvent(namespace string, name string) *kubeCommonEvent {
+	return &kubeCommonEvent{kind: event.LogInfo, value: fmt.Sprintf("secret delete: namespace=%s name=%s", namespace, name)}
 }

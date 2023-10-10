@@ -554,3 +554,26 @@ func (client *KubeClient) JobDelete(namespace string, name string) error {
 
 	return nil
 }
+
+func (client *KubeClient) SecretCreate(namespace string, spec *corev1.Secret) error {
+
+	_, err := client.CoreApi().Secrets(namespace).Create(client.ctx, spec, metav1.CreateOptions{})
+	if err != nil {
+		return errors.Wrapf(err, "error secret create: namespace=%s name=%s", namespace, spec.Name)
+	}
+	return nil
+}
+
+func (client *KubeClient) SecretDelete(namespace string, name string) (bool, error) {
+
+	_, err := client.CoreApi().Secrets(namespace).Get(client.ctx, name, metav1.GetOptions{})
+	if err != nil {
+		// it means the secret doesn't exist
+		return false, nil
+	}
+
+	if err := client.CoreApi().Secrets(namespace).Delete(client.ctx, name, metav1.DeleteOptions{}); err != nil {
+		return false, errors.Wrapf(err, "error secret delete: namespace=%s name=%s", namespace, name)
+	}
+	return true, nil
+}

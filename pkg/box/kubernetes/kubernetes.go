@@ -58,6 +58,17 @@ func (box *KubeBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.Box
 		box.eventBus.Publish(newServiceCreateIgnoreKubeEvent(namespace, service.Name))
 	}
 
+	// create secret and inject sidecar-vpn
+	if opts.NetworkInfo.Vpn != nil {
+		sidecarOpts := &commonModel.SidecarVpnInjectOpts{
+			MainContainerName: boxName,
+			VpnInfo:           opts.NetworkInfo.Vpn,
+		}
+		if err := box.kubeCommon.SidecarVpnInject(namespace, sidecarOpts, &deployment.Spec.Template.Spec); err != nil {
+			return nil, err
+		}
+	}
+
 	// create deployment
 	box.eventBus.Publish(newResourcesDeployKubeLoaderEvent(namespace, opts.Template.Name))
 	deploymentOpts := &kubernetes.DeploymentCreateOpts{
@@ -398,6 +409,9 @@ func (box *KubeBoxClient) deleteBox(name string) error {
 		return err
 	}
 
+	if err := box.kubeCommon.SidecarVpnDelete(namespace, name); err != nil {
+		return err
+	}
 	return nil
 }
 
