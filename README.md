@@ -58,7 +58,7 @@ hckctl box parrot --provider cloud
 #### HTB demo
 
 Prerequisites
-* start the retired [Postman](https://app.hackthebox.com/machines/Postman) machine in your account
+* start the retired [Lame](https://app.hackthebox.com/machines/Lame) machine in your account
 * edit your vpn network config
     ```bash
     vim ${HOME}/.config/hck/config.yml
@@ -270,7 +270,7 @@ tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 ## Roadmap
 
 * `machine` create and access VMs e.g. DigitalOcean Droplet, AWS EC2, Azure Virtual Machines, QEMU etc.
-* `tui` similar to lazydocker and k9s
+* `tui` similar to lazydocker and k9s together
 * `network` support Tor and ProxyChains
 * `plugin` add custom cli commands in any language
   - `man` combine tldr and cheat with task commands
