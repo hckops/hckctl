@@ -26,10 +26,11 @@
 
 Launch manual and automated attacks with pre-defined and always up-to-date templates of your favourite tools.
 
+Attack your vulnerable target infrastructure or connect to your training platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup and network configurations.
+Package, distribute and run known exploits to find weaknesses on authorized targets in a standard way.
+
 Designed to transparently run locally, remotely or integrated in pipelines and with guaranteed stability and backward compatibility over time.
 `hckctl` is free, open source and community driven, no vendor lock-in, extensible and built using native providers api.
-
-Attack your vulnerable target infrastructure or connect to your training platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup and network configurations.
 
 Leverage the cloud platform or request a dedicated managed cluster to:
 * orchestrate complex attack scenarios
@@ -74,27 +75,19 @@ Start your *pwnbox* and solve the challenges
 hckctl box preview/parrot-sec --network-vpn htb
 ```
 
-Start an auto-exploitation box
-```bash
-# TODO review
-
-# exploits the machine and spawns a reverse shell
-hckctl box --network-vpn htb --local ../megalopolis/box/ctf/htb-postman.yml
-```
-
 ### Lab (preview)
 
 > TODO video
 
 Access your target from a managed [`lab`](https://github.com/hckops/megalopolis/tree/main/lab)
 ```bash
-# connects to a vpn, exposes public ports, mount dumps etc.
+# connects to a vpn, exposes public ports, mount dumps (git, s3), store secrets, etc.
 hckctl lab ctf-linux
 ```
 
 ### Task
 
-Run a [`task`](https://github.com/hckops/megalopolis/tree/main/task) using pre-defined commands
+Run a single-stage [`task`](https://github.com/hckops/megalopolis/tree/main/task) using pre-defined commands
 ```bash
 # default commands
 hckctl task gobuster --command help
@@ -158,7 +151,7 @@ hckctl task \
 
 ### Flow (preview)
 
-Launch multiple tasks in parallel, collect and combine the results
+Run multistage tasks in parallel, collect and output the combined results
 ```bash
 hckctl flow scan www.example.com
 hckctl flow fuzz 127.0.0.1:8080
@@ -296,13 +289,19 @@ Please, feel free to contribute to the companion [repository](https://github.com
 
 <!--
 
-* task/box kube shareDir vs copy dir
 * task kube tee log file
+* task/box kube shareDir vs copy dir
 * task kube interrupt
 * replace task/htb example with thm
 * verify/support kube config relative path
 * update cloud pkg
 * update platform prs
+* verify network connectivity between boxes/tasks i.e. kube.svc
+
+TODO demo
+* auto-exploitation box
+* metasploit plugin
+* windows examples
 
 TODO
 * priority
@@ -315,6 +314,7 @@ TODO
     - play htb: linux/win
     - RELEASE example https://github.com/boz/kail#homebrew
     - docker release and gh-action
+    - add copyTo/copyFrom box/task
 * general
     - add disclaimer of responsibility to readme?
     - public discord server (review channels visibility)
@@ -389,6 +389,7 @@ TODO
     - skip output file for `help` and `version`
     - add argument `--volume` to restrict shared directories/files
     - limit default kube resources
+    - add `--background` to omit stdout and ignore interrupt handler i.e. only file output
 * version
     - print if new version available
     - implement server and providers `version` in json format docker/kube/cloud
