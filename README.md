@@ -27,6 +27,7 @@
 Launch manual and automated attacks with pre-defined and always up-to-date templates of your favourite tools.
 
 Attack your vulnerable target infrastructure or connect to your training platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup and network configurations.
+
 Package, distribute and run known exploits to find weaknesses on authorized targets in a standard way.
 
 Designed to transparently run locally, remotely or integrated in pipelines and with guaranteed stability and backward compatibility over time.
@@ -69,7 +70,7 @@ Prerequisites
         path: /home/demo/ctf/openvpn/htb_demo_eu_vip_28.ovpn
     ```
 
-Start your *pwnbox* and solve the challenges
+Start your *pwnbox* locally or remotely and solve the challenges
 ```bash
 # pulls a preview box (first time might take a while)
 hckctl box preview/parrot-sec --network-vpn htb
@@ -172,8 +173,7 @@ hckctl template list
 hckctl template validate "../megalopolis/**/*.{yml,yaml}"
 ```
 
-Even if the template schema will change over time, a lot of design effort has been put around validation and versioning.
-The whole project is centered around git as source of truth, simply pin a `revision` (branch, tag, or sha) if you need to ensure long term stability
+Inspired by [GitOps](https://www.gitops.tech), the whole project is centered around git as source of truth, schema validation and versioning. Simply pin a `revision` (branch, tag, or sha) if you need to ensure long term stability
 ```bash
 # uses template "megalopolis/task/scanner/trivy" @ commit hash "12e7599"
 hckctl task trivy --revision v0.1.0
