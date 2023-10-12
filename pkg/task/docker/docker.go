@@ -105,6 +105,7 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 		OnContainerInterruptCallback: func(containerId string) {
 			// returns control to runTask, it will correctly invoke defer to remove the sidecar
 			// unless it's interrupted while the sidecar is being created
+			task.eventBus.Publish(newContainerRemoveDockerEvent(containerId))
 			task.client.ContainerRemove(containerId)
 		},
 		OnContainerCreateCallback: func(string) error { return nil },

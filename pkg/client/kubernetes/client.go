@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/hckops/hckctl/pkg/util"
 	"io"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
@@ -35,6 +36,7 @@ import (
 	"k8s.io/kubectl/pkg/scheme"
 
 	"github.com/hckops/hckctl/pkg/client/common"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 func NewKubeClient(inCluster bool, configPath string) (*KubeClient, error) {
@@ -532,6 +534,16 @@ func (client *KubeClient) JobCreate(opts *JobCreateOpts) error {
 	job, err := client.BatchApi().Jobs(opts.Namespace).Create(client.ctx, opts.Spec, metav1.CreateOptions{})
 	if err != nil {
 		return errors.Wrapf(err, "error job create: namespace=%s name=%s", opts.Namespace, opts.Spec.Name)
+	}
+
+	if opts.CaptureInterrupt {
+		// captures CTRL+C
+		signalChan := make(chan os.Signal, 1)
+		signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
+		go func() {
+			<-signalChan
+			opts.OnContainerInterruptCallback(job.Name)
+		}()
 	}
 
 	// blocks until the job is ready, then stop watching

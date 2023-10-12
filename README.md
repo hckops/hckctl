@@ -293,7 +293,6 @@ Please, feel free to contribute to the companion [repository](https://github.com
 
 <!--
 
-* task kube interrupt
 * task/box kube shareDir vs copy dir
 * replace task/htb example with thm
 * verify/support kube config relative path

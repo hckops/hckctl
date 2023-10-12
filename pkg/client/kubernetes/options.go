@@ -58,7 +58,9 @@ type JobOpts struct {
 }
 
 type JobCreateOpts struct {
-	Namespace             string
-	Spec                  *batchv1.Job
-	OnStatusEventCallback func(event string)
+	Namespace                    string
+	Spec                         *batchv1.Job
+	CaptureInterrupt             bool
+	OnContainerInterruptCallback func(name string)
+	OnStatusEventCallback        func(event string)
 }

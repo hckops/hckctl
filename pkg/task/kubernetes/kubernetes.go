@@ -75,8 +75,14 @@ func (task *KubeTaskClient) runTask(opts *taskModel.RunOptions) error {
 	}
 
 	jobOpts := &kubernetes.JobCreateOpts{
-		Namespace: namespace,
-		Spec:      jobSpec,
+		Namespace:        namespace,
+		Spec:             jobSpec,
+		CaptureInterrupt: true,
+		OnContainerInterruptCallback: func(name string) {
+			// ignore error when interrupted: it will attempt to delete the job twice
+			task.eventBus.Publish(newJobDeleteKubeEvent(namespace, jobName))
+			task.client.JobDelete(namespace, name)
+		},
 		OnStatusEventCallback: func(event string) {
 			task.eventBus.Publish(newJobCreateStatusKubeEvent(event))
 		},
@@ -96,13 +102,14 @@ func (task *KubeTaskClient) runTask(opts *taskModel.RunOptions) error {
 	// stop loader
 	task.eventBus.Publish(newContainerWaitKubeLoaderEvent())
 
-	logFileName := opts.GenerateLogFileName(taskModel.Kubernetes, podInfo.ContainerName)
+	logFileName := opts.GenerateLogFileName(taskModel.Kubernetes, jobName)
 	logOpts := &kubernetes.PodLogsOpts{
 		Namespace: namespace,
 		PodName:   podInfo.PodName,
 		PodId:     podInfo.ContainerName,
 	}
 	task.eventBus.Publish(newPodLogKubeEvent(logFileName))
+	// blocks and tail logs
 	if err := task.client.PodLogsTee(logOpts, logFileName); err != nil {
 		return err
 	}
