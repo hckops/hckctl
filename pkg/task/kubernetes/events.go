@@ -49,7 +49,7 @@ func newPodLogKubeEvent(logFileName string) *kubeTaskEvent {
 }
 
 func newPodLogKubeConsoleEvent(logFileName string) *kubeTaskEvent {
-	return &kubeTaskEvent{kind: event.PrintConsole, value: fmt.Sprintf("output file: %s", logFileName)}
+	return &kubeTaskEvent{kind: event.PrintConsole, value: fmt.Sprintf("\noutput file: %s", logFileName)}
 }
 
 func newContainerWaitKubeLoaderEvent() *kubeTaskEvent {

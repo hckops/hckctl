@@ -49,7 +49,7 @@ func newContainerLogDockerEvent(logFileName string) *dockerTaskEvent {
 }
 
 func newContainerLogDockerConsoleEvent(logFileName string) *dockerTaskEvent {
-	return &dockerTaskEvent{kind: event.PrintConsole, value: fmt.Sprintf("output file: %s", logFileName)}
+	return &dockerTaskEvent{kind: event.PrintConsole, value: fmt.Sprintf("\noutput file: %s", logFileName)}
 }
 
 func newContainerCreateDockerLoaderEvent() *dockerTaskEvent {

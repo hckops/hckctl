@@ -1,6 +1,11 @@
 package model
 
 import (
+	"fmt"
+	"path"
+	"strconv"
+	"time"
+
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/event"
 )
@@ -29,4 +34,9 @@ type RunOptions struct {
 	StreamOpts  *commonModel.StreamOptions
 	ShareDir    string
 	LogDir      string
+}
+
+func (opts *RunOptions) GenerateLogFileName(provider TaskProvider, containerName string) string {
+	timestamp := strconv.FormatInt(time.Now().UTC().UnixNano(), 10)
+	return path.Join(opts.LogDir, fmt.Sprintf("%s-%s-%s", provider.String(), timestamp, containerName))
 }

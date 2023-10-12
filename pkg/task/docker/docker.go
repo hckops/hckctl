@@ -1,8 +1,6 @@
 package docker
 
 import (
-	"path"
-
 	"github.com/pkg/errors"
 
 	"github.com/hckops/hckctl/pkg/client/docker"
@@ -96,8 +94,7 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 	task.eventBus.Publish(newNetworkUpsertDockerEvent(networkName, networkId))
 	task.eventBus.Publish(newContainerCreateDockerLoaderEvent())
 
-	// TODO prefix log file name with unix timestamp to order files?
-	logFileName := path.Join(opts.LogDir, containerName)
+	logFileName := opts.GenerateLogFileName(taskModel.Docker, containerName)
 	containerOpts := &docker.ContainerCreateOpts{
 		ContainerName:    containerName,
 		ContainerConfig:  containerConfig,
@@ -117,7 +114,7 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 			// stop loader
 			task.eventBus.Publish(newContainerWaitDockerLoaderEvent())
 
-			// TODO prepend file with actual task/command
+			// TODO prepend file content with actual task/command
 			// TODO add flag to TaskV1 template to use "ContainerLogsStd" if command is "help" or "version"
 			// tail logs before blocking
 			task.eventBus.Publish(newContainerLogDockerEvent(logFileName))

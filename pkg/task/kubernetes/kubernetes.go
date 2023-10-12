@@ -97,8 +97,7 @@ func (task *KubeTaskClient) runTask(opts *taskModel.RunOptions) error {
 	task.eventBus.Publish(newContainerWaitKubeLoaderEvent())
 
 	// TODO tee
-	logFileName := "TODO_LOG_FILE_NAME"
-
+	logFileName := opts.GenerateLogFileName(taskModel.Kubernetes, podInfo.ContainerName)
 	logOpts := &kubernetes.PodLogOpts{
 		Namespace: namespace,
 		PodName:   podInfo.PodName,

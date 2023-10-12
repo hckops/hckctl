@@ -383,7 +383,6 @@ TODO
     - inputs should look for HCK_TASK_??? env var override if --input is not present before using default
     - review TaskV1 schema i.e. `pages`, `license`, command `description`
     - `history` command to list old tasks i.e. names of log files e.g. <TIMESTAMP>-task-<NAME>-<RANDOM>
-    - rename output log file with timestamp?
     - for debug purposes prepend file output with interpolated task (yaml) or command parameters
     - add command to remove all logs
     - skip output file for `help` and `version`
