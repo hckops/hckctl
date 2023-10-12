@@ -45,14 +45,18 @@ Leverage the cloud platform or request a dedicated managed cluster to:
 
 Spin-up a [`box`](https://github.com/hckops/megalopolis/tree/main/box) and access all port-forwarded ports locally
 ```bash
-# spawns a temporary docker (default) box locally
+# spawns a temporary docker (default provider) box locally
 hckctl box alpine
 
-# deploys an ephemeral box to your kubernetes cluster
-hckctl box arch --provider kube
+# deploys a detached box to your kubernetes cluster
+hckctl box start arch --provider kube
+# tunnel tty port
+hckctl box open box-arch-<RANDOM> --no-exec
 
-# creates a managed box (preview)
+# creates a managed box (cloud provider preview)
 hckctl box parrot --provider cloud
+# connects to vnc
+vncviewer localhost:5900
 ```
 
 #### HTB demo
@@ -82,7 +86,7 @@ hckctl box preview/parrot-sec --network-vpn htb
 
 Access your target from a managed [`lab`](https://github.com/hckops/megalopolis/tree/main/lab)
 ```bash
-# connects to a vpn, exposes public ports, mount dumps (git, s3), store secrets, etc.
+# connects to a vpn, exposes public ports, mounts dumps (git, s3), loads secrets, etc.
 hckctl lab ctf-linux
 ```
 
@@ -173,7 +177,7 @@ hckctl template list
 hckctl template validate "../megalopolis/**/*.{yml,yaml}"
 ```
 
-Inspired by [GitOps](https://www.gitops.tech), the whole project is centered around git as source of truth, schema validation and versioning. Simply pin a `revision` (branch, tag, or sha) if you need to ensure long term stability
+Inspired by [GitOps](https://www.gitops.tech), the whole project is centered around git as source of truth, schema validation and versioning. Pin a `revision` (branch, tag, or sha) if you need to ensure long term stability
 ```bash
 # uses template "megalopolis/task/scanner/trivy" @ commit hash "12e7599"
 hckctl task trivy --revision v0.1.0
@@ -289,14 +293,14 @@ Please, feel free to contribute to the companion [repository](https://github.com
 
 <!--
 
-* task kube tee log file
-* task/box kube shareDir vs copy dir
 * task kube interrupt
+* task/box kube shareDir vs copy dir
 * replace task/htb example with thm
 * verify/support kube config relative path
 * update cloud pkg
 * update platform prs
 * verify network connectivity between boxes/tasks i.e. kube.svc
+* test on mac-m1 and win (docker images)
 
 TODO demo
 * auto-exploitation box
