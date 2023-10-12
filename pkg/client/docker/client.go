@@ -368,31 +368,40 @@ func (client *DockerClient) ContainerLogs(opts *ContainerLogsOpts) error {
 	}
 }
 
-func (client *DockerClient) ContainerLogsStd(containerId string) error {
-
+func (client *DockerClient) containerLogsStream(containerId string) (io.ReadCloser, error) {
 	outStream, err := client.docker.ContainerLogs(client.ctx, containerId, types.ContainerLogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
 		Follow:     true,
 	})
 	if err != nil {
-		return errors.Wrap(err, "error container logs std")
+		return nil, errors.Wrap(err, "error container logs stream")
 	}
+	return outStream, nil
+}
 
-	_, err = stdcopy.StdCopy(os.Stdout, os.Stderr, outStream)
-	return err
+func (client *DockerClient) ContainerLogsStd(containerId string) error {
+
+	outStream, err := client.containerLogsStream(containerId)
+	if err != nil {
+		return err
+	}
+	defer outStream.Close()
+
+	// blocks until the stream is finished
+	if _, err = stdcopy.StdCopy(os.Stdout, os.Stderr, outStream); err != nil {
+		return errors.Wrapf(err, "error container logs std copy")
+	}
+	return nil
 }
 
 func (client *DockerClient) ContainerLogsTee(containerId string, logFileName string) error {
 
-	outStream, err := client.docker.ContainerLogs(client.ctx, containerId, types.ContainerLogsOptions{
-		ShowStdout: true,
-		ShowStderr: true,
-		Follow:     true,
-	})
+	outStream, err := client.containerLogsStream(containerId)
 	if err != nil {
-		return errors.Wrap(err, "error container logs tee")
+		return err
 	}
+	defer outStream.Close()
 
 	logFile, err := util.OpenFile(logFileName)
 	if err != nil {
@@ -402,7 +411,9 @@ func (client *DockerClient) ContainerLogsTee(containerId string, logFileName str
 	//log.SetOutput(multiWriter)
 	defer logFile.Close()
 
-	_, err = stdcopy.StdCopy(multiWriter, multiWriter, outStream)
+	if _, err = stdcopy.StdCopy(multiWriter, multiWriter, outStream); err != nil {
+		return errors.Wrapf(err, "error container logs tee copy")
+	}
 	return err
 }
 

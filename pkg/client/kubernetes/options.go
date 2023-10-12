@@ -43,7 +43,7 @@ type PodExecOpts struct {
 	OnExecCallback func()
 }
 
-type PodLogOpts struct {
+type PodLogsOpts struct {
 	Namespace string
 	PodName   string
 	PodId     string

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/hckops/hckctl/pkg/util"
 	"io"
 	"net/http"
 	"os"
@@ -465,9 +466,8 @@ func (client *KubeClient) PodExec(opts *PodExecOpts) error {
 	return nil
 }
 
-func (client *KubeClient) PodLog(opts *PodLogOpts) error {
-
-	stream, err := client.CoreApi().
+func (client *KubeClient) podLogsStream(opts *PodLogsOpts) (io.ReadCloser, error) {
+	outStream, err := client.CoreApi().
 		Pods(opts.Namespace).
 		GetLogs(opts.PodName, &corev1.PodLogOptions{
 			Container: opts.PodId,
@@ -475,14 +475,43 @@ func (client *KubeClient) PodLog(opts *PodLogOpts) error {
 		}).
 		Stream(client.ctx)
 	if err != nil {
-		return errors.Wrapf(err, "error pod log stream")
+		return nil, errors.Wrapf(err, "error pod logs stream")
 	}
-	defer stream.Close()
+	return outStream, nil
+}
+
+func (client *KubeClient) PodLogsStd(opts *PodLogsOpts) error {
+
+	outStream, err := client.podLogsStream(opts)
+	if err != nil {
+		return err
+	}
+	defer outStream.Close()
 
 	// blocks until the stream is finished
-	_, err = io.Copy(os.Stdout, stream)
+	if _, err = io.Copy(os.Stdout, outStream); err != nil {
+		return errors.Wrapf(err, "error pod logs std copy")
+	}
+	return nil
+}
+
+func (client *KubeClient) PodLogsTee(opts *PodLogsOpts, logFileName string) error {
+
+	outStream, err := client.podLogsStream(opts)
 	if err != nil {
-		return errors.Wrapf(err, "error pod log copy")
+		return err
+	}
+	defer outStream.Close()
+
+	logFile, err := util.OpenFile(logFileName)
+	if err != nil {
+		return errors.Wrap(err, "error pod logs file")
+	}
+	multiWriter := io.MultiWriter(os.Stdout, logFile)
+	defer logFile.Close()
+
+	if _, err = io.Copy(multiWriter, outStream); err != nil {
+		return errors.Wrapf(err, "error pod logs tee copy")
 	}
 	return nil
 }

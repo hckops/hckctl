@@ -96,15 +96,14 @@ func (task *KubeTaskClient) runTask(opts *taskModel.RunOptions) error {
 	// stop loader
 	task.eventBus.Publish(newContainerWaitKubeLoaderEvent())
 
-	// TODO tee
 	logFileName := opts.GenerateLogFileName(taskModel.Kubernetes, podInfo.ContainerName)
-	logOpts := &kubernetes.PodLogOpts{
+	logOpts := &kubernetes.PodLogsOpts{
 		Namespace: namespace,
 		PodName:   podInfo.PodName,
 		PodId:     podInfo.ContainerName,
 	}
 	task.eventBus.Publish(newPodLogKubeEvent(logFileName))
-	if err := task.client.PodLog(logOpts); err != nil {
+	if err := task.client.PodLogsTee(logOpts, logFileName); err != nil {
 		return err
 	}
 
