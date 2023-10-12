@@ -8,6 +8,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 const (
@@ -84,4 +85,46 @@ func buildSidecarVpnVolumes(containerName string) []corev1.Volume {
 			},
 		},
 	}
+}
+
+func boolPtr(b bool) *bool { return &b }
+
+func injectSidecarVpn(podSpec *corev1.PodSpec, mainContainerName string) {
+
+	// https://kubernetes.io/docs/tasks/configure-pod-container/share-process-namespace
+	//podSpec.ShareProcessNamespace = boolPtr(true)
+
+	// disable ipv6, see https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster
+	podSpec.SecurityContext = &corev1.PodSecurityContext{
+		Sysctls: []corev1.Sysctl{
+			{Name: "net.ipv6.conf.all.disable_ipv6", Value: "0"},
+		},
+	}
+
+	// inject containers
+	podSpec.Containers = append(
+		// order matters
+		[]corev1.Container{
+			buildSidecarVpnContainer(),
+			// add fake sleep to allow sidecar-vpn to connect properly before starting the main container
+			{
+				Name:  fmt.Sprintf("%ssleep", commonModel.SidecarPrefixName),
+				Image: "busybox",
+				Lifecycle: &corev1.Lifecycle{
+					PostStart: &corev1.LifecycleHandler{
+						Exec: &corev1.ExecAction{
+							Command: []string{"sleep", "1s"},
+						},
+					},
+				},
+			},
+		},
+		podSpec.Containers..., // current containers
+	)
+
+	// inject volumes
+	podSpec.Volumes = append(
+		podSpec.Volumes, // current volumes
+		buildSidecarVpnVolumes(util.ToLowerKebabCase(mainContainerName))..., // join slices
+	)
 }

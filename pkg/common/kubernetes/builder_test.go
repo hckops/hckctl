@@ -87,3 +87,90 @@ status: {}
 
 	assert.YAMLEqf(t, expected, kubernetes.ObjectToYaml(actual), "unexpected pod")
 }
+
+func TestInjectSidecarVpn(t *testing.T) {
+
+	expected := `
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+spec:
+  containers:
+  - env:
+    - name: OPENVPN_CONFIG
+      value: /secrets/openvpn/client.ovpn
+    image: hckops/alpine-openvpn:latest
+    imagePullPolicy: IfNotPresent
+    name: sidecar-vpn
+    resources: {}
+    securityContext:
+      capabilities:
+        add:
+        - NET_ADMIN
+    volumeMounts:
+    - mountPath: /dev/net/tun
+      name: tun-device-volume
+      readOnly: true
+    - mountPath: /secrets
+      name: sidecar-vpn-volume
+      readOnly: true
+  - image: busybox
+    lifecycle:
+      postStart:
+        exec:
+          command:
+          - sleep
+          - 1s
+    name: sidecar-sleep
+    resources: {}
+  - image: my-image
+    name: my-name
+    resources: {}
+  securityContext:
+    sysctls:
+    - name: net.ipv6.conf.all.disable_ipv6
+      value: "0"
+  volumes:
+  - hostPath:
+      path: my-path
+    name: my-volume
+  - hostPath:
+      path: /dev/net/tun
+    name: tun-device-volume
+  - name: sidecar-vpn-volume
+    secret:
+      items:
+      - key: openvpn-config
+        path: openvpn/client.ovpn
+      secretName: my-name-sidecar-vpn-secret
+status: {}
+`
+
+	containerName := "my-name"
+	actual := &corev1.Pod{
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Name:  containerName,
+					Image: "my-image",
+				},
+			},
+			Volumes: []corev1.Volume{
+				{
+					Name: "my-volume",
+					VolumeSource: corev1.VolumeSource{
+						HostPath: &corev1.HostPathVolumeSource{
+							Path: "my-path",
+						},
+					},
+				},
+			},
+		},
+	}
+	injectSidecarVpn(&actual.Spec, containerName)
+	// fix model
+	actual.TypeMeta = metav1.TypeMeta{Kind: "Pod", APIVersion: "v1"}
+
+	assert.YAMLEqf(t, expected, kubernetes.ObjectToYaml(actual), "unexpected pod")
+}
