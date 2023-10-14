@@ -39,11 +39,6 @@ func (box *DockerBoxClient) Connect(opts *boxModel.ConnectOptions) error {
 	return box.connectBox(opts)
 }
 
-func (box *DockerBoxClient) Copy(string, string, string) error {
-	defer box.close()
-	return errors.New("not implemented")
-}
-
 func (box *DockerBoxClient) Describe(name string) (*boxModel.BoxDetails, error) {
 	defer box.close()
 	return box.describeBox(name)

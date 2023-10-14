@@ -37,11 +37,6 @@ func (box *CloudBoxClient) Connect(opts *boxModel.ConnectOptions) error {
 	return box.connectBox(opts)
 }
 
-func (box *CloudBoxClient) Copy(string, string, string) error {
-	defer box.close()
-	return errors.New("not implemented")
-}
-
 func (box *CloudBoxClient) Describe(name string) (*boxModel.BoxDetails, error) {
 	//defer box.close()
 	return box.describeBox(name)
