@@ -35,7 +35,7 @@ type PodExecOpts struct {
 	Namespace      string
 	PodName        string
 	PodId          string
-	Shell          string
+	Commands       []string
 	InStream       io.ReadCloser
 	OutStream      io.Writer
 	ErrStream      io.Writer

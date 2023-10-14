@@ -1,4 +1,4 @@
-package common
+package terminal
 
 import (
 	"fmt"
@@ -30,6 +30,6 @@ func NewRawTerminal(in io.Reader) (*RawTerminal, error) {
 	return nil, fmt.Errorf("error invalid terminal")
 }
 
-func (t *RawTerminal) Restore() {
-	term.RestoreTerminal(t.fileDescriptor, t.previousState)
+func (t *RawTerminal) Restore() error {
+	return term.RestoreTerminal(t.fileDescriptor, t.previousState)
 }

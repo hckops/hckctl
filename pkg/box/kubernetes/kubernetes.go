@@ -10,6 +10,7 @@ import (
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
 	commonKube "github.com/hckops/hckctl/pkg/common/kubernetes"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
+	commonUtil "github.com/hckops/hckctl/pkg/common/util"
 	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/util"
 )
@@ -190,7 +191,7 @@ func (box *KubeBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.BoxIn
 		Namespace: box.clientOpts.Namespace,
 		PodName:   util.ToLowerKebabCase(template.Image.Repository), // pod.Spec.Containers[0].Name
 		PodId:     info.Id,
-		Shell:     template.Shell,
+		Commands:  commonUtil.DefaultShellCommand(template.Shell),
 		InStream:  streamOpts.In,
 		OutStream: streamOpts.Out,
 		ErrStream: streamOpts.Err,
@@ -205,7 +206,7 @@ func (box *KubeBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.BoxIn
 		defer box.deleteBox(info.Name)
 	}
 
-	return box.client.PodExec(opts)
+	return box.client.PodExecShell(opts)
 }
 
 func (box *KubeBoxClient) podPortForward(template *boxModel.BoxV1, boxInfo *boxModel.BoxInfo, isWait bool) error {

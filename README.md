@@ -289,7 +289,7 @@ Create your custom template and test it locally
 hckctl box --local ../megalopolis/box/preview/powershell.yml
 ```
 
-Please, feel free to contribute to the companion [repository](https://github.com/hckops/megalopolis) and add more community templates. Don't forget to :star: the project!
+Please, feel free to contribute to the companion [repository](https://github.com/hckops/megalopolis) and add more community templates to the catalog. Don't forget to :star: the project!
 
 <!--
 

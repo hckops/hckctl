@@ -21,7 +21,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
 
-	"github.com/hckops/hckctl/pkg/client/common"
+	"github.com/hckops/hckctl/pkg/client/terminal"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
@@ -162,7 +162,7 @@ func (client *DockerClient) ContainerExec(opts *ContainerExecOpts) error {
 		AttachStderr: true,
 		Detach:       false,
 		Tty:          opts.IsTty,
-		Cmd:          []string{common.DefaultShell(opts.Shell)},
+		Cmd:          opts.Commands,
 	})
 	if err != nil {
 		return errors.Wrap(err, "error container exec create")
@@ -177,14 +177,14 @@ func (client *DockerClient) ContainerExec(opts *ContainerExecOpts) error {
 	defer execAttachResponse.Close()
 
 	// fixes echoes and handle SIGTERM interrupt properly
-	terminal, err := common.NewRawTerminal(opts.InStream)
+	rawTerminal, err := terminal.NewRawTerminal(opts.InStream)
 	if err != nil {
 		return errors.Wrap(err, "error container exec terminal")
 	}
 
 	doneChan := make(chan struct{}, 1)
 	onStreamCloseCallback := func() {
-		terminal.Restore()
+		rawTerminal.Restore()
 		opts.OnStreamCloseCallback()
 		close(doneChan)
 	}

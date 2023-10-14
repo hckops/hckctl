@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 	gossh "golang.org/x/crypto/ssh"
 
-	"github.com/hckops/hckctl/pkg/client/common"
+	"github.com/hckops/hckctl/pkg/client/terminal"
 )
 
 func NewSshClient(config *SshClientConfig) (*SshClient, error) {
@@ -71,11 +71,11 @@ func (client *SshClient) Exec(opts *SshExecOpts) error {
 		return errors.Wrapf(err, "error ssh stream")
 	}
 
-	terminal, err := common.NewRawTerminal(os.Stdin)
+	rawTerminal, err := terminal.NewRawTerminal(os.Stdin)
 	if err != nil {
 		return errors.Wrap(err, "error ssh terminal")
 	}
-	defer terminal.Restore()
+	defer rawTerminal.Restore()
 
 	opts.OnStreamStartCallback()
 

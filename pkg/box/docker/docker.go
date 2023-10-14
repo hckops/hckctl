@@ -11,6 +11,7 @@ import (
 	"github.com/hckops/hckctl/pkg/client/docker"
 	commonDocker "github.com/hckops/hckctl/pkg/common/docker"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
+	commonUtil "github.com/hckops/hckctl/pkg/common/util"
 	"github.com/hckops/hckctl/pkg/schema"
 )
 
@@ -184,8 +185,7 @@ func (box *DockerBoxClient) searchBox(name string) (*boxModel.BoxInfo, error) {
 }
 
 func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.BoxInfo, streamOpts *commonModel.StreamOptions, deleteOnExit bool) error {
-	command := template.Shell
-	box.eventBus.Publish(newContainerExecDockerEvent(info.Id, info.Name, command))
+	box.eventBus.Publish(newContainerExecDockerEvent(info.Id, info.Name, template.Shell))
 
 	// attempt to restart all associated sidecars
 	sidecars, err := box.dockerCommon.SidecarList(info.Name)
@@ -215,7 +215,7 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 		return err
 	}
 
-	if command == boxModel.BoxShellNone {
+	if template.Shell == boxModel.BoxShellNone {
 		if deleteOnExit {
 			// stop loader
 			box.eventBus.Publish(newContainerExecDockerLoaderEvent())
@@ -256,7 +256,7 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 
 	execOpts := &docker.ContainerExecOpts{
 		ContainerId: info.Id,
-		Shell:       command,
+		Commands:    commonUtil.DefaultShellCommand(template.Shell),
 		InStream:    streamOpts.In,
 		OutStream:   streamOpts.Out,
 		ErrStream:   streamOpts.Err,

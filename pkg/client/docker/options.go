@@ -61,7 +61,7 @@ type ContainerRestartOpts struct {
 
 type ContainerExecOpts struct {
 	ContainerId             string
-	Shell                   string
+	Commands                []string
 	InStream                io.ReadCloser
 	OutStream               io.Writer
 	ErrStream               io.Writer

@@ -35,7 +35,6 @@ import (
 	"k8s.io/kubectl/pkg/cmd/exec"
 	"k8s.io/kubectl/pkg/scheme"
 
-	"github.com/hckops/hckctl/pkg/client/common"
 	"github.com/hckops/hckctl/pkg/util"
 )
 
@@ -418,7 +417,24 @@ func (client *KubeClient) PodPortForward(opts *PodPortForwardOpts) error {
 	return nil
 }
 
-func (client *KubeClient) PodExec(opts *PodExecOpts) error {
+func (client *KubeClient) newRestRequestExec(opts *PodExecOpts, isTty bool) *rest.Request {
+	return client.CoreApi().RESTClient().
+		Post().
+		Namespace(opts.Namespace).
+		Resource("pods").
+		Name(opts.PodId).
+		SubResource("exec").
+		VersionedParams(&corev1.PodExecOptions{
+			Container: opts.PodName,
+			Command:   opts.Commands,
+			Stdin:     true,
+			Stdout:    true,
+			Stderr:    true,
+			TTY:       isTty,
+		}, scheme.ParameterCodec)
+}
+
+func (client *KubeClient) PodExecShell(opts *PodExecOpts) error {
 
 	streamOptions := exec.StreamOptions{
 		Stdin: true,
@@ -438,22 +454,7 @@ func (client *KubeClient) PodExec(opts *PodExecOpts) error {
 	}
 
 	// exec remote shell
-	execUrl := client.CoreApi().RESTClient().
-		Post().
-		Namespace(opts.Namespace).
-		Resource("pods").
-		Name(opts.PodId).
-		SubResource("exec").
-		VersionedParams(&corev1.PodExecOptions{
-			Container: opts.PodName,
-			Command:   []string{common.DefaultShell(opts.Shell)},
-			Stdin:     true,
-			Stdout:    true,
-			Stderr:    true,
-			TTY:       true,
-		}, scheme.ParameterCodec).
-		URL()
-
+	execUrl := client.newRestRequestExec(opts, true).URL()
 	executor := exec.DefaultRemoteExecutor{}
 
 	opts.OnExecCallback()
@@ -466,6 +467,12 @@ func (client *KubeClient) PodExec(opts *PodExecOpts) error {
 		return errors.Wrap(err, "terminal session closed")
 	}
 	return nil
+}
+
+func (client *KubeClient) PodExecCommand(opts *PodExecOpts) error {
+	isTty := false
+	execUrl := client.newRestRequestExec(opts, isTty).URL()
+	return (&exec.DefaultRemoteExecutor{}).Execute(http.MethodPost, execUrl, client.RestApi(), opts.InStream, opts.OutStream, opts.ErrStream, isTty, nil)
 }
 
 func (client *KubeClient) podLogsStream(opts *PodLogsOpts) (io.ReadCloser, error) {

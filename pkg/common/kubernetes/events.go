@@ -39,3 +39,7 @@ func newSecretCreateKubeEvent(namespace string, name string) *kubeCommonEvent {
 func newSecretDeleteKubeEvent(namespace string, name string) *kubeCommonEvent {
 	return &kubeCommonEvent{kind: event.LogInfo, value: fmt.Sprintf("secret delete: namespace=%s name=%s", namespace, name)}
 }
+
+func newSidecarVpnConnectKubeEvent(vpnName string) *kubeCommonEvent {
+	return &kubeCommonEvent{kind: event.LogInfo, value: fmt.Sprintf("sidecar-vpn connect: vpnName=%s", vpnName)}
+}
