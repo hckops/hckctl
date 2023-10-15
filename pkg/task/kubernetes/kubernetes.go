@@ -104,15 +104,23 @@ func (task *KubeTaskClient) runTask(opts *taskModel.RunOptions) error {
 	}
 	task.eventBus.Publish(newJobCreateKubeEvent(namespace, jobName))
 
-	// upload shared directory
-	if opts.CommonInfo.ShareDir != nil {
-	}
-
 	podInfo, err := task.client.JobDescribe(namespace, jobName)
 	if err != nil {
 		return err
 	}
 	task.eventBus.Publish(newPodNameKubeEvent(namespace, podInfo.PodName, podInfo.ContainerName))
+
+	// upload shared directory
+	if opts.CommonInfo.ShareDir != nil {
+		sidecarOpts := &commonModel.SidecarShareUploadOpts{
+			Namespace: namespace,
+			PodName:   podInfo.PodName,
+			ShareDir:  opts.CommonInfo.ShareDir,
+		}
+		if err := task.kubeCommon.SidecarShareUpload(sidecarOpts); err != nil {
+			return err
+		}
+	}
 
 	// stop loader
 	task.eventBus.Publish(newContainerWaitKubeLoaderEvent())

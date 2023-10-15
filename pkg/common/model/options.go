@@ -48,3 +48,9 @@ type SidecarShareInjectOpts struct {
 	MainContainerName string
 	ShareDir          *ShareDirInfo
 }
+
+type SidecarShareUploadOpts struct {
+	Namespace string
+	PodName   string
+	ShareDir  *ShareDirInfo
+}

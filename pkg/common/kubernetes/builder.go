@@ -131,9 +131,13 @@ func injectSidecarVpn(podSpec *corev1.PodSpec, mainContainerName string) {
 	)
 }
 
+func buildSidecarShareContainerName() string {
+	return fmt.Sprintf("%sshare", commonModel.SidecarPrefixName)
+}
+
 func buildSidecarShareContainer(remoteDir string) corev1.Container {
 	return corev1.Container{
-		Name:  fmt.Sprintf("%sshare", commonModel.SidecarPrefixName),
+		Name:  buildSidecarShareContainerName(),
 		Image: "busybox", // only requirement is the "tar" binary
 		Stdin: true,
 		VolumeMounts: []corev1.VolumeMount{

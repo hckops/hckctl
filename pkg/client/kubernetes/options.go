@@ -33,8 +33,8 @@ type PodPortForwardOpts struct {
 
 type PodExecOpts struct {
 	Namespace      string
-	PodName        string
 	PodId          string
+	PodName        string
 	Commands       []string
 	InStream       io.ReadCloser
 	OutStream      io.Writer
@@ -63,4 +63,12 @@ type JobCreateOpts struct {
 	CaptureInterrupt             bool
 	OnContainerInterruptCallback func(name string)
 	OnStatusEventCallback        func(event string)
+}
+
+type CopyPodOpts struct {
+	Namespace     string
+	PodName       string
+	ContainerName string
+	LocalPath     string
+	RemotePath    string
 }

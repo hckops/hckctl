@@ -151,6 +151,9 @@ hckctl task \
   --network-vpn htb \
   --input address=10.10.10.242 \
   --input wordlist=wordlists/SecLists/Discovery/Web-Content/Apache.fuzz.txt
+
+go run internal/main.go task gobuster --network-vpn htb --input address=10.10.10.242 --input wordlist=wordlists/SecLists/Discovery/Web-Content/Apache.fuzz.txt
+go run internal/main.go task gobuster --network-vpn htb --input address=10.10.10.242 --input wordlist=wordlists/SecLists/Discovery/Web-Content/Apache.fuzz.txt --provider kube
 ```
 -->
 

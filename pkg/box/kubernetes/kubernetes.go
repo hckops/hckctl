@@ -95,15 +95,23 @@ func (box *KubeBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.Box
 	}
 	box.eventBus.Publish(newDeploymentCreateKubeEvent(namespace, deployment.Name))
 
-	// upload shared directory
-	if opts.CommonInfo.ShareDir != nil {
-	}
-
 	podInfo, err := box.client.PodDescribeFromDeployment(deployment)
 	if err != nil {
 		return nil, err
 	}
 	box.eventBus.Publish(newPodNameKubeEvent(namespace, podInfo.PodName, podInfo.ContainerName))
+
+	// upload shared directory
+	if opts.CommonInfo.ShareDir != nil {
+		sidecarOpts := &commonModel.SidecarShareUploadOpts{
+			Namespace: namespace,
+			PodName:   podInfo.PodName,
+			ShareDir:  opts.CommonInfo.ShareDir,
+		}
+		if err := box.kubeCommon.SidecarShareUpload(sidecarOpts); err != nil {
+			return nil, err
+		}
+	}
 
 	// TODO always healthy unused? otherwise use DeploymentDescribe instead of PodDescribe
 	return &boxModel.BoxInfo{Id: podInfo.PodName, Name: boxName, Healthy: true}, nil

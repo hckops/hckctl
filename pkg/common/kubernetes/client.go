@@ -73,3 +73,17 @@ func (common *KubeCommonClient) SidecarShareInject(opts *commonModel.SidecarShar
 	common.eventBus.Publish(newSidecarShareMountKubeEvent(opts.ShareDir.RemotePath))
 	return nil
 }
+
+func (common *KubeCommonClient) SidecarShareUpload(opts *commonModel.SidecarShareUploadOpts) error {
+	common.eventBus.Publish(newSidecarShareUploadKubeEvent(opts.ShareDir.LocalPath, opts.ShareDir.RemotePath))
+	common.eventBus.Publish(newSidecarShareUploadKubeLoaderEvent())
+
+	copyOpts := &kubernetes.CopyPodOpts{
+		Namespace:     opts.Namespace,
+		PodName:       opts.PodName,
+		ContainerName: buildSidecarShareContainerName(),
+		LocalPath:     opts.ShareDir.LocalPath,
+		RemotePath:    opts.ShareDir.RemotePath,
+	}
+	return common.client.CopyToPod(copyOpts)
+}

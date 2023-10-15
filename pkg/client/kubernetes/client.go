@@ -526,6 +526,41 @@ func (client *KubeClient) PodLogsTee(opts *PodLogsOpts, logFileName string) erro
 	return nil
 }
 
+func (client *KubeClient) CopyToPod(opts *CopyPodOpts) error {
+
+	if util.PathNotExist(opts.LocalPath) {
+		return fmt.Errorf("error copy invalid localPath=%s", opts.LocalPath)
+	}
+
+	reader, writer := io.Pipe()
+	defer reader.Close()
+
+	// create archive
+	go func() {
+		defer writer.Close()
+
+		// TODO unhandled error
+		cpMakeTar(opts.LocalPath, opts.RemotePath, writer)
+	}()
+
+	// upload and extract archive
+	execArchive := &PodExecOpts{
+		Namespace:      opts.Namespace,
+		PodId:          opts.PodName,
+		PodName:        opts.ContainerName,
+		Commands:       []string{"tar", "-xmf", "-", "-C", filepath.Dir(opts.RemotePath)},
+		InStream:       reader, // input stream reader
+		OutStream:      io.Discard,
+		ErrStream:      io.Discard,
+		IsTty:          false,
+		OnExecCallback: func() {},
+	}
+	if err := client.PodExecCommand(execArchive); err != nil {
+		return errors.Wrapf(err, "error copy archive")
+	}
+	return nil
+}
+
 func buildJobLabelSelector(job *batchv1.Job) (metav1.ListOptions, error) {
 	labelMap, err := metav1.LabelSelectorAsMap(job.Spec.Selector)
 	if err != nil {

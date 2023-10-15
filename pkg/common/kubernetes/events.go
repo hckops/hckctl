@@ -47,3 +47,11 @@ func newSidecarVpnConnectKubeEvent(vpnName string) *kubeCommonEvent {
 func newSidecarShareMountKubeEvent(shareDir string) *kubeCommonEvent {
 	return &kubeCommonEvent{kind: event.LogInfo, value: fmt.Sprintf("sidecar-share mount: shareDir=%s", shareDir)}
 }
+
+func newSidecarShareUploadKubeEvent(localPath string, remotePath string) *kubeCommonEvent {
+	return &kubeCommonEvent{kind: event.LogInfo, value: fmt.Sprintf("sidecar-share upload: localPath=%s remotePath=%s", localPath, remotePath)}
+}
+
+func newSidecarShareUploadKubeLoaderEvent() *kubeCommonEvent {
+	return &kubeCommonEvent{kind: event.LoaderUpdate, value: fmt.Sprintf("uploading shared folder")}
+}
