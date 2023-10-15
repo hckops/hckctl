@@ -8,9 +8,9 @@ import (
 
 	boxModel "github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
+	"github.com/hckops/hckctl/pkg/client/terminal"
 	commonKube "github.com/hckops/hckctl/pkg/common/kubernetes"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
-	commonUtil "github.com/hckops/hckctl/pkg/common/util"
 	"github.com/hckops/hckctl/pkg/schema"
 	"github.com/hckops/hckctl/pkg/util"
 )
@@ -191,7 +191,7 @@ func (box *KubeBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.BoxIn
 		Namespace: box.clientOpts.Namespace,
 		PodName:   util.ToLowerKebabCase(template.Image.Repository), // pod.Spec.Containers[0].Name
 		PodId:     info.Id,
-		Commands:  commonUtil.DefaultShellCommand(template.Shell),
+		Commands:  terminal.DefaultShellCommand(template.Shell),
 		InStream:  streamOpts.In,
 		OutStream: streamOpts.Out,
 		ErrStream: streamOpts.Err,

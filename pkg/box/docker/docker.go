@@ -9,9 +9,9 @@ import (
 
 	boxModel "github.com/hckops/hckctl/pkg/box/model"
 	"github.com/hckops/hckctl/pkg/client/docker"
+	"github.com/hckops/hckctl/pkg/client/terminal"
 	commonDocker "github.com/hckops/hckctl/pkg/common/docker"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
-	commonUtil "github.com/hckops/hckctl/pkg/common/util"
 	"github.com/hckops/hckctl/pkg/schema"
 )
 
@@ -256,7 +256,7 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 
 	execOpts := &docker.ContainerExecOpts{
 		ContainerId: info.Id,
-		Commands:    commonUtil.DefaultShellCommand(template.Shell),
+		Commands:    terminal.DefaultShellCommand(template.Shell),
 		InStream:    streamOpts.In,
 		OutStream:   streamOpts.Out,
 		ErrStream:   streamOpts.Err,
