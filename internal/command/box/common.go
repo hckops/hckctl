@@ -148,19 +148,22 @@ func newCreateOptions(info *template.TemplateInfo[boxModel.BoxV1], labels common
 
 	allLabels := commonCmd.AddTemplateLabels[boxModel.BoxV1](info, boxModel.AddBoxSize(labels, size))
 
-	var networkInfo commonModel.NetworkInfo
-	if vpnNetworkInfo, err := configRef.Config.Network.ToVpnNetworkInfo(vpnName); err != nil {
+	var networkVpn *commonModel.NetworkVpnInfo
+	if networkVpnInfo, err := configRef.Config.Network.ToNetworkVpnInfo(vpnName); err != nil {
 		log.Warn().Err(err).Msg("error invalid vpn config")
-	} else if vpnNetworkInfo != nil {
-		log.Info().Msgf("box connected to vpn network name=%s path=%s", vpnNetworkInfo.Name, vpnNetworkInfo.LocalPath)
-		networkInfo.Vpn = vpnNetworkInfo
+		return nil, err
+	} else if networkVpnInfo != nil {
+		log.Info().Msgf("box connected to vpn network name=%s path=%s", networkVpnInfo.Name, networkVpnInfo.LocalPath)
+		networkVpn = networkVpnInfo
 	}
 
 	return &boxModel.CreateOptions{
-		Template:    &info.Value.Data,
-		Size:        size,
-		Labels:      allLabels,
-		NetworkInfo: networkInfo,
-		ShareDir:    configRef.Config.Common.ShareDir,
+		Template: &info.Value.Data,
+		Labels:   allLabels,
+		CommonInfo: commonModel.CommonInfo{
+			NetworkVpn: networkVpn,
+			ShareDir:   configRef.Config.Common.ToShareDirInfo(),
+		},
+		Size: size,
 	}, nil
 }

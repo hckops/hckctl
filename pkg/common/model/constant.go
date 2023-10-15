@@ -7,5 +7,5 @@ const (
 
 	SidecarPrefixName   = "sidecar-"
 	SidecarVpnImageName = "hckops/alpine-openvpn:latest"
-	MountShareDir       = "/hck/share"
+	SidecarShareDir     = "/hck/share"
 )

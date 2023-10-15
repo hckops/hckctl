@@ -23,11 +23,10 @@ func NewCommonBoxOpts() *CommonBoxOptions {
 }
 
 type CreateOptions struct {
-	Template    *BoxV1
-	Size        ResourceSize
-	Labels      commonModel.Labels
-	NetworkInfo commonModel.NetworkInfo
-	ShareDir    string
+	Template   *BoxV1
+	Labels     commonModel.Labels
+	CommonInfo commonModel.CommonInfo
+	Size       ResourceSize
 }
 
 type ConnectOptions struct {

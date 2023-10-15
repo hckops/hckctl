@@ -102,12 +102,12 @@ type VpnConfig struct {
 	Path string `yaml:"path"`
 }
 
-func (c *NetworkConfig) VpnNetworks() map[string]commonModel.VpnNetworkInfo {
-	info := map[string]commonModel.VpnNetworkInfo{}
+func (c *NetworkConfig) VpnNetworks() map[string]commonModel.NetworkVpnInfo {
+	info := map[string]commonModel.NetworkVpnInfo{}
 	for _, network := range c.Vpn {
 		// ignores invalid paths
 		if configFile, err := util.ReadFile(network.Path); err == nil {
-			info[network.Name] = commonModel.VpnNetworkInfo{
+			info[network.Name] = commonModel.NetworkVpnInfo{
 				Name:        network.Name,
 				LocalPath:   network.Path,
 				ConfigValue: configFile,
@@ -117,7 +117,7 @@ func (c *NetworkConfig) VpnNetworks() map[string]commonModel.VpnNetworkInfo {
 	return info
 }
 
-func (c *NetworkConfig) ToVpnNetworkInfo(vpnName string) (*commonModel.VpnNetworkInfo, error) {
+func (c *NetworkConfig) ToNetworkVpnInfo(vpnName string) (*commonModel.NetworkVpnInfo, error) {
 	if vpnName != "" {
 		if vpnNetworkInfo, ok := c.VpnNetworks()[vpnName]; ok {
 			return &vpnNetworkInfo, nil
@@ -135,6 +135,13 @@ type TemplateConfig struct {
 
 type CommonConfig struct {
 	ShareDir string `yaml:"shareDir"`
+}
+
+func (c *CommonConfig) ToShareDirInfo() *commonModel.ShareDirInfo {
+	return &commonModel.ShareDirInfo{
+		LocalPath:  c.ShareDir,
+		RemotePath: commonModel.SidecarShareDir,
+	}
 }
 
 type BoxConfig struct {

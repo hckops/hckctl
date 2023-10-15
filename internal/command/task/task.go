@@ -149,22 +149,25 @@ func (opts *taskCmdOptions) runTask(sourceLoader template.SourceLoader[taskModel
 		arguments = expandedArguments
 	}
 
-	var networkInfo commonModel.NetworkInfo
-	if vpnNetworkInfo, err := opts.configRef.Config.Network.ToVpnNetworkInfo(opts.networkVpnFlag); err != nil {
+	var networkVpn *commonModel.NetworkVpnInfo
+	if networkVpnInfo, err := opts.configRef.Config.Network.ToNetworkVpnInfo(opts.networkVpnFlag); err != nil {
 		log.Warn().Err(err).Msg("error invalid vpn config")
-	} else if vpnNetworkInfo != nil {
-		log.Info().Msgf("run task connected to vpn network name=%s path=%s", vpnNetworkInfo.Name, vpnNetworkInfo.LocalPath)
-		networkInfo.Vpn = vpnNetworkInfo
+		return err
+	} else if networkVpnInfo != nil {
+		log.Info().Msgf("run task connected to vpn network name=%s path=%s", networkVpnInfo.Name, networkVpnInfo.LocalPath)
+		networkVpn = networkVpnInfo
 	}
 
 	runOpts := &taskModel.RunOptions{
-		Template:    &info.Value.Data,
-		Arguments:   arguments,
-		Labels:      commonCmd.AddTemplateLabels[taskModel.TaskV1](info, labels),
-		NetworkInfo: networkInfo,
-		StreamOpts:  commonModel.NewStdStreamOpts(false),
-		ShareDir:    opts.configRef.Config.Common.ShareDir,
-		LogDir:      opts.configRef.Config.Task.LogDir,
+		Template: &info.Value.Data,
+		Labels:   commonCmd.AddTemplateLabels[taskModel.TaskV1](info, labels),
+		CommonInfo: commonModel.CommonInfo{
+			NetworkVpn: networkVpn,
+			ShareDir:   opts.configRef.Config.Common.ToShareDirInfo(),
+		},
+		StreamOpts: commonModel.NewStdStreamOpts(false),
+		Arguments:  arguments,
+		LogDir:     opts.configRef.Config.Task.LogDir,
 	}
 
 	if err := taskClient.Run(runOpts); err != nil {

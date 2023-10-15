@@ -116,7 +116,7 @@ func TestVpnNetworks(t *testing.T) {
 	assert.Equal(t, 2, len(networkConfig.VpnNetworks()))
 }
 
-func TestToVpnNetworkInfo(t *testing.T) {
+func TestToNetworkVpnInfo(t *testing.T) {
 	networkConfig := NetworkConfig{
 		Vpn: []VpnConfig{
 			{Name: "readme", Path: "../../../README.md"},
@@ -124,13 +124,13 @@ func TestToVpnNetworkInfo(t *testing.T) {
 		},
 	}
 
-	emptyVpn, emptyErr := networkConfig.ToVpnNetworkInfo("")
+	emptyVpn, emptyErr := networkConfig.ToNetworkVpnInfo("")
 	assert.Nil(t, emptyVpn)
 	assert.Nil(t, emptyErr)
 
-	validVpn, validErr := networkConfig.ToVpnNetworkInfo("readme")
+	validVpn, validErr := networkConfig.ToNetworkVpnInfo("readme")
 	configFile, _ := util.ReadFile("../../../README.md")
-	expected := &model.VpnNetworkInfo{
+	expected := &model.NetworkVpnInfo{
 		Name:        "readme",
 		LocalPath:   "../../../README.md",
 		ConfigValue: configFile,
@@ -138,7 +138,19 @@ func TestToVpnNetworkInfo(t *testing.T) {
 	assert.Equal(t, expected, validVpn)
 	assert.Nil(t, validErr)
 
-	invalidVpn, invalidErr := networkConfig.ToVpnNetworkInfo("foo")
+	invalidVpn, invalidErr := networkConfig.ToNetworkVpnInfo("foo")
 	assert.Nil(t, invalidVpn)
 	assert.EqualError(t, invalidErr, "vpn not found name=foo")
+}
+
+func TestToShareDirInfo(t *testing.T) {
+	commonConfig := &CommonConfig{
+		ShareDir: "myShareDir",
+	}
+
+	expected := &model.ShareDirInfo{
+		LocalPath:  "myShareDir",
+		RemotePath: "/hck/share",
+	}
+	assert.Equal(t, expected, commonConfig.ToShareDirInfo())
 }

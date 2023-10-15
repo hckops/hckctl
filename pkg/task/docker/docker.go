@@ -43,10 +43,10 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 
 	// vpn sidecar
 	var networkMode string
-	if opts.NetworkInfo.Vpn != nil {
+	if opts.CommonInfo.NetworkVpn != nil {
 		sidecarOpts := &commonModel.SidecarVpnInjectOpts{
 			MainContainerName: containerName,
-			VpnInfo:           opts.NetworkInfo.Vpn,
+			VpnInfo:           opts.CommonInfo.NetworkVpn,
 		}
 		if sidecarContainerId, err := task.dockerCommon.SidecarVpnInject(sidecarOpts, &docker.ContainerPortConfigOpts{}); err != nil {
 			return err
@@ -77,8 +77,8 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 		PortConfig:  &docker.ContainerPortConfigOpts{},
 		Volumes: []docker.ContainerVolume{
 			{
-				HostDir:      opts.ShareDir,
-				ContainerDir: commonModel.MountShareDir,
+				HostDir:      opts.CommonInfo.ShareDir.LocalPath,
+				ContainerDir: opts.CommonInfo.ShareDir.RemotePath,
 			},
 		},
 	})
@@ -110,7 +110,7 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 		},
 		OnContainerCreateCallback: func(string) error { return nil },
 		OnContainerWaitCallback: func(containerId string) error {
-			task.eventBus.Publish(newVolumeMountDockerEvent(containerId, opts.ShareDir, commonModel.MountShareDir))
+			task.eventBus.Publish(newVolumeMountDockerEvent(containerId, opts.CommonInfo.ShareDir.LocalPath, opts.CommonInfo.ShareDir.RemotePath))
 
 			// stop loader
 			task.eventBus.Publish(newContainerWaitDockerLoaderEvent())

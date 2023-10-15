@@ -27,13 +27,12 @@ func NewCommonTaskOpts() *CommonTaskOptions {
 }
 
 type RunOptions struct {
-	Template    *TaskV1
-	Arguments   []string
-	Labels      commonModel.Labels
-	NetworkInfo commonModel.NetworkInfo
-	StreamOpts  *commonModel.StreamOptions
-	ShareDir    string
-	LogDir      string
+	Template   *TaskV1
+	Labels     commonModel.Labels
+	CommonInfo commonModel.CommonInfo
+	StreamOpts *commonModel.StreamOptions
+	Arguments  []string
+	LogDir     string
 }
 
 func (opts *RunOptions) GenerateLogFileName(provider TaskProvider, containerName string) string {

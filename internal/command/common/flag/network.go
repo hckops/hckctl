@@ -18,7 +18,7 @@ func AddNetworkVpnFlag(command *cobra.Command, networkVpn *string) string {
 	return flagName
 }
 
-func ValidateNetworkVpnFlag(name string, networks map[string]model.VpnNetworkInfo) (*model.VpnNetworkInfo, error) {
+func ValidateNetworkVpnFlag(name string, networks map[string]model.NetworkVpnInfo) (*model.NetworkVpnInfo, error) {
 	if strings.TrimSpace(name) == "" {
 		return nil, nil
 	}

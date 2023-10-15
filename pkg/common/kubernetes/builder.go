@@ -18,6 +18,7 @@ const (
 	sidecarVpnSecretVolume = "sidecar-vpn-volume"
 	sidecarVpnSecretPath   = "openvpn/client.ovpn"
 	sidecarVpnSecretKey    = "openvpn-config"
+	sidecarShareVolume     = "sidecar-share-volume"
 )
 
 func buildSidecarVpnSecretName(containerName string) string {
@@ -126,5 +127,54 @@ func injectSidecarVpn(podSpec *corev1.PodSpec, mainContainerName string) {
 	podSpec.Volumes = append(
 		podSpec.Volumes, // current volumes
 		buildSidecarVpnVolumes(util.ToLowerKebabCase(mainContainerName))..., // join slices
+	)
+}
+
+func buildSidecarShareContainer(remoteDir string) corev1.Container {
+	return corev1.Container{
+		Name:  fmt.Sprintf("%sshare", commonModel.SidecarPrefixName),
+		Image: "busybox", // only requirement is the "tar" binary
+		TTY:   true,
+		Stdin: true,
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      sidecarShareVolume,
+				MountPath: remoteDir,
+			},
+		},
+	}
+}
+
+func injectSidecarShare(podSpec *corev1.PodSpec, mainContainerName string, remoteDir string) {
+
+	// mount read-only shared volume to main container
+	for _, c := range podSpec.Containers {
+		if c.Name == mainContainerName {
+			c.VolumeMounts = append(
+				c.VolumeMounts,
+				corev1.VolumeMount{
+					Name:      sidecarShareVolume,
+					MountPath: remoteDir,
+					ReadOnly:  true,
+				},
+			)
+		}
+	}
+
+	// inject sidecar
+	podSpec.Containers = append(
+		podSpec.Containers, // current containers
+		buildSidecarShareContainer(remoteDir),
+	)
+
+	// inject shared volume between main container and sidecar
+	podSpec.Volumes = append(
+		podSpec.Volumes, // current volumes
+		corev1.Volume{
+			Name: sidecarShareVolume,
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		},
 	)
 }

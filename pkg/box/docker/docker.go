@@ -64,11 +64,11 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 	// vpn sidecar
 	var hostname string
 	var networkMode string
-	if opts.NetworkInfo.Vpn != nil {
+	if opts.CommonInfo.NetworkVpn != nil {
 		// set all network configs on the sidecar to avoid option conflicts
 		sidecarOpts := &commonModel.SidecarVpnInjectOpts{
 			MainContainerName: containerName,
-			VpnInfo:           opts.NetworkInfo.Vpn,
+			VpnInfo:           opts.CommonInfo.NetworkVpn,
 		}
 		if sidecarContainerId, err := box.dockerCommon.SidecarVpnInject(sidecarOpts, portConfig); err != nil {
 			return nil, err
@@ -114,8 +114,8 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 		PortConfig:  portConfig,
 		Volumes: []docker.ContainerVolume{
 			{
-				HostDir:      opts.ShareDir,
-				ContainerDir: commonModel.MountShareDir,
+				HostDir:      opts.CommonInfo.ShareDir.LocalPath,
+				ContainerDir: opts.CommonInfo.ShareDir.RemotePath,
 			},
 		},
 	})

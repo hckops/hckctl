@@ -60,10 +60,10 @@ func (box *KubeBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.Box
 	}
 
 	// create secret and inject sidecar-vpn
-	if opts.NetworkInfo.Vpn != nil {
+	if opts.CommonInfo.NetworkVpn != nil {
 		sidecarOpts := &commonModel.SidecarVpnInjectOpts{
 			MainContainerName: boxName,
-			VpnInfo:           opts.NetworkInfo.Vpn,
+			VpnInfo:           opts.CommonInfo.NetworkVpn,
 		}
 		if err := box.kubeCommon.SidecarVpnInject(namespace, sidecarOpts, &deployment.Spec.Template.Spec); err != nil {
 			return nil, err

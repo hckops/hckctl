@@ -50,12 +50,18 @@ type SidecarInfo struct {
 	Name string
 }
 
-type NetworkInfo struct {
-	Vpn *VpnNetworkInfo
+type CommonInfo struct {
+	NetworkVpn *NetworkVpnInfo
+	ShareDir   *ShareDirInfo
 }
 
-type VpnNetworkInfo struct {
+type NetworkVpnInfo struct {
 	Name        string
 	LocalPath   string
 	ConfigValue string
+}
+
+type ShareDirInfo struct {
+	LocalPath  string
+	RemotePath string
 }
