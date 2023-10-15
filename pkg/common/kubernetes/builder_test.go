@@ -124,6 +124,7 @@ spec:
           - 1s
     name: sidecar-sleep
     resources: {}
+    stdin: true
   - image: my-image
     name: my-name
     resources: {}
@@ -169,6 +170,67 @@ status: {}
 		},
 	}
 	injectSidecarVpn(&actual.Spec, containerName)
+	// fix model
+	actual.TypeMeta = metav1.TypeMeta{Kind: "Pod", APIVersion: "v1"}
+
+	assert.YAMLEqf(t, expected, kubernetes.ObjectToYaml(actual), "unexpected pod")
+}
+
+func TestInjectSidecarShare(t *testing.T) {
+
+	expected := `
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+spec:
+  containers:
+  - image: my-image
+    name: my-name
+    resources: {}
+    volumeMounts:
+    - mountPath: /tmp/foo
+      name: sidecar-share-volume
+      readOnly: true
+  - image: busybox
+    name: sidecar-share
+    resources: {}
+    stdin: true
+    volumeMounts:
+    - mountPath: /tmp/foo
+      name: sidecar-share-volume
+  volumes:
+  - hostPath:
+      path: my-path
+    name: my-volume
+  - emptyDir: {}
+    name: sidecar-share-volume
+status: {}
+`
+
+	containerName := "my-name"
+	shareDir := "/tmp/foo"
+	actual := &corev1.Pod{
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Name:  containerName,
+					Image: "my-image",
+				},
+			},
+			Volumes: []corev1.Volume{
+				{
+					Name: "my-volume",
+					VolumeSource: corev1.VolumeSource{
+						HostPath: &corev1.HostPathVolumeSource{
+							Path: "my-path",
+						},
+					},
+				},
+			},
+		},
+	}
+	injectSidecarShare(&actual.Spec, containerName, shareDir)
 	// fix model
 	actual.TypeMeta = metav1.TypeMeta{Kind: "Pod", APIVersion: "v1"}
 

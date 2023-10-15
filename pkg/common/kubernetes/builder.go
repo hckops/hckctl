@@ -111,6 +111,7 @@ func injectSidecarVpn(podSpec *corev1.PodSpec, mainContainerName string) {
 			{
 				Name:  fmt.Sprintf("%ssleep", commonModel.SidecarPrefixName),
 				Image: "busybox",
+				Stdin: true, // fixes PostStartHookError
 				Lifecycle: &corev1.Lifecycle{
 					PostStart: &corev1.LifecycleHandler{
 						Exec: &corev1.ExecAction{
@@ -134,7 +135,6 @@ func buildSidecarShareContainer(remoteDir string) corev1.Container {
 	return corev1.Container{
 		Name:  fmt.Sprintf("%sshare", commonModel.SidecarPrefixName),
 		Image: "busybox", // only requirement is the "tar" binary
-		TTY:   true,
 		Stdin: true,
 		VolumeMounts: []corev1.VolumeMount{
 			{
@@ -148,9 +148,9 @@ func buildSidecarShareContainer(remoteDir string) corev1.Container {
 func injectSidecarShare(podSpec *corev1.PodSpec, mainContainerName string, remoteDir string) {
 
 	// mount read-only shared volume to main container
-	for _, c := range podSpec.Containers {
+	for index, c := range podSpec.Containers {
 		if c.Name == mainContainerName {
-			c.VolumeMounts = append(
+			podSpec.Containers[index].VolumeMounts = append(
 				c.VolumeMounts,
 				corev1.VolumeMount{
 					Name:      sidecarShareVolume,

@@ -54,15 +54,22 @@ func (common *KubeCommonClient) SidecarVpnDelete(namespace string, mainContainer
 func (common *KubeCommonClient) SidecarVpnInject(namespace string, opts *commonModel.SidecarVpnInjectOpts, podSpec *corev1.PodSpec) error {
 
 	// create secret
-	secret := buildSidecarVpnSecret(namespace, opts.MainContainerName, opts.VpnInfo.ConfigValue)
+	secret := buildSidecarVpnSecret(namespace, opts.MainContainerId, opts.NetworkVpn.ConfigValue)
 	common.eventBus.Publish(newSecretCreateKubeEvent(namespace, secret.Name))
 	if err := common.client.SecretCreate(namespace, secret); err != nil {
 		return err
 	}
 
 	// update pod
-	injectSidecarVpn(podSpec, opts.MainContainerName)
-	common.eventBus.Publish(newSidecarVpnConnectKubeEvent(opts.VpnInfo.Name))
+	injectSidecarVpn(podSpec, opts.MainContainerId)
+	common.eventBus.Publish(newSidecarVpnConnectKubeEvent(opts.NetworkVpn.Name))
 
+	return nil
+}
+
+func (common *KubeCommonClient) SidecarShareInject(opts *commonModel.SidecarShareInjectOpts, podSpec *corev1.PodSpec) error {
+	// update pod
+	injectSidecarShare(podSpec, opts.MainContainerName, opts.ShareDir.RemotePath)
+	common.eventBus.Publish(newSidecarShareMountKubeEvent(opts.ShareDir.RemotePath))
 	return nil
 }

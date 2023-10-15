@@ -40,10 +40,11 @@ func NewStdStreamOpts(tty bool) *StreamOptions {
 }
 
 type SidecarVpnInjectOpts struct {
-	MainContainerName string
-	VpnInfo           *NetworkVpnInfo
+	MainContainerId string
+	NetworkVpn      *NetworkVpnInfo
 }
 
 type SidecarShareInjectOpts struct {
 	MainContainerName string
+	ShareDir          *ShareDirInfo
 }

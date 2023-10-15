@@ -111,7 +111,7 @@ func buildSidecarVpnName(containerName string) string {
 func (common *DockerCommonClient) SidecarVpnInject(opts *commonModel.SidecarVpnInjectOpts, portConfig *docker.ContainerPortConfigOpts) (string, error) {
 
 	// sidecarName
-	containerName := buildSidecarVpnName(opts.MainContainerName)
+	containerName := buildSidecarVpnName(opts.MainContainerId)
 
 	// constants
 	imageName := commonModel.SidecarVpnImageName
@@ -119,20 +119,20 @@ func (common *DockerCommonClient) SidecarVpnInject(opts *commonModel.SidecarVpnI
 	vpnConfigPath := "/usr/share/client.ovpn"
 
 	if err := common.PullImageOffline(imageName, func() {
-		common.eventBus.Publish(newSidecarVpnConnectDockerEvent(opts.VpnInfo.Name))
-		common.eventBus.Publish(newSidecarVpnConnectDockerLoaderEvent(opts.VpnInfo.Name))
+		common.eventBus.Publish(newSidecarVpnConnectDockerEvent(opts.NetworkVpn.Name))
+		common.eventBus.Publish(newSidecarVpnConnectDockerLoaderEvent(opts.NetworkVpn.Name))
 	}); err != nil {
 		return "", err
 	}
 
 	containerConfig, err := docker.BuildContainerConfig(&docker.ContainerConfigOpts{
 		ImageName: imageName,
-		Hostname:  opts.MainContainerName,
+		Hostname:  opts.MainContainerId,
 		Env:       []docker.ContainerEnv{{Key: "OPENVPN_CONFIG", Value: vpnConfigPath}},
 		Ports:     portConfig.Ports,
 		Tty:       false,
 		Cmd:       []string{},
-		Labels:    commonModel.NewSidecarLabels().AddSidecarMain(opts.MainContainerName),
+		Labels:    commonModel.NewSidecarLabels().AddSidecarMain(opts.MainContainerId),
 	})
 	if err != nil {
 		return "", err
@@ -151,7 +151,7 @@ func (common *DockerCommonClient) SidecarVpnInject(opts *commonModel.SidecarVpnI
 		CaptureInterrupt: false, // edge case: killing this while creating will leave an orphan sidecar container
 		OnContainerCreateCallback: func(containerId string) error {
 			// upload openvpn config file
-			return common.client.CopyFileToContainer(containerId, opts.VpnInfo.LocalPath, vpnConfigPath)
+			return common.client.CopyFileToContainer(containerId, opts.NetworkVpn.LocalPath, vpnConfigPath)
 		},
 		OnContainerStatusCallback: func(status string) {
 			common.eventBus.Publish(newSidecarVpnCreateStatusDockerEvent(status))

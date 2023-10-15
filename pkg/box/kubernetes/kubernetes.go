@@ -59,11 +59,22 @@ func (box *KubeBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.Box
 		box.eventBus.Publish(newServiceCreateIgnoreKubeEvent(namespace, service.Name))
 	}
 
+	// inject sidecar-volume
+	if opts.CommonInfo.ShareDir != nil {
+		sidecarOpts := &commonModel.SidecarShareInjectOpts{
+			MainContainerName: util.ToLowerKebabCase(opts.Template.Image.Repository),
+			ShareDir:          opts.CommonInfo.ShareDir,
+		}
+		if err := box.kubeCommon.SidecarShareInject(sidecarOpts, &deployment.Spec.Template.Spec); err != nil {
+			return nil, err
+		}
+	}
+
 	// create secret and inject sidecar-vpn
 	if opts.CommonInfo.NetworkVpn != nil {
 		sidecarOpts := &commonModel.SidecarVpnInjectOpts{
-			MainContainerName: boxName,
-			VpnInfo:           opts.CommonInfo.NetworkVpn,
+			MainContainerId: boxName,
+			NetworkVpn:      opts.CommonInfo.NetworkVpn,
 		}
 		if err := box.kubeCommon.SidecarVpnInject(namespace, sidecarOpts, &deployment.Spec.Template.Spec); err != nil {
 			return nil, err
@@ -83,6 +94,10 @@ func (box *KubeBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.Box
 		return nil, err
 	}
 	box.eventBus.Publish(newDeploymentCreateKubeEvent(namespace, deployment.Name))
+
+	// upload shared directory
+	if opts.CommonInfo.ShareDir != nil {
+	}
 
 	podInfo, err := box.client.PodDescribeFromDeployment(deployment)
 	if err != nil {

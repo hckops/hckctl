@@ -43,3 +43,7 @@ func newSecretDeleteKubeEvent(namespace string, name string) *kubeCommonEvent {
 func newSidecarVpnConnectKubeEvent(vpnName string) *kubeCommonEvent {
 	return &kubeCommonEvent{kind: event.LogInfo, value: fmt.Sprintf("sidecar-vpn connect: vpnName=%s", vpnName)}
 }
+
+func newSidecarShareMountKubeEvent(shareDir string) *kubeCommonEvent {
+	return &kubeCommonEvent{kind: event.LogInfo, value: fmt.Sprintf("sidecar-share mount: shareDir=%s", shareDir)}
+}
