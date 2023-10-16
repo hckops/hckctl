@@ -2,7 +2,8 @@ package kubernetes
 
 import (
 	"fmt"
-	"path"
+	"path/filepath"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -42,7 +43,7 @@ func buildSidecarVpnContainer() corev1.Container {
 		Image:           commonModel.SidecarVpnImageName,
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Env: []corev1.EnvVar{
-			{Name: "OPENVPN_CONFIG", Value: path.Join(secretBasePath, sidecarVpnSecretPath)},
+			{Name: "OPENVPN_CONFIG", Value: filepath.Join(secretBasePath, sidecarVpnSecretPath)},
 		},
 		SecurityContext: &corev1.SecurityContext{
 			Capabilities: &corev1.Capabilities{
@@ -110,12 +111,12 @@ func injectSidecarVpn(podSpec *corev1.PodSpec, mainContainerName string) {
 			// add fake sleep to allow sidecar-vpn to connect properly before starting the main container
 			{
 				Name:  fmt.Sprintf("%ssleep", commonModel.SidecarPrefixName),
-				Image: "busybox",
+				Image: commonModel.SidecarShareImageName,
 				Stdin: true, // fixes PostStartHookError
 				Lifecycle: &corev1.Lifecycle{
 					PostStart: &corev1.LifecycleHandler{
 						Exec: &corev1.ExecAction{
-							Command: []string{"sleep", "1s"},
+							Command: []string{"sleep", "3s"},
 						},
 					},
 				},
@@ -135,10 +136,14 @@ func buildSidecarShareContainerName() string {
 	return fmt.Sprintf("%sshare", commonModel.SidecarPrefixName)
 }
 
+func buildSidecarShareLock(remoteDir string) string {
+	return filepath.Join(remoteDir, ".wait")
+}
+
 func buildSidecarShareContainer(remoteDir string) corev1.Container {
 	return corev1.Container{
 		Name:  buildSidecarShareContainerName(),
-		Image: "busybox", // only requirement is the "tar" binary
+		Image: commonModel.SidecarShareImageName, // only requirement is the "tar" binary
 		Stdin: true,
 		VolumeMounts: []corev1.VolumeMount{
 			{
@@ -149,16 +154,55 @@ func buildSidecarShareContainer(remoteDir string) corev1.Container {
 	}
 }
 
-func injectSidecarShare(podSpec *corev1.PodSpec, mainContainerName string, remoteDir string) {
+func injectSidecarShare(podSpec *corev1.PodSpec, mainContainerName string, shareDir *commonModel.ShareDirInfo) {
 
-	// mount read-only shared volume to main container
+	lockfile := buildSidecarShareLock(shareDir.RemotePath)
+
+	if shareDir.LockDir {
+		// create lockfile
+		podSpec.InitContainers = append(
+			podSpec.InitContainers,
+			corev1.Container{
+				Name:    "init-share-lock",
+				Image:   commonModel.SidecarShareImageName,
+				Command: []string{"touch", lockfile},
+				VolumeMounts: []corev1.VolumeMount{
+					{
+						Name:      sidecarShareVolume,
+						MountPath: shareDir.RemotePath,
+					},
+				},
+			},
+		)
+	}
+
 	for index, c := range podSpec.Containers {
 		if c.Name == mainContainerName {
+
+			// ensure entrypoint is always empty: use only arguments
+			podSpec.Containers[index].Command = []string{}
+
+			// this is a hack, but at this time the only hooks available are postStart and preStop
+			// block to allow the job to finish uploading before start the main container
+			if shareDir.LockDir {
+				arguments := podSpec.Containers[index].Args
+
+				// override entrypoint and assume "sh" is always available
+				podSpec.Containers[index].Command = []string{"/bin/sh", "-c"}
+
+				// wait to start until lockfile is removed (upload is finished)
+				preStartHook := fmt.Sprintf("while [ -f %s ]; do sleep 1; done", lockfile)
+				podSpec.Containers[index].Args = []string{
+					fmt.Sprintf("%s && %s", preStartHook, strings.Join(arguments, " ")),
+				}
+			}
+
+			// mount read-only shared volume to main container
 			podSpec.Containers[index].VolumeMounts = append(
 				c.VolumeMounts,
 				corev1.VolumeMount{
 					Name:      sidecarShareVolume,
-					MountPath: remoteDir,
+					MountPath: shareDir.RemotePath,
 					ReadOnly:  true,
 				},
 			)
@@ -168,7 +212,7 @@ func injectSidecarShare(podSpec *corev1.PodSpec, mainContainerName string, remot
 	// inject sidecar
 	podSpec.Containers = append(
 		podSpec.Containers, // current containers
-		buildSidecarShareContainer(remoteDir),
+		buildSidecarShareContainer(shareDir.RemotePath),
 	)
 
 	// inject shared volume between main container and sidecar

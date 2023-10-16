@@ -38,6 +38,7 @@ func BuildContainerConfig(opts *ContainerConfigOpts) (*container.Config, error) 
 		OpenStdin:    true,
 		StdinOnce:    true,
 		Tty:          opts.Tty,
+		Entrypoint:   []string{}, // override entrypoint
 		Cmd:          opts.Cmd,
 		Env:          envs,
 		ExposedPorts: exposedPorts,

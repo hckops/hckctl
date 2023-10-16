@@ -8,8 +8,34 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
+	"github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/util"
 )
+
+func newPodSpecTest(containerName string) *corev1.Pod {
+	return &corev1.Pod{
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Name:    containerName,
+					Image:   "my-image",
+					Command: []string{"xyz", "abc"},
+					Args:    []string{"foo", "bar"},
+				},
+			},
+			Volumes: []corev1.Volume{
+				{
+					Name: "my-volume",
+					VolumeSource: corev1.VolumeSource{
+						HostPath: &corev1.HostPathVolumeSource{
+							Path: "my-path",
+						},
+					},
+				},
+			},
+		},
+	}
+}
 
 func TestBuildSidecarVpnSecret(t *testing.T) {
 
@@ -125,7 +151,13 @@ spec:
     name: sidecar-sleep
     resources: {}
     stdin: true
-  - image: my-image
+  - args:
+    - foo
+    - bar
+    command:
+    - xyz
+    - abc
+    image: my-image
     name: my-name
     resources: {}
   securityContext:
@@ -149,26 +181,7 @@ status: {}
 `
 
 	containerName := "my-name"
-	actual := &corev1.Pod{
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:  containerName,
-					Image: "my-image",
-				},
-			},
-			Volumes: []corev1.Volume{
-				{
-					Name: "my-volume",
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: "my-path",
-						},
-					},
-				},
-			},
-		},
-	}
+	actual := newPodSpecTest(containerName)
 	injectSidecarVpn(&actual.Spec, containerName)
 	// fix model
 	actual.TypeMeta = metav1.TypeMeta{Kind: "Pod", APIVersion: "v1"}
@@ -185,7 +198,10 @@ metadata:
   creationTimestamp: null
 spec:
   containers:
-  - image: my-image
+  - args:
+    - foo
+    - bar
+    image: my-image
     name: my-name
     resources: {}
     volumeMounts:
@@ -209,27 +225,65 @@ status: {}
 `
 
 	containerName := "my-name"
-	shareDir := "/tmp/foo"
-	actual := &corev1.Pod{
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:  containerName,
-					Image: "my-image",
-				},
-			},
-			Volumes: []corev1.Volume{
-				{
-					Name: "my-volume",
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: "my-path",
-						},
-					},
-				},
-			},
-		},
-	}
+	shareDir := &model.ShareDirInfo{RemotePath: "/tmp/foo", LockDir: false}
+	actual := newPodSpecTest(containerName)
+	injectSidecarShare(&actual.Spec, containerName, shareDir)
+	// fix model
+	actual.TypeMeta = metav1.TypeMeta{Kind: "Pod", APIVersion: "v1"}
+
+	assert.YAMLEqf(t, expected, kubernetes.ObjectToYaml(actual), "unexpected pod")
+}
+
+func TestInjectSidecarShareLockDir(t *testing.T) {
+
+	expected := `
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+spec:
+  containers:
+  - args:
+    - while [ -f /tmp/foo/.wait ]; do sleep 1; done && foo bar
+    command:
+    - /bin/sh
+    - -c
+    image: my-image
+    name: my-name
+    resources: {}
+    volumeMounts:
+    - mountPath: /tmp/foo
+      name: sidecar-share-volume
+      readOnly: true
+  - image: busybox
+    name: sidecar-share
+    resources: {}
+    stdin: true
+    volumeMounts:
+    - mountPath: /tmp/foo
+      name: sidecar-share-volume
+  initContainers:
+  - command:
+    - touch
+    - /tmp/foo/.wait
+    image: busybox
+    name: init-share-lock
+    resources: {}
+    volumeMounts:
+    - mountPath: /tmp/foo
+      name: sidecar-share-volume
+  volumes:
+  - hostPath:
+      path: my-path
+    name: my-volume
+  - emptyDir: {}
+    name: sidecar-share-volume
+status: {}
+`
+
+	containerName := "my-name"
+	shareDir := &model.ShareDirInfo{RemotePath: "/tmp/foo", LockDir: true}
+	actual := newPodSpecTest(containerName)
 	injectSidecarShare(&actual.Spec, containerName, shareDir)
 	// fix model
 	actual.TypeMeta = metav1.TypeMeta{Kind: "Pod", APIVersion: "v1"}

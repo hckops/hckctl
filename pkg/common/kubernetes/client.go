@@ -1,6 +1,9 @@
 package kubernetes
 
 import (
+	"io"
+	"os"
+
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 
@@ -69,7 +72,7 @@ func (common *KubeCommonClient) SidecarVpnInject(namespace string, opts *commonM
 
 func (common *KubeCommonClient) SidecarShareInject(opts *commonModel.SidecarShareInjectOpts, podSpec *corev1.PodSpec) error {
 	// update pod
-	injectSidecarShare(podSpec, opts.MainContainerName, opts.ShareDir.RemotePath)
+	injectSidecarShare(podSpec, opts.MainContainerName, opts.ShareDir)
 	common.eventBus.Publish(newSidecarShareMountKubeEvent(opts.ShareDir.RemotePath))
 	return nil
 }
@@ -78,12 +81,35 @@ func (common *KubeCommonClient) SidecarShareUpload(opts *commonModel.SidecarShar
 	common.eventBus.Publish(newSidecarShareUploadKubeEvent(opts.ShareDir.LocalPath, opts.ShareDir.RemotePath))
 	common.eventBus.Publish(newSidecarShareUploadKubeLoaderEvent())
 
+	sidecarContainerName := buildSidecarShareContainerName()
 	copyOpts := &kubernetes.CopyPodOpts{
 		Namespace:     opts.Namespace,
 		PodName:       opts.PodName,
-		ContainerName: buildSidecarShareContainerName(),
+		ContainerName: sidecarContainerName,
 		LocalPath:     opts.ShareDir.LocalPath,
 		RemotePath:    opts.ShareDir.RemotePath,
 	}
-	return common.client.CopyToPod(copyOpts)
+	if err := common.client.CopyToPod(copyOpts); err != nil {
+		return err
+	}
+
+	if opts.ShareDir.LockDir {
+		// remove lock
+		execDeleteLock := &kubernetes.PodExecOpts{
+			Namespace:      opts.Namespace,
+			PodId:          opts.PodName,
+			PodName:        sidecarContainerName,
+			Commands:       []string{"rm", buildSidecarShareLock(opts.ShareDir.RemotePath)},
+			InStream:       os.Stdin,
+			OutStream:      io.Discard,
+			ErrStream:      io.Discard,
+			IsTty:          false,
+			OnExecCallback: func() {},
+		}
+		if err := common.client.PodExecCommand(execDeleteLock); err != nil {
+			return errors.Wrapf(err, "error delete lock")
+		}
+	}
+
+	return nil
 }

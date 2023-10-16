@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <i>The declarative Breach and Attack Simulation tool</i><br>
+  <i>The declarative Breach and Attack Simulation toolkit: one tool to rule 'em all</i><br>
   <a href="#quick-start">Quick start</a>&nbsp;&bull;
   <a href="#setup">Setup</a>&nbsp;&bull;
   <a href="#provider">Provider</a>&nbsp;&bull;
@@ -28,7 +28,7 @@ Launch manual and automated attacks with pre-defined and always up-to-date templ
 
 Attack your vulnerable target infrastructure or connect to your training platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup and network configurations.
 
-Package, distribute and run known exploits to find weaknesses on authorized targets in a standard way.
+Package, distribute and run known exploits to find weaknesses on authorized targets in a declarative way.
 
 Designed to transparently run locally, remotely or integrated in pipelines and with guaranteed stability and backward compatibility over time.
 `hckctl` is free, open source and community driven, no vendor lock-in, extensible and built using native providers api.
@@ -266,6 +266,9 @@ Follow the official [instructions](https://podman.io/docs/installation) to insta
 ```bash
 # run
 go run internal/main.go
+
+# debug
+go run internal/main.go task --local ../megalopolis/task/test/debug.yml --provider kube --inline -- tree /hck/share
 
 # build
 just

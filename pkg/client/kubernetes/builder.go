@@ -190,7 +190,7 @@ func BuildJob(opts *JobOpts) *batchv1.Job {
 							Name:            util.ToLowerKebabCase(opts.PodInfo.ContainerName),
 							Image:           opts.PodInfo.ImageName,
 							ImagePullPolicy: corev1.PullIfNotPresent,
-							Command:         []string{},
+							Command:         []string{}, // override entrypoint
 							Args:            opts.PodInfo.Arguments,
 							Env:             buildEnvVars(opts.PodInfo.Env),
 						},
