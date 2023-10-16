@@ -10,6 +10,7 @@ import (
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/event"
 	"github.com/hckops/hckctl/pkg/schema"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 type DockerCommonClient struct {
@@ -164,6 +165,8 @@ func (common *DockerCommonClient) SidecarVpnInject(opts *commonModel.SidecarVpnI
 		return "", err
 	}
 	common.eventBus.Publish(newSidecarVpnCreateDockerEvent(containerName, containerId))
+	// block to give time to connect
+	util.Sleep(3)
 
 	return containerId, nil
 }
