@@ -29,6 +29,7 @@ func TestBuildContainerConfig(t *testing.T) {
 		OpenStdin:    true,
 		StdinOnce:    true,
 		Tty:          true,
+		Entrypoint:   []string{},
 		Cmd:          []string{},
 		Env: []string{
 			"TTYD_USERNAME=username",

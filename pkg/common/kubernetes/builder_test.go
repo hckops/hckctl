@@ -147,7 +147,7 @@ spec:
         exec:
           command:
           - sleep
-          - 1s
+          - 3s
     name: sidecar-sleep
     resources: {}
     stdin: true
