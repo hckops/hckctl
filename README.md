@@ -86,7 +86,7 @@ hckctl box preview/parrot-sec --network-vpn htb
 
 Access your target from a managed [`lab`](https://github.com/hckops/megalopolis/tree/main/lab)
 ```bash
-# connects to a vpn, exposes public ports, mounts dumps (git, s3), loads secrets, etc.
+# connects to a vpn, exposes public ports, mounts dumps (git, s3), loads secrets, takes volume snapshots, etc.
 hckctl lab ctf-linux
 ```
 
@@ -232,11 +232,11 @@ provider:
     configPath: ""
     namespace: hckops
 ```
-Make sure you disable IPv6 in your cluster in order to use the vpn
+Make sure you disable IPv6 in your cluster to use the `--network-vpn` flag
 ```bash
 minikube start --extra-config="kubelet.allowed-unsafe-sysctls=net.ipv6.conf.all.disable_ipv6"
 ```
-If you are looking for a simple way to get started with a remote cluster consider [kube-template](https://github.com/hckops/kube-template)
+If you are looking for a simple way to get started with a remote cluster consider using [kube-template](https://github.com/hckops/kube-template)
 ```bash
 provider:
   kube:
@@ -268,12 +268,13 @@ Follow the official [instructions](https://podman.io/docs/installation) to insta
 go run internal/main.go
 
 # debug
-go run internal/main.go task --local ../megalopolis/task/test/debug.yml --provider kube --inline -- tree /hck/share
+go run internal/main.go task test/debug --provider kube --inline -- tree /hck/share
 
 # build
 just
 ./build/hckctl
 
+# logs
 tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 ```
 
@@ -299,12 +300,15 @@ Please, feel free to contribute to the companion [repository](https://github.com
 
 <!--
 
-* task/box kube shareDir vs copy dir
+* update all tasks arguments
+* test all catalog
+* discord + social links
 * replace task/htb example with thm
 * verify/support kube config relative path
 * update cloud pkg
 * update platform prs
 * verify network connectivity between boxes/tasks i.e. kube.svc
+* verify binaries
 * test on mac-m1 and win (docker images)
 
 TODO demo
