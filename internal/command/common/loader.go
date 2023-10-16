@@ -6,6 +6,8 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/rs/zerolog/log"
+
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 type Loader struct {
@@ -43,7 +45,7 @@ func (l *Loader) Refresh(message string, values ...any) {
 }
 
 func (l *Loader) Sleep(seconds int) {
-	time.Sleep(time.Duration(seconds) * time.Second)
+	util.Sleep(seconds)
 }
 
 func (l *Loader) Stop() {
