@@ -137,10 +137,11 @@ type CommonConfig struct {
 	ShareDir string `yaml:"shareDir"`
 }
 
-func (c *CommonConfig) ToShareDirInfo() *commonModel.ShareDirInfo {
+func (c *CommonConfig) ToShareDirInfo(lockDir bool) *commonModel.ShareDirInfo {
 	return &commonModel.ShareDirInfo{
 		LocalPath:  c.ShareDir,
 		RemotePath: commonModel.SidecarShareDir,
+		LockDir:    lockDir,
 	}
 }
 

@@ -162,7 +162,7 @@ func newCreateOptions(info *template.TemplateInfo[boxModel.BoxV1], labels common
 		Labels:   allLabels,
 		CommonInfo: commonModel.CommonInfo{
 			NetworkVpn: networkVpn,
-			ShareDir:   configRef.Config.Common.ToShareDirInfo(),
+			ShareDir:   configRef.Config.Common.ToShareDirInfo(false),
 		},
 		Size: size,
 	}, nil

@@ -64,4 +64,5 @@ type NetworkVpnInfo struct {
 type ShareDirInfo struct {
 	LocalPath  string
 	RemotePath string
+	LockDir    bool
 }

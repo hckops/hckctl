@@ -163,7 +163,7 @@ func (opts *taskCmdOptions) runTask(sourceLoader template.SourceLoader[taskModel
 		Labels:   commonCmd.AddTemplateLabels[taskModel.TaskV1](info, labels),
 		CommonInfo: commonModel.CommonInfo{
 			NetworkVpn: networkVpn,
-			ShareDir:   opts.configRef.Config.Common.ToShareDirInfo(),
+			ShareDir:   opts.configRef.Config.Common.ToShareDirInfo(true),
 		},
 		StreamOpts: commonModel.NewStdStreamOpts(false),
 		Arguments:  arguments,

@@ -151,6 +151,7 @@ func TestToShareDirInfo(t *testing.T) {
 	expected := &model.ShareDirInfo{
 		LocalPath:  "myShareDir",
 		RemotePath: "/hck/share",
+		LockDir:    true,
 	}
-	assert.Equal(t, expected, commonConfig.ToShareDirInfo())
+	assert.Equal(t, expected, commonConfig.ToShareDirInfo(true))
 }
