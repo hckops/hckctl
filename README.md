@@ -33,7 +33,7 @@ Package, distribute and run known exploits to find weaknesses on authorized targ
 Designed to transparently run locally, remotely or integrated in pipelines and with guaranteed stability and backward compatibility over time.
 `hckctl` is free, open source and community driven, no vendor lock-in, extensible and built using native providers api.
 
-Leverage the cloud platform or request a dedicated managed cluster to:
+Leverage the cloud platform or request a dedicated managed environment to:
 * orchestrate complex attack scenarios
 * constantly probe and monitor your security posture
 * analyze, aggregate and export results via api
@@ -45,39 +45,24 @@ Leverage the cloud platform or request a dedicated managed cluster to:
 
 Spin-up a [`box`](https://github.com/hckops/megalopolis/tree/main/box) and access all port-forwarded ports locally
 ```bash
-# spawns a temporary docker (default provider) box locally
+# spawns a temporary docker box locally
 hckctl box alpine
+#[box-alpine-<RANDOM>][tty] tunnel (remote) 7681 -> (local) 7681
+#[box-alpine-<RANDOM>] TTYD_USERNAME=root
+#[box-alpine-<RANDOM>] TTYD_PASSWORD=alpine
 
-# deploys a detached box to your kubernetes cluster
+# deploys a detached box to a kubernetes cluster
 hckctl box start arch --provider kube
-# tunnel tty port
+# tunnel ports only
 hckctl box open box-arch-<RANDOM> --no-exec
 
-# creates a managed box (cloud provider preview)
-hckctl box parrot --provider cloud
+# creates a pwnbox box connected to your hack the box account
+hckctl box preview/parrot-sec --network-vpn htb
 # connects to vnc
 vncviewer localhost:5900
-```
 
-#### HTB demo
-
-Prerequisites
-* start the retired [Lame](https://app.hackthebox.com/machines/Lame) machine in your account
-* edit your vpn network config
-    ```bash
-    vim ${HOME}/.config/hck/config.yml
-
-    network:
-      vpn:
-      - name: htb
-        # update with your openvpn config path
-        path: /home/demo/ctf/openvpn/htb_demo_eu_vip_28.ovpn
-    ```
-
-Start your *pwnbox* locally or remotely and solve the challenges
-```bash
-# pulls a preview box (first time might take a while)
-hckctl box preview/parrot-sec --network-vpn htb
+# starts a background box to attack locally
+hckctl box start vulnerable/owasp-juice-shop
 ```
 
 ### Lab (preview)
@@ -85,8 +70,13 @@ hckctl box preview/parrot-sec --network-vpn htb
 > TODO video
 
 Access your target from a managed [`lab`](https://github.com/hckops/megalopolis/tree/main/lab)
+* tunnel multiple vpn connections through a high-available proxy
+* expose public endpoints
+* pre-mount saved `dumps` (git, s3)
+* load secrets from a vault
+* save/restore workdir snapshots
+* deploy custom labs
 ```bash
-# connects to a vpn, exposes public ports, mounts dumps (git, s3), loads secrets, takes volume snapshots, etc.
 hckctl lab ctf-linux
 ```
 
@@ -193,11 +183,22 @@ Edit the default configurations
 # prints path and current configs
 hckctl config
 
+# resets default configs
+hckctl config --reset
+```
+
+How to configure vpn networks
+```bash
 # (unix path)
 vim ${HOME}/.config/hck/config.yml
 
-# resets default configs
-hckctl config --reset
+# update with your openvpn config path
+network:
+  vpn:
+  - name: htb
+    path: /home/demo/ctf/openvpn/htb_demo_eu_vip_28.ovpn
+  - name: thm
+    path: /home/demo/ctf/openvpn/thm_demo_us_regular_3.ovpn
 ```
 
 ## Setup
