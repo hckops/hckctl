@@ -53,7 +53,7 @@ hckctl box alpine
 
 # deploys a detached box to a kubernetes cluster
 hckctl box start arch --provider kube
-# tunnel ports only
+# tunnels tty port only
 hckctl box open box-arch-<RANDOM> --no-exec
 
 # creates a pwnbox box connected to your hack the box account
@@ -70,7 +70,7 @@ hckctl box start vulnerable/owasp-juice-shop
 > TODO video
 
 Access your target from a managed [`lab`](https://github.com/hckops/megalopolis/tree/main/lab)
-* tunnel multiple vpn connections through a high-available proxy
+* tunnel multiple vpn connections through a high-available ssh proxy
 * expose public endpoints
 * pre-mount saved `dumps` (git, s3)
 * load secrets from a vault
@@ -178,7 +178,7 @@ hckctl task trivy --revision v0.1.0
 
 ### Config
 
-Edit the default configurations
+Override the default configurations
 ```bash
 # prints path and current configs
 hckctl config
@@ -189,10 +189,10 @@ hckctl config --reset
 
 How to configure vpn networks
 ```bash
-# (unix path)
+# edits config file
 vim ${HOME}/.config/hck/config.yml
 
-# update with your openvpn config path
+# example
 network:
   vpn:
   - name: htb
@@ -297,7 +297,8 @@ Create your custom template and test it locally
 hckctl box --local ../megalopolis/box/preview/powershell.yml
 ```
 
-Please, feel free to contribute to the companion [repository](https://github.com/hckops/megalopolis) and add more community templates to the catalog. Don't forget to :star: the project!
+Please, feel free to contribute to the companion [repository](https://github.com/hckops/megalopolis) and add more community templates to the catalog.
+Credits should go to all the authors and maintainers for their amazing open source tools, without them this project wouldn't exist!
 
 <!--
 
