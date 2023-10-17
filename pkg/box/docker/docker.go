@@ -2,6 +2,9 @@ package docker
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
@@ -168,7 +171,7 @@ func (box *DockerBoxClient) connectBox(opts *boxModel.ConnectOptions) error {
 		if opts.DisableExec || opts.DisableTunnel {
 			box.eventBus.Publish(newContainerExecIgnoreDockerEvent(info.Id))
 		}
-		return box.execBox(opts.Template, info, opts.StreamOpts, opts.DeleteOnExit)
+		return box.execBox(opts.Template, *info, opts.StreamOpts, opts.DeleteOnExit)
 	}
 }
 
@@ -185,7 +188,7 @@ func (box *DockerBoxClient) searchBox(name string) (*boxModel.BoxInfo, error) {
 	return nil, errors.New("box not found")
 }
 
-func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.BoxInfo, streamOpts *commonModel.StreamOptions, deleteOnExit bool) error {
+func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info boxModel.BoxInfo, streamOpts *commonModel.StreamOptions, deleteOnExit bool) error {
 	box.eventBus.Publish(newContainerExecDockerEvent(info.Id, info.Name, template.Shell))
 
 	// attempt to restart all associated sidecars
@@ -217,11 +220,10 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 	}
 
 	if template.Shell == boxModel.BoxShellNone {
-		if deleteOnExit {
-			// stop loader
-			box.eventBus.Publish(newContainerExecDockerLoaderEvent())
-		}
-		return box.logsBox(info.Id, streamOpts)
+		// stop loader
+		box.eventBus.Publish(newContainerExecDockerLoaderEvent())
+
+		return box.logsBox(info, streamOpts, deleteOnExit)
 	}
 
 	// already printed for temporary box
@@ -268,21 +270,17 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.Box
 		},
 		OnStreamCloseCallback: func() {
 			box.eventBus.Publish(newContainerExecExitDockerEvent(info.Id))
-
 			if deleteOnExit {
-				for _, sidecar := range sidecars {
-					if err := box.client.ContainerRemove(sidecar.Id); err != nil {
-						box.eventBus.Publish(newContainerExecErrorDockerEvent(sidecar.Id, errors.Wrap(err, "error sidecar exec remove")))
-					}
-				}
-
-				if err := box.client.ContainerRemove(info.Id); err != nil {
-					box.eventBus.Publish(newContainerExecErrorDockerEvent(info.Id, errors.Wrap(err, "error container exec remove")))
-				}
+				// ignore error
+				box.deleteBox(info)
 			}
 		},
 		OnStreamErrorCallback: func(err error) {
 			box.eventBus.Publish(newContainerExecErrorDockerEvent(info.Id, err))
+			if deleteOnExit {
+				// ignore error
+				box.deleteBox(info)
+			}
 		},
 	}
 
@@ -300,16 +298,27 @@ func (box *DockerBoxClient) publishPortInfo(networkMap map[string]boxModel.BoxPo
 	box.eventBus.Publish(newContainerCreatePortBindDockerConsoleEvent(containerName, networkPort, portPadding))
 }
 
-func (box *DockerBoxClient) logsBox(containerId string, streamOpts *commonModel.StreamOptions) error {
+func (box *DockerBoxClient) logsBox(info boxModel.BoxInfo, streamOpts *commonModel.StreamOptions, deleteOnExit bool) error {
+
+	if deleteOnExit {
+		// captures CTRL+C
+		signalChan := make(chan os.Signal, 1)
+		signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
+		go func() {
+			<-signalChan
+			box.deleteBox(info)
+		}()
+	}
+
 	opts := &docker.ContainerLogsOpts{
-		ContainerId: containerId,
+		ContainerId: info.Id,
 		OutStream:   streamOpts.Out,
 		ErrStream:   streamOpts.Err,
 		OnStreamCloseCallback: func() {
-			box.eventBus.Publish(newContainerExecExitDockerEvent(containerId))
+			box.eventBus.Publish(newContainerExecExitDockerEvent(info.Id))
 		},
 		OnStreamErrorCallback: func(err error) {
-			box.eventBus.Publish(newContainerExecErrorDockerEvent(containerId, err))
+			box.eventBus.Publish(newContainerExecErrorDockerEvent(info.Id, err))
 		},
 	}
 	return box.client.ContainerLogs(opts)
@@ -417,25 +426,32 @@ func (box *DockerBoxClient) deleteBoxes(names []string) ([]string, error) {
 		// all or filter
 		if len(names) == 0 || slices.Contains(names, boxInfo.Name) {
 
-			if err := box.client.ContainerRemove(boxInfo.Id); err == nil {
+			if err := box.deleteBox(boxInfo); err == nil {
 				deleted = append(deleted, boxInfo.Name)
-				box.eventBus.Publish(newContainerRemoveDockerEvent(boxInfo.Id))
-			} else {
-				// silently ignore
-				box.eventBus.Publish(newContainerRemoveIgnoreDockerEvent(boxInfo.Id))
-			}
-
-			// delete all sidecars
-			sidecars, _ := box.dockerCommon.SidecarList(boxInfo.Name)
-			for _, sidecar := range sidecars {
-				if err := box.client.ContainerRemove(sidecar.Id); err != nil {
-					box.eventBus.Publish(newContainerRemoveDockerEvent(sidecar.Id))
-				} else {
-					// silently ignore
-					box.eventBus.Publish(newContainerRemoveIgnoreDockerEvent(sidecar.Id))
-				}
 			}
 		}
 	}
 	return deleted, nil
+}
+
+func (box *DockerBoxClient) deleteBox(boxInfo boxModel.BoxInfo) error {
+
+	// delete all sidecars
+	sidecars, _ := box.dockerCommon.SidecarList(boxInfo.Name)
+	for _, sidecar := range sidecars {
+		if err := box.client.ContainerRemove(sidecar.Id); err != nil {
+			// silently ignore
+			box.eventBus.Publish(newContainerRemoveIgnoreDockerEvent(sidecar.Name, sidecar.Id, err))
+		} else {
+			box.eventBus.Publish(newContainerRemoveDockerEvent(sidecar.Name, sidecar.Id))
+		}
+	}
+
+	if err := box.client.ContainerRemove(boxInfo.Id); err != nil {
+		box.eventBus.Publish(newContainerRemoveIgnoreDockerEvent(boxInfo.Name, boxInfo.Id, err))
+		return err
+	}
+
+	box.eventBus.Publish(newContainerRemoveDockerEvent(boxInfo.Name, boxInfo.Id))
+	return nil
 }

@@ -300,6 +300,8 @@ Please, feel free to contribute to the companion [repository](https://github.com
 
 <!--
 
+fix distroless kube
+
 solve the machine and add how to after docker https://github.com/juice-shop/juice-shop#docker-container
 
 * test all catalog

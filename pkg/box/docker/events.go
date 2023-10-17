@@ -88,12 +88,12 @@ func newContainerListDockerEvent(index int, containerName string, containerId st
 	return &dockerBoxEvent{kind: event.LogDebug, value: fmt.Sprintf("container list: (%d) containerName=%s containerId=%s healthy=%v", index, containerName, containerId, healthy)}
 }
 
-func newContainerRemoveDockerEvent(containerId string) *dockerBoxEvent {
-	return &dockerBoxEvent{kind: event.LogInfo, value: fmt.Sprintf("container remove: containerId=%s", containerId)}
+func newContainerRemoveDockerEvent(containerName string, containerId string) *dockerBoxEvent {
+	return &dockerBoxEvent{kind: event.LogInfo, value: fmt.Sprintf("container remove: containerName=%s containerId=%s", containerName, containerId)}
 }
 
-func newContainerRemoveIgnoreDockerEvent(containerId string) *dockerBoxEvent {
-	return &dockerBoxEvent{kind: event.LogWarning, value: fmt.Sprintf("container remove ignored: containerId=%s", containerId)}
+func newContainerRemoveIgnoreDockerEvent(containerName string, containerId string, err error) *dockerBoxEvent {
+	return &dockerBoxEvent{kind: event.LogWarning, value: fmt.Sprintf("container remove ignored: containerName=%s containerId=%s error=%v", containerName, containerId, err)}
 }
 
 func newContainerInspectDockerEvent(containerId string) *dockerBoxEvent {
