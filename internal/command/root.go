@@ -51,6 +51,9 @@ func NewRootCmd() *cobra.Command {
 			cmd.HelpFunc()(cmd, args)
 		},
 		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
+			// TODO investigate random warning due to async events
+			// "zerolog: could not write event: write /home/<REDACTED>/.local/state/hck/log/hckctl-<REDACTED>.log: file already closed"
+
 			// close log file properly
 			return logCallback()
 		},

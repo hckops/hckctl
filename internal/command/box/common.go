@@ -35,6 +35,7 @@ func runBoxClient(sourceLoader template.SourceLoader[boxModel.BoxV1], provider b
 	templateName := commonCmd.PrettyName(boxTemplate, configRef.Config.Template.CacheDir, boxTemplate.Value.Data.Name)
 	loader := commonCmd.NewLoader()
 	loader.Start("loading template %s", templateName)
+	loader.Sleep(1)
 	defer loader.Stop()
 
 	log.Info().Msgf("loading template: provider=%s name=%s\n%s", provider, templateName, boxTemplate.Value.Data.Pretty())

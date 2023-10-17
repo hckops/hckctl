@@ -300,7 +300,6 @@ Please, feel free to contribute to the companion [repository](https://github.com
 
 <!--
 
-* update all tasks arguments
 * test all catalog
 * discord + social links
 * replace task/htb example with thm
@@ -310,6 +309,7 @@ Please, feel free to contribute to the companion [repository](https://github.com
 * verify network connectivity between boxes/tasks i.e. kube.svc
 * verify binaries
 * test on mac-m1 and win (docker images)
+* review all command cli example/description
 
 TODO demo
 * auto-exploitation box
@@ -380,7 +380,7 @@ TODO
     - cloud: remove body from empty request `omitempty to remove "body":{}`
     - list boxes in table with padding see `tabwriter` https://gosamples.dev/string-padding
     - filter/list box (list and delete) and template (list and validate) columns by provider + sorting
-    - flaky issue zerolog `could not write event: write /home/ubuntu/.local/state/hck/hckctl-ubuntu.log: file already closed`
+    - flaky issue `zerolog: could not write event: write /home/<REDACTED>/.local/state/hck/log/hckctl-<REDACTED>.log: file already closed`
 * lab 
     - `command` cli description and example
     - in `create` add override e.g. `--input alias=parrot --input password=changeme --input vpn=htb-eu`
