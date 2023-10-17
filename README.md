@@ -282,7 +282,7 @@ tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 
 * `machine` create and access VMs e.g. DigitalOcean Droplet, AWS EC2, Azure Virtual Machines, QEMU etc.
 * `tui` similar to lazydocker and k9s together
-* `network` support Tor and ProxyChains
+* `network` support WireGuard, Tor, ProxyChains, etc.
 * `plugin` add custom cli commands in any language
   - `man` combine tldr and cheat with task commands
   - `htb` and `thm` api to start/stop/list machines and submit flags
@@ -300,6 +300,8 @@ Please, feel free to contribute to the companion [repository](https://github.com
 
 <!--
 
+solve the machine and add how to after docker https://github.com/juice-shop/juice-shop#docker-container
+
 * test all catalog
 * discord + social links
 * replace task/htb example with thm
@@ -316,6 +318,9 @@ TODO demo
 * metasploit plugin
 * windows examples
 
+>>> lab + kompose https://github.com/kubernetes/kompose
+composeRef e.g. https://github.com/digininja/DVWA/blob/master/compose.yml
+
 TODO
 * priority
     - add task cloud
@@ -329,6 +334,7 @@ TODO
     - docker release and gh-action
     - add copyTo/copyFrom box/task
 * general
+    - strict schema validation
     - add disclaimer of responsibility to readme?
     - public discord server (review channels visibility)
     - brew release

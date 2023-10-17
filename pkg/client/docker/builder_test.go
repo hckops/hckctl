@@ -29,8 +29,8 @@ func TestBuildContainerConfig(t *testing.T) {
 		OpenStdin:    true,
 		StdinOnce:    true,
 		Tty:          true,
-		Entrypoint:   []string{},
-		Cmd:          []string{},
+		Entrypoint:   []string{"xyz", "abc"},
+		Cmd:          []string{"foo", "bar"},
 		Env: []string{
 			"TTYD_USERNAME=username",
 			"TTYD_PASSWORD=password",
@@ -45,12 +45,13 @@ func TestBuildContainerConfig(t *testing.T) {
 		},
 	}
 	opts := &ContainerConfigOpts{
-		ImageName: "myImageName",
-		Hostname:  "myContainerName",
-		Env:       envs,
-		Ports:     ports,
-		Tty:       true,
-		Cmd:       []string{},
+		ImageName:  "myImageName",
+		Hostname:   "myContainerName",
+		Env:        envs,
+		Ports:      ports,
+		Tty:        true,
+		Entrypoint: []string{"xyz", "abc"},
+		Cmd:        []string{"foo", "bar"},
 		Labels: map[string]string{
 			"a.b.c": "hello",
 			"x.y.z": "world",

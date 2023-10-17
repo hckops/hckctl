@@ -60,13 +60,14 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 	}
 
 	containerConfig, err := docker.BuildContainerConfig(&docker.ContainerConfigOpts{
-		ImageName: imageName,
-		Hostname:  "", // vpn NetworkMode conflicts with Hostname containerName
-		Env:       []docker.ContainerEnv{},
-		Ports:     []docker.ContainerPort{},
-		Labels:    opts.Labels,
-		Tty:       opts.StreamOpts.IsTty,
-		Cmd:       opts.Arguments,
+		ImageName:  imageName,
+		Hostname:   "", // vpn NetworkMode conflicts with Hostname containerName
+		Env:        []docker.ContainerEnv{},
+		Ports:      []docker.ContainerPort{},
+		Labels:     opts.Labels,
+		Tty:        opts.StreamOpts.IsTty,
+		Entrypoint: []string{}, // use args only
+		Cmd:        opts.Arguments,
 	})
 	if err != nil {
 		return err

@@ -10,13 +10,14 @@ import (
 )
 
 type ContainerConfigOpts struct {
-	ImageName string
-	Hostname  string
-	Env       []ContainerEnv
-	Ports     []ContainerPort
-	Tty       bool
-	Cmd       []string
-	Labels    commonModel.Labels
+	ImageName  string
+	Hostname   string
+	Env        []ContainerEnv
+	Ports      []ContainerPort
+	Tty        bool
+	Entrypoint []string
+	Cmd        []string
+	Labels     commonModel.Labels
 }
 
 type ContainerHostConfigOpts struct {

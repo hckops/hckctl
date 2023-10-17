@@ -97,13 +97,14 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 	}
 
 	containerConfig, err := docker.BuildContainerConfig(&docker.ContainerConfigOpts{
-		ImageName: imageName,
-		Hostname:  hostname,
-		Env:       containerEnv,
-		Ports:     containerPorts,
-		Labels:    opts.Labels,
-		Tty:       true, // always
-		Cmd:       []string{},
+		ImageName:  imageName,
+		Hostname:   hostname,
+		Env:        containerEnv,
+		Ports:      containerPorts,
+		Labels:     opts.Labels,
+		Tty:        true, // always
+		Entrypoint: nil,  // use default
+		Cmd:        []string{},
 	})
 	if err != nil {
 		return nil, err
