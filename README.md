@@ -298,7 +298,7 @@ hckctl box --local ../megalopolis/box/preview/powershell.yml
 ```
 
 Please, feel free to contribute to the companion [repository](https://github.com/hckops/megalopolis) and add more community templates to the catalog.
-Credits should go to all the authors and maintainers for their amazing open source tools, without them this project wouldn't exist!
+Credit should go to all the authors and maintainers for their open source tools, without them this project wouldn't exist!
 
 <!--
 
