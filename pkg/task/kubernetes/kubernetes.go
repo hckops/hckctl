@@ -91,7 +91,7 @@ func (task *KubeTaskClient) runTask(opts *taskModel.RunOptions) error {
 		CaptureInterrupt: true,
 		OnContainerInterruptCallback: func(name string) {
 			// ignore error when interrupted: it will attempt to delete the job twice
-			task.eventBus.Publish(newJobDeleteKubeEvent(namespace, jobName))
+			task.eventBus.Publish(newJobDeleteKubeConsoleEvent())
 			task.client.JobDelete(namespace, name)
 		},
 		OnStatusEventCallback: func(event string) {

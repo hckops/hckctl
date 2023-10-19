@@ -2,10 +2,6 @@ package docker
 
 import (
 	"fmt"
-	"os"
-	"os/signal"
-	"syscall"
-
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
@@ -16,6 +12,7 @@ import (
 	commonDocker "github.com/hckops/hckctl/pkg/common/docker"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/schema"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 func newDockerBoxClient(commonOpts *boxModel.CommonBoxOptions, dockerOpts *commonModel.DockerOptions) (*DockerBoxClient, error) {
@@ -189,7 +186,6 @@ func (box *DockerBoxClient) searchBox(name string) (*boxModel.BoxInfo, error) {
 }
 
 func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info boxModel.BoxInfo, streamOpts *commonModel.StreamOptions, deleteOnExit bool) error {
-	box.eventBus.Publish(newContainerExecDockerEvent(info.Id, info.Name, template.Shell))
 
 	// attempt to restart all associated sidecars
 	sidecars, err := box.dockerCommon.SidecarList(info.Name)
@@ -283,7 +279,7 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info boxModel.BoxI
 			}
 		},
 	}
-
+	box.eventBus.Publish(newContainerExecDockerEvent(info.Id, info.Name, template.Shell))
 	return box.client.ContainerExec(execOpts)
 }
 
@@ -301,26 +297,22 @@ func (box *DockerBoxClient) publishPortInfo(networkMap map[string]boxModel.BoxPo
 func (box *DockerBoxClient) logsBox(info boxModel.BoxInfo, streamOpts *commonModel.StreamOptions, deleteOnExit bool) error {
 
 	if deleteOnExit {
-		// captures CTRL+C
-		signalChan := make(chan os.Signal, 1)
-		signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
-		go func() {
-			<-signalChan
+		util.InterruptHandler(func() {
 			box.deleteBox(info)
-		}()
+		})
 	}
 
 	opts := &docker.ContainerLogsOpts{
 		ContainerId: info.Id,
 		OutStream:   streamOpts.Out,
-		ErrStream:   streamOpts.Err,
 		OnStreamCloseCallback: func() {
-			box.eventBus.Publish(newContainerExecExitDockerEvent(info.Id))
+			box.eventBus.Publish(newContainerLogsExitDockerEvent(info.Id))
 		},
 		OnStreamErrorCallback: func(err error) {
-			box.eventBus.Publish(newContainerExecErrorDockerEvent(info.Id, err))
+			box.eventBus.Publish(newContainerLogsErrorDockerEvent(info.Id, err))
 		},
 	}
+	box.eventBus.Publish(newContainerLogsDockerEvent(info.Id))
 	return box.client.ContainerLogs(opts)
 }
 

@@ -302,14 +302,12 @@ Credit should go to all the authors and maintainers for their open source tools,
 
 <!--
 
-fix distroless kube
-
 solve the machine and add how to after docker https://github.com/juice-shop/juice-shop#docker-container
 
 * test all catalog
 * discord + social links
 * replace task/htb example with thm
-* verify/support kube config relative path
+* verify/support kube config relative path + remote cluster
 * update cloud pkg
 * update platform prs
 * verify network connectivity between boxes/tasks i.e. kube.svc
@@ -331,8 +329,7 @@ TODO
     - debug `htb-postman`
     - lab inputs
     - add flow example
-    - verify kube/cloud distroless support
-    - verify kube/cloud no-shell support
+    - verify cloud no-shell support
     - play htb: linux/win
     - RELEASE example https://github.com/boz/kail#homebrew
     - docker release and gh-action
@@ -377,7 +374,6 @@ TODO
     - print/event shared directory, same as envs, ports etc.
     - review tty resize
     - expose copy from/to ???
-    - kube: add distroless support
     - kube: verify if `close()` is needed or `return nil`
     - kube: `execBox` deployment always check/scale replica to 1 before exec (test with replica=0)
     - kube: update resources sizes + comparison

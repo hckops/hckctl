@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/pkg/errors"
@@ -99,13 +97,9 @@ func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, 
 	}
 
 	if opts.CaptureInterrupt {
-		// captures CTRL+C
-		signalChan := make(chan os.Signal, 1)
-		signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
-		go func() {
-			<-signalChan
+		util.InterruptHandler(func() {
 			opts.OnContainerInterruptCallback(newContainer.ID)
-		}()
+		})
 	}
 
 	if err := opts.OnContainerCreateCallback(newContainer.ID); err != nil {
@@ -355,8 +349,9 @@ func (client *DockerClient) ContainerLogs(opts *ContainerLogsOpts) error {
 
 	var once sync.Once
 	go func() {
+		// do not copy ErrStream because it fails with "Unrecognized input header"
 		if _, err := io.Copy(opts.OutStream, outStream); err != nil {
-			opts.OnStreamErrorCallback(errors.Wrap(err, "error copy stdout and stderr docker->local"))
+			opts.OnStreamErrorCallback(errors.Wrap(err, "error copy stdout docker->local"))
 		}
 		once.Do(onStreamCloseCallback)
 	}()

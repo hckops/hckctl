@@ -40,6 +40,10 @@ func newJobDeleteKubeEvent(namespace string, name string) *kubeTaskEvent {
 	return &kubeTaskEvent{kind: event.LogInfo, value: fmt.Sprintf("job delete: namespace=%s name=%s", namespace, name)}
 }
 
+func newJobDeleteKubeConsoleEvent() *kubeTaskEvent {
+	return &kubeTaskEvent{kind: event.LoaderUpdate, value: "killing"}
+}
+
 func newPodNameKubeEvent(namespace string, name string, containerName string) *kubeTaskEvent {
 	return &kubeTaskEvent{kind: event.LogInfo, value: fmt.Sprintf("found unique pod: namespace=%s name=%s containerName=%s", namespace, name, containerName)}
 }

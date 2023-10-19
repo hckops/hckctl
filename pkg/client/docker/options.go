@@ -75,7 +75,6 @@ type ContainerExecOpts struct {
 type ContainerLogsOpts struct {
 	ContainerId           string
 	OutStream             io.Writer
-	ErrStream             io.Writer
 	OnStreamCloseCallback func()
 	OnStreamErrorCallback func(error)
 }

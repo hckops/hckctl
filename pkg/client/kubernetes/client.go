@@ -7,11 +7,9 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"syscall"
 
 	"github.com/pkg/errors"
 
@@ -582,13 +580,9 @@ func (client *KubeClient) JobCreate(opts *JobCreateOpts) error {
 	}
 
 	if opts.CaptureInterrupt {
-		// captures CTRL+C
-		signalChan := make(chan os.Signal, 1)
-		signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
-		go func() {
-			<-signalChan
+		util.InterruptHandler(func() {
 			opts.OnContainerInterruptCallback(job.Name)
-		}()
+		})
 	}
 
 	// blocks until the job is ready, then stop watching

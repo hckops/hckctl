@@ -84,6 +84,18 @@ func newContainerExecErrorDockerEvent(containerId string, err error) *dockerBoxE
 	return &dockerBoxEvent{kind: event.LogError, value: fmt.Sprintf("container exec error: containerId=%s error=%v", containerId, err)}
 }
 
+func newContainerLogsDockerEvent(containerId string) *dockerBoxEvent {
+	return &dockerBoxEvent{kind: event.LogDebug, value: fmt.Sprintf("container logs: containerId=%s", containerId)}
+}
+
+func newContainerLogsExitDockerEvent(containerId string) *dockerBoxEvent {
+	return &dockerBoxEvent{kind: event.LogDebug, value: fmt.Sprintf("container logs exit: containerId=%s", containerId)}
+}
+
+func newContainerLogsErrorDockerEvent(containerId string, err error) *dockerBoxEvent {
+	return &dockerBoxEvent{kind: event.LogError, value: fmt.Sprintf("container logs error: containerId=%s error=%v", containerId, err)}
+}
+
 func newContainerListDockerEvent(index int, containerName string, containerId string, healthy bool) *dockerBoxEvent {
 	return &dockerBoxEvent{kind: event.LogDebug, value: fmt.Sprintf("container list: (%d) containerName=%s containerId=%s healthy=%v", index, containerName, containerId, healthy)}
 }

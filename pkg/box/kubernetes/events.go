@@ -92,6 +92,22 @@ func newPodExecKubeLoaderEvent() *kubeBoxEvent {
 	return &kubeBoxEvent{kind: event.LoaderStop, value: "waiting"}
 }
 
+func newPodLogsKubeEvent(namespace string, name string) *kubeBoxEvent {
+	return &kubeBoxEvent{kind: event.LogDebug, value: fmt.Sprintf("pod logs: namespace=%s name=%s", namespace, name)}
+}
+
+func newPodLogsExitKubeEvent(namespace string, name string) *kubeBoxEvent {
+	return &kubeBoxEvent{kind: event.LogDebug, value: fmt.Sprintf("pod logs exit: namespace=%s name=%s", namespace, name)}
+}
+
+func newPodLogsExitKubeConsoleEvent() *kubeBoxEvent {
+	return &kubeBoxEvent{kind: event.LoaderUpdate, value: "killing"}
+}
+
+func newPodLogsErrorKubeEvent(namespace string, name string, err error) *kubeBoxEvent {
+	return &kubeBoxEvent{kind: event.LogError, value: fmt.Sprintf("pod logs error: namespace=%s name=%s error=%v", namespace, name, err)}
+}
+
 func newPodPortForwardIgnoreKubeEvent(namespace string, name string) *kubeBoxEvent {
 	return &kubeBoxEvent{kind: event.LogWarning, value: fmt.Sprintf("pod port-forward ignored: namespace=%s name=%s", namespace, name)}
 }
