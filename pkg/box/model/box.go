@@ -88,6 +88,10 @@ func ToBoxTemplateName(boxName string) string {
 	}
 }
 
+func (box *BoxV1) MainContainerName() string {
+	return util.ToLowerKebabCase(box.Image.Repository)
+}
+
 func (box *BoxV1) HasPorts() bool {
 	return len(box.Network.Ports) > 0
 }

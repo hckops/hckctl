@@ -68,8 +68,8 @@ func newDeploymentSearchKubeEvent(namespace string, name string) *kubeBoxEvent {
 	return &kubeBoxEvent{kind: event.LogInfo, value: fmt.Sprintf("deployment search: namespace=%s name=%s", namespace, name)}
 }
 
-func newDeploymentListKubeEvent(index int, namespace string, deploymentName string, podId string, healthy bool) *kubeBoxEvent {
-	return &kubeBoxEvent{kind: event.LogDebug, value: fmt.Sprintf("deployment list: (%d) namespace=%s deploymentName=%s podId=%s healthy=%v", index, namespace, deploymentName, podId, healthy)}
+func newDeploymentListKubeEvent(index int, namespace string, name string, healthy bool) *kubeBoxEvent {
+	return &kubeBoxEvent{kind: event.LogDebug, value: fmt.Sprintf("deployment list: (%d) namespace=%s name=%s healthy=%v", index, namespace, name, healthy)}
 }
 
 func newDeploymentDescribeKubeEvent(namespace string, name string) *kubeBoxEvent {
@@ -80,42 +80,42 @@ func newDeploymentDeleteKubeEvent(namespace string, name string) *kubeBoxEvent {
 	return &kubeBoxEvent{kind: event.LogInfo, value: fmt.Sprintf("deployment delete: namespace=%s name=%s", namespace, name)}
 }
 
-func newPodNameKubeEvent(namespace string, podName string, containerName string) *kubeBoxEvent {
-	return &kubeBoxEvent{kind: event.LogInfo, value: fmt.Sprintf("found unique pod: namespace=%s podName=%s containerName=%s", namespace, podName, containerName)}
+func newPodNameKubeEvent(namespace string, name string, containerName string) *kubeBoxEvent {
+	return &kubeBoxEvent{kind: event.LogInfo, value: fmt.Sprintf("found unique pod: namespace=%s name=%s containerName=%s", namespace, name, containerName)}
 }
 
-func newPodExecKubeEvent(templateName string, namespace string, podId string, command string) *kubeBoxEvent {
-	return &kubeBoxEvent{kind: event.LogInfo, value: fmt.Sprintf("pod attach: templateName=%s namespace=%s podId=%s command=%s", templateName, namespace, podId, command)}
+func newPodExecKubeEvent(templateName string, namespace string, name string, command string) *kubeBoxEvent {
+	return &kubeBoxEvent{kind: event.LogInfo, value: fmt.Sprintf("pod attach: templateName=%s namespace=%s name=%s command=%s", templateName, namespace, name, command)}
 }
 
 func newPodExecKubeLoaderEvent() *kubeBoxEvent {
 	return &kubeBoxEvent{kind: event.LoaderStop, value: "waiting"}
 }
 
-func newPodPortForwardIgnoreKubeEvent(namespace string, podId string) *kubeBoxEvent {
-	return &kubeBoxEvent{kind: event.LogWarning, value: fmt.Sprintf("pod port-forward ignored: namespace=%s podId=%s", namespace, podId)}
+func newPodPortForwardIgnoreKubeEvent(namespace string, name string) *kubeBoxEvent {
+	return &kubeBoxEvent{kind: event.LogWarning, value: fmt.Sprintf("pod port-forward ignored: namespace=%s name=%s", namespace, name)}
 }
 
-func newPodPortForwardBindingKubeEvent(namespace, podId string, port model.BoxPort) *kubeBoxEvent {
+func newPodPortForwardBindingKubeEvent(namespace, name string, port model.BoxPort) *kubeBoxEvent {
 	return &kubeBoxEvent{kind: event.LogInfo, value: fmt.Sprintf(
-		"pod port-forward: namespace=%s podId=%s portAlias=%s portRemote=%s portLocal=%s",
-		namespace, podId, port.Alias, port.Remote, port.Local)}
+		"pod port-forward: namespace=%s name=%s portAlias=%s portRemote=%s portLocal=%s",
+		namespace, name, port.Alias, port.Remote, port.Local)}
 }
 
-func newPodPortForwardBindingKubeConsoleEvent(namespace string, podName string, port model.BoxPort, padding int) *kubeBoxEvent {
+func newPodPortForwardBindingKubeConsoleEvent(namespace string, containerName string, port model.BoxPort, padding int) *kubeBoxEvent {
 	return &kubeBoxEvent{kind: event.PrintConsole, value: fmt.Sprintf(
 		"[%s/%s][%-*s] tunnel (remote) %s -> (local) %s",
-		namespace, podName, padding, port.Alias, port.Remote, port.Local)}
+		namespace, containerName, padding, port.Alias, port.Remote, port.Local)}
 }
 
-func newPodPortForwardErrorKubeEvent(namespace string, podId string, err error) *kubeBoxEvent {
-	return &kubeBoxEvent{kind: event.LogError, value: fmt.Sprintf("pod port-forward error: namespace=%s podId=%s error=%v", namespace, podId, err)}
+func newPodPortForwardErrorKubeEvent(namespace string, name string, err error) *kubeBoxEvent {
+	return &kubeBoxEvent{kind: event.LogError, value: fmt.Sprintf("pod port-forward error: namespace=%s name=%s error=%v", namespace, name, err)}
 }
 
-func newPodEnvKubeEvent(namespace string, podId string, env model.BoxEnv) *kubeBoxEvent {
-	return &kubeBoxEvent{kind: event.LogInfo, value: fmt.Sprintf("pod env: namespace=%s podId=%s key=%s value=%s", namespace, podId, env.Key, env.Value)}
+func newPodEnvKubeEvent(namespace string, name string, env model.BoxEnv) *kubeBoxEvent {
+	return &kubeBoxEvent{kind: event.LogInfo, value: fmt.Sprintf("pod env: namespace=%s name=%s key=%s value=%s", namespace, name, env.Key, env.Value)}
 }
 
-func newPodEnvKubeConsoleEvent(namespace string, podId string, env model.BoxEnv) *kubeBoxEvent {
-	return &kubeBoxEvent{kind: event.PrintConsole, value: fmt.Sprintf("[%s/%s] %s=%s", namespace, podId, env.Key, env.Value)}
+func newPodEnvKubeConsoleEvent(namespace string, containerName string, env model.BoxEnv) *kubeBoxEvent {
+	return &kubeBoxEvent{kind: event.PrintConsole, value: fmt.Sprintf("[%s/%s] %s=%s", namespace, containerName, env.Key, env.Value)}
 }

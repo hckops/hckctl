@@ -373,7 +373,7 @@ func (client *KubeClient) PodPortForward(opts *PodPortForwardOpts) error {
 		Post().
 		Resource("pods").
 		Namespace(opts.Namespace).
-		Name(opts.PodId).
+		Name(opts.PodName).
 		SubResource("portforward")
 
 	transport, upgrader, err := spdy.RoundTripperFor(client.RestApi())
@@ -423,10 +423,10 @@ func (client *KubeClient) newRestRequestExec(opts *PodExecOpts, isTty bool) *res
 		Post().
 		Namespace(opts.Namespace).
 		Resource("pods").
-		Name(opts.PodId).
+		Name(opts.PodName).
 		SubResource("exec").
 		VersionedParams(&corev1.PodExecOptions{
-			Container: opts.PodName,
+			Container: opts.ContainerName,
 			Command:   opts.Commands,
 			Stdin:     true,
 			Stdout:    true,
@@ -477,12 +477,14 @@ func (client *KubeClient) PodExecCommand(opts *PodExecOpts) error {
 }
 
 func (client *KubeClient) podLogsStream(opts *PodLogsOpts) (io.ReadCloser, error) {
+
+	logOptions := &corev1.PodLogOptions{
+		Container: opts.ContainerName,
+		Follow:    true,
+	}
 	outStream, err := client.CoreApi().
 		Pods(opts.Namespace).
-		GetLogs(opts.PodName, &corev1.PodLogOptions{
-			Container: opts.PodId,
-			Follow:    true,
-		}).
+		GetLogs(opts.PodName, logOptions).
 		Stream(client.ctx)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error pod logs stream")
@@ -546,8 +548,8 @@ func (client *KubeClient) CopyToPod(opts *CopyPodOpts) error {
 	// upload and extract archive
 	execArchive := &PodExecOpts{
 		Namespace:      opts.Namespace,
-		PodId:          opts.PodName,
-		PodName:        opts.ContainerName,
+		PodName:        opts.PodName,
+		ContainerName:  opts.ContainerName,
 		Commands:       []string{"tar", "-xmf", "-", "-C", filepath.Dir(opts.RemotePath)},
 		InStream:       reader, // input stream reader
 		OutStream:      io.Discard,

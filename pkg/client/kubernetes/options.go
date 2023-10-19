@@ -24,7 +24,7 @@ type DeploymentCreateOpts struct {
 
 type PodPortForwardOpts struct {
 	Namespace             string
-	PodId                 string
+	PodName               string
 	Ports                 []string // format "LOCAL:REMOTE"
 	IsWait                bool
 	OnTunnelStartCallback func()
@@ -33,8 +33,8 @@ type PodPortForwardOpts struct {
 
 type PodExecOpts struct {
 	Namespace      string
-	PodId          string
 	PodName        string
+	ContainerName  string
 	Commands       []string
 	InStream       io.ReadCloser
 	OutStream      io.Writer
@@ -44,9 +44,9 @@ type PodExecOpts struct {
 }
 
 type PodLogsOpts struct {
-	Namespace string
-	PodName   string
-	PodId     string
+	Namespace     string
+	PodName       string
+	ContainerName string
 }
 
 type JobOpts struct {

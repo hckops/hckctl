@@ -157,7 +157,7 @@ func (box *KubeBoxClient) connectBox(opts *boxModel.ConnectOptions) error {
 
 		namespace := box.clientOpts.Namespace
 		for _, e := range opts.Template.EnvironmentVariables() {
-			box.eventBus.Publish(newPodEnvKubeEvent(namespace, info.Name, e))
+			box.eventBus.Publish(newPodEnvKubeEvent(namespace, info.Id, e))
 			box.eventBus.Publish(newPodEnvKubeConsoleEvent(namespace, info.Name, e))
 		}
 
@@ -206,19 +206,16 @@ func (box *KubeBoxClient) searchBox(name string) (*boxModel.BoxInfo, error) {
 func (box *KubeBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.BoxInfo, streamOpts *commonModel.StreamOptions, deleteOnExit bool) error {
 	box.eventBus.Publish(newPodExecKubeEvent(template.Name, box.clientOpts.Namespace, info.Id, template.Shell))
 
-	// TODO if BoxInfo not Healthy attempt scale 1
-	// TODO model.BoxShellNone
-
 	// exec
 	opts := &kubernetes.PodExecOpts{
-		Namespace: box.clientOpts.Namespace,
-		PodName:   util.ToLowerKebabCase(template.Image.Repository), // pod.Spec.Containers[0].Name
-		PodId:     info.Id,
-		Commands:  terminal.DefaultShellCommand(template.Shell),
-		InStream:  streamOpts.In,
-		OutStream: streamOpts.Out,
-		ErrStream: streamOpts.Err,
-		IsTty:     streamOpts.IsTty,
+		Namespace:     box.clientOpts.Namespace,
+		PodName:       info.Id,
+		ContainerName: template.MainContainerName(),
+		Commands:      terminal.DefaultShellCommand(template.Shell),
+		InStream:      streamOpts.In,
+		OutStream:     streamOpts.Out,
+		ErrStream:     streamOpts.Err,
+		IsTty:         streamOpts.IsTty,
 		OnExecCallback: func() {
 			// stop loader
 			box.eventBus.Publish(newPodExecKubeLoaderEvent())
@@ -253,7 +250,7 @@ func (box *KubeBoxClient) podPortForward(template *boxModel.BoxV1, boxInfo *boxM
 
 	opts := &kubernetes.PodPortForwardOpts{
 		Namespace: namespace,
-		PodId:     boxInfo.Id,
+		PodName:   boxInfo.Id,
 		Ports:     ports,
 		IsWait:    isWait,
 		OnTunnelStartCallback: func() {
@@ -372,7 +369,7 @@ func (box *KubeBoxClient) listBoxes() ([]boxModel.BoxInfo, error) {
 	var result []boxModel.BoxInfo
 	for index, d := range deployments {
 		result = append(result, newBoxInfo(d))
-		box.eventBus.Publish(newDeploymentListKubeEvent(index, namespace, d.Name, d.PodInfo.PodName, d.Healthy))
+		box.eventBus.Publish(newDeploymentListKubeEvent(index, namespace, d.Name, d.Healthy))
 	}
 
 	return result, nil

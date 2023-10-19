@@ -97,8 +97,8 @@ func (common *KubeCommonClient) SidecarShareUpload(opts *commonModel.SidecarShar
 		// remove lock
 		execDeleteLock := &kubernetes.PodExecOpts{
 			Namespace:      opts.Namespace,
-			PodId:          opts.PodName,
-			PodName:        sidecarContainerName,
+			PodName:        opts.PodName,
+			ContainerName:  sidecarContainerName,
 			Commands:       []string{"rm", buildSidecarShareLock(opts.ShareDir.RemotePath)},
 			InStream:       os.Stdin,
 			OutStream:      io.Discard,

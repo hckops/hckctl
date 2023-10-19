@@ -127,9 +127,9 @@ func (task *KubeTaskClient) runTask(opts *taskModel.RunOptions) error {
 
 	logFileName := opts.GenerateLogFileName(taskModel.Kubernetes, jobName)
 	logOpts := &kubernetes.PodLogsOpts{
-		Namespace: namespace,
-		PodName:   podInfo.PodName,
-		PodId:     podInfo.ContainerName,
+		Namespace:     namespace,
+		PodName:       podInfo.PodName,
+		ContainerName: podInfo.ContainerName,
 	}
 	task.eventBus.Publish(newPodLogKubeEvent(logFileName))
 	// blocks and tail logs
