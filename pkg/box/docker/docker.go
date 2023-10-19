@@ -70,8 +70,8 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 	if opts.CommonInfo.NetworkVpn != nil {
 		// set all network configs on the sidecar to avoid option conflicts
 		sidecarOpts := &commonModel.SidecarVpnInjectOpts{
-			MainContainerId: containerName,
-			NetworkVpn:      opts.CommonInfo.NetworkVpn,
+			Name:       containerName,
+			NetworkVpn: opts.CommonInfo.NetworkVpn,
 		}
 		if sidecarContainerId, err := box.dockerCommon.SidecarVpnInject(sidecarOpts, portConfig); err != nil {
 			return nil, err

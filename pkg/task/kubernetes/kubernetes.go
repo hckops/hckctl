@@ -65,7 +65,7 @@ func (task *KubeTaskClient) runTask(opts *taskModel.RunOptions) error {
 	// inject sidecar-volume
 	if opts.CommonInfo.ShareDir != nil {
 		sidecarOpts := &commonModel.SidecarShareInjectOpts{
-			MainContainerName: util.ToLowerKebabCase(opts.Template.Image.Repository),
+			MainContainerName: opts.Template.MainContainerName(),
 			ShareDir:          opts.CommonInfo.ShareDir,
 		}
 		if err := task.kubeCommon.SidecarShareInject(sidecarOpts, &jobSpec.Spec.Template.Spec); err != nil {
@@ -76,8 +76,8 @@ func (task *KubeTaskClient) runTask(opts *taskModel.RunOptions) error {
 	// create secret and inject sidecar-vpn
 	if opts.CommonInfo.NetworkVpn != nil {
 		sidecarOpts := &commonModel.SidecarVpnInjectOpts{
-			MainContainerId: jobName,
-			NetworkVpn:      opts.CommonInfo.NetworkVpn,
+			Name:       jobName,
+			NetworkVpn: opts.CommonInfo.NetworkVpn,
 		}
 		if err := task.kubeCommon.SidecarVpnInject(namespace, sidecarOpts, &jobSpec.Spec.Template.Spec); err != nil {
 			return err

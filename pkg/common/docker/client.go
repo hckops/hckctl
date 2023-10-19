@@ -112,7 +112,7 @@ func buildSidecarVpnName(containerName string) string {
 func (common *DockerCommonClient) SidecarVpnInject(opts *commonModel.SidecarVpnInjectOpts, portConfig *docker.ContainerPortConfigOpts) (string, error) {
 
 	// sidecarName
-	containerName := buildSidecarVpnName(opts.MainContainerId)
+	containerName := buildSidecarVpnName(opts.Name)
 
 	// constants
 	imageName := commonModel.SidecarVpnImageName
@@ -128,13 +128,13 @@ func (common *DockerCommonClient) SidecarVpnInject(opts *commonModel.SidecarVpnI
 
 	containerConfig, err := docker.BuildContainerConfig(&docker.ContainerConfigOpts{
 		ImageName:  imageName,
-		Hostname:   opts.MainContainerId,
+		Hostname:   opts.Name,
 		Env:        []docker.ContainerEnv{{Key: "OPENVPN_CONFIG", Value: vpnConfigPath}},
 		Ports:      portConfig.Ports,
 		Tty:        false,
 		Entrypoint: nil,
 		Cmd:        []string{},
-		Labels:     commonModel.NewSidecarLabels().AddSidecarMain(opts.MainContainerId),
+		Labels:     commonModel.NewSidecarLabels().AddSidecarMain(opts.Name),
 	})
 	if err != nil {
 		return "", err

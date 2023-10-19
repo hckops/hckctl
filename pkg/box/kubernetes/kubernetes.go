@@ -62,7 +62,7 @@ func (box *KubeBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.Box
 	// inject sidecar-volume
 	if opts.CommonInfo.ShareDir != nil {
 		sidecarOpts := &commonModel.SidecarShareInjectOpts{
-			MainContainerName: util.ToLowerKebabCase(opts.Template.Image.Repository),
+			MainContainerName: opts.Template.MainContainerName(),
 			ShareDir:          opts.CommonInfo.ShareDir,
 		}
 		if err := box.kubeCommon.SidecarShareInject(sidecarOpts, &deployment.Spec.Template.Spec); err != nil {
@@ -73,8 +73,8 @@ func (box *KubeBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.Box
 	// create secret and inject sidecar-vpn
 	if opts.CommonInfo.NetworkVpn != nil {
 		sidecarOpts := &commonModel.SidecarVpnInjectOpts{
-			MainContainerId: boxName,
-			NetworkVpn:      opts.CommonInfo.NetworkVpn,
+			Name:       boxName,
+			NetworkVpn: opts.CommonInfo.NetworkVpn,
 		}
 		if err := box.kubeCommon.SidecarVpnInject(namespace, sidecarOpts, &deployment.Spec.Template.Spec); err != nil {
 			return nil, err

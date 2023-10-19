@@ -22,14 +22,14 @@ const (
 	sidecarShareVolume     = "sidecar-share-volume"
 )
 
-func buildSidecarVpnSecretName(containerName string) string {
-	return fmt.Sprintf("%s-sidecar-vpn-secret", containerName)
+func buildSidecarVpnSecretName(podName string) string {
+	return fmt.Sprintf("%s-sidecar-vpn-secret", util.ToLowerKebabCase(podName))
 }
 
-func buildSidecarVpnSecret(namespace, containerName, secretValue string) *corev1.Secret {
+func buildSidecarVpnSecret(namespace, podName, secretValue string) *corev1.Secret {
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      buildSidecarVpnSecretName(containerName),
+			Name:      buildSidecarVpnSecretName(podName),
 			Namespace: namespace,
 		},
 		Type: corev1.SecretTypeOpaque,
@@ -65,7 +65,7 @@ func buildSidecarVpnContainer() corev1.Container {
 	}
 }
 
-func buildSidecarVpnVolumes(containerName string) []corev1.Volume {
+func buildSidecarVpnVolumes(podName string) []corev1.Volume {
 	return []corev1.Volume{
 		{
 			Name: sidecarVpnTunnelVolume,
@@ -79,7 +79,7 @@ func buildSidecarVpnVolumes(containerName string) []corev1.Volume {
 			Name: sidecarVpnSecretVolume,
 			VolumeSource: corev1.VolumeSource{
 				Secret: &corev1.SecretVolumeSource{
-					SecretName: buildSidecarVpnSecretName(containerName),
+					SecretName: buildSidecarVpnSecretName(podName),
 					Items: []corev1.KeyToPath{
 						{Key: sidecarVpnSecretKey, Path: sidecarVpnSecretPath},
 					},
@@ -91,7 +91,7 @@ func buildSidecarVpnVolumes(containerName string) []corev1.Volume {
 
 func boolPtr(b bool) *bool { return &b }
 
-func injectSidecarVpn(podSpec *corev1.PodSpec, mainContainerName string) {
+func injectSidecarVpn(podSpec *corev1.PodSpec, podName string) {
 
 	// https://kubernetes.io/docs/tasks/configure-pod-container/share-process-namespace
 	//podSpec.ShareProcessNamespace = boolPtr(true)
@@ -127,8 +127,8 @@ func injectSidecarVpn(podSpec *corev1.PodSpec, mainContainerName string) {
 
 	// inject volumes
 	podSpec.Volumes = append(
-		podSpec.Volumes, // current volumes
-		buildSidecarVpnVolumes(util.ToLowerKebabCase(mainContainerName))..., // join slices
+		podSpec.Volumes,                    // current volumes
+		buildSidecarVpnVolumes(podName)..., // join slices
 	)
 }
 

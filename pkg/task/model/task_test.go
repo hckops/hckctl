@@ -18,6 +18,15 @@ func TestGenerateName(t *testing.T) {
 	assert.Equal(t, 18, len(taskId))
 }
 
+func TestMainContainerName(t *testing.T) {
+	testBox := &TaskV1{
+		Image: commonModel.Image{
+			Repository: "hckops/my-image",
+		},
+	}
+	assert.Equal(t, "hckops-my-image", testBox.MainContainerName())
+}
+
 func TestCommandMap(t *testing.T) {
 	task := &TaskV1{
 		Commands: []TaskCommand{

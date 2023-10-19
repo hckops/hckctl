@@ -40,8 +40,8 @@ func NewStdStreamOpts(tty bool) *StreamOptions {
 }
 
 type SidecarVpnInjectOpts struct {
-	MainContainerId string
-	NetworkVpn      *NetworkVpnInfo
+	Name       string // containerName for docker and podName for kube
+	NetworkVpn *NetworkVpnInfo
 }
 
 type SidecarShareInjectOpts struct {

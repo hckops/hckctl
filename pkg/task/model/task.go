@@ -50,6 +50,10 @@ func (task *TaskV1) GenerateName() string {
 	return fmt.Sprintf("%s%s-%s", tagPrefixName, util.ToLowerKebabCase(task.Name), util.RandomAlphanumeric(5))
 }
 
+func (task *TaskV1) MainContainerName() string {
+	return util.ToLowerKebabCase(task.Image.Repository)
+}
+
 func (task *TaskV1) CommandMap() map[string]TaskCommand {
 	commands := map[string]TaskCommand{}
 	for _, command := range task.Commands {

@@ -52,9 +52,8 @@ func TestToBoxTemplateNameInvalid(t *testing.T) {
 	assert.Equal(t, "-b-12345", ToBoxTemplateName("-b-12345"))
 }
 
-// TODO
 func TestMainContainerName(t *testing.T) {
-	assert.Equal(t, "foo", testBox.MainContainerName())
+	assert.Equal(t, "hckops-my-image", testBox.MainContainerName())
 }
 
 func TestHasPorts(t *testing.T) {
