@@ -16,8 +16,8 @@
 <p align="center">
   <i>The declarative Breach and Attack Simulation toolkit: one tool to rule 'em all</i><br>
   <a href="#quick-start">Quick start</a>&nbsp;&bull;
-  <a href="#setup">Setup</a>&nbsp;&bull;
   <a href="#provider">Provider</a>&nbsp;&bull;
+  <a href="#setup">Setup</a>&nbsp;&bull;
   <a href="#development">Development</a>&nbsp;&bull;
   <a href="#roadmap">Roadmap</a>&nbsp;&bull;
   <a href="#contribute">Contribute</a>
@@ -201,20 +201,6 @@ network:
     path: /home/demo/ctf/openvpn/thm_demo_us_regular_3.ovpn
 ```
 
-## Setup
-
-Download the latest binaries
-```bash
-HCKCTL_VERSION=0.12.0
-
-# install (unix)
-curl -sSL https://github.com/hckops/hckctl/releases/download/v${HCKCTL_VERSION}/hckctl-${HCKCTL_VERSION}-linux-x86_64.tar.gz | \
-  sudo tar -xzf - -C /usr/local/bin
-
-# uninstall
-sudo rm /usr/local/bin/hckctl
-```
-
 ## Provider
 
 ### Docker
@@ -262,6 +248,20 @@ provider:
 ### Podman (coming soon)
 
 Follow the official [instructions](https://podman.io/docs/installation) to install Podman
+
+## Setup
+
+Download the latest binaries
+```bash
+HCKCTL_VERSION=0.12.0
+
+# install (unix)
+curl -sSL https://github.com/hckops/hckctl/releases/download/v${HCKCTL_VERSION}/hckctl-${HCKCTL_VERSION}-linux-x86_64.tar.gz | \
+  sudo tar -xzf - -C /usr/local/bin
+
+# uninstall
+sudo rm /usr/local/bin/hckctl
+```
 
 ## Development
 
