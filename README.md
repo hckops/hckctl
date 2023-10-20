@@ -205,11 +205,14 @@ network:
 
 Download the latest binaries
 ```bash
-# TODO latest
-HCKCTL_VERSION=???
+HCKCTL_VERSION=0.12.0
 
-curl -sSL https://github.com/hckops/hckctl/releases/download/${HCKCTL_VERSION}/hckctl_linux_x86_64.tar.gz | \
-  tar -xzf - -C /usr/local/bin
+# install (unix)
+curl -sSL https://github.com/hckops/hckctl/releases/download/v${HCKCTL_VERSION}/hckctl-${HCKCTL_VERSION}-linux-x86_64.tar.gz | \
+  sudo tar -xzf - -C /usr/local/bin
+
+# uninstall
+sudo rm /usr/local/bin/hckctl
 ```
 
 ## Provider
