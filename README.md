@@ -222,10 +222,23 @@ provider:
     configPath: ""
     namespace: hckops
 ```
+
 Make sure you disable IPv6 in your cluster to use the `--network-vpn` flag
 ```bash
-minikube start --extra-config="kubelet.allowed-unsafe-sysctls=net.ipv6.conf.all.disable_ipv6"
+# set --embed-certs to run "hckops/kube-base"
+minikube start --embed-certs --extra-config="kubelet.allowed-unsafe-sysctls=net.ipv6.conf.all.disable_ipv6"
 ```
+
+Useful dev tools
+```bash
+# starts tmp container
+docker run --rm --name hck-tmp --network host -it \
+  -v ${HOME}/.kube/config:/root/.kube/config hckops/kube-base
+
+# watches pods
+kubectl klock -n hckops pods
+```
+
 If you are looking for a simple way to get started with a remote cluster consider using [kube-template](https://github.com/hckops/kube-template)
 ```bash
 provider:
@@ -255,8 +268,8 @@ Download the latest binaries
 ```bash
 HCKCTL_VERSION=0.12.0
 
-# install (unix)
-curl -sSL https://github.com/hckops/hckctl/releases/download/v${HCKCTL_VERSION}/hckctl-${HCKCTL_VERSION}-linux-x86_64.tar.gz | \
+# install or update
+curl -sSL https://github.com/hckops/hckctl/releases/latest/download/hckctl-${HCKCTL_VERSION}-linux-x86_64.tar.gz | \
   sudo tar -xzf - -C /usr/local/bin
 
 # uninstall
@@ -305,8 +318,6 @@ Credit should go to all the authors and maintainers for their open source tools,
 
 <!--
 
-solve the machine and add how to after docker https://github.com/juice-shop/juice-shop#docker-container
-
 * test all catalog
 * discord + social links
 * replace task/htb example with thm
@@ -319,6 +330,7 @@ solve the machine and add how to after docker https://github.com/juice-shop/juic
 * review all command cli example/description
 
 TODO demo
+* solve the machine and add how to after docker https://github.com/juice-shop/juice-shop#docker-container
 * auto-exploitation box
 * metasploit plugin
 * windows examples
