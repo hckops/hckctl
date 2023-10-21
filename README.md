@@ -217,7 +217,7 @@ docker run --rm --name hck-tmp-local --network host -it \
 kubectl klock -n hckops pods
 ```
 
-Depending on your local settings, you might need to override IPv6 config in your *local* cluster to use the `--network-vpn` flag. Set also `--embed-certs` if you need to access the cluster using the dev tools
+Depending on your local environment, you might need to override IPv6 config in the *local* cluster to use the `--network-vpn` flag. Set also `--embed-certs` if you need to use the dev tools
 ```bash
 # starts local cluster
 minikube start --embed-certs \
