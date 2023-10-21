@@ -70,13 +70,14 @@ hckctl box start vulnerable/owasp-juice-shop
 > TODO video
 
 Access your target from a managed [`lab`](https://github.com/hckops/megalopolis/tree/main/lab) to
-* tunnel multiple vpn connections through a high-available ssh proxy
-* expose public endpoints
-* pre-mount saved `dumps` (git, s3)
+* tunnel multiple vpn connections through a highly available ssh proxy
+* expose public endpoints with custom domains
+* mount and keep in sync `dumps` e.g. git, s3
 * load secrets from a vault
 * save/restore workdir snapshots
-* deploy private templates
+* deploy private templates and infrastructures e.g. [Kompose](https://kompose.io), [Helm](https://helm.sh)
 ```bash
+# starts demo lab (cloud only)
 hckctl lab ctf-linux
 ```
 
@@ -93,16 +94,17 @@ hckctl task rustscan
 hckctl task rustscan --input address=127.0.0.1
 hckctl task scanner/rustscan --command default --input address=127.0.0.1
 
-# run the "full" preset command against the retired "Lame" machine (with docker)
+# runs the "full" preset command against the retired "Lame" machine (with docker)
 # see https://app.hackthebox.com/machines/Lame
 hckctl task nmap --network-vpn htb --command full --input address=10.10.10.3 
 # equivalent of (with kube)
 hckctl task nmap --network-vpn htb --provider kube --inline -- nmap 10.10.10.3 -sC -sV
 
-# download common wordlists
+# downloads common wordlists
 git clone --depth 1 https://github.com/danielmiessler/SecLists.git \
   ${HOME}/.local/state/hck/share/wordlists/SecLists
-# fuzzing with gobuster loading a local template against the retired "Knife" machine (with kube)
+# fuzzing loading a local template against the retired "Knife" machine (with kube)
+# see https://app.hackthebox.com/machines/Knife
 hckctl task \
   --local ../megalopolis/task/fuzzer/gobuster.yml \
   --network-vpn htb \
@@ -179,16 +181,20 @@ curl -fsSL https://get.docker.com -o get-docker.sh
 ./sudo sh get-docker.sh
 ```
 
-Recommended tool to watch the container [lazydocker](https://github.com/jesseduffield/lazydocker)
+[lazydocker](https://github.com/jesseduffield/lazydocker) is the recommended tool to watch and monitor containers
 
 ### Kubernetes
 
-If you are looking for a simple and cheap way to get started with a remote cluster use [kube-template](https://github.com/hckops/kube-template) on [DigitalOcean](https://www.digitalocean.com/products/kubernetes)
+#### Remote
+
+If you are looking for a simple and cheap way to get started with a *remote* cluster use [kube-template](https://github.com/hckops/kube-template) on [DigitalOcean](https://www.digitalocean.com/products/kubernetes)
 ```bash
 provider:
   kube:
     configPath: "/PATH/TO/kube-template/clusters/do-template-kubeconfig.yaml"
 ```
+
+#### Local
 
 Use [minikube](https://minikube.sigs.k8s.io), [kind](https://kind.sigs.k8s.io) or [k3s](https://k3s.io) to setup a local cluster
 ```bash
@@ -199,19 +205,7 @@ provider:
     namespace: hckops
 ```
 
-Make sure you disable IPv6 in your *local* cluster to use the `--network-vpn` flag and set `--embed-certs` if you need to access the cluster using the dev tools
-```bash
-# starts local cluster
-minikube start --embed-certs \
-  --extra-config="kubelet.allowed-unsafe-sysctls=net.ipv6.conf.all.disable_ipv6"
-
-# runs with temporary privileges to connect to a vpn
-env HCK_CONFIG_NETWORK.PRIVILEGED=true hckctl box alpine --provider kube --network-vpn htb
-
-network:
-  # default is false, required only for local clusters
-  privileged: true
-```
+#### Troubleshooting
 
 Useful dev tools, see [`hckops/kube-base`](https://github.com/hckops/actions/blob/main/docker/Dockerfile.base)
 ```bash
@@ -221,6 +215,20 @@ docker run --rm --name hck-tmp-local --network host -it \
 
 # watches pods
 kubectl klock -n hckops pods
+```
+
+Depending on your local settings, you might need to override IPv6 config in your *local* cluster to use the `--network-vpn` flag. Set also `--embed-certs` if you need to access the cluster using the dev tools
+```bash
+# starts local cluster
+minikube start --embed-certs \
+  --extra-config="kubelet.allowed-unsafe-sysctls=net.ipv6.conf.all.disable_ipv6"
+
+# runs with temporary privileges to connect to a vpn
+env HCK_CONFIG_NETWORK.PRIVILEGED=true hckctl box alpine --provider kube --network-vpn htb
+# equivalent of
+network:
+  # default is false, override for local clusters
+  privileged: true
 ```
 
 ### Cloud
