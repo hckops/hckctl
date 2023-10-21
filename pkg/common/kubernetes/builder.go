@@ -37,10 +37,29 @@ func buildSidecarVpnSecret(namespace, podName, secretValue string) *corev1.Secre
 	}
 }
 
-func buildSidecarVpnContainer() corev1.Container {
+func buildSidecarVpnContainer(privileged bool) corev1.Container {
+
+	// default
+	imageName := commonModel.SidecarVpnImageName
+	volumeMounts := []corev1.VolumeMount{
+		{
+			Name:      sidecarVpnSecretVolume,
+			MountPath: secretBasePath,
+			ReadOnly:  true,
+		},
+	}
+	if privileged {
+		imageName = commonModel.SidecarVpnPrivilegedImageName
+		volumeMounts = append(volumeMounts, corev1.VolumeMount{
+			Name:      sidecarVpnTunnelVolume,
+			MountPath: sidecarVpnTunnelPath,
+			ReadOnly:  true,
+		})
+	}
+
 	return corev1.Container{
 		Name:            fmt.Sprintf("%svpn", commonModel.SidecarPrefixName),
-		Image:           commonModel.SidecarVpnImageName,
+		Image:           imageName,
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Env: []corev1.EnvVar{
 			{Name: "OPENVPN_CONFIG", Value: filepath.Join(secretBasePath, sidecarVpnSecretPath)},
@@ -50,31 +69,12 @@ func buildSidecarVpnContainer() corev1.Container {
 				Add: []corev1.Capability{"NET_ADMIN"},
 			},
 		},
-		VolumeMounts: []corev1.VolumeMount{
-			{
-				Name:      sidecarVpnTunnelVolume,
-				MountPath: sidecarVpnTunnelPath,
-				ReadOnly:  true,
-			},
-			{
-				Name:      sidecarVpnSecretVolume,
-				MountPath: secretBasePath,
-				ReadOnly:  true,
-			},
-		},
+		VolumeMounts: volumeMounts,
 	}
 }
 
-func buildSidecarVpnVolumes(podName string) []corev1.Volume {
-	return []corev1.Volume{
-		{
-			Name: sidecarVpnTunnelVolume,
-			VolumeSource: corev1.VolumeSource{
-				HostPath: &corev1.HostPathVolumeSource{
-					Path: sidecarVpnTunnelPath,
-				},
-			},
-		},
+func buildSidecarVpnVolumes(podName string, privileged bool) []corev1.Volume {
+	volumes := []corev1.Volume{
 		{
 			Name: sidecarVpnSecretVolume,
 			VolumeSource: corev1.VolumeSource{
@@ -87,27 +87,40 @@ func buildSidecarVpnVolumes(podName string) []corev1.Volume {
 			},
 		},
 	}
+	if privileged {
+		volumes = append(volumes, corev1.Volume{
+			Name: sidecarVpnTunnelVolume,
+			VolumeSource: corev1.VolumeSource{
+				HostPath: &corev1.HostPathVolumeSource{
+					Path: sidecarVpnTunnelPath,
+				},
+			},
+		})
+	}
+	return volumes
 }
 
 func boolPtr(b bool) *bool { return &b }
 
-func injectSidecarVpn(podSpec *corev1.PodSpec, podName string) {
+func injectSidecarVpn(podSpec *corev1.PodSpec, podName string, privileged bool) {
 
 	// https://kubernetes.io/docs/tasks/configure-pod-container/share-process-namespace
 	//podSpec.ShareProcessNamespace = boolPtr(true)
 
-	// disable ipv6, see https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster
-	podSpec.SecurityContext = &corev1.PodSecurityContext{
-		Sysctls: []corev1.Sysctl{
-			{Name: "net.ipv6.conf.all.disable_ipv6", Value: "0"},
-		},
+	if privileged {
+		// disable ipv6, see https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster
+		podSpec.SecurityContext = &corev1.PodSecurityContext{
+			Sysctls: []corev1.Sysctl{
+				{Name: "net.ipv6.conf.all.disable_ipv6", Value: "0"},
+			},
+		}
 	}
 
 	// inject containers
 	podSpec.Containers = append(
 		// order matters
 		[]corev1.Container{
-			buildSidecarVpnContainer(),
+			buildSidecarVpnContainer(privileged),
 			// add fake sleep to allow sidecar-vpn to connect properly before starting the main container
 			{
 				Name:  fmt.Sprintf("%ssleep", commonModel.SidecarPrefixName),
@@ -127,8 +140,8 @@ func injectSidecarVpn(podSpec *corev1.PodSpec, podName string) {
 
 	// inject volumes
 	podSpec.Volumes = append(
-		podSpec.Volumes,                    // current volumes
-		buildSidecarVpnVolumes(podName)..., // join slices
+		podSpec.Volumes, // current volumes
+		buildSidecarVpnVolumes(podName, privileged)..., // join slices
 	)
 }
 

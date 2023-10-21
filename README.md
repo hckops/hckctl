@@ -69,13 +69,13 @@ hckctl box start vulnerable/owasp-juice-shop
 
 > TODO video
 
-Access your target from a managed [`lab`](https://github.com/hckops/megalopolis/tree/main/lab)
+Access your target from a managed [`lab`](https://github.com/hckops/megalopolis/tree/main/lab) to
 * tunnel multiple vpn connections through a high-available ssh proxy
 * expose public endpoints
 * pre-mount saved `dumps` (git, s3)
 * load secrets from a vault
 * save/restore workdir snapshots
-* deploy custom labs
+* deploy private templates
 ```bash
 hckctl lab ctf-linux
 ```
@@ -99,6 +99,9 @@ hckctl task nmap --command full --input address=127.0.0.1 --input port=80
 
 # invokes it with custom arguments
 hckctl task nuclei --inline -- -u https://example.com
+
+go run internal/main.go task nmap --network-vpn htb --provider kube --inline -- nmap 10.10.10.3 -sC -sV
+go run internal/main.go task nmap --network-vpn htb --provider kube --command full --input address=10.10.10.3
 
 # monitors the logs
 tail -F ${HOME}/.local/state/hck/task/log/task-*
@@ -207,43 +210,53 @@ network:
 
 Follow the official [instructions](https://docs.docker.com/engine/install) to install Docker Engine. The fastest way to get started is with the [convenience script](https://get.docker.com)
 ```bash
-# download and run script
+# downloads and runs script
 curl -fsSL https://get.docker.com -o get-docker.sh
 ./sudo sh get-docker.sh
 ```
 
+Recommended tool to watch the container [lazydocker](https://github.com/jesseduffield/lazydocker)
+
 ### Kubernetes
 
-Use [minikube](https://minikube.sigs.k8s.io) or [kind](https://kind.sigs.k8s.io) to setup a local cluster
+If you are looking for a simple and cheap way to get started with a remote cluster consider using [kube-template](https://github.com/hckops/kube-template) on [DigitalOcean](https://www.digitalocean.com/products/kubernetes)
 ```bash
 provider:
   kube:
-    # by default uses "~/.kube/config"
+    configPath: "/PATH/TO/kube-template/clusters/do-template-kubeconfig.yaml"
+```
+
+Use [minikube](https://minikube.sigs.k8s.io), [kind](https://kind.sigs.k8s.io) or [k3s](https://k3s.io) to setup a local cluster
+```bash
+provider:
+  kube:
+    # absolute path, empty by default uses "${HOME}/.kube/config"
     configPath: ""
     namespace: hckops
 ```
 
-Make sure you disable IPv6 in your cluster to use the `--network-vpn` flag
+Make sure you disable IPv6 in your *local* cluster to use the `--network-vpn` flag and set `--embed-certs` if you need to access the cluster using the dev tools
 ```bash
-# set --embed-certs to run "hckops/kube-base"
-minikube start --embed-certs --extra-config="kubelet.allowed-unsafe-sysctls=net.ipv6.conf.all.disable_ipv6"
+# starts local cluster
+minikube start --embed-certs \
+  --extra-config="kubelet.allowed-unsafe-sysctls=net.ipv6.conf.all.disable_ipv6"
+
+# runs with temporary privileges to connect to a vpn
+env HCK_CONFIG_NETWORK.PRIVILEGED=true hckctl box alpine --provider kube --network-vpn htb
+
+network:
+  # default is false, required only for local clusters
+  privileged: true
 ```
 
-Useful dev tools
+Useful dev tools, see [`hckops/kube-base`](https://github.com/hckops/actions/blob/main/docker/Dockerfile.base)
 ```bash
 # starts tmp container
-docker run --rm --name hck-tmp --network host -it \
+docker run --rm --name hck-tmp-local --network host -it \
   -v ${HOME}/.kube/config:/root/.kube/config hckops/kube-base
 
 # watches pods
 kubectl klock -n hckops pods
-```
-
-If you are looking for a simple way to get started with a remote cluster consider using [kube-template](https://github.com/hckops/kube-template)
-```bash
-provider:
-  kube:
-    configPath: "~/PATH/TO/kube-template/clusters/do-template-kubeconfig.yaml"
 ```
 
 ### Cloud
@@ -271,6 +284,9 @@ HCKCTL_VERSION=0.12.0
 # install or update
 curl -sSL https://github.com/hckops/hckctl/releases/latest/download/hckctl-${HCKCTL_VERSION}-linux-x86_64.tar.gz | \
   sudo tar -xzf - -C /usr/local/bin
+
+# verify
+hckctl version
 
 # uninstall
 sudo rm /usr/local/bin/hckctl
@@ -318,10 +334,14 @@ Credit should go to all the authors and maintainers for their open source tools,
 
 <!--
 
+box remote kube: after killing vnc/portforward
+E1020 19:55:12.436966  149063 portforward.go:381] error copying from remote stream to local connection: readfrom tcp4 127.0.0.1:5900->127.0.0.1:54768: write tcp4 127.0.0.1:5900->127.0.0.1:54768: write: broken pipe
+
+>>> remove TryHackMe demo from readme
+
 * test all catalog
 * discord + social links
 * replace task/htb example with thm
-* verify/support kube config relative path + remote cluster
 * update cloud pkg
 * update platform prs
 * verify network connectivity between boxes/tasks i.e. kube.svc
@@ -434,5 +454,7 @@ TODO
     - verify release workflow should depend on ci workflow
 * prompt
     - https://github.com/snwfdhmp/awesome-gpt-prompt-engineering
+* megalopolis
+    - (docker) https://github.com/edoardottt/scilla
 
 -->

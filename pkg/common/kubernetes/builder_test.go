@@ -83,16 +83,10 @@ spec:
         add:
         - NET_ADMIN
     volumeMounts:
-    - mountPath: /dev/net/tun
-      name: tun-device-volume
-      readOnly: true
     - mountPath: /secrets
       name: sidecar-vpn-volume
       readOnly: true
   volumes:
-  - hostPath:
-      path: /dev/net/tun
-    name: tun-device-volume
   - name: sidecar-vpn-volume
     secret:
       items:
@@ -104,8 +98,8 @@ status: {}
 
 	actual := &corev1.Pod{
 		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{buildSidecarVpnContainer()},
-			Volumes:    buildSidecarVpnVolumes("main-container"),
+			Containers: []corev1.Container{buildSidecarVpnContainer(false)},
+			Volumes:    buildSidecarVpnVolumes("main-container", false),
 		},
 	}
 	// fix model
@@ -135,11 +129,76 @@ spec:
         add:
         - NET_ADMIN
     volumeMounts:
-    - mountPath: /dev/net/tun
-      name: tun-device-volume
-      readOnly: true
     - mountPath: /secrets
       name: sidecar-vpn-volume
+      readOnly: true
+  - image: busybox
+    lifecycle:
+      postStart:
+        exec:
+          command:
+          - sleep
+          - 3s
+    name: sidecar-sleep
+    resources: {}
+    stdin: true
+  - args:
+    - foo
+    - bar
+    command:
+    - xyz
+    - abc
+    image: my-image
+    name: my-name
+    resources: {}
+  volumes:
+  - hostPath:
+      path: my-path
+    name: my-volume
+  - name: sidecar-vpn-volume
+    secret:
+      items:
+      - key: openvpn-config
+        path: openvpn/client.ovpn
+      secretName: my-name-sidecar-vpn-secret
+status: {}
+`
+
+	containerName := "my-name"
+	actual := newPodSpecTest(containerName)
+	injectSidecarVpn(&actual.Spec, containerName, false)
+	// fix model
+	actual.TypeMeta = metav1.TypeMeta{Kind: "Pod", APIVersion: "v1"}
+
+	assert.YAMLEqf(t, expected, kubernetes.ObjectToYaml(actual), "unexpected pod")
+}
+
+func TestInjectSidecarVpnPrivileged(t *testing.T) {
+
+	expected := `
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+spec:
+  containers:
+  - env:
+    - name: OPENVPN_CONFIG
+      value: /secrets/openvpn/client.ovpn
+    image: hckops/alpine-openvpn-privileged:latest
+    imagePullPolicy: IfNotPresent
+    name: sidecar-vpn
+    resources: {}
+    securityContext:
+      capabilities:
+        add:
+        - NET_ADMIN
+    volumeMounts:
+    - mountPath: /secrets
+      name: sidecar-vpn-volume
+      readOnly: true
+    - mountPath: /dev/net/tun
+      name: tun-device-volume
       readOnly: true
   - image: busybox
     lifecycle:
@@ -168,21 +227,21 @@ spec:
   - hostPath:
       path: my-path
     name: my-volume
-  - hostPath:
-      path: /dev/net/tun
-    name: tun-device-volume
   - name: sidecar-vpn-volume
     secret:
       items:
       - key: openvpn-config
         path: openvpn/client.ovpn
       secretName: my-name-sidecar-vpn-secret
+  - hostPath:
+      path: /dev/net/tun
+    name: tun-device-volume
 status: {}
 `
 
 	containerName := "my-name"
 	actual := newPodSpecTest(containerName)
-	injectSidecarVpn(&actual.Spec, containerName)
+	injectSidecarVpn(&actual.Spec, containerName, true)
 	// fix model
 	actual.TypeMeta = metav1.TypeMeta{Kind: "Pod", APIVersion: "v1"}
 

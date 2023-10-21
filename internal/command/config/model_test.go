@@ -41,6 +41,7 @@ func TestNewConfig(t *testing.T) {
 			},
 		},
 		Network: NetworkConfig{
+			Privileged: false,
 			Vpn: []VpnConfig{
 				{Name: "default", Path: "/path/to/client.ovpn"},
 			},

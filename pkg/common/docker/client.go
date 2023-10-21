@@ -114,8 +114,9 @@ func (common *DockerCommonClient) SidecarVpnInject(opts *commonModel.SidecarVpnI
 	// sidecarName
 	containerName := buildSidecarVpnName(opts.Name)
 
-	// constants
-	imageName := commonModel.SidecarVpnImageName
+	// ignore opts.NetworkVpn.Privileged locally
+	imageName := commonModel.SidecarVpnPrivilegedImageName
+
 	// base directory "/usr/share" must exist
 	vpnConfigPath := "/usr/share/client.ovpn"
 

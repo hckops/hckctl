@@ -59,6 +59,7 @@ type NetworkVpnInfo struct {
 	Name        string
 	LocalPath   string
 	ConfigValue string
+	Privileged  bool
 }
 
 type ShareDirInfo struct {

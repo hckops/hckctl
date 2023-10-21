@@ -94,7 +94,8 @@ func (c *CloudConfig) ToCloudOptions(version string) *commonModel.CloudOptions {
 }
 
 type NetworkConfig struct {
-	Vpn []VpnConfig `yaml:"vpn"`
+	Privileged bool        `yaml:"privileged"`
+	Vpn        []VpnConfig `yaml:"vpn"`
 }
 
 type VpnConfig struct {
@@ -111,6 +112,7 @@ func (c *NetworkConfig) VpnNetworks() map[string]commonModel.NetworkVpnInfo {
 				Name:        network.Name,
 				LocalPath:   network.Path,
 				ConfigValue: configFile,
+				Privileged:  c.Privileged,
 			}
 		}
 	}
@@ -186,6 +188,7 @@ func newConfig(opts *configOptions) *ConfigV1 {
 			},
 		},
 		Network: NetworkConfig{
+			Privileged: false,
 			Vpn: []VpnConfig{
 				{Name: common.DefaultVpnName, Path: "/path/to/client.ovpn"},
 			},

@@ -64,7 +64,7 @@ func (common *KubeCommonClient) SidecarVpnInject(namespace string, opts *commonM
 	}
 
 	// update pod
-	injectSidecarVpn(podSpec, opts.Name)
+	injectSidecarVpn(podSpec, opts.Name, opts.NetworkVpn.Privileged)
 	common.eventBus.Publish(newSidecarVpnConnectKubeEvent(opts.NetworkVpn.Name))
 
 	return nil
