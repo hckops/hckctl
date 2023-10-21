@@ -281,6 +281,9 @@ just
 
 # logs
 tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
+
+# publish
+just publish 0.12.0
 ```
 
 ## Roadmap
@@ -311,11 +314,17 @@ E1020 19:55:12.436966  149063 portforward.go:381] error copying from remote stre
 
 >>> remove TryHackMe demo from readme
 
-* test all catalog
-* discord + social links
-* update cloud pkg
+* fix cloud
 * update platform prs
 * verify network connectivity between boxes/tasks i.e. kube.svc
+* add task cloud (kube provider)
+* use public PKG
+* lab inputs
+* convert TODOs left in GitHub issues
+* add GitHub org labels: feature/bug/question
+
+* test all catalog
+* discord + social links (?)
 * verify binaries
 * test on mac-m1 and win (docker images)
 * review all command cli example/description
@@ -331,9 +340,7 @@ composeRef e.g. https://github.com/digininja/DVWA/blob/master/compose.yml
 
 TODO
 * priority
-    - add task cloud
     - debug `htb-postman`
-    - lab inputs
     - add flow example
     - verify cloud no-shell support
     - play htb: linux/win
@@ -350,8 +357,6 @@ TODO
     - add readme lab video/gif https://asciinema.org
     - delete old branches (video)
     - update internal cli diagram
-    - convert TODOs left in GitHub issues
-    - add GitHub org labels: feature/bug/question
     - review/delete GitHub project
     - add go reference badge
     - public `preview/kali-core` image

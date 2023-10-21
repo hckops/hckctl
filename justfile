@@ -8,7 +8,7 @@ default: (build BUILD_PATH)
 
 install:
   go mod tidy
-  go mod vendor
+  #go mod vendor
 
 format:
   go fmt {{GO_FILES}}
@@ -26,3 +26,6 @@ build output $VERSION_COMMIT="$(git rev-parse HEAD)" $VERSION_TIMESTAMP="$(date 
     -X github.com/hckops/hckctl/internal/command/version.commit={{VERSION_COMMIT}} \
     -X github.com/hckops/hckctl/internal/command/version.timestamp={{VERSION_TIMESTAMP}}" \
     -o {{output}}/{{BIN_NAME}} internal/main.go
+
+publish version:
+  GOPROXY=proxy.golang.org go list -m github.com/hckops/hckctl@v{{version}}
