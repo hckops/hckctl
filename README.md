@@ -84,71 +84,35 @@ hckctl lab ctf-linux
 
 Run a single-stage [`task`](https://github.com/hckops/megalopolis/tree/main/task) using pre-defined commands
 ```bash
-# default commands
-hckctl task gobuster --command help
-hckctl task fuzzer/ffuf --command version
+# shows the "help" command
+hckctl task nuclei --command help
 
-# uses the "default" preset arguments
+# uses the "default" preset command and arguments
 hckctl task rustscan
 # equivalent of
 hckctl task rustscan --input address=127.0.0.1
 hckctl task scanner/rustscan --command default --input address=127.0.0.1
 
-# uses the "full" preset arguments
-hckctl task nmap --command full --input address=127.0.0.1 --input port=80
+# run the "full" preset command against the retired "Lame" machine (with docker)
+# see https://app.hackthebox.com/machines/Lame
+hckctl task nmap --network-vpn htb --command full --input address=10.10.10.3 
+# equivalent of (with kube)
+hckctl task nmap --network-vpn htb --provider kube --inline -- nmap 10.10.10.3 -sC -sV
 
-# invokes it with custom arguments
-hckctl task nuclei --inline -- -u https://example.com
-
-go run internal/main.go task nmap --network-vpn htb --provider kube --inline -- nmap 10.10.10.3 -sC -sV
-go run internal/main.go task nmap --network-vpn htb --provider kube --command full --input address=10.10.10.3
+# download common wordlists
+git clone --depth 1 https://github.com/danielmiessler/SecLists.git \
+  ${HOME}/.local/state/hck/share/wordlists/SecLists
+# fuzzing with gobuster loading a local template against the retired "Knife" machine (with kube)
+hckctl task \
+  --local ../megalopolis/task/fuzzer/gobuster.yml \
+  --network-vpn htb \
+  --provider kube \
+  --input address=10.10.10.242 \
+  --input wordlist=wordlists/SecLists/Discovery/Web-Content/Apache.fuzz.txt
 
 # monitors the logs
 tail -F ${HOME}/.local/state/hck/task/log/task-*
 ```
-
-#### TryHackMe demo
-
-> TODO
-
-<!--
-Prerequisites
-* start the retired [Lame](https://app.hackthebox.com/machines/Lame) and [Knife](https://app.hackthebox.com/machines/Knife) machines in your account
-* edit your vpn network config (see box example above)
-
-Run tasks against the vulnerable machine
-```bash
-# scan with nmap
-hckctl task nmap --network-vpn htb --command full --input address=10.10.10.3
-
-# scan with rustscan
-hckctl task rustscan --network-vpn htb --inline -- -a 10.10.10.3 --ulimit 5000
-
-# scan with nuclei
-hckctl task nuclei --network-vpn htb --input address=10.10.10.3
-```
-See [output](./docs/task-htb-example.txt) example
-
-Use the shared directory to mount local paths
-```bash
-# download your wordlists
-git clone --depth 1 https://github.com/danielmiessler/SecLists.git \
-  ${HOME}/.local/state/hck/share/wordlists/SecLists
-
-# fuzzing with ffuf
-hckctl task ffuf --network-vpn htb --input address=10.10.10.242
-
-# fuzzing with gobuster
-hckctl task \
-  --local ../megalopolis/task/fuzzer/gobuster.yml \
-  --network-vpn htb \
-  --input address=10.10.10.242 \
-  --input wordlist=wordlists/SecLists/Discovery/Web-Content/Apache.fuzz.txt
-
-go run internal/main.go task gobuster --network-vpn htb --input address=10.10.10.242 --input wordlist=wordlists/SecLists/Discovery/Web-Content/Apache.fuzz.txt
-go run internal/main.go task gobuster --network-vpn htb --input address=10.10.10.242 --input wordlist=wordlists/SecLists/Discovery/Web-Content/Apache.fuzz.txt --provider kube
-```
--->
 
 ### Flow (preview)
 
@@ -219,7 +183,7 @@ Recommended tool to watch the container [lazydocker](https://github.com/jesseduf
 
 ### Kubernetes
 
-If you are looking for a simple and cheap way to get started with a remote cluster consider using [kube-template](https://github.com/hckops/kube-template) on [DigitalOcean](https://www.digitalocean.com/products/kubernetes)
+If you are looking for a simple and cheap way to get started with a remote cluster use [kube-template](https://github.com/hckops/kube-template) on [DigitalOcean](https://www.digitalocean.com/products/kubernetes)
 ```bash
 provider:
   kube:
@@ -341,7 +305,6 @@ E1020 19:55:12.436966  149063 portforward.go:381] error copying from remote stre
 
 * test all catalog
 * discord + social links
-* replace task/htb example with thm
 * update cloud pkg
 * update platform prs
 * verify network connectivity between boxes/tasks i.e. kube.svc
@@ -440,7 +403,6 @@ TODO
     - for debug purposes prepend file output with interpolated task (yaml) or command parameters
     - add command to remove all logs
     - skip output file for `help` and `version`
-    - add argument `--volume` to restrict shared directories/files
     - limit default kube resources
     - add `--background` to omit stdout and ignore interrupt handler i.e. only file output
 * version
