@@ -257,7 +257,8 @@ Follow the official [instructions](https://podman.io/docs/installation) to insta
 
 Download the latest binaries
 ```bash
-HCKCTL_VERSION=0.12.0
+# latest release
+HCKCTL_VERSION=$(curl -sS https://api.github.com/repos/hckops/hckctl/releases/latest | jq -r .name | sed 's/v//')
 
 # install or update
 curl -sSL https://github.com/hckops/hckctl/releases/latest/download/hckctl-${HCKCTL_VERSION}-linux-x86_64.tar.gz | \
@@ -330,7 +331,6 @@ E1020 19:55:12.436966  149063 portforward.go:381] error copying from remote stre
 * add GitHub org labels: feature/bug/question
 
 * test all catalog
-* discord + social links (?)
 * verify binaries
 * test on mac-m1 and win (docker images)
 * review all command cli example/description
@@ -356,7 +356,6 @@ TODO
 * general
     - strict schema validation
     - add disclaimer of responsibility to readme?
-    - public discord server (review channels visibility)
     - brew release
     - review context/http/client timeouts e.g. vpn or target not available
     - verify config migration between versions
