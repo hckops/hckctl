@@ -15,7 +15,7 @@
     <img src="https://pkg.go.dev/badge/github.com/hckops/hckctl.svg" alt="go-reference">
   </a>
   <a href="https://discord.gg/4PYPV9qP27">
-    <img src="https://img.shields.io/badge/discord-join?label=join&logo=discord&style=flat-square&color=5865F2" alt="discord">
+    <img src="https://img.shields.io/badge/discord-join?label=join&logo=discord&style=flat-square&color=5865F2&logoColor=white" alt="discord">
   </a>
 </p>
 
