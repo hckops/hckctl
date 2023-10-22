@@ -5,7 +5,7 @@
 <h1 align="center"><code>hckctl</code></h1>
 
 <p align="center">
-  <a href="https://github.com/hckops/hckctl/actions/workflows/ci.yaml">
+  <a href="https://github.com/hckops/hckctl/actions/workflows/ci.yml">
     <img src="https://img.shields.io/github/actions/workflow/status/hckops/hckctl/ci.yml?label=ci&style=flat-square" alt="ci">
   </a>
   <a href="https://github.com/hckops/hckctl/actions/workflows/release.yml">
