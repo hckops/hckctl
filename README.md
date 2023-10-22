@@ -6,10 +6,16 @@
 
 <p align="center">
   <a href="https://github.com/hckops/hckctl/actions/workflows/ci.yaml">
-    <img src="https://github.com/hckops/hckctl/actions/workflows/ci.yaml/badge.svg" alt="ci">
+    <img src="https://img.shields.io/github/actions/workflow/status/hckops/hckctl/ci.yml?label=ci&style=flat-square" alt="ci">
   </a>
   <a href="https://github.com/hckops/hckctl/actions/workflows/release.yml">
-    <img src="https://github.com/hckops/hckctl/actions/workflows/release.yml/badge.svg" alt="release">
+    <img src="https://img.shields.io/github/actions/workflow/status/hckops/hckctl/release.yml?label=release&style=flat-square" alt="release">
+  </a>
+  <a href="https://pkg.go.dev/github.com/hckops/hckctl">
+    <img src="https://pkg.go.dev/badge/github.com/hckops/hckctl.svg" alt="go-reference">
+  </a>
+  <a href="https://discord.gg/4PYPV9qP27">
+    <img src="https://img.shields.io/badge/discord-join?label=join&logo=discord&style=flat-square&color=5865F2" alt="discord">
   </a>
 </p>
 
@@ -282,8 +288,8 @@ just
 # logs
 tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 
-# publish
-just publish 0.12.0
+# publish (without "v" prefix)
+just publish <MAJOR.MINOR.PATCH>
 ```
 
 ## Roadmap
