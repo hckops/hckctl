@@ -174,7 +174,7 @@ func (box *KubeBoxClient) connectBox(opts *boxModel.ConnectOptions) error {
 			}
 		}
 
-		return box.execBox(opts.Template, info, opts.StreamOpts, opts.DeleteOnExit)
+		return box.execBox(opts, info)
 	}
 }
 
@@ -203,59 +203,59 @@ func (box *KubeBoxClient) searchBox(name string) (*boxModel.BoxInfo, error) {
 	}
 }
 
-func (box *KubeBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.BoxInfo, streamOpts *commonModel.StreamOptions, deleteOnExit bool) error {
+func (box *KubeBoxClient) execBox(opts *boxModel.ConnectOptions, info *boxModel.BoxInfo) error {
 
 	// TODO if BoxInfo not Healthy attempt scale 1
 
-	if template.Shell == boxModel.BoxShellNone {
+	if opts.Template.Shell == boxModel.BoxShellNone {
 		// stop loader
 		box.eventBus.Publish(newPodExecKubeLoaderEvent())
 
-		return box.logsBox(template, info, streamOpts, deleteOnExit)
+		return box.logsBox(opts, info)
 	}
 
-	if deleteOnExit {
+	if opts.DeleteOnExit {
 		defer box.deleteBox(info.Name)
 	}
 
 	// exec
-	opts := &kubernetes.PodExecOpts{
+	execOpts := &kubernetes.PodExecOpts{
 		Namespace:     box.clientOpts.Namespace,
 		PodName:       info.Id,
-		ContainerName: template.MainContainerName(),
-		Commands:      terminal.DefaultShellCommand(template.Shell),
-		InStream:      streamOpts.In,
-		OutStream:     streamOpts.Out,
-		ErrStream:     streamOpts.Err,
-		IsTty:         streamOpts.IsTty,
+		ContainerName: opts.Template.MainContainerName(),
+		Commands:      terminal.DefaultShellCommand(opts.Template.Shell),
+		InStream:      opts.StreamOpts.In,
+		OutStream:     opts.StreamOpts.Out,
+		ErrStream:     opts.StreamOpts.Err,
+		IsTty:         opts.StreamOpts.IsTty,
 		OnExecCallback: func() {
 			// stop loader
 			box.eventBus.Publish(newPodExecKubeLoaderEvent())
 		},
 	}
-	box.eventBus.Publish(newPodExecKubeEvent(template.Name, box.clientOpts.Namespace, info.Id, template.Shell))
-	return box.client.PodExecShell(opts)
+	box.eventBus.Publish(newPodExecKubeEvent(opts.Template.Name, box.clientOpts.Namespace, info.Id, opts.Template.Shell))
+	return box.client.PodExecShell(execOpts)
 }
 
-func (box *KubeBoxClient) logsBox(template *boxModel.BoxV1, info *boxModel.BoxInfo, streamOpts *commonModel.StreamOptions, deleteOnExit bool) error {
+func (box *KubeBoxClient) logsBox(opts *boxModel.ConnectOptions, info *boxModel.BoxInfo) error {
 	namespace := box.clientOpts.Namespace
 
-	if deleteOnExit {
-		util.InterruptHandler(func() {
+	if opts.DeleteOnExit {
+		opts.OnInterruptCallback(func() {
 			box.eventBus.Publish(newPodLogsExitKubeEvent(namespace, info.Id))
 			box.eventBus.Publish(newPodLogsExitKubeConsoleEvent())
 			box.deleteBox(info.Name)
 		})
 	}
 
-	opts := &kubernetes.PodLogsOpts{
+	logsOpts := &kubernetes.PodLogsOpts{
 		Namespace:     namespace,
 		PodName:       info.Id,
-		ContainerName: template.MainContainerName(),
-		OutStream:     streamOpts.Out,
+		ContainerName: opts.Template.MainContainerName(),
+		OutStream:     opts.StreamOpts.Out,
 	}
 	box.eventBus.Publish(newPodLogsKubeEvent(namespace, info.Id))
-	return box.client.PodLogs(opts)
+	return box.client.PodLogs(logsOpts)
 }
 
 func (box *KubeBoxClient) podPortForward(template *boxModel.BoxV1, boxInfo *boxModel.BoxInfo, isWait bool) error {

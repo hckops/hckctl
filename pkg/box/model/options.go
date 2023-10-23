@@ -30,10 +30,11 @@ type CreateOptions struct {
 }
 
 type ConnectOptions struct {
-	Template      *BoxV1
-	StreamOpts    *commonModel.StreamOptions
-	Name          string
-	DisableExec   bool
-	DisableTunnel bool
-	DeleteOnExit  bool
+	Template            *BoxV1
+	StreamOpts          *commonModel.StreamOptions
+	Name                string
+	DisableExec         bool
+	DisableTunnel       bool
+	DeleteOnExit        bool
+	OnInterruptCallback func(func())
 }

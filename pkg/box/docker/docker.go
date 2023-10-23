@@ -13,7 +13,6 @@ import (
 	commonDocker "github.com/hckops/hckctl/pkg/common/docker"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
 	"github.com/hckops/hckctl/pkg/schema"
-	"github.com/hckops/hckctl/pkg/util"
 )
 
 func newDockerBoxClient(commonOpts *boxModel.CommonBoxOptions, dockerOpts *commonModel.DockerOptions) (*DockerBoxClient, error) {
@@ -169,7 +168,7 @@ func (box *DockerBoxClient) connectBox(opts *boxModel.ConnectOptions) error {
 		if opts.DisableExec || opts.DisableTunnel {
 			box.eventBus.Publish(newContainerExecIgnoreDockerEvent(info.Id))
 		}
-		return box.execBox(opts.Template, *info, opts.StreamOpts, opts.DeleteOnExit)
+		return box.execBox(opts, info)
 	}
 }
 
@@ -186,7 +185,7 @@ func (box *DockerBoxClient) searchBox(name string) (*boxModel.BoxInfo, error) {
 	return nil, errors.New("box not found")
 }
 
-func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info boxModel.BoxInfo, streamOpts *commonModel.StreamOptions, deleteOnExit bool) error {
+func (box *DockerBoxClient) execBox(opts *boxModel.ConnectOptions, info *boxModel.BoxInfo) error {
 
 	// attempt to restart all associated sidecars
 	sidecars, err := box.dockerCommon.SidecarList(info.Name)
@@ -216,15 +215,15 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info boxModel.BoxI
 		return err
 	}
 
-	if template.Shell == boxModel.BoxShellNone {
+	if opts.Template.Shell == boxModel.BoxShellNone {
 		// stop loader
 		box.eventBus.Publish(newContainerExecDockerLoaderEvent())
 
-		return box.logsBox(info, streamOpts, deleteOnExit)
+		return box.logsBox(opts, info)
 	}
 
 	// already printed for temporary box
-	if !deleteOnExit {
+	if !opts.DeleteOnExit {
 		containerDetails, err := box.client.ContainerInspect(info.Id)
 		if err != nil {
 			return err
@@ -232,7 +231,7 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info boxModel.BoxI
 		// print environment variables
 		for _, e := range containerDetails.Env {
 			// ignore internal variables e.g. PATH
-			if _, exists := template.EnvironmentVariables()[e.Key]; exists {
+			if _, exists := opts.Template.EnvironmentVariables()[e.Key]; exists {
 				env := boxModel.BoxEnv{Key: e.Key, Value: e.Value}
 				box.eventBus.Publish(newContainerCreateEnvDockerEvent(containerDetails.Info.ContainerName, env))
 				box.eventBus.Publish(newContainerCreateEnvDockerConsoleEvent(containerDetails.Info.ContainerName, env))
@@ -240,7 +239,7 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info boxModel.BoxI
 		}
 		// print open ports
 		for _, port := range containerDetails.Ports {
-			box.publishPortInfo(template.NetworkPorts(false), containerDetails.Info.ContainerName, port)
+			box.publishPortInfo(opts.Template.NetworkPorts(false), containerDetails.Info.ContainerName, port)
 		}
 		// print sidecar ports
 		for _, sidecar := range sidecars {
@@ -249,38 +248,38 @@ func (box *DockerBoxClient) execBox(template *boxModel.BoxV1, info boxModel.BoxI
 				return err
 			}
 			for _, port := range sidecarDetails.Ports {
-				box.publishPortInfo(template.NetworkPorts(false), containerDetails.Info.ContainerName, port)
+				box.publishPortInfo(opts.Template.NetworkPorts(false), containerDetails.Info.ContainerName, port)
 			}
 		}
 	}
 
 	execOpts := &docker.ContainerExecOpts{
 		ContainerId: info.Id,
-		Commands:    terminal.DefaultShellCommand(template.Shell),
-		InStream:    streamOpts.In,
-		OutStream:   streamOpts.Out,
-		ErrStream:   streamOpts.Err,
-		IsTty:       streamOpts.IsTty,
+		Commands:    terminal.DefaultShellCommand(opts.Template.Shell),
+		InStream:    opts.StreamOpts.In,
+		OutStream:   opts.StreamOpts.Out,
+		ErrStream:   opts.StreamOpts.Err,
+		IsTty:       opts.StreamOpts.IsTty,
 		OnContainerExecCallback: func() {
 			// stop loader
 			box.eventBus.Publish(newContainerExecDockerLoaderEvent())
 		},
 		OnStreamCloseCallback: func() {
 			box.eventBus.Publish(newContainerExecExitDockerEvent(info.Id))
-			if deleteOnExit {
+			if opts.DeleteOnExit {
 				// ignore error
-				box.deleteBox(info)
+				box.deleteBox(*info)
 			}
 		},
 		OnStreamErrorCallback: func(err error) {
 			box.eventBus.Publish(newContainerExecErrorDockerEvent(info.Id, err))
-			if deleteOnExit {
+			if opts.DeleteOnExit {
 				// ignore error
-				box.deleteBox(info)
+				box.deleteBox(*info)
 			}
 		},
 	}
-	box.eventBus.Publish(newContainerExecDockerEvent(info.Id, info.Name, template.Shell))
+	box.eventBus.Publish(newContainerExecDockerEvent(info.Id, info.Name, opts.Template.Shell))
 	return box.client.ContainerExec(execOpts)
 }
 
@@ -295,17 +294,17 @@ func (box *DockerBoxClient) publishPortInfo(networkMap map[string]boxModel.BoxPo
 	box.eventBus.Publish(newContainerCreatePortBindDockerConsoleEvent(containerName, networkPort, portPadding))
 }
 
-func (box *DockerBoxClient) logsBox(info boxModel.BoxInfo, streamOpts *commonModel.StreamOptions, deleteOnExit bool) error {
+func (box *DockerBoxClient) logsBox(opts *boxModel.ConnectOptions, info *boxModel.BoxInfo) error {
 
-	if deleteOnExit {
-		util.InterruptHandler(func() {
-			box.deleteBox(info)
+	if opts.DeleteOnExit {
+		opts.OnInterruptCallback(func() {
+			box.deleteBox(*info)
 		})
 	}
 
-	opts := &docker.ContainerLogsOpts{
+	logsOpts := &docker.ContainerLogsOpts{
 		ContainerId: info.Id,
-		OutStream:   streamOpts.Out,
+		OutStream:   opts.StreamOpts.Out,
 		OnStreamCloseCallback: func() {
 			box.eventBus.Publish(newContainerLogsExitDockerEvent(info.Id))
 		},
@@ -314,7 +313,7 @@ func (box *DockerBoxClient) logsBox(info boxModel.BoxInfo, streamOpts *commonMod
 		},
 	}
 	box.eventBus.Publish(newContainerLogsDockerEvent(info.Id))
-	return box.client.ContainerLogs(opts)
+	return box.client.ContainerLogs(logsOpts)
 }
 
 func (box *DockerBoxClient) describeBox(name string) (*boxModel.BoxDetails, error) {

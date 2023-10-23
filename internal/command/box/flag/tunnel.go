@@ -8,6 +8,7 @@ import (
 	commonFlag "github.com/hckops/hckctl/internal/command/common/flag"
 	boxModel "github.com/hckops/hckctl/pkg/box/model"
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
+	"github.com/hckops/hckctl/pkg/util"
 )
 
 const (
@@ -22,12 +23,13 @@ type TunnelFlag struct {
 
 func (f *TunnelFlag) ToConnectOptions(template *boxModel.BoxV1, name string, temporary bool) *boxModel.ConnectOptions {
 	return &boxModel.ConnectOptions{
-		Template:      template,
-		StreamOpts:    commonModel.NewStdStreamOpts(true),
-		Name:          name,
-		DisableExec:   f.NoExec,
-		DisableTunnel: f.NoTunnel,
-		DeleteOnExit:  temporary,
+		Template:            template,
+		StreamOpts:          commonModel.NewStdStreamOpts(true),
+		Name:                name,
+		DisableExec:         f.NoExec,
+		DisableTunnel:       f.NoTunnel,
+		DeleteOnExit:        temporary,
+		OnInterruptCallback: util.InterruptHandler,
 	}
 }
 
