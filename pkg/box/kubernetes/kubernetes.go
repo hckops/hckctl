@@ -214,6 +214,10 @@ func (box *KubeBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.BoxIn
 		return box.logsBox(template, info, streamOpts, deleteOnExit)
 	}
 
+	if deleteOnExit {
+		defer box.deleteBox(info.Name)
+	}
+
 	// exec
 	opts := &kubernetes.PodExecOpts{
 		Namespace:     box.clientOpts.Namespace,
@@ -229,11 +233,6 @@ func (box *KubeBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.BoxIn
 			box.eventBus.Publish(newPodExecKubeLoaderEvent())
 		},
 	}
-
-	if deleteOnExit {
-		defer box.deleteBox(info.Name)
-	}
-
 	box.eventBus.Publish(newPodExecKubeEvent(template.Name, box.clientOpts.Namespace, info.Id, template.Shell))
 	return box.client.PodExecShell(opts)
 }
