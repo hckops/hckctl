@@ -86,34 +86,35 @@ func (box *CloudBoxClient) connectBox(opts *boxModel.ConnectOptions) error {
 		}
 	}
 
-	return box.execBox(opts.Name, opts.DeleteOnExit)
+	return box.execBox(opts)
 }
 
-func (box *CloudBoxClient) execBox(name string, deleteOnExit bool) error {
-	box.eventBus.Publish(newApiExecCloudEvent(name))
+func (box *CloudBoxClient) execBox(opts *boxModel.ConnectOptions) error {
+	box.eventBus.Publish(newApiExecCloudEvent(opts.Name))
 
-	session := v1.NewBoxExecSession(box.clientOpts.Version, name)
+	session := v1.NewBoxExecSession(box.clientOpts.Version, opts.Name)
 	payload, err := session.Encode()
 	if err != nil {
 		return errors.Wrap(err, "error cloud exec session")
 	}
 
-	opts := &ssh.SshExecOpts{
+	// TODO close streams on opts.OnInterruptCallback
+
+	if opts.DeleteOnExit {
+		defer box.deleteBoxes([]string{opts.Name})
+	}
+
+	execOpts := &ssh.SshExecOpts{
 		Payload: payload,
 		OnStreamStartCallback: func() {
 			// stop loader
 			box.eventBus.Publish(newApiStopCloudLoaderEvent())
 		},
 		OnStreamErrorCallback: func(err error) {
-			box.eventBus.Publish(newApiExecErrorCloudEvent(name, err))
+			box.eventBus.Publish(newApiExecErrorCloudEvent(opts.Name, err))
 		},
 	}
-
-	if deleteOnExit {
-		defer box.deleteBoxes([]string{name})
-	}
-
-	return box.client.Exec(opts)
+	return box.client.Exec(execOpts)
 }
 
 func (box *CloudBoxClient) tunnelBox(template *boxModel.BoxV1, name string, isWait bool) error {

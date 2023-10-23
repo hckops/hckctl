@@ -96,6 +96,7 @@ func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, 
 		return "", errors.Wrap(err, "error container create")
 	}
 
+	// TODO move in the commands
 	if opts.CaptureInterrupt {
 		util.InterruptHandler(func() {
 			opts.OnContainerInterruptCallback(newContainer.ID)

@@ -578,6 +578,7 @@ func (client *KubeClient) JobCreate(opts *JobCreateOpts) error {
 		return errors.Wrapf(err, "error job create: namespace=%s name=%s", opts.Namespace, opts.Spec.Name)
 	}
 
+	// TODO move in the commands
 	if opts.CaptureInterrupt {
 		util.InterruptHandler(func() {
 			opts.OnContainerInterruptCallback(job.Name)

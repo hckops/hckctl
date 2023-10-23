@@ -398,6 +398,7 @@ TODO
     - docker: add support for remote docker daemon with `DOCKER_HOST`
     - add podman provider
     - add context timeout
+    - BUG cloud: `execBox` does not interrupt stream with shell none and hang forever
     - cloud: ssh key auth only + remove InsecureIgnoreHostKey
     - cloud: remove body from empty request `omitempty to remove "body":{}`
     - list boxes in table with padding see `tabwriter` https://gosamples.dev/string-padding
@@ -415,6 +416,7 @@ TODO
         * https://github.com/vulhub/vulhub
         * https://github.com/madhuakula/kubernetes-goat.git
 * task
+    - BUG move docker/ContainerCreate and kube/JobCreate `InterruptHandler` in the commands
     - inputs should look for HCK_TASK_??? env var override if --input is not present before using default
     - review TaskV1 schema i.e. `pages`, `license`, command `description`
     - `history` command to list old tasks i.e. names of log files e.g. <TIMESTAMP>-task-<NAME>-<RANDOM>
