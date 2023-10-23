@@ -130,6 +130,7 @@ func (task *KubeTaskClient) runTask(opts *taskModel.RunOptions) error {
 		Namespace:     namespace,
 		PodName:       podInfo.PodName,
 		ContainerName: podInfo.ContainerName,
+		OutStream:     opts.StreamOpts.Out,
 	}
 	task.eventBus.Publish(newPodLogKubeEvent(logFileName))
 	// blocks and tail logs

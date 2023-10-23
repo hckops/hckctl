@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -490,7 +489,7 @@ func (client *KubeClient) podLogsStream(opts *PodLogsOpts) (io.ReadCloser, error
 	return outStream, nil
 }
 
-func (client *KubeClient) PodLogsStd(opts *PodLogsOpts) error {
+func (client *KubeClient) PodLogs(opts *PodLogsOpts) error {
 
 	outStream, err := client.podLogsStream(opts)
 	if err != nil {
@@ -499,7 +498,7 @@ func (client *KubeClient) PodLogsStd(opts *PodLogsOpts) error {
 	defer outStream.Close()
 
 	// blocks until the stream is finished
-	if _, err = io.Copy(os.Stdout, outStream); err != nil {
+	if _, err = io.Copy(opts.OutStream, outStream); err != nil {
 		return errors.Wrapf(err, "error pod logs std copy")
 	}
 	return nil
@@ -517,7 +516,7 @@ func (client *KubeClient) PodLogsTee(opts *PodLogsOpts, logFileName string) erro
 	if err != nil {
 		return errors.Wrap(err, "error pod logs file")
 	}
-	multiWriter := io.MultiWriter(os.Stdout, logFile)
+	multiWriter := io.MultiWriter(opts.OutStream, logFile)
 	defer logFile.Close()
 
 	if _, err = io.Copy(multiWriter, outStream); err != nil {

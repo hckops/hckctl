@@ -120,7 +120,11 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 			// TODO add flag to TaskV1 template to use "ContainerLogsStd" if command is "help" or "version"
 			// tail logs before blocking
 			task.eventBus.Publish(newContainerLogDockerEvent(logFileName))
-			return task.client.ContainerLogsTee(containerId, logFileName)
+			logsOpts := &docker.ContainerLogsOpts{
+				ContainerId: containerId,
+				OutStream:   opts.StreamOpts.Out,
+			}
+			return task.client.ContainerLogsTee(logsOpts, logFileName)
 		},
 		OnContainerStatusCallback: func(status string) {
 			task.eventBus.Publish(newContainerCreateStatusDockerEvent(status))

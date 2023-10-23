@@ -391,9 +391,9 @@ func (client *DockerClient) ContainerLogsStd(containerId string) error {
 	return nil
 }
 
-func (client *DockerClient) ContainerLogsTee(containerId string, logFileName string) error {
+func (client *DockerClient) ContainerLogsTee(opts *ContainerLogsOpts, logFileName string) error {
 
-	outStream, err := client.containerLogsStream(containerId)
+	outStream, err := client.containerLogsStream(opts.ContainerId)
 	if err != nil {
 		return err
 	}
@@ -403,7 +403,7 @@ func (client *DockerClient) ContainerLogsTee(containerId string, logFileName str
 	if err != nil {
 		return errors.Wrap(err, "error container logs file")
 	}
-	multiWriter := io.MultiWriter(os.Stdout, logFile)
+	multiWriter := io.MultiWriter(opts.OutStream, logFile)
 	//log.SetOutput(multiWriter)
 	defer logFile.Close()
 

@@ -346,6 +346,7 @@ composeRef e.g. https://github.com/digininja/DVWA/blob/master/compose.yml
 
 TODO
 * priority
+    - InterruptHandler in kube client should be ignored or moved in the command
     - debug `htb-postman`
     - add flow example
     - verify cloud no-shell support

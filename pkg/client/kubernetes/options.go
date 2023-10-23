@@ -47,6 +47,7 @@ type PodLogsOpts struct {
 	Namespace     string
 	PodName       string
 	ContainerName string
+	OutStream     io.Writer
 }
 
 type JobOpts struct {

@@ -211,7 +211,7 @@ func (box *KubeBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.BoxIn
 		// stop loader
 		box.eventBus.Publish(newPodExecKubeLoaderEvent())
 
-		return box.logsBox(template, info, deleteOnExit)
+		return box.logsBox(template, info, streamOpts, deleteOnExit)
 	}
 
 	// exec
@@ -238,7 +238,7 @@ func (box *KubeBoxClient) execBox(template *boxModel.BoxV1, info *boxModel.BoxIn
 	return box.client.PodExecShell(opts)
 }
 
-func (box *KubeBoxClient) logsBox(template *boxModel.BoxV1, info *boxModel.BoxInfo, deleteOnExit bool) error {
+func (box *KubeBoxClient) logsBox(template *boxModel.BoxV1, info *boxModel.BoxInfo, streamOpts *commonModel.StreamOptions, deleteOnExit bool) error {
 	namespace := box.clientOpts.Namespace
 
 	if deleteOnExit {
@@ -253,9 +253,10 @@ func (box *KubeBoxClient) logsBox(template *boxModel.BoxV1, info *boxModel.BoxIn
 		Namespace:     namespace,
 		PodName:       info.Id,
 		ContainerName: template.MainContainerName(),
+		OutStream:     streamOpts.Out,
 	}
 	box.eventBus.Publish(newPodLogsKubeEvent(namespace, info.Id))
-	return box.client.PodLogsStd(opts)
+	return box.client.PodLogs(opts)
 }
 
 func (box *KubeBoxClient) podPortForward(template *boxModel.BoxV1, boxInfo *boxModel.BoxInfo, isWait bool) error {
