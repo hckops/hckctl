@@ -43,7 +43,7 @@ checksum:
 
 brews:
   - name: hckctl
-    tap:
+    repository:
       owner: hckops
       name: homebrew-tap
     commit_author:

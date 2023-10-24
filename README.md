@@ -255,25 +255,33 @@ Follow the official [instructions](https://podman.io/docs/installation) to insta
 
 ## Setup
 
-Download the latest binaries
+### Linux
+
 ```bash
 # latest release
 HCKCTL_VERSION=$(curl -sS https://api.github.com/repos/hckops/hckctl/releases/latest | jq -r .name | sed 's/v//')
 
-# install or update (linux)
+# install or update
 curl -sSL https://github.com/hckops/hckctl/releases/latest/download/hckctl-${HCKCTL_VERSION}-linux-x86_64.tar.gz | \
   sudo tar -xzf - -C /usr/local/bin
-
-# install (macos)
-brew install hckops/tap/hckctl
-# update
-brew upgrade hckctl
 
 # verify
 hckctl version
 
 # uninstall
 sudo rm /usr/local/bin/hckctl
+```
+
+### MacOS
+
+* [Homebrew](https://brew.sh)
+
+```bash
+# install
+brew install hckops/tap/hckctl
+
+# update
+brew upgrade hckctl
 ```
 
 ## Development
@@ -321,121 +329,108 @@ Credit should go to all the authors and maintainers for their open source tools,
 
 <!--
 
-box remote kube: after killing vnc/portforward
-E1020 19:55:12.436966  149063 portforward.go:381] error copying from remote stream to local connection: readfrom tcp4 127.0.0.1:5900->127.0.0.1:54768: write tcp4 127.0.0.1:5900->127.0.0.1:54768: write: broken pipe
-
 * demo
-    - solve the machine and add how to after docker https://github.com/juice-shop/juice-shop#docker-container
-    - auto-exploitation box
-    - metasploit plugin
-    - windows examples
-    - catalog: fix powershell
-    - catalog: add page/license/etc and generate static site
-
->>> lab + kompose https://github.com/kubernetes/kompose
-composeRef e.g. https://github.com/digininja/DVWA/blob/master/compose.yml
-
-TODO
-* priority
-    - lab inputs
-    - add GitHub org labels: feature/bug/question
-    - review all command cli example/description
-    - convert TODOs left in GitHub issues
-    - cloud: update platform dependency prs (3)
-    - cloud: verify network connectivity between boxes/tasks i.e. kube.svc
-    - cloud: add task (kube provider)
-    - cloud: use public pkg
-    - debug `htb-postman`
-    - add flow example
-    - play htb: linux/win
-    - add copyTo/copyFrom box/task
-    - goreleaser: docker release and gh-action
-    - goreleaser:test on windows and add scoop
-    - (?) kube plugin
-* general
-    - strict schema validation
-    - add disclaimer of responsibility to readme?
-    - brew release
-    - review context/http/client timeouts e.g. vpn or target not available
-    - verify config migration between versions
-    - add readme lab video/gif https://asciinema.org
-    - delete old branches (video)
-    - update internal cli diagram
-    - review/delete GitHub project
-    - add go reference badge
-    - public `preview/kali-core` image
+    - play htb/thm/root-me (unix and windows)
+    - strawhatsec link with "megalopolis/box/vulnerable" solution
+    - example auto-exploitation box with `htb-postman` > TODO listen port
     - create PR to external official doc to run
         * owasp/dvwa
+        * add "how to setup" e.g. https://github.com/juice-shop/juice-shop#docker-container
         * https://github.com/vulhub/vulhub
         * https://houdini.secsi.io
-    - flaky tests (?)
-        * kubernetes_test.go:TestNewResources
-    - rename `template` to catalog? or alias?
-    - cmd aliases e.g. start/up/create
+* general
+    - convert TODOs left in GitHub issues
+    - add GitHub org labels: feature/bug/question
+    - add disclaimer of responsibility to readme?
+    - review context/http/client timeouts e.g. vpn or target not available
+    - add readme lab video/gif https://asciinema.org
+    - delete old branches (video)
+    - review/delete GitHub project
+    - update internal cli diagram
+    - docker: add support for remote docker daemon with `DOCKER_HOST` i.e. dind
 * cli
+    - review all commands cli example/description
     - autocomplete commands and values
         * e.g. `box connect <list of boxes>` with `ValidArgsFunction`
         * e.g. `box <list of box templates>` with `ValidArgsFunction`
         * see fix autocomplete
-    - config add set command
+    - config: add set command
+    - config: add migration strategy between versions
     - add confirmation before
         * reset config
         * delete all
+    - add copyTo/copyFrom box/task
+    - cmd aliases e.g. start/up/create
 * template
+    - strict schema validation
     - add `--remote` mutually exclusive flag
-    - keep up-to-date directories to exclude in `resolvePath` e.g. charts
-    - add filters and review output e.g. table
+    - add filters and review output e.g. print table
+    - always review and keep up-to-date directories to exclude in `resolvePath` e.g. charts
+    - rename `template` to catalog? or alias?
 * box
-    - print/event shared directory, same as envs, ports etc.
-    - review tty resize
-    - expose copy from/to ???
-    - kube: verify if `close()` is needed or `return nil`
+    - BUG docker: support box/preview/powershell.yml `/usr/bin/pwsh` (attach with no tty and raw terminal) see `docker run --rm -it mcr.microsoft.com/powershell`
+    - BUG cloud: `execBox` does not interrupt stream with shell none and hang forever
+    - on connect/exec with docker/kube print/event shared directory, same as envs, ports etc.
+    - review tty resize support
+    - kube: verify if `close()` is needed or delete and `return nil`
     - kube: `execBox` deployment always check/scale replica to 1 before exec (test with replica=0)
     - kube: update resources sizes + comparison
-    - docker: COPY shared volume `XDG_DATA_HOME`
-    - docker: support powershell `/usr/bin/pwsh` (attach with no tty and raw terminal) see `docker run --rm -it mcr.microsoft.com/powershell`
-    - docker: add support for remote docker daemon with `DOCKER_HOST`
-    - add podman provider
-    - add context timeout
-    - BUG cloud: `execBox` does not interrupt stream with shell none and hang forever
-    - cloud: ssh key auth only + remove InsecureIgnoreHostKey
-    - cloud: remove body from empty request `omitempty to remove "body":{}`
     - list boxes in table with padding see `tabwriter` https://gosamples.dev/string-padding
     - filter/list box (list and delete) and template (list and validate) columns by provider + sorting
-    - flaky issue `zerolog: could not write event: write /home/<REDACTED>/.local/state/hck/log/hckctl-<REDACTED>.log: file already closed`
 * lab 
-    - `command` cli description and example
-    - in `create` add override e.g. `--input alias=parrot --input password=changeme --input vpn=htb-eu`
+    - TODO add missing `command` cli description and example
+    - add inputs override e.g. `--input alias=parrot --input password=changeme --input vpn=htb-eu`
     - inputs should look for HCK_LAB_??? env var override if --input is not present before using default
     - verify optional merge/overrides
     - in `connect` merge/expand BoxEnv actual BoxEnv e.g. generated password
-    - compose/template/infra
+    - compose/template/infra https://kompose.io or helm
         * https://github.com/SpecterOps/BloodHound/blob/main/examples/docker-compose/docker-compose.yml
-        * https://kompose.io
+        * https://github.com/digininja/DVWA/blob/master/compose.yml
         * https://github.com/vulhub/vulhub
         * https://github.com/madhuakula/kubernetes-goat.git
 * task
+    - TODO add missing `command` cli description and example
     - BUG move docker/ContainerCreate and kube/JobCreate `InterruptHandler` in the commands
     - inputs should look for HCK_TASK_??? env var override if --input is not present before using default
-    - review TaskV1 schema i.e. `pages`, `license`, command `description`
-    - `history` command to list old tasks i.e. names of log files e.g. <TIMESTAMP>-task-<NAME>-<RANDOM>
-    - for debug purposes prepend file output with interpolated task (yaml) or command parameters
-    - add command to remove all logs
-    - skip output file for `help` and `version`
-    - limit default kube resources
-    - add `--background` to omit stdout and ignore interrupt handler i.e. only file output
+    - review TaskV1 schema i.e. `pages`, `license`, command `description` and generate static site
+    - docker/kube: limit default resources
+    - log: `history` command to list old tasks i.e. names of log files e.g. <TIMESTAMP>-task-<NAME>-<RANDOM>
+    - log: for debug purposes prepend file output with interpolated task (yaml) or command parameters + sha REVISION
+    - log: add command to remove/clear all logs
+    - log: skip output file creation for `help` and `version` commands (set in schema or default commands if always present)
+    - log: add `--background` to omit stdout and ignore interrupt handler i.e. only output file
+* cloud
+    - update platform dependency prs (3)
+    - verify network connectivity between boxes/tasks i.e. kube.svc
+    - add task provider (kube) > vpn use flow?
+    - add flow example
+    - use public pkg
+    - on connect/exec print public endpoints, same as envs, ports etc.
+    - use ssh key auth only instead of token + remove InsecureIgnoreHostKey
+    - remove body from empty request `omitempty to remove "body":{}`
 * version
     - print if new version available
     - implement server and providers `version` in json format docker/kube/cloud
 * release
-    - add brew https://goreleaser.com/customization/homebrew
-    - test linux
+    - goreleaser: add docker release and gh-action (cicd)
+    - goreleaser: add scoop
     - test mac and mac1
     - test window vm
     - verify release workflow should depend on ci workflow
+    - publish to public/official brew
+* megalopolis
+    - public `preview/kali-core` image 
+    - docker image https://github.com/edoardottt/scilla
+    - add command to use generic metasploit plugin
 * prompt
     - https://github.com/snwfdhmp/awesome-gpt-prompt-engineering
-* megalopolis
-    - (docker) https://github.com/edoardottt/scilla
+* warnings to investigate
+
+# caused by async events
+zerolog: could not write event: write /home/<REDACTED>/.local/state/hck/log/hckctl-<REDACTED>.log: file already closed
+
+# cloud only
+box remote kube: after killing vnc/portforward
+E1020 19:55:12.436966  149063 portforward.go:381] error copying from remote stream to local connection: readfrom tcp4 127.0.0.1:5900->127.0.0.1:54768: write tcp4 127.0.0.1:5900->127.0.0.1:54768: write: broken pipe
 
 -->
