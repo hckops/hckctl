@@ -40,3 +40,23 @@ archives:
 
 checksum:
   name_template: "{{ .ProjectName }}-{{ .Version }}-checksums.txt"
+
+brews:
+  - name: hckctl
+    tap:
+      owner: hckops
+      name: homebrew-tap
+    commit_author:
+      name: hckbot
+      email: hckbot@users.noreply.github.com
+    folder: Formula
+    homepage: https://github.com/hckops/hckctl
+    description: "The declarative HaCKing Tool"
+    skip_upload: false
+    dependencies:
+      - name: docker
+        type: optional
+      - name: kubectl
+        type: optional
+    test: |-
+      hckctl version
