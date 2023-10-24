@@ -43,4 +43,4 @@ jobs:
         with:
           action: create-message
           webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          message: "> Repository:  **${{ github.repository }}**\\n> Version:\\t\\t ${{ github.ref }}\\n> Status:\\t\\t  **NEW release**"
+          message: "> Repository:  **${{ github.repository }}**\\n> Version:\\t\\t ${{ github.ref_name }}\\n> Status:\\t\\t  **NEW release**"
