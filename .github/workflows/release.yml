@@ -35,7 +35,8 @@ jobs:
           version: latest
           args: release --clean
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # https://goreleaser.com/errors/resource-not-accessible-by-integration
+          GITHUB_TOKEN: ${{ secrets.GORELEASER_TOKEN }}
 
       - name: Notification
         uses: hckops/actions/discord-action@v0.10.10

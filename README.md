@@ -260,9 +260,14 @@ Download the latest binaries
 # latest release
 HCKCTL_VERSION=$(curl -sS https://api.github.com/repos/hckops/hckctl/releases/latest | jq -r .name | sed 's/v//')
 
-# install or update
+# install or update (linux)
 curl -sSL https://github.com/hckops/hckctl/releases/latest/download/hckctl-${HCKCTL_VERSION}-linux-x86_64.tar.gz | \
   sudo tar -xzf - -C /usr/local/bin
+
+# install (macos)
+brew install hckops/tap/hckctl
+# update
+brew upgrade hckctl
 
 # verify
 hckctl version
@@ -319,40 +324,34 @@ Credit should go to all the authors and maintainers for their open source tools,
 box remote kube: after killing vnc/portforward
 E1020 19:55:12.436966  149063 portforward.go:381] error copying from remote stream to local connection: readfrom tcp4 127.0.0.1:5900->127.0.0.1:54768: write tcp4 127.0.0.1:5900->127.0.0.1:54768: write: broken pipe
 
->>> remove TryHackMe demo from readme
-
-* fix cloud
-* update platform prs
-* verify network connectivity between boxes/tasks i.e. kube.svc
-* add task cloud (kube provider)
-* use public PKG
-* lab inputs
-* convert TODOs left in GitHub issues
-* add GitHub org labels: feature/bug/question
-
-* test all catalog
-* verify binaries
-* test on mac-m1 and win (docker images)
-* review all command cli example/description
-
-TODO demo
-* solve the machine and add how to after docker https://github.com/juice-shop/juice-shop#docker-container
-* auto-exploitation box
-* metasploit plugin
-* windows examples
+* demo
+    - solve the machine and add how to after docker https://github.com/juice-shop/juice-shop#docker-container
+    - auto-exploitation box
+    - metasploit plugin
+    - windows examples
+    - catalog: fix powershell
+    - catalog: add page/license/etc and generate static site
 
 >>> lab + kompose https://github.com/kubernetes/kompose
 composeRef e.g. https://github.com/digininja/DVWA/blob/master/compose.yml
 
 TODO
 * priority
+    - lab inputs
+    - add GitHub org labels: feature/bug/question
+    - review all command cli example/description
+    - convert TODOs left in GitHub issues
+    - cloud: update platform dependency prs (3)
+    - cloud: verify network connectivity between boxes/tasks i.e. kube.svc
+    - cloud: add task (kube provider)
+    - cloud: use public pkg
     - debug `htb-postman`
     - add flow example
-    - verify cloud no-shell support
     - play htb: linux/win
-    - RELEASE example https://github.com/boz/kail#homebrew
-    - docker release and gh-action
     - add copyTo/copyFrom box/task
+    - goreleaser: docker release and gh-action
+    - goreleaser:test on windows and add scoop
+    - (?) kube plugin
 * general
     - strict schema validation
     - add disclaimer of responsibility to readme?
