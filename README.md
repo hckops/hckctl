@@ -259,10 +259,10 @@ Follow the official [instructions](https://podman.io/docs/installation) to insta
 
 ```bash
 # latest release
-HCKCTL_VERSION=$(curl -sS https://api.github.com/repos/hckops/hckctl/releases/latest | jq -r .name | sed 's/v//')
+HCKCTL_VERSION=$(curl -sS https://api.github.com/repos/hckops/hckctl/releases/latest | jq -r .name)
 
 # install or update
-curl -sSL https://github.com/hckops/hckctl/releases/latest/download/hckctl-${HCKCTL_VERSION}-linux-x86_64.tar.gz | \
+curl -sSL https://github.com/hckops/hckctl/releases/latest/download/hckctl-${HCKCTL_VERSION#"v"}-linux-x86_64.tar.gz | \
   sudo tar -xzf - -C /usr/local/bin
 
 # verify
@@ -314,6 +314,7 @@ just publish <MAJOR.MINOR.PATCH>
 * `plugin` add custom cli commands in any language
   - `man` combine tldr and cheat with task commands
   - `htb` and `thm` api to start/stop/list machines and submit flags
+  - `mitm` hook to sniff and tamper box and task network traffic
   - `prompt` chatgpt prompt style
 
 ## Contribute
@@ -371,6 +372,8 @@ Credit should go to all the authors and maintainers for their open source tools,
     - BUG docker: support box/preview/powershell.yml `/usr/bin/pwsh` (attach with no tty and raw terminal) see `docker run --rm -it mcr.microsoft.com/powershell`
     - BUG cloud: `execBox` does not interrupt stream with shell none and hang forever
     - on connect/exec with docker/kube print/event shared directory, same as envs, ports etc.
+    - add parameter to override default SIZE i.e. s/m/l/xl
+    - fix linux `host.docker.internal` e.g. `hckops.local`
     - review tty resize support
     - kube: verify if `close()` is needed or delete and `return nil`
     - kube: `execBox` deployment always check/scale replica to 1 before exec (test with replica=0)
