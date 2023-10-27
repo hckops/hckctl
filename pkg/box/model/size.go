@@ -36,7 +36,6 @@ func (size ResourceSize) ToKubeResource() *kubernetes.KubeResource {
 		Memory: "1024Mi",
 		Cpu:    "1000m",
 	}
-	// TODO define sizes
 	switch size {
 	case ExtraSmall:
 		return &kubernetes.KubeResource{
@@ -45,6 +44,21 @@ func (size ResourceSize) ToKubeResource() *kubernetes.KubeResource {
 		}
 	case Small:
 		return defaultSize
+	case Medium:
+		return &kubernetes.KubeResource{
+			Memory: "2Gi",
+			Cpu:    "2000m",
+		}
+	case Large:
+		return &kubernetes.KubeResource{
+			Memory: "3Gi",
+			Cpu:    "3000m",
+		}
+	case ExtraLarge:
+		return &kubernetes.KubeResource{
+			Memory: "4Gi",
+			Cpu:    "4000m",
+		}
 	default:
 		return defaultSize
 	}
