@@ -7,8 +7,6 @@ import (
 	"github.com/hckops/hckctl/pkg/client/kubernetes"
 )
 
-// TODO comparable e.g. "M > S"
-
 type ResourceSize uint
 
 const (

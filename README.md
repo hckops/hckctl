@@ -377,7 +377,6 @@ Credit should go to all the authors and maintainers for their open source tools,
     - review tty resize support
     - kube: verify if `close()` is needed or delete and `return nil`
     - kube: `execBox` deployment always check/scale replica to 1 before exec (test with replica=0)
-    - kube: update comparison
     - list boxes in table with padding see `tabwriter` https://gosamples.dev/string-padding
     - filter/list box (list and delete) and template (list and validate) columns by provider + sorting
 * lab 

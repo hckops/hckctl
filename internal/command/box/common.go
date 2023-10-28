@@ -146,6 +146,7 @@ func newCreateOptions(info *template.TemplateInfo[boxModel.BoxV1], labels common
 	if err != nil {
 		return nil, err
 	}
+	log.Info().Msgf("box resources size=%s", size)
 
 	allLabels := commonCmd.AddTemplateLabels[boxModel.BoxV1](info, boxModel.AddBoxSize(labels, size))
 
