@@ -279,7 +279,7 @@ func (box *DockerBoxClient) execBox(opts *boxModel.ConnectOptions, info *boxMode
 			}
 		},
 	}
-	box.eventBus.Publish(newContainerExecDockerEvent(info.Id, info.Name, opts.Template.Shell))
+	box.eventBus.Publish(newContainerExecDockerEvent(info.Name, info.Id, opts.Template.Shell))
 	return box.client.ContainerExec(execOpts)
 }
 

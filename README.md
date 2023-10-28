@@ -81,7 +81,7 @@ Access your target from a managed [`lab`](https://github.com/hckops/megalopolis/
 * mount and keep in sync `dumps` e.g. git, s3
 * load secrets from a vault
 * save/restore workdir snapshots
-* deploy private templates and infrastructures e.g. [Kompose](https://kompose.io), [Helm](https://helm.sh)
+* deploy private templates and infrastructures using an operator
 ```bash
 # starts demo lab (cloud only)
 hckctl lab ctf-linux
@@ -109,7 +109,7 @@ hckctl task nmap --network-vpn htb --provider kube --inline -- nmap 10.10.10.3 -
 # downloads common wordlists
 git clone --depth 1 https://github.com/danielmiessler/SecLists.git \
   ${HOME}/.local/state/hck/share/wordlists/SecLists
-# fuzzing loading a local template against the retired "Knife" machine (with kube)
+# fuzzing using a local template against the retired "Knife" machine (with kube)
 # see https://app.hackthebox.com/machines/Knife
 hckctl task \
   --local ../megalopolis/task/fuzzer/gobuster.yml \
@@ -314,8 +314,8 @@ just publish <MAJOR.MINOR.PATCH>
 * `plugin` add custom cli commands in any language
   - `man` combine tldr and cheat with task commands
   - `htb` and `thm` api to start/stop/list machines and submit flags
-  - `mitm` hook to sniff and tamper box and task network traffic
-  - `prompt` chatgpt prompt style
+  - `mitm` hook to intercept network traffic of boxes and tasks
+  - `prompt` ChatGPT prompt style
 
 ## Contribute
 
@@ -385,7 +385,7 @@ Credit should go to all the authors and maintainers for their open source tools,
     - inputs should look for HCK_LAB_??? env var override if --input is not present before using default
     - verify optional merge/overrides
     - in `connect` merge/expand BoxEnv actual BoxEnv e.g. generated password
-    - compose/template/infra https://kompose.io or helm
+    - compose/template/infra https://kompose.io or https://helm.sh
         * https://github.com/SpecterOps/BloodHound/blob/main/examples/docker-compose/docker-compose.yml
         * https://github.com/digininja/DVWA/blob/master/compose.yml
         * https://github.com/vulhub/vulhub
