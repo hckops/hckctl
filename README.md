@@ -81,7 +81,7 @@ Access your target from a managed [`lab`](https://github.com/hckops/megalopolis/
 * mount and keep in sync `dumps` e.g. git, s3
 * load secrets from a vault
 * save/restore workdir snapshots
-* deploy private templates and infrastructures using an operator
+* provision private templates with an operator
 ```bash
 # starts demo lab (cloud only)
 hckctl lab ctf-linux
