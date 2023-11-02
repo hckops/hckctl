@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <i>Automated Penetration Testing and Security Workflows</i><br>
+  <i>Automated Penetration Testing and Security Workflows Orchestrator</i><br>
   <a href="#quick-start">Quick start</a>&nbsp;&bull;
   <a href="#provider">Provider</a>&nbsp;&bull;
   <a href="#setup">Setup</a>&nbsp;&bull;
@@ -34,7 +34,7 @@ Launch manual and automated attacks with pre-defined and always up-to-date templ
 
 Attack a vulnerable infrastructure and connect to your training platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup and network configurations.
 
-Package, distribute and run local or remote attack boxes and workflows to find weaknesses on authorized targets in a declarative way. `hckctl` is free, open source and community driven, no vendor lock-in, extensible and built using native providers api.
+Package, distribute and run local or remote pwnboxes and workflows to find weaknesses on authorized targets in a declarative way. `hckctl` is free, open source and community driven, no vendor lock-in, extensible and built using native providers api.
 
 ## Quick start
 
@@ -73,9 +73,9 @@ hckctl task \
 tail -F ${HOME}/.local/state/hck/task/log/task-*
 ```
 
-## Flow (coming soon)
+### Flow (coming soon)
 
-> *Run scheduled multistage tasks in parallel, collect and output the combined results*
+> *Run scheduled multistage tasks in parallel, collect and output the combined results in multiple formats*
 
 ### Box
 
@@ -275,8 +275,8 @@ just publish <MAJOR.MINOR.PATCH>
 
 ## Roadmap
 
-* `flow` run scheduled multistage tasks in parallel, collect and output the combined results
-* `lab` attack a vulnerable target from a managed platform
+* `flow` orchestrate tasks and combine their output
+* `lab` simulate attacks and scenarios against vulnerable targets on a managed platform
 * `machine` create and access VMs e.g. DigitalOcean Droplet, AWS EC2, Azure Virtual Machines, QEMU etc.
 * `tui` similar to lazydocker and k9s together
 * `network` support WireGuard, Tor, ProxyChains, etc.
