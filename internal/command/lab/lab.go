@@ -40,7 +40,7 @@ func NewLabCmd(configRef *config.ConfigRef) *cobra.Command {
 		Args:    cobra.ExactArgs(1),
 		PreRunE: opts.validate,
 		RunE:    opts.run,
-		Hidden:  false,
+		Hidden:  true,
 	}
 
 	// N --inputs

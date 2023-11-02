@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <i>The declarative Breach and Attack Simulation toolkit: one tool to rule 'em all</i><br>
+  <i>Automated Penetration Testing and Security Workflows</i><br>
   <a href="#quick-start">Quick start</a>&nbsp;&bull;
   <a href="#provider">Provider</a>&nbsp;&bull;
   <a href="#setup">Setup</a>&nbsp;&bull;
@@ -32,60 +32,11 @@
 
 Launch manual and automated attacks with pre-defined and always up-to-date templates of your favourite tools.
 
-Attack your vulnerable target infrastructure or connect to your training platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup and network configurations.
+Attack a vulnerable infrastructure and connect to your training platform ([HTB](https://www.hackthebox.com), [TryHackMe](https://tryhackme.com), [Vulnlab](https://www.vulnlab.com), etc.) without wasting anymore time on boring installations, environment setup and network configurations.
 
-Package, distribute and run known exploits to find weaknesses on authorized targets in a declarative way.
-
-Designed to transparently run locally, remotely or integrated in pipelines and with guaranteed stability and backward compatibility over time.
-`hckctl` is free, open source and community driven, no vendor lock-in, extensible and built using native providers api.
-
-Leverage the cloud platform or request a dedicated managed environment to:
-* orchestrate complex attack scenarios
-* constantly probe and monitor your security posture
-* analyze, aggregate and export results via api
-* trigger instant actions based on observed events and patterns
+Package, distribute and run local or remote attack boxes and workflows to find weaknesses on authorized targets in a declarative way. `hckctl` is free, open source and community driven, no vendor lock-in, extensible and built using native providers api.
 
 ## Quick start
-
-### Box
-
-Spin-up a [`box`](https://github.com/hckops/megalopolis/tree/main/box) and access all port-forwarded ports locally
-```bash
-# spawns a temporary docker box locally
-hckctl box alpine
-#[box-alpine-<RANDOM>][tty] tunnel (remote) 7681 -> (local) 7681
-#[box-alpine-<RANDOM>] TTYD_USERNAME=root
-#[box-alpine-<RANDOM>] TTYD_PASSWORD=alpine
-
-# deploys a detached box to a kubernetes cluster
-hckctl box start arch --provider kube
-# tunnels tty port only
-hckctl box open box-arch-<RANDOM> --no-exec
-
-# creates a pwnbox box connected to your hack the box account
-hckctl box preview/parrot-sec --network-vpn htb
-# connects to vnc
-vncviewer localhost:5900
-
-# starts a background box to attack locally
-hckctl box start vulnerable/owasp-juice-shop
-```
-
-### Lab (preview)
-
-> TODO video
-
-Access your target from a managed [`lab`](https://github.com/hckops/megalopolis/tree/main/lab) to
-* tunnel multiple vpn connections through a highly available ssh proxy
-* expose public endpoints with custom domains
-* mount and keep in sync `dumps` e.g. git, s3
-* load secrets from a vault
-* save/restore workdir snapshots
-* provision private templates with an operator
-```bash
-# starts demo lab (cloud only)
-hckctl lab ctf-linux
-```
 
 ### Task
 
@@ -122,16 +73,32 @@ hckctl task \
 tail -F ${HOME}/.local/state/hck/task/log/task-*
 ```
 
-### Flow (preview)
+## Flow (coming soon)
 
-Run multistage tasks in parallel, collect and output the combined results
+> *Run scheduled multistage tasks in parallel, collect and output the combined results*
+
+### Box
+
+Spin-up a [`box`](https://github.com/hckops/megalopolis/tree/main/box) and access all port-forwarded ports locally
 ```bash
-hckctl flow scan www.example.com
-hckctl flow fuzz 127.0.0.1:8080
-hckctl flow sql 127.0.0.1:3306
-hckctl flow atomic-red-team 127.0.0.1 T1485
-hckctl flow c2 ping
-hckctl flow phishing @example.com
+# spawns a temporary docker box locally
+hckctl box alpine
+#[box-alpine-<RANDOM>][tty] tunnel (remote) 7681 -> (local) 7681
+#[box-alpine-<RANDOM>] TTYD_USERNAME=root
+#[box-alpine-<RANDOM>] TTYD_PASSWORD=alpine
+
+# deploys a detached box to a kubernetes cluster
+hckctl box start arch --provider kube
+# tunnels tty port only
+hckctl box open box-arch-<RANDOM> --no-exec
+
+# creates a pwnbox box connected to your hack the box account
+hckctl box preview/parrot-sec --network-vpn htb
+# connects to vnc
+vncviewer localhost:5900
+
+# starts a background box to attack locally
+hckctl box start vulnerable/owasp-juice-shop
 ```
 
 ### Template
@@ -145,7 +112,7 @@ hckctl template list
 hckctl template validate "../megalopolis/**/*.{yml,yaml}"
 ```
 
-Inspired by [GitOps](https://www.gitops.tech), the whole project is centered around git as source of truth, schema validation and versioning. Pin a `revision` (branch, tag, or sha) if you need to ensure long term stability
+The whole project is centered around git as source of truth, schema validation and versioning. Pin a `revision` (branch, tag, or sha) if you need to ensure long term stability
 ```bash
 # uses template "megalopolis/task/scanner/trivy" @ commit hash "12e7599"
 hckctl task trivy --revision v0.1.0
@@ -259,7 +226,7 @@ Follow the official [instructions](https://podman.io/docs/installation) to insta
 
 ```bash
 # latest release
-HCKCTL_VERSION=$(curl -sS https://api.github.com/repos/hckops/hckctl/releases/latest | jq -r .name)
+HCKCTL_VERSION=$(curl -sS https://api.github.com/repos/hckops/hckctl/releases/latest | jq -r .tag_name)
 
 # install or update
 curl -sSL https://github.com/hckops/hckctl/releases/latest/download/hckctl-${HCKCTL_VERSION#"v"}-linux-x86_64.tar.gz | \
@@ -308,6 +275,8 @@ just publish <MAJOR.MINOR.PATCH>
 
 ## Roadmap
 
+* `flow` run scheduled multistage tasks in parallel, collect and output the combined results
+* `lab` attack a vulnerable target from a managed platform
 * `machine` create and access VMs e.g. DigitalOcean Droplet, AWS EC2, Azure Virtual Machines, QEMU etc.
 * `tui` similar to lazydocker and k9s together
 * `network` support WireGuard, Tor, ProxyChains, etc.
@@ -330,6 +299,7 @@ Credit should go to all the authors and maintainers for their open source tools,
 
 <!--
 
+* review sec-notes
 * demo
     - play htb/thm/root-me (unix and windows)
     - strawhatsec link with "megalopolis/box/vulnerable" solution
@@ -421,7 +391,9 @@ Credit should go to all the authors and maintainers for their open source tools,
     - verify release workflow should depend on ci workflow
     - publish to public/official brew
 * megalopolis
-    - public `preview/kali-core` image 
+    - docker: tor/browser
+    - docker: windows-core
+    - docker: kali-core + vnc
     - docker image https://github.com/edoardottt/scilla
     - add command to use generic metasploit plugin
 * prompt
