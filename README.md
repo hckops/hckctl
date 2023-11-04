@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="160" src="docs/logo.svg" alt="logo">
+  <img src="docs/logo.svg" width="160" alt="logo">
 </p>
 
 <h1 align="center"><code>hckctl</code></h1>
@@ -73,11 +73,16 @@ hckctl task \
 tail -F ${HOME}/.local/state/hck/task/log/task-*
 ```
 
+Output command [examples](docs/task-htb-example.txt)
+
 ### Flow (coming soon)
 
 > *Run scheduled multistage tasks in parallel, collect and output the combined results in multiple formats*
 
 ### Box
+
+<img src="docs/screenshot-parrot-sec-1.png" width="49%" alt="parrot-sec-1"></img>
+<img src="docs/screenshot-parrot-sec-2.png" width="49%" alt="parrot-sec-1"></img>
 
 Spin-up a [`box`](https://github.com/hckops/megalopolis/tree/main/box) and access all port-forwarded ports locally
 ```bash
