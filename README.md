@@ -38,6 +38,35 @@ Package, distribute and run local or remote boxes and workflows to find weakness
 
 ## Quick start
 
+### Box
+
+Spin-up a [`box`](https://github.com/hckops/megalopolis/tree/main/box) and access all port-forwarded ports locally
+```bash
+# spawns a temporary docker box locally
+hckctl box alpine
+#[box-alpine-<RANDOM>][tty] tunnel (remote) 7681 -> (local) 7681
+#[box-alpine-<RANDOM>] TTYD_USERNAME=root
+#[box-alpine-<RANDOM>] TTYD_PASSWORD=alpine
+
+# deploys a detached box to a kubernetes cluster
+hckctl box start arch --provider kube
+# tunnels tty port only
+hckctl box open box-arch-<RANDOM> --no-exec
+
+# creates a pwnbox box connected to your hack the box account
+hckctl box preview/parrot-sec --network-vpn htb
+# connects to vnc
+vncviewer localhost:5900
+
+# starts a background box to attack locally
+hckctl box start vulnerable/owasp-juice-shop
+```
+
+*parrot-sec box screenshots*
+
+<img src="docs/screenshot-parrot-sec-1.png" width="49%" alt="parrot-sec-1"></img>
+<img src="docs/screenshot-parrot-sec-2.png" width="49%" alt="parrot-sec-1"></img>
+
 ### Task
 
 Run a single-stage [`task`](https://github.com/hckops/megalopolis/tree/main/task) using pre-defined commands
@@ -74,35 +103,6 @@ tail -F ${HOME}/.local/state/hck/task/log/task-*
 ```
 
 Output command [examples](docs/task-htb-example.txt)
-
-### Box
-
-Spin-up a [`box`](https://github.com/hckops/megalopolis/tree/main/box) and access all port-forwarded ports locally
-```bash
-# spawns a temporary docker box locally
-hckctl box alpine
-#[box-alpine-<RANDOM>][tty] tunnel (remote) 7681 -> (local) 7681
-#[box-alpine-<RANDOM>] TTYD_USERNAME=root
-#[box-alpine-<RANDOM>] TTYD_PASSWORD=alpine
-
-# deploys a detached box to a kubernetes cluster
-hckctl box start arch --provider kube
-# tunnels tty port only
-hckctl box open box-arch-<RANDOM> --no-exec
-
-# creates a pwnbox box connected to your hack the box account
-hckctl box preview/parrot-sec --network-vpn htb
-# connects to vnc
-vncviewer localhost:5900
-
-# starts a background box to attack locally
-hckctl box start vulnerable/owasp-juice-shop
-```
-
-*parrot-sec box screenshots*
-
-<img src="docs/screenshot-parrot-sec-1.png" width="49%" alt="parrot-sec-1"></img>
-<img src="docs/screenshot-parrot-sec-2.png" width="49%" alt="parrot-sec-1"></img>
 
 ### Template
 
@@ -150,11 +150,15 @@ network:
 
 ### Docker
 
-Follow the official [instructions](https://docs.docker.com/engine/install) to install Docker Engine. The fastest way to get started is with the [convenience script](https://get.docker.com)
+Follow the official [instructions](https://docs.docker.com/engine/install) to install Docker Engine. The fastest way to get started on Linux is with the [convenience script](https://get.docker.com)
 ```bash
 # downloads and runs script
 curl -fsSL https://get.docker.com -o get-docker.sh
 ./sudo sh get-docker.sh
+```
+or on macOS with [Docker Desktop](https://docs.docker.com/desktop)
+```bash
+brew install homebrew/cask/docker
 ```
 
 [lazydocker](https://github.com/jesseduffield/lazydocker) is the recommended tool to watch and monitor containers
@@ -322,6 +326,7 @@ Credit should go to all the authors and maintainers for their open source tools,
     - review/delete GitHub project
     - update internal cli diagram
     - docker: add support for remote docker daemon with `DOCKER_HOST` i.e. dind
+    - docker: to use localhost tunnels with tasks add `--network-host` flag
 * cli
     - review all commands cli example/description
     - autocomplete commands and values
@@ -374,6 +379,8 @@ Credit should go to all the authors and maintainers for their open source tools,
     - log: add command to remove/clear all logs
     - log: skip output file creation for `help` and `version` commands (set in schema or default commands if always present)
     - log: add `--background` to omit stdout and ignore interrupt handler i.e. only output file
+    - add ENV to schema e.g. RUST_LOG=debug
+    - add `init` command e.g. update /etc/hosts
 * cloud
     - update platform dependency prs (3)
     - verify network connectivity between boxes/tasks i.e. kube.svc
@@ -394,13 +401,16 @@ Credit should go to all the authors and maintainers for their open source tools,
     - verify release workflow should depend on ci workflow
     - publish to public/official brew
 * megalopolis
+    - mirror: https://gitlab.com/hckops
     - docker: tor/browser
     - docker: windows-core
     - docker: kali-core + vnc
     - docker image https://github.com/edoardottt/scilla
     - add command to use generic metasploit plugin
+    - https://github.com/D3vil0p3r/htb-toolkit
 * prompt
     - https://github.com/snwfdhmp/awesome-gpt-prompt-engineering
+    - https://learnprompting.org
 * warnings to investigate
 
 # caused by async events
@@ -409,5 +419,9 @@ zerolog: could not write event: write /home/<REDACTED>/.local/state/hck/log/hckc
 # cloud only
 box remote kube: after killing vnc/portforward
 E1020 19:55:12.436966  149063 portforward.go:381] error copying from remote stream to local connection: readfrom tcp4 127.0.0.1:5900->127.0.0.1:54768: write tcp4 127.0.0.1:5900->127.0.0.1:54768: write: broken pipe
+
+https://github.com/ticarpi/dockerauto/issues/1
+https://github.com/evilsocket/legba/issues/24
+https://github.com/Athena-OS/athena-iso/issues/83
 
 -->
