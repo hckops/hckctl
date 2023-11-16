@@ -108,12 +108,12 @@ func newConfigOptions() (*configOptions, error) {
 	}
 
 	sharePath := filepath.Join(xdg.StateHome, common.DefaultDirName, shareDirName)
-	if err := util.CreateBaseDir(logFile); err != nil {
+	if err := util.CreateBaseDir(sharePath); err != nil {
 		return nil, errors.Wrap(err, "error creating share dir")
 	}
 
 	taskLogPath := filepath.Join(xdg.StateHome, common.DefaultDirName, taskLogDirName)
-	if err := util.CreateBaseDir(logFile); err != nil {
+	if err := util.CreateBaseDir(taskLogPath); err != nil {
 		return nil, errors.Wrap(err, "error creating task dir")
 	}
 
