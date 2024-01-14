@@ -326,7 +326,7 @@ Credit should go to all the authors and maintainers for their open source tools,
     - review/delete GitHub project
     - update internal cli diagram
     - docker: add support for remote docker daemon with `DOCKER_HOST` i.e. dind
-    - docker: to use localhost tunnels with tasks add `--network-host` flag
+    - IMPORTANT docker: to use localhost tunnels with tasks add `--network-host` flag
 * cli
     - review all commands cli example/description
     - autocomplete commands and values
@@ -357,6 +357,7 @@ Credit should go to all the authors and maintainers for their open source tools,
     - kube: `execBox` deployment always check/scale replica to 1 before exec (test with replica=0)
     - list boxes in table with padding see `tabwriter` https://gosamples.dev/string-padding
     - filter/list box (list and delete) and template (list and validate) columns by provider + sorting
+    - add flag `--offline` to avoid pulling the latest image (or fail if it doesn't exist)
 * lab 
     - TODO add missing `command` cli description and example
     - add inputs override e.g. `--input alias=parrot --input password=changeme --input vpn=htb-eu`
@@ -405,7 +406,6 @@ Credit should go to all the authors and maintainers for their open source tools,
     - docker: tor/browser
     - docker: windows-core
     - docker: kali-core + vnc
-    - docker image https://github.com/edoardottt/scilla
     - add command to use generic metasploit plugin
     - https://github.com/D3vil0p3r/htb-toolkit
 * prompt
@@ -423,5 +423,6 @@ E1020 19:55:12.436966  149063 portforward.go:381] error copying from remote stre
 https://github.com/ticarpi/dockerauto/issues/1
 https://github.com/evilsocket/legba/issues/24
 https://github.com/Athena-OS/athena-iso/issues/83
+https://github.com/pwnpad/pwnpad/issues/12
 
 -->
