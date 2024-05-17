@@ -39,7 +39,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GORELEASER_TOKEN }}
 
       - name: Notification
-        uses: hckops/actions/discord-action@v0.10.11
+        uses: hckops/actions/discord-action@v0.10.13
         with:
           action: create-message
           webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
