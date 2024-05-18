@@ -136,6 +136,7 @@ func (box *DockerBoxClient) createBox(opts *boxModel.CreateOptions) (*boxModel.B
 		ContainerConfig:              containerConfig,
 		HostConfig:                   hostConfig,
 		NetworkingConfig:             docker.BuildNetworkingConfig(networkName, networkId), // all on the same network
+		Platform:                     docker.DefaultPlatform(),
 		WaitStatus:                   false,
 		CaptureInterrupt:             false,
 		OnContainerInterruptCallback: func(string) {},

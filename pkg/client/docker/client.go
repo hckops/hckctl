@@ -19,8 +19,6 @@ import (
 	dockerApi "github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/stdcopy"
-	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
-
 	"github.com/hckops/hckctl/pkg/client/terminal"
 	"github.com/hckops/hckctl/pkg/util"
 )
@@ -86,18 +84,12 @@ func (client *DockerClient) ImageRemoveDangling(opts *ImageRemoveOpts) error {
 
 func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, error) {
 
-	// TODO move in ContainerCreateOpts and use this as default
-	platform := &ocispec.Platform{
-		Architecture: "amd64",
-		OS:           "linux",
-	}
-
 	newContainer, err := client.docker.ContainerCreate(
 		client.ctx,
 		opts.ContainerConfig,
 		opts.HostConfig,
 		opts.NetworkingConfig,
-		platform,
+		opts.Platform,
 		opts.ContainerName)
 	if err != nil {
 		return "", errors.Wrap(err, "error container create")

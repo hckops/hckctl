@@ -1,6 +1,7 @@
 package docker
 
 import (
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"io"
 
 	"github.com/docker/docker/api/types/container"
@@ -46,6 +47,7 @@ type ContainerCreateOpts struct {
 	ContainerConfig              *container.Config
 	HostConfig                   *container.HostConfig
 	NetworkingConfig             *network.NetworkingConfig
+	Platform                     *ocispec.Platform
 	WaitStatus                   bool
 	CaptureInterrupt             bool
 	OnContainerInterruptCallback func(containerId string)

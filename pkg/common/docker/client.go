@@ -150,6 +150,7 @@ func (common *DockerCommonClient) SidecarVpnInject(opts *commonModel.SidecarVpnI
 		ContainerName:    containerName,
 		ContainerConfig:  containerConfig,
 		HostConfig:       hostConfig,
+		Platform:         docker.DefaultPlatform(),
 		WaitStatus:       false,
 		CaptureInterrupt: false, // edge case: killing this while creating will leave an orphan sidecar container
 		OnContainerCreateCallback: func(containerId string) error {

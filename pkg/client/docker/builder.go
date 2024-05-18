@@ -2,6 +2,7 @@ package docker
 
 import (
 	"fmt"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -137,4 +138,11 @@ func ContainerNetworkMode(idOrName string) string {
 
 func BuildNetworkingConfig(networkName, networkId string) *network.NetworkingConfig {
 	return &network.NetworkingConfig{EndpointsConfig: map[string]*network.EndpointSettings{networkName: {NetworkID: networkId}}}
+}
+
+func DefaultPlatform() *ocispec.Platform {
+	return &ocispec.Platform{
+		Architecture: "amd64", // TODO add support for linux/arm64
+		OS:           "linux",
+	}
 }
