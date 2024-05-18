@@ -14,8 +14,9 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
+	dockerContainer "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
+	dockerImage "github.com/docker/docker/api/types/image"
 	dockerApi "github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/stdcopy"
@@ -43,7 +44,7 @@ func (client *DockerClient) Close() error {
 
 func (client *DockerClient) ImagePull(opts *ImagePullOpts) error {
 
-	reader, err := client.docker.ImagePull(client.ctx, opts.ImageName, types.ImagePullOptions{})
+	reader, err := client.docker.ImagePull(client.ctx, opts.ImageName, dockerImage.PullOptions{})
 	if err != nil {
 		return errors.Wrap(err, "error image pull")
 	}
@@ -62,7 +63,7 @@ func (client *DockerClient) ImagePull(opts *ImagePullOpts) error {
 func (client *DockerClient) ImageRemoveDangling(opts *ImageRemoveOpts) error {
 
 	// dangling images have no tags <none>
-	images, err := client.docker.ImageList(client.ctx, types.ImageListOptions{
+	images, err := client.docker.ImageList(client.ctx, dockerImage.ListOptions{
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key: "dangling", Value: "true",
 		}),
@@ -73,7 +74,7 @@ func (client *DockerClient) ImageRemoveDangling(opts *ImageRemoveOpts) error {
 	for _, image := range images {
 		opts.OnImageRemoveCallback(image.ID)
 
-		_, err := client.docker.ImageRemove(client.ctx, image.ID, types.ImageRemoveOptions{})
+		_, err := client.docker.ImageRemove(client.ctx, image.ID, dockerImage.RemoveOptions{})
 		if err != nil {
 			// ignore failures: there might be running containers with old images
 			opts.OnImageRemoveErrorCallback(image.ID, err)
@@ -107,7 +108,7 @@ func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, 
 		return "", errors.Wrap(err, "error container create callback")
 	}
 
-	if err := client.docker.ContainerStart(client.ctx, newContainer.ID, types.ContainerStartOptions{}); err != nil {
+	if err := client.docker.ContainerStart(client.ctx, newContainer.ID, dockerContainer.StartOptions{}); err != nil {
 		return "", errors.Wrap(err, "error container start")
 	}
 
@@ -116,7 +117,7 @@ func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, 
 			return "", errors.Wrap(err, "error container wait callback")
 		}
 
-		statusCh, errCh := client.docker.ContainerWait(client.ctx, newContainer.ID, container.WaitConditionNotRunning)
+		statusCh, errCh := client.docker.ContainerWait(client.ctx, newContainer.ID, dockerContainer.WaitConditionNotRunning)
 		select {
 		case err := <-errCh:
 			if err != nil {
@@ -143,7 +144,7 @@ func (client *DockerClient) ContainerRestart(opts *ContainerRestartOpts) error {
 	if containerJson.State.Status != ContainerStatusRunning {
 		opts.OnRestartCallback(containerJson.State.Status)
 
-		if err := client.docker.ContainerRestart(client.ctx, opts.ContainerId, container.StopOptions{}); err != nil {
+		if err := client.docker.ContainerRestart(client.ctx, opts.ContainerId, dockerContainer.StopOptions{}); err != nil {
 			return errors.Wrap(err, "error docker restart")
 		}
 	}
@@ -229,7 +230,7 @@ func handleStreams(
 }
 
 func (client *DockerClient) ContainerRemove(containerId string) error {
-	if err := client.docker.ContainerRemove(client.ctx, containerId, types.ContainerRemoveOptions{Force: true}); err != nil {
+	if err := client.docker.ContainerRemove(client.ctx, containerId, dockerContainer.RemoveOptions{Force: true}); err != nil {
 		return errors.Wrap(err, "error docker remove")
 	}
 	return nil
@@ -295,7 +296,7 @@ func newContainerDetails(container types.ContainerJSON) (ContainerDetails, error
 
 func (client *DockerClient) ContainerList(namePrefix string, label string) ([]ContainerInfo, error) {
 
-	containers, err := client.docker.ContainerList(client.ctx, types.ContainerListOptions{
+	containers, err := client.docker.ContainerList(client.ctx, dockerContainer.ListOptions{
 		All: true, // include exited
 		Filters: filters.NewArgs(
 			filters.KeyValuePair{Key: "name", Value: namePrefix},
@@ -330,7 +331,7 @@ func newContainerInfo(id, name, status string) ContainerInfo {
 
 func (client *DockerClient) ContainerLogs(opts *ContainerLogsOpts) error {
 
-	outStream, err := client.docker.ContainerLogs(client.ctx, opts.ContainerId, types.ContainerLogsOptions{
+	outStream, err := client.docker.ContainerLogs(client.ctx, opts.ContainerId, dockerContainer.LogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
 		Timestamps: true,
@@ -366,7 +367,7 @@ func (client *DockerClient) ContainerLogs(opts *ContainerLogsOpts) error {
 }
 
 func (client *DockerClient) containerLogsStream(containerId string) (io.ReadCloser, error) {
-	outStream, err := client.docker.ContainerLogs(client.ctx, containerId, types.ContainerLogsOptions{
+	outStream, err := client.docker.ContainerLogs(client.ctx, containerId, dockerContainer.LogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
 		Follow:     true,
