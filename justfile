@@ -10,6 +10,9 @@ install:
   go mod tidy
   #go mod vendor
 
+update:
+  go get -u ./...
+
 format:
   go fmt {{GO_FILES}}
 
