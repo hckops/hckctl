@@ -1,11 +1,11 @@
 package docker
 
 import (
-	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"io"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
 )

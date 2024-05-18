@@ -2,7 +2,6 @@ package docker
 
 import (
 	"fmt"
-	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -11,6 +10,7 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 
 	"github.com/hckops/hckctl/pkg/util"
 )
