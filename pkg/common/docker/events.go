@@ -32,8 +32,8 @@ func newCloseDockerClientEvent() *dockerCommonEvent {
 	return &dockerCommonEvent{kind: event.LogDebug, value: "close docker client"}
 }
 
-func newImagePullDockerEvent(imageName string) *dockerCommonEvent {
-	return &dockerCommonEvent{kind: event.LogInfo, value: fmt.Sprintf("image pull: imageName=%s", imageName)}
+func newImagePullDockerEvent(imageName string, platform string) *dockerCommonEvent {
+	return &dockerCommonEvent{kind: event.LogInfo, value: fmt.Sprintf("image pull: imageName=%s platform=%s", imageName, platform)}
 }
 
 func newImagePullIgnoreDockerEvent(imageName string) *dockerCommonEvent {

@@ -57,7 +57,7 @@ func (common *DockerCommonClient) PullImageOffline(imageName string, onImagePull
 		Platform:            platform,
 		OnImagePullCallback: onImagePullCallback,
 	}
-	common.eventBus.Publish(newImagePullDockerEvent(imageName))
+	common.eventBus.Publish(newImagePullDockerEvent(imageName, imagePullOpts.PlatformString()))
 	if err := common.client.ImagePull(imagePullOpts); err != nil {
 		// ignore error and try to use an existing image if exists
 		if common.clientOpts.IgnoreImagePullError {
