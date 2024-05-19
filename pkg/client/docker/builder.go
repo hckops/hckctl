@@ -142,7 +142,7 @@ func BuildNetworkingConfig(networkName, networkId string) *network.NetworkingCon
 
 func DefaultPlatform() *ocispec.Platform {
 	return &ocispec.Platform{
-		Architecture: "amd64", // TODO add support for linux/arm64
+		Architecture: "amd64",
 		OS:           "linux",
 	}
 }

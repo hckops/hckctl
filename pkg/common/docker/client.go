@@ -46,8 +46,15 @@ func (common *DockerCommonClient) Close() error {
 
 func (common *DockerCommonClient) PullImageOffline(imageName string, onImagePullCallback func()) error {
 
+	// TODO add support at least for linux/arm64
+	// temporary solution to force the architecture, ideally:
+	// - every image should be correctly built for all the architectures
+	// - the templates should have a field with the list of supported architectures and use the default only as fallback
+	platform := docker.DefaultPlatform()
+
 	imagePullOpts := &docker.ImagePullOpts{
 		ImageName:           imageName,
+		Platform:            platform,
 		OnImagePullCallback: onImagePullCallback,
 	}
 	common.eventBus.Publish(newImagePullDockerEvent(imageName))

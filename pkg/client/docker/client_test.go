@@ -100,3 +100,10 @@ func TestNewContainerDetails(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expected, containerDetails)
 }
+
+func TestImagePlatform(t *testing.T) {
+	opts := &ImagePullOpts{
+		Platform: DefaultPlatform(),
+	}
+	assert.Equal(t, "linux/amd64", opts.PlatformString())
+}

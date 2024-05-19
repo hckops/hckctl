@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/docker/docker/api/types/container"
@@ -34,7 +35,12 @@ type ContainerPortConfigOpts struct {
 
 type ImagePullOpts struct {
 	ImageName           string
+	Platform            *ocispec.Platform
 	OnImagePullCallback func()
+}
+
+func (o *ImagePullOpts) PlatformString() string {
+	return fmt.Sprintf("%s/%s", o.Platform.OS, o.Platform.Architecture)
 }
 
 type ImageRemoveOpts struct {
