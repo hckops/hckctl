@@ -9,6 +9,7 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
 func TestBuildContainerConfig(t *testing.T) {
@@ -136,4 +137,9 @@ func TestBuildNetworkingConfig(t *testing.T) {
 
 	result := BuildNetworkingConfig("myNetwork", "123")
 	assert.Equal(t, expected, result)
+}
+
+func TestDefaultPlatform(t *testing.T) {
+	expected := &ocispec.Platform{Architecture: "amd64", OS: "linux"}
+	assert.Equal(t, expected, DefaultPlatform())
 }

@@ -43,7 +43,7 @@ func (client *DockerClient) Close() error {
 
 func (client *DockerClient) ImagePull(opts *ImagePullOpts) error {
 
-	reader, err := client.docker.ImagePull(client.ctx, opts.ImageName, types.ImagePullOptions{})
+	reader, err := client.docker.ImagePull(client.ctx, opts.ImageName, types.ImagePullOptions{Platform: opts.PlatformString()})
 	if err != nil {
 		return errors.Wrap(err, "error image pull")
 	}
@@ -90,7 +90,7 @@ func (client *DockerClient) ContainerCreate(opts *ContainerCreateOpts) (string, 
 		opts.ContainerConfig,
 		opts.HostConfig,
 		opts.NetworkingConfig,
-		nil, // platform
+		opts.Platform, // consistent with ImagePull, on ARM it works also if "nil"
 		opts.ContainerName)
 	if err != nil {
 		return "", errors.Wrap(err, "error container create")

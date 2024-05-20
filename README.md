@@ -280,6 +280,10 @@ tail -F ${HOME}/.local/state/hck/log/hckctl-*.log
 just publish <MAJOR.MINOR.PATCH>
 ```
 
+## Known issues
+
+* Most of the images are built by default only for [`linux/amd64`](https://github.com/hckops/hckctl/pull/169), but they should work also on `linux/arm64`
+
 ## Roadmap
 
 * `flow` orchestrate and schedule multistage tasks, collect and output the combined results in multiple formats

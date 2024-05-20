@@ -1,10 +1,12 @@
 package docker
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 
 	commonModel "github.com/hckops/hckctl/pkg/common/model"
 )
@@ -33,7 +35,12 @@ type ContainerPortConfigOpts struct {
 
 type ImagePullOpts struct {
 	ImageName           string
+	Platform            *ocispec.Platform
 	OnImagePullCallback func()
+}
+
+func (o *ImagePullOpts) PlatformString() string {
+	return fmt.Sprintf("%s/%s", o.Platform.OS, o.Platform.Architecture)
 }
 
 type ImageRemoveOpts struct {
@@ -46,6 +53,7 @@ type ContainerCreateOpts struct {
 	ContainerConfig              *container.Config
 	HostConfig                   *container.HostConfig
 	NetworkingConfig             *network.NetworkingConfig
+	Platform                     *ocispec.Platform
 	WaitStatus                   bool
 	CaptureInterrupt             bool
 	OnContainerInterruptCallback func(containerId string)

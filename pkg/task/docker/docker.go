@@ -101,7 +101,8 @@ func (task *DockerTaskClient) runTask(opts *taskModel.RunOptions) error {
 		ContainerConfig:  containerConfig,
 		HostConfig:       hostConfig,
 		NetworkingConfig: docker.BuildNetworkingConfig(networkName, networkId), // all on the same network
-		WaitStatus:       true,                                                 // block
+		Platform:         docker.DefaultPlatform(),
+		WaitStatus:       true, // block
 		CaptureInterrupt: true,
 		OnContainerInterruptCallback: func(containerId string) {
 			// returns control to runTask, it will correctly invoke defer to remove the sidecar
