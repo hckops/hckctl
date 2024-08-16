@@ -51,7 +51,7 @@ brews:
     commit_author:
       name: hckbot
       email: hckbot@users.noreply.github.com
-    folder: Formula
+    directory: Formula
     homepage: https://github.com/hckops/hckctl
     description: "The declarative HaCKing Tool"
     skip_upload: false
