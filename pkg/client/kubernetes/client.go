@@ -459,7 +459,7 @@ func (client *KubeClient) PodExecShell(opts *PodExecOpts) error {
 
 	fn := func() error {
 		isTty := tty.Raw && opts.IsTty
-		return executor.Execute(http.MethodPost, execUrl, client.RestApi(), streamOptions.In, streamOptions.Out, streamOptions.ErrOut, isTty, sizeQueue)
+		return executor.Execute(execUrl, client.RestApi(), streamOptions.In, streamOptions.Out, streamOptions.ErrOut, isTty, sizeQueue)
 	}
 	if err := tty.Safe(fn); err != nil {
 		return errors.Wrap(err, "terminal session closed")
@@ -470,7 +470,7 @@ func (client *KubeClient) PodExecShell(opts *PodExecOpts) error {
 func (client *KubeClient) PodExecCommand(opts *PodExecOpts) error {
 	isTty := false
 	execUrl := client.newRestRequestExec(opts, isTty).URL()
-	return (&exec.DefaultRemoteExecutor{}).Execute(http.MethodPost, execUrl, client.RestApi(), opts.InStream, opts.OutStream, opts.ErrStream, isTty, nil)
+	return (&exec.DefaultRemoteExecutor{}).Execute(execUrl, client.RestApi(), opts.InStream, opts.OutStream, opts.ErrStream, isTty, nil)
 }
 
 func (client *KubeClient) podLogsStream(opts *PodLogsOpts) (io.ReadCloser, error) {
