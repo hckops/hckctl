@@ -14,7 +14,7 @@ require (
 	github.com/google/uuid v1.5.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/moby/term v0.5.0
-	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b
+	github.com/opencontainers/image-spec v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.31.0
 	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1
